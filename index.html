@@ -172,15 +172,17 @@
   /* ---------- HERO ---------- */
   .hero{ position:relative; overflow:clip; padding-block: clamp(40px,7vw,72px) clamp(56px,8vw,96px); }
   .hero-grid{
+    position:relative; z-index:2;
     display:grid; grid-template-columns: 1.05fr 1fr; gap:clamp(28px,5vw,64px);
     align-items:center;
   }
   .hero-copy{ position:relative; z-index:2; }
   .watermark{
-    position:absolute; left:-6px; top:clamp(118px, 24vw, 186px); z-index:1;
+    position:absolute; left:clamp(-24px, -3vw, 0px); top:50%; transform:translateY(-50%);
+    z-index:1;
     font-family:'Yinmar', 'Noto Sans Myanmar', 'Fraunces', serif; font-style:normal; font-weight:400;
-    font-size:clamp(2.6rem, 8vw, 7rem); color:var(--ink); opacity:0.08;
-    white-space:nowrap; pointer-events:none;
+    font-size:clamp(6.5rem, 19vw, 17rem); color:var(--ink); opacity:0.07;
+    white-space:nowrap; pointer-events:none; line-height:1;
   }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
@@ -208,7 +210,9 @@
   }
   .btn:hover{ transform:translateY(-2px); background:var(--navy-deep); }
   .btn.ghost{
-    background:transparent; color:var(--ink); border:1px solid var(--line);
+    background:color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    color:var(--ink); border:1px solid var(--line);
   }
   .btn.ghost:hover{ background:var(--bg-sunk); }
   .scroll-cue{
@@ -386,9 +390,9 @@
 
 <main id="top">
   <section class="hero" id="welcome">
+    <span class="watermark myanmar" aria-hidden="true">မင်္ဂလာပါ</span>
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <span class="watermark myanmar" aria-hidden="true">မင်္ဂလာပါ</span>
         <span class="eyebrow">Welcome</span>
         <h1>Mingalabar</h1>
         <p class="lede">The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's a seat for you at our table.</p>
