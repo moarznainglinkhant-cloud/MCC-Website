@@ -28,6 +28,149 @@ const SETTINGS_CSV_URL = "data/settings.csv"; // <-- replace with your published
 // (or it's blank/not a number yet).
 const DEFAULT_PAST_EVENTS_COUNT = 12;
 
+/* ============================================================
+   BILINGUAL SWITCH (English / Burmese)
+   ------------------------------------------------------------
+   Covers the site's fixed chrome (nav, buttons, headings, footer)
+   — event names/dates/descriptions come from the Sheet and stay
+   English-only, so posting an event never requires writing it twice.
+
+   Draft translations below were written by Claude, not a native
+   speaker — have someone fluent skim them before you consider this
+   "done." To fix a string, just edit the "mm" value for its key.
+   ============================================================ */
+const I18N = {
+  en: {
+    label_welcome: "Welcome",
+    label_next_event: "Next Event",
+    label_all_events: "All Events",
+    label_connect: "Connect",
+    label_join_newsletter_nav: "Join Newsletter",
+    label_join_club: "Join the Club",
+    label_join_newsletter_footer: "Join the Newsletter",
+
+    hero_h1: "Mingalabar",
+    hero_lede: "The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's a seat for you at our table.",
+    hero_cta_next: "See Our Next Event",
+
+    strip1_h: "Student-run, UofT-wide",
+    strip1_p: "Open to every faculty and every year — no Burmese background required, just curiosity.",
+    strip2_h: "Food, festivals & language",
+    strip2_p: "From Thingyan water festival to mohinga nights and Burmese language chats.",
+    strip3_h: "A community away from home",
+    strip3_p: "For the Myanmar diaspora and anyone who wants to learn alongside us.",
+
+    event_h2: "See what MCC is hosting",
+    event_intro: "Our next gathering, straight from the calendar. Check back often — new events go up here first.",
+    register_now: "Register Now",
+    stay_tuned_tag: "Stay tuned",
+    no_event_h3: "New event not available right now",
+    no_event_p: "We're always planning something — keep checking back, and in the meantime take a look at everything we've hosted so far.",
+    visit_all_previous: "Visit All Previous Events",
+    rsvp: "RSVP",
+
+    footer_h2: "Let's stay in touch.",
+    footer_p: "Follow along for event drops, cultural spotlights, and the occasional mohinga craving. New members welcome any time of year.",
+    contact_email_label: "Email",
+    contact_email_copied: "Copied to clipboard!",
+    contact_linktree_label: "Everything else",
+
+    events_eyebrow: "MCC Calendar",
+    events_h1: "Every gathering, in one place.",
+    events_lede: "From food nights to festival celebrations, here's what the Myanmar Culture Club has coming up — and what we've hosted before. Can't make it in person? Follow along on Instagram so you never miss the next one.",
+    coming_up_eyebrow: "Coming Up",
+    coming_up_h2: "More on the calendar",
+    past_events_eyebrow: "Past Events",
+    past_events_h2: "What we've hosted",
+    past_note_showing_recent: "Showing our {n} most recent events.",
+    past_note_everything: "Everything we've hosted — {n} events so far.",
+  },
+  mm: {
+    label_welcome: "ကြိုဆိုပါသည်",
+    label_next_event: "လာမည့်အခမ်းအနား",
+    label_all_events: "အခမ်းအနားအားလုံး",
+    label_connect: "ဆက်သွယ်ရန်",
+    label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
+    label_join_club: "အသင်းဝင်ရန်",
+    label_join_newsletter_footer: "သတင်းလွှာတွင် စာရင်းသွင်းရန်",
+
+    hero_h1: "မင်္ဂလာပါ",
+    hero_lede: "Myanmar Culture Club သည် တိုရွန်တိုတက္ကသိုလ်သို့ မြန်မာ့အစားအစာ၊ ပွဲတော်များ၊ ဘာသာစကားနှင့် ဇာတ်လမ်းများကို ယူဆောင်လာပါသည်။ ဤအစဉ်အလာများကြားတွင် ကြီးပြင်းခဲ့သူဖြစ်စေ၊ ယခုမှစတင်၍ ရှာဖွေလေ့လာနေသူဖြစ်စေ၊ ကျွန်ုပ်တို့စားပွဲတွင် သင့်အတွက် နေရာတစ်နေရာ ရှိပါသည်။",
+    hero_cta_next: "လာမည့်အခမ်းအနားကြည့်ရန်",
+
+    strip1_h: "ကျောင်းသားများကိုယ်တိုင်စီမံ၊ တက္ကသိုလ်တစ်ခုလုံးအတွက်",
+    strip1_p: "အဌာနတိုင်း၊ နှစ်အလိုက်ကျောင်းသားများအားလုံးအတွက် ဖွင့်ထားပါသည် — မြန်မာ့နောက်ခံလိုအပ်ချက်မရှိပါ၊ စူးစမ်းလိုစိတ်တစ်ခုတည်း လိုအပ်ပါသည်။",
+    strip2_h: "အစားအစာ၊ ပွဲတော်များနှင့် ဘာသာစကား",
+    strip2_p: "သင်္ကြန်ပွဲတော်မှသည် မုန့်ဟင်းခါးညများ၊ မြန်မာစကားပြောဆိုမှုများအထိ။",
+    strip3_h: "အိမ်ကွာသော်လည်း အသိုင်းအဝိုင်း",
+    strip3_p: "မြန်မာမျိုးနွယ်စုများနှင့် ကျွန်ုပ်တို့နှင့်အတူ လေ့လာလိုသူတိုင်းအတွက်။",
+
+    event_h2: "MCC ၏ လာမည့်အစီအစဉ်များကြည့်ရန်",
+    event_intro: "ကျွန်ုပ်တို့၏ ပြက္ခဒိန်မှ လာမည့်စုစည်းပွဲ။ မကြာခဏ ပြန်ကြည့်ပါ — အခမ်းအနားအသစ်များကို ဒီနေရာတွင် အရင်ဆုံးတင်ပါသည်။",
+    register_now: "အခုပင်စာရင်းသွင်းပါ",
+    stay_tuned_tag: "စောင့်ကြည့်ပါ",
+    no_event_h3: "လက်ရှိတွင် အခမ်းအနားအသစ်မရှိသေးပါ",
+    no_event_p: "ကျွန်ုပ်တို့ အမြဲတမ်းစီစဉ်နေပါသည် — ဆက်လက်ကြည့်ရှုပေးပါ၊ ယခုအချိန်တွင် ကျွန်ုပ်တို့ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ကြည့်ရှုနိုင်ပါသည်။",
+    visit_all_previous: "ယခင်အခမ်းအနားများအားလုံးကြည့်ရန်",
+    rsvp: "စာရင်းသွင်းရန်",
+
+    footer_h2: "ဆက်သွယ်နေကြပါစို့။",
+    footer_p: "အခမ်းအနားသတင်းများ၊ ယဉ်ကျေးမှုဆိုင်ရာ အထူးဖော်ပြချက်များနှင့် တစ်ခါတစ်ရံ မုန့်ဟင်းခါးစားချင်စိတ်များအတွက် လိုက်နာကြည့်ရှုပါ။ အသင်းဝင်သစ်များကို နှစ်တစ်လျှောက်လုံး ကြိုဆိုပါသည်။",
+    contact_email_label: "အီးမေးလ်",
+    contact_email_copied: "ကူးယူပြီးပါပြီ!",
+    contact_linktree_label: "အခြားအရာများ",
+
+    events_eyebrow: "MCC ပြက္ခဒိန်",
+    events_h1: "စုစည်းပွဲအားလုံး တစ်နေရာတည်းတွင်။",
+    events_lede: "အစားအသောက်ညများမှ ပွဲတော်ကျင်းပမှုများအထိ၊ Myanmar Culture Club ၏ လာမည့်အခမ်းအနားများနှင့် ယခင်ကကျင်းပခဲ့သည့်အခမ်းအနားများကို ဤနေရာတွင် တွေ့နိုင်ပါသည်။ တကယ်လာရောက်၍မရပါက Instagram တွင် လိုက်နာပါ၊ နောက်တစ်ကြိမ် လွတ်မသွားပါစေနှင့်။",
+    coming_up_eyebrow: "လာမည့်အစီအစဉ်များ",
+    coming_up_h2: "ပြက္ခဒိန်ပေါ်ရှိ နောက်ထပ်များ",
+    past_events_eyebrow: "ယခင်အခမ်းအနားများ",
+    past_events_h2: "ကျွန်ုပ်တို့ ကျင်းပခဲ့သည်များ",
+    past_note_showing_recent: "လတ်တလော အခမ်းအနား {n} ခုကို ပြသထားပါသည်။",
+    past_note_everything: "ကျွန်ုပ်တို့ ကျင်းပခဲ့သမျှ — အခမ်းအနား {n} ခု ရှိပါပြီ။",
+  },
+};
+
+function getLang() {
+  try { return localStorage.getItem("mcc_lang") === "mm" ? "mm" : "en"; }
+  catch (e) { return "en"; }
+}
+function setLang(lang) {
+  try { localStorage.setItem("mcc_lang", lang); } catch (e) {}
+}
+function t(key) {
+  const lang = getLang();
+  return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+}
+function applyTranslations() {
+  const lang = getLang();
+  document.documentElement.setAttribute("data-lang", lang);
+  document.documentElement.lang = lang === "mm" ? "my" : "en";
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const key = el.getAttribute("data-i18n");
+    el.textContent = t(key);
+    el.classList.toggle("myanmar", lang === "mm");
+  });
+  document.querySelectorAll(".lang-toggle button").forEach(btn => {
+    const isActive = btn.dataset.lang === lang;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-pressed", String(isActive));
+  });
+}
+function initLangToggle() {
+  const buttons = document.querySelectorAll(".lang-toggle button");
+  if (!buttons.length) return;
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.lang === getLang()) return;
+      setLang(btn.dataset.lang);
+      applyTranslations();
+      rerenderDynamicText();
+    });
+  });
+}
+
 // TESTING SWITCH — normally, when there's no upcoming event, the "Next
 // Event" spot shows a "New event not available right now" message. Flip
 // this to true to instead show your most recent past event in that spot
@@ -231,6 +374,7 @@ function renderFeaturedEvent(ev) {
   const visual = document.getElementById("js-event-visual");
   const body = document.getElementById("js-event-body");
   if (!body) return;
+  const mmClass = getLang() === "mm" ? "myanmar" : "";
 
   if (!ev) {
     if (visual) visual.innerHTML = "";
@@ -239,10 +383,10 @@ function renderFeaturedEvent(ev) {
     // wherever it actually is.
     const pastHref = document.getElementById("js-past-gallery") ? "#past-events" : "events.html#past-events";
     body.innerHTML = `
-      <span class="event-tag">Stay tuned</span>
-      <h3>New event not available right now</h3>
-      <p class="desc">We're always planning something — keep checking back, and in the meantime take a look at everything we've hosted so far.</p>
-      <a class="btn ghost" href="${pastHref}">Visit All Previous Events</a>`;
+      <span class="event-tag ${mmClass}">${t("stay_tuned_tag")}</span>
+      <h3 class="${mmClass}">${t("no_event_h3")}</h3>
+      <p class="desc ${mmClass}">${t("no_event_p")}</p>
+      <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>`;
     return;
   }
 
@@ -252,11 +396,11 @@ function renderFeaturedEvent(ev) {
       : "";
   }
   body.innerHTML = `
-    <span class="event-tag">Next Event</span>
+    <span class="event-tag ${mmClass}">${t("label_next_event")}</span>
     <h3>${escapeHtml(ev.name)}</h3>
     ${eventMetaRow(ev)}
     ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
-    ${ev.link ? `<a class="btn" href="${ev.link}" target="_blank" rel="noopener">Register Now</a>` : ""}
+    ${ev.link ? `<a class="btn ${mmClass}" href="${ev.link}" target="_blank" rel="noopener">${t("register_now")}</a>` : ""}
   `;
 }
 
@@ -269,12 +413,13 @@ function renderComingUp(rest) {
     return;
   }
   if (section) section.style.display = "";
+  const mmClass = getLang() === "mm" ? "myanmar" : "";
   grid.innerHTML = rest.map(ev => `
     <div class="event-mini reveal">
       <h3>${escapeHtml(ev.name)}</h3>
       ${eventMetaRow(ev)}
       ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
-      ${ev.link ? `<a class="btn small" href="${ev.link}" target="_blank" rel="noopener">RSVP</a>` : ""}
+      ${ev.link ? `<a class="btn small ${mmClass}" href="${ev.link}" target="_blank" rel="noopener">${t("rsvp")}</a>` : ""}
     </div>
   `).join("");
 }
@@ -298,9 +443,10 @@ function renderPastGallery(past, limit) {
 
   const note = document.getElementById("js-past-note");
   if (note) {
+    note.classList.toggle("myanmar", getLang() === "mm");
     note.textContent = past.length > shown.length
-      ? `Showing our ${shown.length} most recent events.`
-      : `Everything we've hosted — ${shown.length} event${shown.length === 1 ? "" : "s"} so far.`;
+      ? t("past_note_showing_recent").replace("{n}", shown.length)
+      : t("past_note_everything").replace("{n}", shown.length);
   }
 }
 
@@ -534,8 +680,9 @@ function initEmailCopy() {
     if (!email) return;
     const label = btn.querySelector(".js-email-label");
     const arrow = btn.querySelector(".arrow");
-    const originalLabel = label ? label.textContent : "";
-    const originalArrow = arrow ? arrow.innerHTML : "";
+    // Not captured once up front — the label's language can change (via the
+    // EN/MM toggle) between page load and whenever this actually reverts.
+    const arrowSvg = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg>';
     let resetTimer = null;
 
     btn.addEventListener("click", async () => {
@@ -569,7 +716,7 @@ function initEmailCopy() {
       if (!copied) return;
 
       btn.classList.add("is-copied");
-      if (label) label.textContent = "Copied to clipboard!";
+      if (label) label.textContent = t("contact_email_copied");
       if (arrow) {
         arrow.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13 L10 18 L19 6"/></svg>';
       }
@@ -577,8 +724,8 @@ function initEmailCopy() {
       clearTimeout(resetTimer);
       resetTimer = setTimeout(() => {
         btn.classList.remove("is-copied");
-        if (label) label.textContent = originalLabel;
-        if (arrow) arrow.innerHTML = originalArrow;
+        if (label) label.textContent = t("contact_email_label");
+        if (arrow) arrow.innerHTML = arrowSvg;
       }, 1800);
     });
   });
@@ -591,6 +738,22 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// Cached inputs to the three CSV-driven render functions above, so the
+// language toggle can re-render them in the new language instantly
+// without re-fetching the CSVs.
+let _cachedNext = null, _cachedRest = [], _cachedPast = [], _cachedPastLimit = DEFAULT_PAST_EVENTS_COUNT;
+let _dataLoaded = false;
+
+function rerenderDynamicText() {
+  // If the toggle is clicked before the CSVs finish loading, do nothing —
+  // initSiteData's own render (moments later) will already pick up
+  // whichever language is currently selected.
+  if (!_dataLoaded) return;
+  renderFeaturedEvent(_cachedNext);
+  renderComingUp(_cachedRest);
+  renderPastGallery(_cachedPast, _cachedPastLimit);
 }
 
 async function initSiteData() {
@@ -614,6 +777,12 @@ async function initSiteData() {
     pastForGallery = past.slice(1);
   }
 
+  _cachedNext = next;
+  _cachedRest = rest;
+  _cachedPast = pastForGallery;
+  _cachedPastLimit = pastLimit;
+  _dataLoaded = true;
+
   renderFeaturedEvent(next);
   renderComingUp(rest);
   renderPastGallery(pastForGallery, pastLimit);
@@ -624,6 +793,10 @@ async function initSiteData() {
   initScrollReveal();
 }
 
+// Applies saved-language text to the static HTML before anything else runs,
+// so there's no flash of English before it switches.
+document.addEventListener("DOMContentLoaded", applyTranslations);
+document.addEventListener("DOMContentLoaded", initLangToggle);
 document.addEventListener("DOMContentLoaded", initSiteData);
 
 // Independent of the CSV-driven render above — these buttons are already in

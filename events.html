@@ -147,6 +147,19 @@
     padding:9px 18px; border-radius:999px; font-size:0.78rem !important;
   }
   .nav-cta::after{ display:none; }
+  .lang-toggle{
+    display:flex; align-items:center; gap:2px;
+    border:1px solid var(--line); border-radius:999px; padding:3px;
+  }
+  .lang-toggle button{
+    border:none; background:none; cursor:pointer;
+    font-family:'Work Sans', sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.04em;
+    color:var(--ink-soft); padding:5px 11px; border-radius:999px;
+    transition: background .18s ease, color .18s ease;
+  }
+  .lang-toggle button.active{ background:var(--navy); color:var(--footer-ink); }
+  .lang-toggle button:hover:not(.active){ color:var(--ink); }
+  #mobile-panel .lang-toggle{ align-self:flex-start; margin-top:4px; }
   .menu-btn{
     display:none; background:none; border:1px solid var(--line); border-radius:8px;
     width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer;
@@ -323,19 +336,27 @@
       <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
     </a>
     <nav class="links">
-      <a href="index.html">Welcome</a>
-      <a href="#next-event">Next Event</a>
-      <a href="#past-events">All Events</a>
-      <a href="#connect">Connect</a>
-      <a href="https://forms.gle/mccNewsletterSample" class="nav-cta celebrate">Join Newsletter</a>
+      <a href="index.html" data-i18n="label_welcome">Welcome</a>
+      <a href="#next-event" data-i18n="label_next_event">Next Event</a>
+      <a href="#past-events" data-i18n="label_all_events">All Events</a>
+      <a href="#connect" data-i18n="label_connect">Connect</a>
+      <a href="https://forms.gle/mccNewsletterSample" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="mm">MM</button>
+      </div>
     </nav>
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-panel"><span></span></button>
   </div>
   <div id="mobile-panel" hidden>
-    <a href="index.html">Welcome</a>
-    <a href="#next-event">Next Event</a>
-    <a href="#past-events">All Events</a>
-    <a href="#connect">Connect</a>
+    <a href="index.html" data-i18n="label_welcome">Welcome</a>
+    <a href="#next-event" data-i18n="label_next_event">Next Event</a>
+    <a href="#past-events" data-i18n="label_all_events">All Events</a>
+    <a href="#connect" data-i18n="label_connect">Connect</a>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="mm">MM</button>
+    </div>
   </div>
 </header>
 
@@ -343,16 +364,16 @@
   <section class="page-hero">
     <span class="watermark myanmar" aria-hidden="true">ပွဲများ</span>
     <div class="wrap">
-      <span class="eyebrow">MCC Calendar</span>
-      <h1>Every gathering, in one place.</h1>
-      <p class="lede">From food nights to festival celebrations, here's what the Myanmar Culture Club has coming up — and what we've hosted before. Can't make it in person? Follow along on Instagram so you never miss the next one.</p>
+      <span class="eyebrow" data-i18n="events_eyebrow">MCC Calendar</span>
+      <h1 data-i18n="events_h1">Every gathering, in one place.</h1>
+      <p class="lede" data-i18n="events_lede">From food nights to festival celebrations, here's what the Myanmar Culture Club has coming up — and what we've hosted before. Can't make it in person? Follow along on Instagram so you never miss the next one.</p>
     </div>
   </section>
 
   <section class="section" id="next-event">
     <div class="wrap">
       <div class="section-head">
-        <span class="eyebrow">Next Event</span>
+        <span class="eyebrow" data-i18n="label_next_event">Next Event</span>
       </div>
       <div class="event-card reveal">
         <div class="event-visual" id="js-event-visual">
@@ -376,8 +397,8 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <span class="eyebrow">Coming Up</span>
-          <h2>More on the calendar</h2>
+          <span class="eyebrow" data-i18n="coming_up_eyebrow">Coming Up</span>
+          <h2 data-i18n="coming_up_h2">More on the calendar</h2>
         </div>
       </div>
       <div class="events-grid" id="js-events-grid"></div>
@@ -388,8 +409,8 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <span class="eyebrow">Past Events</span>
-          <h2>What we've hosted</h2>
+          <span class="eyebrow" data-i18n="past_events_eyebrow">Past Events</span>
+          <h2 data-i18n="past_events_h2">What we've hosted</h2>
         </div>
       </div>
       <div class="past-note" id="js-past-note">Everything we've hosted — 5 events so far.</div>
@@ -437,12 +458,12 @@
     <div class="wrap">
       <div class="contact-top">
         <div class="contact-intro">
-          <span class="eyebrow" style="color:var(--gold)">Connect</span>
-          <h2>Let's stay in touch.</h2>
-          <p>Follow along for event drops, cultural spotlights, and the occasional mohinga craving. New members welcome any time of year.</p>
+          <span class="eyebrow" style="color:var(--gold)" data-i18n="label_connect">Connect</span>
+          <h2 data-i18n="footer_h2">Let's stay in touch.</h2>
+          <p data-i18n="footer_p">Follow along for event drops, cultural spotlights, and the occasional mohinga craving. New members welcome any time of year.</p>
           <div class="cta-row">
-            <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA">Join the Club</a>
-            <a class="btn-footer ghost celebrate" href="https://forms.gle/mccNewsletterSample">Join the Newsletter</a>
+            <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
+            <a class="btn-footer ghost celebrate" href="https://forms.gle/mccNewsletterSample" data-i18n="label_join_newsletter_footer">Join the Newsletter</a>
           </div>
         </div>
         <div class="contact-links">
@@ -456,14 +477,14 @@
           <button type="button" class="js-email-copy" data-email="uoft.myanmar@gmail.com">
             <span class="link-lead">
               <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7 L12 13 L20 7"/></svg>
-              <span><span class="k js-email-label">Email</span><br>uoft.myanmar@gmail.com</span>
+              <span><span class="k js-email-label" data-i18n="contact_email_label">Email</span><br>uoft.myanmar@gmail.com</span>
             </span>
             <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
           </button>
           <a href="https://linktr.ee/mcc.uoft" target="_blank" rel="noopener">
             <span class="link-lead">
               <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-              <span><span class="k">Everything else</span><br>linktr.ee/mcc.uoft</span>
+              <span><span class="k" data-i18n="contact_linktree_label">Everything else</span><br>linktr.ee/mcc.uoft</span>
             </span>
             <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
           </a>
