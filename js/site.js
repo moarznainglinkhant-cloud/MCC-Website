@@ -379,6 +379,47 @@ function initScrollReveal() {
   }
 }
 
+// Shared by the "celebrate" buttons below and the logo easter egg further
+// down — a burst of confetti pieces radiating out from (x, y). Both callers
+// already check prefers-reduced-motion/animate support before calling this.
+const CONFETTI_COLORS = ["#C08A2E", "#AE3628", "#4B7A3C", "#F6F1E4", "#1C2440"];
+
+function confettiBurst(x, y) {
+  const pieceCount = 32;
+  for (let i = 0; i < pieceCount; i++) {
+    const el = document.createElement("span");
+    const size = 5 + Math.random() * 6;
+    const round = Math.random() < 0.4;
+    Object.assign(el.style, {
+      position: "fixed",
+      left: x + "px",
+      top: y + "px",
+      width: size + "px",
+      height: size + "px",
+      background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+      borderRadius: round ? "50%" : "2px",
+      pointerEvents: "none",
+      zIndex: 9999,
+      willChange: "transform, opacity",
+    });
+    document.body.appendChild(el);
+
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 110 + Math.random() * 170; // bigger spread than before
+    const dx = Math.cos(angle) * distance;
+    const dy = Math.sin(angle) * distance - 70; // upward bias, like a firework burst
+    const rotate = (Math.random() - 0.5) * 900;
+
+    const anim = el.animate([
+      { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
+      { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotate}deg)`, opacity: 1, offset: 0.5 },
+      { transform: `translate(-50%, -50%) translate(${dx * 1.2}px, ${dy + 220}px) rotate(${rotate * 1.4}deg)`, opacity: 0 },
+    ], { duration: 1400 + Math.random() * 600, easing: "cubic-bezier(.2,.7,.3,1)" }); // longer hang time than before
+
+    anim.onfinish = () => el.remove();
+  }
+}
+
 // Little confetti-burst "congrats!" moment for anything with class="celebrate"
 // — the Join the Club / Join Newsletter buttons. These links open the actual
 // form in a new tab (target="_blank"), so this never blocks or delays that;
@@ -391,44 +432,6 @@ function initCelebrations() {
   const reduceMotion = window.matchMedia &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduceMotion || typeof Element === "undefined" || !Element.prototype.animate) return;
-
-  const COLORS = ["#C08A2E", "#AE3628", "#4B7A3C", "#F6F1E4", "#1C2440"];
-
-  function burst(x, y) {
-    const pieceCount = 32;
-    for (let i = 0; i < pieceCount; i++) {
-      const el = document.createElement("span");
-      const size = 5 + Math.random() * 6;
-      const round = Math.random() < 0.4;
-      Object.assign(el.style, {
-        position: "fixed",
-        left: x + "px",
-        top: y + "px",
-        width: size + "px",
-        height: size + "px",
-        background: COLORS[i % COLORS.length],
-        borderRadius: round ? "50%" : "2px",
-        pointerEvents: "none",
-        zIndex: 9999,
-        willChange: "transform, opacity",
-      });
-      document.body.appendChild(el);
-
-      const angle = Math.random() * Math.PI * 2;
-      const distance = 110 + Math.random() * 170; // bigger spread than before
-      const dx = Math.cos(angle) * distance;
-      const dy = Math.sin(angle) * distance - 70; // upward bias, like a firework burst
-      const rotate = (Math.random() - 0.5) * 900;
-
-      const anim = el.animate([
-        { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
-        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotate}deg)`, opacity: 1, offset: 0.5 },
-        { transform: `translate(-50%, -50%) translate(${dx * 1.2}px, ${dy + 220}px) rotate(${rotate * 1.4}deg)`, opacity: 0 },
-      ], { duration: 1400 + Math.random() * 600, easing: "cubic-bezier(.2,.7,.3,1)" }); // longer hang time than before
-
-      anim.onfinish = () => el.remove();
-    }
-  }
 
   targets.forEach(el => {
     el.addEventListener("click", e => {
@@ -445,9 +448,80 @@ function initCelebrations() {
       // away almost instantly, so this deliberately navigates in the same
       // tab instead (use the browser's back button to return to the site).
       e.preventDefault();
-      burst(e.clientX, e.clientY);
+      confettiBurst(e.clientX, e.clientY);
       window.setTimeout(() => { window.location.href = href; }, 1300);
     });
+  });
+}
+
+// Hidden little "you found it" moment — triple-click the logo mark (not the
+// club name text next to it, which should always just go home normally) and
+// it spins itself up like an Android hidden-menu easter egg, with the same
+// confetti burst used elsewhere on the site.
+function initLogoEasterEgg() {
+  const logo = document.querySelector(".brand img");
+  const brandLink = document.querySelector(".brand");
+  if (!logo || !brandLink) return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || typeof Element === "undefined" || !Element.prototype.animate) return;
+
+  // The homepage's own logo just scrolls to the top of the same page
+  // (href="#top") — completely harmless to click repeatedly, so clicks 1
+  // and 2 there are left 100% untouched and instant. On the events page the
+  // logo instead navigates to a different page (href="index.html"), which
+  // would fire on the very first click and cut the pattern off before a
+  // 2nd/3rd click could register — so on THAT page only, clicks are held
+  // for a brief 220ms in case more are coming. That's short enough to be
+  // barely noticeable next to the page load that follows anyway.
+  const href = brandLink.getAttribute("href") || "";
+  const samePage = href.charAt(0) === "#";
+  const WINDOW_MS = 600;
+  const NAV_GRACE_MS = 220;
+  let clickTimes = [];
+  let navTimer = null;
+
+  function spin() {
+    logo.animate([
+      { transform: "scale(1) rotate(0deg)", offset: 0 },
+      { transform: "scale(1.5) rotate(200deg)", offset: 0.45 },
+      { transform: "scale(1.5) rotate(380deg)", offset: 0.75 },
+      { transform: "scale(1) rotate(360deg)", offset: 1 },
+    ], { duration: 900, easing: "cubic-bezier(.34,1.56,.64,1)" });
+
+    const rect = logo.getBoundingClientRect();
+    confettiBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+  }
+
+  logo.addEventListener("click", e => {
+    const now = Date.now();
+    clickTimes = clickTimes.filter(t => now - t < WINDOW_MS);
+    clickTimes.push(now);
+
+    if (samePage) {
+      // Nothing to protect against — let every click behave normally, and
+      // just layer the spin on top as a bonus when the 3rd one lands.
+      if (clickTimes.length >= 3) {
+        clickTimes = [];
+        spin();
+      }
+      return;
+    }
+
+    e.preventDefault();
+    clearTimeout(navTimer);
+
+    if (clickTimes.length >= 3) {
+      clickTimes = [];
+      spin();
+      return;
+    }
+
+    navTimer = setTimeout(() => {
+      clickTimes = [];
+      window.location.href = href;
+    }, NAV_GRACE_MS);
   });
 }
 
@@ -496,3 +570,4 @@ document.addEventListener("DOMContentLoaded", initSiteData);
 // Independent of the CSV-driven render above — these buttons are already in
 // the static HTML, so there's no reason to wait on data loading for this.
 document.addEventListener("DOMContentLoaded", initCelebrations);
+document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
