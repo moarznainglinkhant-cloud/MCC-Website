@@ -320,10 +320,11 @@
   .contact-links a, .contact-links button{
     display:flex; align-items:center; justify-content:space-between; gap:16px;
     text-decoration:none; color:var(--footer-ink);
-    padding-block:16px;
+    padding:16px 0; margin:0;
     font-family:'Fraunces', serif; font-size:clamp(1.15rem,2.4vw,1.5rem); font-weight:500;
     transition: opacity .18s ease, gap .18s ease;
     background:none; border:none; width:100%; text-align:left; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
   }
   .contact-links a:hover, .contact-links button:hover{ opacity:0.72; gap:22px; }
   .contact-links .link-lead{ display:flex; align-items:center; gap:16px; }
