@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moarznainglinkhant-cloud.github.io/MCC-Website/sitemap.xml
