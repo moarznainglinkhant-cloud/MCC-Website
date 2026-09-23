@@ -1,0 +1,10 @@
+/* TEAM */
+
+Designer & Developer: Naing Lin Khant (Moarz)
+Site: Myanmar Culture Club — University of Toronto (@mcc_uoft)
+
+/* SITE */
+
+Last update: 2026/09/22
+Standards: HTML5, CSS3
+Components: Vanilla JS, Google Sheets (as CMS)
