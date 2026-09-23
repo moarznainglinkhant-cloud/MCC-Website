@@ -379,6 +379,62 @@ function initScrollReveal() {
   }
 }
 
+// Little confetti-burst "congrats!" moment for anything with class="celebrate"
+// — the Join the Club / Join Newsletter buttons. These links open the actual
+// form in a new tab (target="_blank"), so this never blocks or delays that;
+// it's just a bit of positive feedback in the moment you click. Respects
+// prefers-reduced-motion by doing nothing at all (the link still works fine).
+function initCelebrations() {
+  const targets = document.querySelectorAll(".celebrate");
+  if (!targets.length) return;
+
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion || typeof Element === "undefined" || !Element.prototype.animate) return;
+
+  const COLORS = ["#C08A2E", "#AE3628", "#4B7A3C", "#F6F1E4", "#1C2440"];
+
+  function burst(x, y) {
+    const pieceCount = 24;
+    for (let i = 0; i < pieceCount; i++) {
+      const el = document.createElement("span");
+      const size = 5 + Math.random() * 5;
+      const round = Math.random() < 0.4;
+      Object.assign(el.style, {
+        position: "fixed",
+        left: x + "px",
+        top: y + "px",
+        width: size + "px",
+        height: size + "px",
+        background: COLORS[i % COLORS.length],
+        borderRadius: round ? "50%" : "2px",
+        pointerEvents: "none",
+        zIndex: 9999,
+        willChange: "transform, opacity",
+      });
+      document.body.appendChild(el);
+
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 60 + Math.random() * 90;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance - 50; // upward bias, like a firework burst
+      const rotate = (Math.random() - 0.5) * 720;
+
+      const anim = el.animate([
+        { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
+        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotate}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(-50%, -50%) translate(${dx * 1.15}px, ${dy + 130}px) rotate(${rotate * 1.4}deg)`, opacity: 0 },
+      ], { duration: 800 + Math.random() * 400, easing: "cubic-bezier(.2,.7,.3,1)" });
+
+      anim.onfinish = () => el.remove();
+    }
+  }
+
+  targets.forEach(el => {
+    el.addEventListener("click", e => burst(e.clientX, e.clientY));
+  });
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)
@@ -420,3 +476,7 @@ async function initSiteData() {
 }
 
 document.addEventListener("DOMContentLoaded", initSiteData);
+
+// Independent of the CSV-driven render above — these buttons are already in
+// the static HTML, so there's no reason to wait on data loading for this.
+document.addEventListener("DOMContentLoaded", initCelebrations);
