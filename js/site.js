@@ -395,10 +395,10 @@ function initCelebrations() {
   const COLORS = ["#C08A2E", "#AE3628", "#4B7A3C", "#F6F1E4", "#1C2440"];
 
   function burst(x, y) {
-    const pieceCount = 24;
+    const pieceCount = 32;
     for (let i = 0; i < pieceCount; i++) {
       const el = document.createElement("span");
-      const size = 5 + Math.random() * 5;
+      const size = 5 + Math.random() * 6;
       const round = Math.random() < 0.4;
       Object.assign(el.style, {
         position: "fixed",
@@ -415,16 +415,16 @@ function initCelebrations() {
       document.body.appendChild(el);
 
       const angle = Math.random() * Math.PI * 2;
-      const distance = 60 + Math.random() * 90;
+      const distance = 110 + Math.random() * 170; // bigger spread than before
       const dx = Math.cos(angle) * distance;
-      const dy = Math.sin(angle) * distance - 50; // upward bias, like a firework burst
-      const rotate = (Math.random() - 0.5) * 720;
+      const dy = Math.sin(angle) * distance - 70; // upward bias, like a firework burst
+      const rotate = (Math.random() - 0.5) * 900;
 
       const anim = el.animate([
         { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
-        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotate}deg)`, opacity: 1, offset: 0.55 },
-        { transform: `translate(-50%, -50%) translate(${dx * 1.15}px, ${dy + 130}px) rotate(${rotate * 1.4}deg)`, opacity: 0 },
-      ], { duration: 800 + Math.random() * 400, easing: "cubic-bezier(.2,.7,.3,1)" });
+        { transform: `translate(-50%, -50%) translate(${dx}px, ${dy}px) rotate(${rotate}deg)`, opacity: 1, offset: 0.5 },
+        { transform: `translate(-50%, -50%) translate(${dx * 1.2}px, ${dy + 220}px) rotate(${rotate * 1.4}deg)`, opacity: 0 },
+      ], { duration: 1400 + Math.random() * 600, easing: "cubic-bezier(.2,.7,.3,1)" }); // longer hang time than before
 
       anim.onfinish = () => el.remove();
     }
@@ -446,7 +446,7 @@ function initCelebrations() {
       // tab instead (use the browser's back button to return to the site).
       e.preventDefault();
       burst(e.clientX, e.clientY);
-      window.setTimeout(() => { window.location.href = href; }, 700);
+      window.setTimeout(() => { window.location.href = href; }, 1300);
     });
   });
 }
