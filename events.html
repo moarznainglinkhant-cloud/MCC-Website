@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <!-- Myanmar Culture Club (University of Toronto) — site designed & built by Naing Lin Khant (Moarz). -->
 <title>MCC Events</title>
 <meta name="author" content="Naing Lin Khant (Moarz)">
@@ -124,6 +129,7 @@
     padding:16px clamp(18px,4vw,56px) 22px;
     display:flex; flex-direction:column; gap:14px;
   }
+  #mobile-panel[hidden]{ display:none; }
   #mobile-panel a{ text-decoration:none; color:var(--ink); font-weight:600; font-size:0.95rem; }
 
   @media (max-width:760px){
@@ -272,6 +278,8 @@
   .contact-bottom img{ width:26px; height:26px; border-radius:50%; }
 
 </style>
+</head>
+<body>
 
 <header class="nav">
   <div class="wrap nav-row">
@@ -453,3 +461,6 @@
 </script>
 
 <script src="js/site.js"></script>
+
+</body>
+</html>
