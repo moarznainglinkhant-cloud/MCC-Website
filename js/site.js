@@ -525,6 +525,65 @@ function initLogoEasterEgg() {
   });
 }
 
+function initEmailCopy() {
+  const buttons = document.querySelectorAll(".js-email-copy");
+  if (!buttons.length) return;
+
+  buttons.forEach(btn => {
+    const email = btn.dataset.email;
+    if (!email) return;
+    const label = btn.querySelector(".js-email-label");
+    const arrow = btn.querySelector(".arrow");
+    const originalLabel = label ? label.textContent : "";
+    const originalArrow = arrow ? arrow.innerHTML : "";
+    let resetTimer = null;
+
+    btn.addEventListener("click", async () => {
+      let copied = false;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(email);
+          copied = true;
+        }
+      } catch (err) {
+        copied = false;
+      }
+
+      if (!copied) {
+        try {
+          const temp = document.createElement("textarea");
+          temp.value = email;
+          temp.setAttribute("readonly", "");
+          temp.style.position = "fixed";
+          temp.style.opacity = "0";
+          document.body.appendChild(temp);
+          temp.select();
+          temp.setSelectionRange(0, temp.value.length);
+          copied = document.execCommand("copy");
+          document.body.removeChild(temp);
+        } catch (err) {
+          copied = false;
+        }
+      }
+
+      if (!copied) return;
+
+      btn.classList.add("is-copied");
+      if (label) label.textContent = "Copied to clipboard!";
+      if (arrow) {
+        arrow.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13 L10 18 L19 6"/></svg>';
+      }
+
+      clearTimeout(resetTimer);
+      resetTimer = setTimeout(() => {
+        btn.classList.remove("is-copied");
+        if (label) label.textContent = originalLabel;
+        if (arrow) arrow.innerHTML = originalArrow;
+      }, 1800);
+    });
+  });
+}
+
 function escapeHtml(str) {
   if (!str) return "";
   return String(str)
@@ -571,3 +630,4 @@ document.addEventListener("DOMContentLoaded", initSiteData);
 // the static HTML, so there's no reason to wait on data loading for this.
 document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
+document.addEventListener("DOMContentLoaded", initEmailCopy);

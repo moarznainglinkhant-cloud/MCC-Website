@@ -329,18 +329,21 @@
   }
   .btn-footer.ghost:hover{ background:rgba(246,241,228,0.1); opacity:1; }
   .contact-links{ display:flex; flex-direction:column; gap:4px; }
-  .contact-links a{
+  .contact-links a, .contact-links button{
     display:flex; align-items:center; justify-content:space-between; gap:16px;
     text-decoration:none; color:var(--footer-ink);
     padding-block:16px;
     font-family:'Fraunces', serif; font-size:clamp(1.15rem,2.4vw,1.5rem); font-weight:500;
     transition: opacity .18s ease, gap .18s ease;
+    background:none; border:none; width:100%; text-align:left; cursor:pointer;
   }
-  .contact-links a:hover{ opacity:0.72; gap:22px; }
+  .contact-links a:hover, .contact-links button:hover{ opacity:0.72; gap:22px; }
   .contact-links .link-lead{ display:flex; align-items:center; gap:16px; }
   .contact-links .ig-icon{ width:24px; height:24px; flex:none; }
   .contact-links .k{ font-family:'Work Sans',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:0.14em; color:var(--footer-ink-soft); text-transform:uppercase; }
-  .contact-links .arrow{ font-size:1.1rem; }
+  .contact-links .arrow{ display:flex; align-items:center; flex:none; }
+  .contact-links .arrow svg{ width:20px; height:20px; flex:none; }
+  .contact-links button.is-copied .arrow{ color:var(--gold); }
 
   .contact-bottom{
     display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;
@@ -465,21 +468,21 @@
               <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
               <span><span class="k">Instagram</span><br>@mcc_uoft</span>
             </span>
-            <span class="arrow">&#8599;</span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
           </a>
-          <a href="mailto:uoft.myanmar@gmail.com">
+          <button type="button" class="js-email-copy" data-email="uoft.myanmar@gmail.com">
             <span class="link-lead">
               <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7 L12 13 L20 7"/></svg>
-              <span><span class="k">Email</span><br>uoft.myanmar@gmail.com</span>
+              <span><span class="k js-email-label">Email · Tap to copy</span><br>uoft.myanmar@gmail.com</span>
             </span>
-            <span class="arrow">&#8599;</span>
-          </a>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </button>
           <a href="https://linktr.ee/mcc.uoft" target="_blank" rel="noopener">
             <span class="link-lead">
               <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               <span><span class="k">Everything else</span><br>linktr.ee/mcc.uoft</span>
             </span>
-            <span class="arrow">&#8599;</span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
           </a>
         </div>
       </div>
