@@ -157,6 +157,9 @@ function applyTranslations() {
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-pressed", String(isActive));
   });
+  document.querySelectorAll(".lang-toggle").forEach(group => {
+    group.setAttribute("data-active", lang);
+  });
 }
 function initLangToggle() {
   const buttons = document.querySelectorAll(".lang-toggle button");

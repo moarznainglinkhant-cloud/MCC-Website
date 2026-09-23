@@ -148,18 +148,32 @@
   }
   .nav-cta::after{ display:none; }
   .lang-toggle{
-    display:flex; align-items:center; gap:2px;
+    position:relative;
+    display:flex; align-items:center;
     border:1px solid var(--line); border-radius:999px; padding:3px;
   }
+  .lang-toggle-slider{
+    position:absolute; top:3px; left:3px; bottom:3px;
+    width:calc(50% - 3px);
+    background:var(--navy); border-radius:999px;
+    transition:transform .28s cubic-bezier(.65,0,.35,1);
+    z-index:0;
+  }
+  .lang-toggle[data-active="mm"] .lang-toggle-slider{ transform:translateX(100%); }
   .lang-toggle button{
+    position:relative; z-index:1;
     border:none; background:none; cursor:pointer;
     font-family:'Work Sans', 'Noto Sans Myanmar', sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.04em;
     color:var(--ink-soft); padding:5px 11px; border-radius:999px;
-    transition: background .18s ease, color .18s ease;
+    flex:1 1 0; text-align:center;
+    transition: color .18s ease;
   }
-  .lang-toggle button.active{ background:var(--navy); color:var(--footer-ink); }
+  .lang-toggle button.active{ color:var(--footer-ink); }
   .lang-toggle button:hover:not(.active){ color:var(--ink); }
   #mobile-panel .lang-toggle{ align-self:flex-start; margin-top:4px; }
+  @media (prefers-reduced-motion: reduce){
+    .lang-toggle-slider{ transition:none; }
+  }
   .menu-btn{
     display:none; background:none; border:1px solid var(--line); border-radius:8px;
     width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer;
@@ -389,6 +403,7 @@
       <a href="#connect" data-i18n="label_connect">Connect</a>
       <a href="https://forms.gle/mccNewsletterSample" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
       <div class="lang-toggle" role="group" aria-label="Language">
+        <span class="lang-toggle-slider" aria-hidden="true"></span>
         <button type="button" data-lang="en">EN</button>
         <button type="button" data-lang="mm">မမ</button>
       </div>
@@ -401,6 +416,7 @@
     <a href="events.html" data-i18n="label_all_events">All Events</a>
     <a href="#connect" data-i18n="label_connect">Connect</a>
     <div class="lang-toggle" role="group" aria-label="Language">
+      <span class="lang-toggle-slider" aria-hidden="true"></span>
       <button type="button" data-lang="en">EN</button>
       <button type="button" data-lang="mm">မမ</button>
     </div>
