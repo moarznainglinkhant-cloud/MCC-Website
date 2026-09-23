@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://moarznainglinkhant-cloud.github.io/MCC-Website/sitemap.xml
+Sitemap: https://uoftmcc.ca/sitemap.xml
