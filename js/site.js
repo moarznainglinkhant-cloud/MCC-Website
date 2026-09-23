@@ -431,7 +431,23 @@ function initCelebrations() {
   }
 
   targets.forEach(el => {
-    el.addEventListener("click", e => burst(e.clientX, e.clientY));
+    el.addEventListener("click", e => {
+      // Let modified clicks (open in new tab/window, download, etc.) behave
+      // however the browser/user normally handles those — only hijack a
+      // plain left-click.
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+      const href = el.getAttribute("href");
+      if (!href) return; // nothing to navigate to — just let it burst, no-op otherwise
+
+      // Hold the actual navigation for a beat so the confetti is genuinely
+      // visible before we leave the page — a new tab would switch focus
+      // away almost instantly, so this deliberately navigates in the same
+      // tab instead (use the browser's back button to return to the site).
+      e.preventDefault();
+      burst(e.clientX, e.clientY);
+      window.setTimeout(() => { window.location.href = href; }, 700);
+    });
   });
 }
 
