@@ -182,7 +182,7 @@ function initLangToggle() {
 // only kicks in when there is no genuine upcoming event — a real
 // upcoming event always takes priority. Set back to false when you're
 // done testing.
-const TESTING_SHOW_LATEST_EVENT_AS_NEXT = true;
+const TESTING_SHOW_LATEST_EVENT_AS_NEXT = false;
 
 // All "is this event over yet" checks are done in Toronto time, regardless
 // of the visitor's own timezone or device clock — see nowInToronto() below.
