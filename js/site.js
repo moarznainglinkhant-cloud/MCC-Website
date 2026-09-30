@@ -20,9 +20,9 @@
    files in /data as sample content, so nothing ever breaks.
    ============================================================ */
 
-const EVENTS_CSV_URL   = "data/events.csv";   // <-- replace with your published Google Sheet CSV link
-const HERO_CSV_URL     = "data/hero.csv";     // <-- replace with your published Google Sheet CSV link
-const SETTINGS_CSV_URL = "data/settings.csv"; // <-- replace with your published Google Sheet CSV link
+const EVENTS_CSV_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1409409640&single=true&output=csv";
+const HERO_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1259347518&single=true&output=csv";
+const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1117657583&single=true&output=csv";
 
 // Used when the "Settings" sheet doesn't have a past_events_count row
 // (or it's blank/not a number yet).
@@ -182,7 +182,7 @@ function initLangToggle() {
 // only kicks in when there is no genuine upcoming event — a real
 // upcoming event always takes priority. Set back to false when you're
 // done testing.
-const TESTING_SHOW_LATEST_EVENT_AS_NEXT = false;
+const TESTING_SHOW_LATEST_EVENT_AS_NEXT = true;
 
 // All "is this event over yet" checks are done in Toronto time, regardless
 // of the visitor's own timezone or device clock — see nowInToronto() below.
