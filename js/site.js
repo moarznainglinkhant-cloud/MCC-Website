@@ -50,7 +50,7 @@ const I18N = {
     label_join_newsletter_footer: "Join the Newsletter",
 
     hero_h1: "Mingalabar",
-    hero_lede: "The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's a seat for you at our table.",
+    hero_lede: "The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.",
     hero_cta_next: "See Our Next Event",
 
     strip1_h: "Student-run, UofT-wide",
@@ -395,7 +395,7 @@ function renderFeaturedEvent(ev) {
 
   if (visual) {
     visual.innerHTML = ev.photo
-      ? `<img src="${ev.photo}" alt="${escapeHtml(ev.name)} event photo" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
+      ? `<img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} event photo" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
       : "";
   }
   body.innerHTML = `
@@ -403,7 +403,7 @@ function renderFeaturedEvent(ev) {
     <h3>${escapeHtml(ev.name)}</h3>
     ${eventMetaRow(ev)}
     ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
-    ${ev.link ? `<a class="btn ${mmClass}" href="${ev.link}" target="_blank" rel="noopener">${t("register_now")}</a>` : ""}
+    ${ev.link ? `<a class="btn ${mmClass}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${t("register_now")}</a>` : ""}
   `;
 }
 
@@ -422,7 +422,7 @@ function renderComingUp(rest) {
       <h3>${escapeHtml(ev.name)}</h3>
       ${eventMetaRow(ev)}
       ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
-      ${ev.link ? `<a class="btn small ${mmClass}" href="${ev.link}" target="_blank" rel="noopener">${t("rsvp")}</a>` : ""}
+      ${ev.link ? `<a class="btn small ${mmClass}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${t("rsvp")}</a>` : ""}
     </div>
   `).join("");
 }
@@ -436,7 +436,7 @@ function renderPastGallery(past, limit) {
   const shown = past.slice(0, limit);
   gallery.innerHTML = shown.map(ev => `
     <div class="past-card reveal">
-      <div class="photo"><img src="${ev.photo}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}${ev.location ? ", " + escapeHtml(ev.location) : ""}" loading="lazy"></div>
+      <div class="photo"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}${ev.location ? ", " + escapeHtml(ev.location) : ""}" loading="lazy"></div>
       <div class="info">
         <div class="title">${escapeHtml(ev.name)}</div>
         <div class="date">${formatDate(ev.date)}${ev.location ? " &middot; " + escapeHtml(ev.location) : ""}</div>
@@ -469,7 +469,7 @@ function renderHeroPhotos(heroRows) {
   container.innerHTML = [1, 2, 3].map((slot, i) => {
     const row = bySlot[slot];
     const inner = row
-      ? `<img src="${row.photo}" alt="${escapeHtml(row.alt || "")}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
+      ? `<img src="${safeUrl(row.photo)}" alt="${escapeHtml(row.alt || "")}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
       : "";
     return `<div class="panel panel-${letters[i]}">${inner}</div>`;
   }).join("");
@@ -741,6 +741,19 @@ function escapeHtml(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// Used for any URL coming from the Sheet (event links, photos) before it's
+// dropped into an href/src attribute. Blocks the javascript:/data: schemes
+// (which a browser would otherwise treat as executable when clicked/loaded)
+// and escapes quotes so the value can't break out of the attribute and
+// inject extra HTML. A relative path like "images/events/x.jpg" or a normal
+// http(s)/mailto link passes through unchanged.
+function safeUrl(str) {
+  if (!str) return "";
+  const s = String(str).trim();
+  if (/^(javascript|data|vbscript):/i.test(s)) return "";
+  return escapeHtml(s);
 }
 
 // Cached inputs to the three CSV-driven render functions above, so the

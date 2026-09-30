@@ -209,22 +209,6 @@
     font-size:clamp(2.86rem, 8.8vw, 7.7rem); color:var(--ink); opacity:0.08;
     white-space:nowrap; pointer-events:none;
   }
-  /* Small hand-drawn flourish above the watermark, and a wavy underline
-     below it — sized in em so both scale together with the watermark's
-     own responsive font-size. Inherit the watermark's opacity since
-     CSS opacity on a parent already fades its pseudo-elements too. */
-  .watermark::before{
-    content:"";
-    position:absolute; top:-0.34em; right:-0.16em;
-    width:0.5em; height:0.36em;
-    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 44'%3E%3Cpath d='M6 34 Q 18 10 34 18 Q 46 24 40 8' stroke='%231C2440' stroke-width='5' fill='none' stroke-linecap='round'/%3E%3Cpath d='M44 6 L52 2 M50 12 L58 10' stroke='%231C2440' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/contain;
-  }
-  .watermark::after{
-    content:"";
-    position:absolute; left:2px; bottom:-0.3em;
-    width:88%; height:0.22em;
-    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 24'%3E%3Cpath d='M4 14 Q 30 4 55 13 T 105 13 T 155 13 T 205 13 T 255 13 T 296 12' stroke='%231C2440' stroke-width='6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat left/contain;
-  }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;
@@ -450,7 +434,7 @@
         <span class="watermark myanmar" aria-hidden="true">မင်္ဂလာပါ</span>
         <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
         <h1 data-i18n="hero_h1">Mingalabar</h1>
-        <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's a seat for you at our table.</p>
+        <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.</p>
         <div class="cta-row">
           <a class="btn" href="#event" data-i18n="hero_cta_next">See Our Next Event</a>
           <a class="btn ghost celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
