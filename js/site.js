@@ -29,6 +29,33 @@ const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v
 const DEFAULT_PAST_EVENTS_COUNT = 12;
 
 /* ============================================================
+   "I'M FEELING LUCKY" FUN FACTS (fun-fact.html)
+   ------------------------------------------------------------
+   Random trivia about Myanmar shown when someone clicks the
+   footer's "Feeling Lucky?" link. English-only for now, same as
+   the live event descriptions — add more any time, just keep
+   the { emoji, text } shape.
+   ============================================================ */
+const MYANMAR_FUN_FACTS = [
+  { emoji: "🏯", text: "Myanmar is home to over 100 distinct ethnic groups, each with its own language, dress, and traditions." },
+  { emoji: "🍜", text: "Mohinga — a fish-based rice noodle soup often eaten for breakfast — is widely considered Myanmar's unofficial national dish." },
+  { emoji: "🌿", text: "Thanaka, a pale yellow-white paste ground from bark, has been worn on the face as sunscreen and skincare for over 2,000 years." },
+  { emoji: "✨", text: "Shwedagon Pagoda in Yangon is, by legend, said to enshrine strands of the Buddha's hair — and it's genuinely covered in gold leaf, not paint." },
+  { emoji: "📿", text: "Myanmar follows a traditional lunar calendar, which is why Thingyan, the Burmese New Year water festival, falls on a different date every April." },
+  { emoji: "🪷", text: "The plains of Bagan hold thousands of Buddhist temples and pagodas built between the 9th and 13th centuries — one of the densest concentrations of ancient temples anywhere in the world." },
+  { emoji: "👘", text: "The longyi, a long sheet of fabric wrapped and knotted at the waist, is still everyday wear for both men and women across Myanmar." },
+  { emoji: "🎣", text: "Fishermen on Inle Lake are famous for rowing their boats by wrapping one leg around the oar, keeping both hands free for their nets." },
+  { emoji: "🎻", text: "The saung, a Burmese harp shaped like a boat, is one of the oldest surviving string instruments in Asia, with roots going back over a thousand years." },
+  { emoji: "🔤", text: "The Burmese alphabet's round letters are widely believed to come from writing on palm leaves, which would tear along straight lines — a script quirk shared with other Southeast and South Asian writing systems." },
+  { emoji: "🚂", text: "Yangon's Circular Railway loops the city in about three hours, passing through markets and rice paddies — commuters and curious visitors ride it side by side." },
+  { emoji: "🎭", text: "Traditional Burmese marionette theatre (yoke thé) dates back centuries, and puppeteers were once given more creative license to comment on rulers than human actors were." },
+  { emoji: "🗓️", text: "Myanmar was officially known as Burma in English until the country's name was changed in 1989." },
+  { emoji: "🍵", text: "Laphet, fermented tea leaves tossed with nuts, sesame, and crispy beans, is eaten as a salad in Myanmar — one of the few places in the world where tea is eaten as much as it's drunk." },
+  { emoji: "🌊", text: "Mahayana and Theravada Buddhism have coexisted in Myanmar for centuries, but Theravada Buddhism is practiced by the vast majority of the population today." },
+  { emoji: "🧧", text: "In Myanmar, people are traditionally given a name letter based on the day of the week they were born — one of eight days, since Wednesday is split into morning and afternoon." },
+];
+
+/* ============================================================
    BILINGUAL SWITCH (English / Burmese)
    ------------------------------------------------------------
    Covers the site's fixed chrome (nav, buttons, headings, footer)
@@ -74,6 +101,12 @@ const I18N = {
     contact_email_label: "Email",
     contact_email_copied: "Copied to clipboard!",
     contact_linktree_label: "Everything else",
+    contact_lucky_label: "Feeling lucky?",
+    contact_lucky_value: "Get a random fun fact",
+
+    fun_fact_eyebrow: "Fun Fact",
+    fun_fact_another: "Another Fact",
+    fun_fact_back: "Back Home",
 
     events_eyebrow: "MCC Calendar",
     events_h1: "Every gathering, in one place.",
@@ -119,6 +152,12 @@ const I18N = {
     contact_email_label: "အီးမေးလ်",
     contact_email_copied: "ကူးယူပြီးပါပြီ!",
     contact_linktree_label: "အခြားအရာများ",
+    contact_lucky_label: "ကံစမ်းချင်လား?",
+    contact_lucky_value: "စိတ်ဝင်စားစရာ အချက်အလက်တစ်ခု ရယူပါ",
+
+    fun_fact_eyebrow: "စိတ်ဝင်စားစရာ",
+    fun_fact_another: "နောက်တစ်ခု",
+    fun_fact_back: "ပင်မစာမျက်နှာသို့",
 
     events_eyebrow: "MCC ပြက္ခဒိန်",
     events_h1: "စုစည်းပွဲအားလုံး တစ်နေရာတည်းတွင်။",
@@ -674,6 +713,41 @@ function initLogoEasterEgg() {
   });
 }
 
+// Powers fun-fact.html: shows a random Myanmar fun fact on load, and a new
+// one (never the same fact twice in a row) each time "Another fact" is
+// clicked, with the same confetti burst used elsewhere on the site.
+function initFunFact() {
+  const textEl = document.getElementById("js-fact-text");
+  const emojiEl = document.getElementById("js-fact-emoji");
+  const reroll = document.getElementById("js-fact-reroll");
+  if (!textEl) return;
+
+  let lastIndex = -1;
+  function showRandomFact() {
+    let i = Math.floor(Math.random() * MYANMAR_FUN_FACTS.length);
+    if (MYANMAR_FUN_FACTS.length > 1 && i === lastIndex) {
+      i = (i + 1) % MYANMAR_FUN_FACTS.length;
+    }
+    lastIndex = i;
+    const fact = MYANMAR_FUN_FACTS[i];
+    textEl.textContent = fact.text;
+    if (emojiEl) emojiEl.textContent = fact.emoji;
+  }
+
+  showRandomFact();
+
+  if (reroll) {
+    reroll.addEventListener("click", e => {
+      showRandomFact();
+      const reduceMotion = window.matchMedia &&
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (!reduceMotion && typeof Element !== "undefined" && Element.prototype.animate) {
+        confettiBurst(e.clientX, e.clientY);
+      }
+    });
+  }
+}
+
 function initEmailCopy() {
   const buttons = document.querySelectorAll(".js-email-copy");
   if (!buttons.length) return;
@@ -820,3 +894,4 @@ document.addEventListener("DOMContentLoaded", initSiteData);
 document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
+document.addEventListener("DOMContentLoaded", initFunFact);
