@@ -211,6 +211,8 @@
   }
   .hero-gradient > div{ opacity:0; transition:opacity 1.6s ease; }
   .hero-gradient[data-ready="1"] > div{ opacity:0.55; }
+  /* Once the colorful gradient is live, nudge the paragraph darker so it stays crisp over the grain. */
+  .hero:has(.hero-gradient[data-ready="1"]) p.lede{ color:#3A3628; }
   .hero-grid{
     display:grid; grid-template-columns: 1.05fr 1fr; gap:clamp(28px,5vw,64px);
     align-items:center;

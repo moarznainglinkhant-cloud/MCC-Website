@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { ShaderGradientCanvas, ShaderGradient } from "@shadergradient/react";
 
 // Mounts a slow, soft ShaderGradient behind the homepage hero.
-// Palette = MCC brand: cream, gold, red, navy. Uses 3D lighting (not 'env')
+// ShaderGradient "Halo" preset (orange / tan / lavender) with grain. Uses 3D lighting (not 'env')
 // so nothing is fetched from the network at runtime.
 const mount = document.getElementById("hero-gradient");
 if (mount) {
@@ -21,18 +21,18 @@ if (mount) {
         type="plane"
         animate="on"
         uTime={0}
-        uSpeed={0.12}
-        uStrength={1.6}
-        uDensity={1.1}
+        uSpeed={0.4}
+        uStrength={4}
+        uDensity={1.3}
         uFrequency={5.5}
         uAmplitude={1}
-        color1="#F6E7C8"
-        color2="#E9B97A"
-        color3="#D9806A"
+        color1="#ff5005"
+        color2="#dbba95"
+        color3="#d0bce1"
         lightType="3d"
-        brightness={1.25}
-        reflection={0.05}
-        grain="off"
+        brightness={1.2}
+        reflection={0.1}
+        grain="on"
         cAzimuthAngle={180}
         cPolarAngle={90}
         cDistance={3.6}
