@@ -210,9 +210,10 @@
             mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
   }
   .hero-gradient > div{ opacity:0; transition:opacity 1.6s ease; }
-  .hero-gradient[data-ready="1"] > div{ opacity:0.55; }
-  /* Once the colorful gradient is live, nudge the paragraph darker so it stays crisp over the grain. */
-  .hero:has(.hero-gradient[data-ready="1"]) p.lede{ color:#3A3628; }
+  .hero-gradient[data-ready="1"] > div{ opacity:0.45; }
+  /* Once the colorful gradient is live, nudge the small text darker so it stays crisp over the red/grain. */
+  .hero:has(.hero-gradient[data-ready="1"]) p.lede{ color:#2E2B20; }
+  .hero:has(.hero-gradient[data-ready="1"]) .eyebrow{ color:var(--navy); }
   .hero-grid{
     display:grid; grid-template-columns: 1.05fr 1fr; gap:clamp(28px,5vw,64px);
     align-items:center;
