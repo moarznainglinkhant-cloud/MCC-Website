@@ -209,6 +209,7 @@
     -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
             mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
   }
+  .hero-gradient[data-enabled="false"]{ display:none; }
   .hero-gradient > div{ opacity:0; transition:opacity 1.6s ease; }
   .hero-gradient[data-ready="1"] > div{ opacity:0.45; }
   /* Once the colorful gradient is live, nudge the small text darker so it stays crisp over the red/grain. */
@@ -445,7 +446,8 @@
 
 <main id="top">
   <section class="hero" id="welcome">
-    <div class="hero-gradient" id="hero-gradient" aria-hidden="true"></div>
+    <!-- Hero gradient is currently OFF. To turn it back on, change data-enabled to "true". -->
+    <div class="hero-gradient" id="hero-gradient" data-enabled="false" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <span class="watermark myanmar" aria-hidden="true">မင်္ဂလာပါ</span>
@@ -590,6 +592,7 @@
   try{
     var el = document.getElementById('hero-gradient');
     if (!el) return;
+    if (el.getAttribute('data-enabled') !== 'true') return; // switched off — see the toggle on the #hero-gradient div
     if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     if (navigator.connection && navigator.connection.saveData) return;
     var c = document.createElement('canvas');
