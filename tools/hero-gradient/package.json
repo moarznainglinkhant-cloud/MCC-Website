@@ -1,0 +1,21 @@
+{
+  "name": "mcc-hero-gradient",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Rebuild js/hero-gradient.js: npm install && npm run build, then copy hero-gradient.js into ../../js/",
+  "scripts": {
+    "build": "esbuild entry.jsx --bundle --minify --format=iife --target=es2019 --define:process.env.NODE_ENV=\\\"production\\\" --outfile=hero-gradient.js"
+  },
+  "dependencies": {
+    "@react-three/fiber": "8.17.10",
+    "@shadergradient/react": "2.4.20",
+    "camera-controls": "*",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "three": "0.169.0",
+    "three-stdlib": "*"
+  },
+  "devDependencies": {
+    "esbuild": "*"
+  }
+}

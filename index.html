@@ -198,6 +198,19 @@
 
   /* ---------- HERO ---------- */
   .hero{ position:relative; overflow:clip; padding-block: clamp(40px,7vw,72px) clamp(56px,8vw,96px); }
+  /* Soft animated ShaderGradient behind the hero (js/hero-gradient.js, lazy-loaded
+     after the page is interactive). The CSS gradient below is the always-on
+     fallback — what you see before it loads, with reduced-motion, or without WebGL. */
+  .hero-gradient{
+    position:absolute; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(60% 70% at 85% 20%, rgba(233,185,122,0.38), transparent 70%),
+      radial-gradient(50% 60% at 10% 90%, rgba(217,128,106,0.22), transparent 70%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+  .hero-gradient > div{ opacity:0; transition:opacity 1.6s ease; }
+  .hero-gradient[data-ready="1"] > div{ opacity:0.55; }
   .hero-grid{
     display:grid; grid-template-columns: 1.05fr 1fr; gap:clamp(28px,5vw,64px);
     align-items:center;
@@ -429,6 +442,7 @@
 
 <main id="top">
   <section class="hero" id="welcome">
+    <div class="hero-gradient" id="hero-gradient" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <span class="watermark myanmar" aria-hidden="true">မင်္ဂလာပါ</span>
@@ -565,6 +579,33 @@
 </script>
 
 <script src="js/site.js"></script>
+
+<script>
+/* Lazy-load the hero ShaderGradient (~300 KB gzipped) only once the page is idle,
+   and only when it's welcome: no reduced-motion, no data-saver, WebGL available. */
+(function(){
+  try{
+    var el = document.getElementById('hero-gradient');
+    if (!el) return;
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (navigator.connection && navigator.connection.saveData) return;
+    var c = document.createElement('canvas');
+    if (!(c.getContext('webgl2') || c.getContext('webgl'))) return;
+    function load(){
+      var s = document.createElement('script');
+      s.src = 'js/hero-gradient.js';
+      s.async = true;
+      document.body.appendChild(s);
+    }
+    function whenIdle(){
+      if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 2500 });
+      else setTimeout(load, 1200);
+    }
+    if (document.readyState === 'complete') whenIdle();
+    else window.addEventListener('load', whenIdle);
+  }catch(e){}
+})();
+</script>
 
 </body>
 </html>
