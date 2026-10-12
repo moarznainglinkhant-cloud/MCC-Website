@@ -50,7 +50,10 @@
       <p class="panel-sub">Add a task, give it an owner, tick it off. Everyone sees everything.</p>
       <form class="todo-form" id="todo-form">
         <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task">
+        <input class="extra" id="todo-event" type="text" maxlength="80" list="todo-events" placeholder="Event (optional)" aria-label="Event" autocomplete="off">
+        <datalist id="todo-events"></datalist>
         <select id="todo-assignee" aria-label="Assign to"></select>
+        <select class="extra" id="todo-priority" aria-label="Priority"></select>
         <input id="todo-due" type="date" aria-label="Due date (optional)">
         <button class="btn" id="todo-add" type="submit">Add</button>
       </form>
@@ -59,6 +62,7 @@
         <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
         <button type="button" class="chip" data-filter="mine">Mine <b id="n-mine">0</b></button>
         <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
+        <label class="group-toggle extra"><input type="checkbox" id="todo-group" checked> Group by event</label>
       </div>
       <ul class="todo-list" id="todo-list"></ul>
     </section>

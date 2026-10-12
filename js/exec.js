@@ -178,7 +178,7 @@
         li.appendChild(el("p", "shout-text", s.body));
         if (s.shoutout_reactions) li.appendChild(reactionBar(s));   // only once the reactions table exists
         var foot = el("div", "shout-foot");
-        var by = el("span", "shout-by", (s.profiles && s.profiles.display_name) || "An exec");
+        var by = el("span", "shout-by", nameOf(s.author_id));
         by.appendChild(el("small", null, when(s.created_at)));
         foot.appendChild(by);
         if (me && s.author_id === me.id) {
@@ -200,12 +200,12 @@
 
     function loadShouts() {
       return sb.from("shoutouts")
-        .select("id, author_id, body, created_at, profiles(display_name), shoutout_reactions(emoji, user_id)")
+        .select("id, author_id, body, created_at, shoutout_reactions(emoji, user_id)")
         .order("created_at", { ascending: false }).limit(50)
         .then(function (r) {
           if (r.error) {
             // Reactions table may not exist yet: fall back to plain shout-outs.
-            return sb.from("shoutouts").select("id, author_id, body, created_at, profiles(display_name)")
+            return sb.from("shoutouts").select("id, author_id, body, created_at")
               .order("created_at", { ascending: false }).limit(50).then(function (r2) {
                 if (r2.error) { $("shout-panel").hidden = true; return; }
                 renderShouts(r2.data || []);
@@ -244,6 +244,14 @@
     }
 
     // ----- Exec to-do board -----
+    var PRIORITIES = [["high", "High"], ["medium", "Medium"], ["low", "Low"]];
+    var PRANK = { high: 0, medium: 1, low: 2 };
+    var BASE_COLS = "id, title, assignee_id, status, due_date, created_by, created_at, completed_at";
+    var hasExtras = true;       // false until the priority / event columns exist in the database
+    var groupByEvent = true;
+    var eventNames = [];        // event names from the public events Sheet
+    var eventDates = {};        // name -> YYYY-MM-DD
+
     function fillAssignee(select, selectedId) {
       select.textContent = "";
       var none = el("option", null, "Unassigned");
@@ -255,6 +263,49 @@
         select.appendChild(o);
       });
       select.value = selectedId || "";
+    }
+
+    function fillPriority(select, value) {
+      select.textContent = "";
+      PRIORITIES.forEach(function (p) {
+        var o = el("option", null, p[1]);
+        o.value = p[0];
+        select.appendChild(o);
+      });
+      select.value = PRANK.hasOwnProperty(value) ? value : "medium";
+    }
+
+    // Event names we can suggest: the Sheet's events plus any already used on a task.
+    function knownEvents() {
+      var seen = {}, out = [];
+      function add(n) { n = (n || "").trim(); if (n && !seen[n]) { seen[n] = 1; out.push(n); } }
+      eventNames.forEach(add);
+      todos.forEach(function (t) { add(t.event_name); });
+      return out;
+    }
+
+    function refreshEventList() {
+      var dl = $("todo-events");
+      if (!dl) return;
+      dl.textContent = "";
+      knownEvents().forEach(function (n) {
+        var o = document.createElement("option");
+        o.value = n;
+        dl.appendChild(o);
+      });
+    }
+
+    function loadSheetEvents() {
+      if (typeof loadCSV !== "function" || typeof EVENTS_CSV_URL === "undefined") return Promise.resolve();
+      var fallback = typeof FALLBACK_EVENTS_CSV !== "undefined" ? FALLBACK_EVENTS_CSV : "";
+      return loadCSV(EVENTS_CSV_URL, fallback).then(function (rows) {
+        var sp = splitEvents(rows);
+        eventNames = []; eventDates = {};
+        sp.upcoming.concat(sp.past.slice(0, 12)).forEach(function (e) {
+          var n = (e.name || "").trim();
+          if (n) { eventNames.push(n); eventDates[n] = e.date || ""; }
+        });
+      }).catch(function () { /* suggestions are optional */ });
     }
 
     function patchTodo(id, fields, ctrl) {
@@ -270,15 +321,117 @@
       });
     }
 
+    // Open tasks: highest priority first, then soonest due date, then newest. Done: most recent first.
     function sortTodos(list) {
       return list.slice().sort(function (a, b) {
         if (a.status === "done" || b.status === "done") {
           return String(b.completed_at || "").localeCompare(String(a.completed_at || ""));
         }
+        var pa = PRANK.hasOwnProperty(a.priority) ? PRANK[a.priority] : 1;
+        var pb = PRANK.hasOwnProperty(b.priority) ? PRANK[b.priority] : 1;
+        if (pa !== pb) return pa - pb;
         var da = a.due_date || "9999-12-31", db2 = b.due_date || "9999-12-31";
         if (da !== db2) return da < db2 ? -1 : 1;
         return String(b.created_at).localeCompare(String(a.created_at));
       });
+    }
+
+    // Events with a known date first (soonest first), then other events A-Z, "No event" last.
+    function groupTodos(list) {
+      var map = {}, order = [];
+      list.forEach(function (t) {
+        var k = (hasExtras && t.event_name) || "";
+        if (!map[k]) { map[k] = []; order.push(k); }
+        map[k].push(t);
+      });
+      order.sort(function (a, b) {
+        if (a === "" || b === "") return a === "" ? 1 : -1;
+        var da = eventDates[a] || "9999-99-99", db2 = eventDates[b] || "9999-99-99";
+        if (da !== db2) return da < db2 ? -1 : 1;
+        return a.localeCompare(b);
+      });
+      return order.map(function (k) { return { name: k, items: map[k] }; });
+    }
+
+    function todoItem(t, today) {
+      var isDone = t.status === "done";
+      var overdue = !isDone && t.due_date && t.due_date < today;
+      var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : ""));
+
+      var top = el("div", "todo-top");
+      var cb = el("input");
+      cb.type = "checkbox";
+      cb.checked = isDone;
+      cb.setAttribute("aria-label", (isDone ? "Reopen: " : "Mark done: ") + t.title);
+      cb.addEventListener("change", function () {
+        patchTodo(t.id, cb.checked
+          ? { status: "done", completed_at: new Date().toISOString() }
+          : { status: "open", completed_at: null }, cb);
+        if (cb.checked && !reducedMotion() && typeof confettiBurst === "function") {
+          var rect = cb.getBoundingClientRect();
+          confettiBurst(rect.left + rect.width / 2, rect.top);
+        }
+      });
+      top.appendChild(cb);
+      top.appendChild(el("span", "todo-text", t.title));
+      li.appendChild(top);
+
+      var meta = el("div", "todo-meta");
+
+      if (hasExtras) {
+        var pr = el("select", "todo-assign prio prio-" + (PRANK.hasOwnProperty(t.priority) ? t.priority : "medium"));
+        pr.setAttribute("aria-label", "Priority");
+        fillPriority(pr, t.priority);
+        pr.addEventListener("change", function () { patchTodo(t.id, { priority: pr.value }, pr); });
+        meta.appendChild(pr);
+      }
+
+      var sel = el("select", "todo-assign");
+      sel.setAttribute("aria-label", "Assigned to");
+      fillAssignee(sel, t.assignee_id);
+      sel.addEventListener("change", function () { patchTodo(t.id, { assignee_id: sel.value || null }, sel); });
+      meta.appendChild(sel);
+
+      if (hasExtras) {
+        var ev = el("select", "todo-assign");
+        ev.setAttribute("aria-label", "Event");
+        var none = el("option", null, "No event");
+        none.value = "";
+        ev.appendChild(none);
+        knownEvents().forEach(function (n) {
+          var o = el("option", null, n);
+          o.value = n;
+          ev.appendChild(o);
+        });
+        ev.value = t.event_name || "";
+        ev.addEventListener("change", function () { patchTodo(t.id, { event_name: ev.value || null }, ev); });
+        meta.appendChild(ev);
+      }
+
+      if (t.due_date) meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(t.due_date)));
+      if (isDone && t.completed_at) meta.appendChild(el("span", null, "Done " + when(t.completed_at)));
+      else if (t.created_by) meta.appendChild(el("span", null, "Added by " + nameOf(t.created_by)));
+
+      if (!isDone && me && t.assignee_id !== me.id) {
+        var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
+        take.type = "button";
+        take.addEventListener("click", function () { patchTodo(t.id, { assignee_id: me.id }, take); });
+        meta.appendChild(take);
+      }
+      if (me && t.created_by === me.id) {
+        var del = el("button", "link-btn", "Delete");
+        del.type = "button";
+        del.addEventListener("click", function () {
+          del.disabled = true;
+          sb.from("todos").delete().eq("id", t.id).then(function (r) {
+            if (r.error) { del.disabled = false; setMsg($("todo-msg"), "Couldn't delete that task.", "error"); }
+            else loadTodos();
+          });
+        });
+        meta.appendChild(del);
+      }
+      li.appendChild(meta);
+      return li;
     }
 
     function renderTodos() {
@@ -306,80 +459,54 @@
         return;
       }
 
-      shown.forEach(function (t) {
-        var isDone = t.status === "done";
-        var overdue = !isDone && t.due_date && t.due_date < today;
-        var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : ""));
-
-        var top = el("div", "todo-top");
-        var cb = el("input");
-        cb.type = "checkbox";
-        cb.checked = isDone;
-        cb.setAttribute("aria-label", (isDone ? "Reopen: " : "Mark done: ") + t.title);
-        cb.addEventListener("change", function () {
-          patchTodo(t.id, cb.checked
-            ? { status: "done", completed_at: new Date().toISOString() }
-            : { status: "open", completed_at: null }, cb);
-          if (cb.checked && !reducedMotion() && typeof confettiBurst === "function") {
-            var rect = cb.getBoundingClientRect();
-            confettiBurst(rect.left + rect.width / 2, rect.top);
-          }
+      if (hasExtras && groupByEvent) {
+        groupTodos(shown).forEach(function (g) {
+          var head = el("li", "group-head");
+          head.appendChild(el("h3", null, g.name || "No event"));
+          var sub = [];
+          if (g.name && eventDates[g.name]) sub.push(dueLabel(eventDates[g.name]));
+          sub.push(g.items.length + (g.items.length === 1 ? " task" : " tasks"));
+          head.appendChild(el("span", null, sub.join(" · ")));
+          ul.appendChild(head);
+          g.items.forEach(function (t) { ul.appendChild(todoItem(t, today)); });
         });
-        top.appendChild(cb);
-        top.appendChild(el("span", "todo-text", t.title));
-        li.appendChild(top);
-
-        var meta = el("div", "todo-meta");
-        var sel = el("select", "todo-assign");
-        sel.setAttribute("aria-label", "Assigned to");
-        fillAssignee(sel, t.assignee_id);
-        sel.addEventListener("change", function () {
-          patchTodo(t.id, { assignee_id: sel.value || null }, sel);
-        });
-        meta.appendChild(sel);
-        if (t.due_date) meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(t.due_date)));
-        if (isDone && t.completed_at) meta.appendChild(el("span", null, "Done " + when(t.completed_at)));
-        else if (t.created_by) meta.appendChild(el("span", null, "Added by " + nameOf(t.created_by)));
-
-        if (!isDone && me && t.assignee_id !== me.id) {
-          var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
-          take.type = "button";
-          take.addEventListener("click", function () { patchTodo(t.id, { assignee_id: me.id }, take); });
-          meta.appendChild(take);
-        }
-        if (me && t.created_by === me.id) {
-          var del = el("button", "link-btn", "Delete");
-          del.type = "button";
-          del.addEventListener("click", function () {
-            del.disabled = true;
-            sb.from("todos").delete().eq("id", t.id).then(function (r) {
-              if (r.error) { del.disabled = false; setMsg($("todo-msg"), "Couldn't delete that task.", "error"); }
-              else loadTodos();
-            });
-          });
-          meta.appendChild(del);
-        }
-        li.appendChild(meta);
-        ul.appendChild(li);
-      });
+      } else {
+        shown.forEach(function (t) { ul.appendChild(todoItem(t, today)); });
+      }
     }
 
     function loadTodos() {
-      return sb.from("todos")
-        .select("id, title, assignee_id, status, due_date, created_by, created_at, completed_at")
+      function finish(data) {
+        todos = data || [];
+        $("todo-panel").classList.toggle("no-extras", !hasExtras);
+        refreshEventList();
+        renderTodos();
+        $("todo-panel").hidden = false;
+      }
+      return sb.from("todos").select(BASE_COLS + ", priority, event_name")
         .order("created_at", { ascending: false }).limit(300)
         .then(function (r) {
-          if (r.error) { $("todo-panel").hidden = true; return; }
-          todos = r.data || [];
-          renderTodos();
-          $("todo-panel").hidden = false;
+          if (!r.error) { hasExtras = true; return finish(r.data); }
+          // Priority / event columns not added yet: fall back to the basic board.
+          return sb.from("todos").select(BASE_COLS)
+            .order("created_at", { ascending: false }).limit(300)
+            .then(function (r2) {
+              if (r2.error) { $("todo-panel").hidden = true; return; }
+              hasExtras = false;
+              finish(r2.data);
+            });
         });
     }
 
     function initTodoForm() {
       var titleIn = $("todo-title-input"), assignee = $("todo-assignee"), due = $("todo-due"),
+          prio = $("todo-priority"), evIn = $("todo-event"), grp = $("todo-group"),
           add = $("todo-add"), tmsg = $("todo-msg");
       fillAssignee(assignee, "");
+      fillPriority(prio, "medium");
+
+      grp.checked = groupByEvent;
+      grp.addEventListener("change", function () { groupByEvent = grp.checked; renderTodos(); });
 
       document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
         c.addEventListener("click", function () {
@@ -392,16 +519,18 @@
         e.preventDefault();
         var title = titleIn.value.trim();
         if (!title) { setMsg(tmsg, "Describe the task first.", "error"); return; }
+        var row = { title: title, assignee_id: assignee.value || null, due_date: due.value || null };
+        if (hasExtras) {
+          row.priority = prio.value;
+          row.event_name = evIn.value.trim().slice(0, 80) || null;
+        }
         add.disabled = true;
         setMsg(tmsg, "Adding…", "info");
-        sb.from("todos").insert({
-          title: title,
-          assignee_id: assignee.value || null,
-          due_date: due.value || null
-        }).then(function (r) {
+        sb.from("todos").insert(row).then(function (r) {
           add.disabled = false;
           if (r.error) { setMsg(tmsg, "Couldn't add that task. Try again.", "error"); return; }
-          titleIn.value = ""; due.value = ""; assignee.value = "";
+          // Keep the event filled in (handy when adding several tasks for one event).
+          titleIn.value = ""; due.value = ""; assignee.value = ""; prio.value = "medium";
           setMsg(tmsg, "", "");
           todoFilter = "open";
           loadTodos();
@@ -443,7 +572,7 @@
             // Team first: its names + ids feed the shout-out reactions and the to-do board.
             return loadTeam().then(function () {
               initTodoForm();
-              return Promise.all([loadAnnouncement(), loadTodos(), loadShouts()]);
+              return Promise.all([loadAnnouncement(), loadSheetEvents().then(loadTodos), loadShouts()]);
             });
           });
       });
