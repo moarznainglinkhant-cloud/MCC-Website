@@ -190,5 +190,5 @@ No cost for any of this — GitHub Pages is free for a site like this one.
 | Add, edit, or remove an event | Google Sheet only |
 | Change which photo shows on the homepage | Google Sheet ("Hero" tab) only |
 | Which event is "Next Event" | Automatic — nothing to touch |
-| Club contact info, social links, address | `index.html` / `events.html` (ask Claude, or edit the footer HTML directly) |
+| Club contact info, social links, address | `index.html` / `events.html` (edit the footer HTML directly) |
 | Visual design, colors, fonts | `index.html` / `events.html` `<style>` block |

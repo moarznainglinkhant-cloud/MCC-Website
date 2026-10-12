@@ -62,7 +62,7 @@ const MYANMAR_FUN_FACTS = [
    — event names/dates/descriptions come from the Sheet and stay
    English-only, so posting an event never requires writing it twice.
 
-   Draft translations below were written by Claude, not a native
+   Draft translations below have not been reviewed by a native
    speaker — have someone fluent skim them before you consider this
    "done." To fix a string, just edit the "mm" value for its key.
    ============================================================ */
