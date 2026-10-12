@@ -45,6 +45,24 @@
       <p class="meta" id="announce-meta"></p>
     </section>
 
+    <section class="panel" id="todo-panel" hidden aria-labelledby="todo-title">
+      <h2 id="todo-title">Exec to-do board</h2>
+      <p class="panel-sub">Add a task, give it an owner, tick it off. Everyone sees everything.</p>
+      <form class="todo-form" id="todo-form">
+        <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task">
+        <select id="todo-assignee" aria-label="Assign to"></select>
+        <input id="todo-due" type="date" aria-label="Due date (optional)">
+        <button class="btn" id="todo-add" type="submit">Add</button>
+      </form>
+      <p class="msg" id="todo-msg" role="status" aria-live="polite"></p>
+      <div class="filters" role="group" aria-label="Filter tasks">
+        <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
+        <button type="button" class="chip" data-filter="mine">Mine <b id="n-mine">0</b></button>
+        <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
+      </div>
+      <ul class="todo-list" id="todo-list"></ul>
+    </section>
+
     <section class="panel" id="shout-panel" hidden aria-labelledby="shout-title">
       <h2 id="shout-title">Shout-out wall</h2>
       <p class="panel-sub">Cheer on a fellow exec, share a win, or just say hi.</p>

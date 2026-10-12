@@ -145,3 +145,48 @@ footer.slim img{ width:26px; height:26px; border-radius:50%; }
 .team-card{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--bg); }
 .team-card strong{ display:block; font-family:'Fraunces',serif; font-size:1.1rem; overflow-wrap:anywhere; }
 .team-card span{ font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); }
+
+/* ---------- REACTIONS ---------- */
+.reacts{ display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.react{
+  display:inline-flex; align-items:center; gap:5px; cursor:pointer;
+  background:var(--bg-raised); border:1px solid var(--line); border-radius:999px;
+  padding:3px 10px; font:inherit; font-size:0.9rem; line-height:1.5; color:var(--ink);
+  transition: transform .15s ease, background .15s ease;
+}
+.react:hover{ transform:translateY(-1px); background:var(--bg-sunk); }
+.react.on{ background:color-mix(in srgb, var(--gold) 22%, var(--bg-raised)); border-color:var(--gold); }
+.react[disabled]{ opacity:0.6; cursor:progress; transform:none; }
+.react .n{ font-size:0.78rem; font-weight:700; }
+
+/* ---------- TO-DO BOARD ---------- */
+.todo-form{ display:grid; grid-template-columns: 1fr auto auto auto; gap:10px; align-items:center; }
+.todo-form input, .todo-form select, .todo-assign{
+  font:inherit; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:10px; padding:11px 12px; min-width:0;
+}
+.todo-form input:focus-visible, .todo-form select:focus-visible, .todo-assign:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+.todo-form .btn{ padding:11px 22px; }
+@media (max-width:640px){
+  .todo-form{ grid-template-columns: 1fr 1fr; }
+  .todo-form .todo-input{ grid-column: 1 / -1; }
+  .todo-form .btn{ grid-column: 1 / -1; }
+}
+.filters{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
+.chip{
+  font:inherit; font-size:0.78rem; font-weight:600; cursor:pointer; color:var(--ink);
+  background:transparent; border:1px solid var(--line); border-radius:999px; padding:5px 14px;
+}
+.chip b{ margin-left:4px; color:var(--ink-soft); font-weight:700; }
+.chip.on{ background:var(--navy); color:var(--footer-ink); border-color:var(--navy); }
+.chip.on b{ color:var(--gold); }
+.todo-list{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.todo{ border:1px solid var(--line); border-radius:12px; padding:12px 14px; background:var(--bg); }
+.todo.overdue{ border-color:var(--red); }
+.todo-top{ display:flex; align-items:flex-start; gap:10px; }
+.todo-top input[type=checkbox]{ width:20px; height:20px; margin-top:2px; accent-color:var(--navy); flex:none; cursor:pointer; }
+.todo-text{ overflow-wrap:anywhere; font-weight:500; }
+.todo.done .todo-text{ text-decoration:line-through; color:var(--ink-soft); }
+.todo-meta{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin:8px 0 0 30px; font-size:0.78rem; color:var(--ink-soft); }
+.todo-assign{ padding:4px 8px; font-size:0.78rem; border-radius:8px; }
+.due{ padding:2px 9px; border-radius:999px; border:1px solid var(--line); }
+.todo.overdue .due{ color:var(--red-ink); border-color:var(--red); font-weight:700; }

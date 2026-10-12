@@ -8,10 +8,10 @@
   var configured = cfg.url && cfg.key && cfg.url.indexOf("PASTE_") !== 0 && cfg.key.indexOf("PASTE_") !== 0;
 
   function $(id) { return document.getElementById(id); }
-  function setMsg(el, text, kind) {
-    if (!el) return;
-    el.textContent = text || "";            // textContent only: never inject text as HTML
-    el.className = "msg" + (kind ? " " + kind : "");
+  function setMsg(node, text, kind) {
+    if (!node) return;
+    node.textContent = text || "";            // textContent only: never inject text as HTML
+    node.className = "msg" + (kind ? " " + kind : "");
   }
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -28,6 +28,15 @@
     if (s < 86400) return Math.floor(s / 3600) + " h ago";
     if (s < 86400 * 7) return Math.floor(s / 86400) + " d ago";
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+  function reducedMotion() { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
+  function localToday() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function dueLabel(ymd) {
+    var d = new Date(ymd + "T00:00:00");
+    return isNaN(d) ? ymd : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }
 
   // ---------- not configured yet ----------
@@ -83,11 +92,16 @@
   // ---------- exec dashboard ----------
   if (page === "exec") {
     var card2 = $("welcome-card");
-    var me = null;           // { id, name, role }
+    var me = null;            // { id, name, role }
+    var team = [];            // [{ id, display_name, role }]
+    var names = {};           // id -> display_name
+    var todos = [];
+    var todoFilter = "open";
 
     function goLogin() { location.replace("login.html"); }
+    function nameOf(id) { return names[id] || "An exec"; }
 
-    // Announcement banner (latest row; hidden if there is none or the table isn't set up yet)
+    // ----- Announcement banner (latest row; hidden if none or table not set up yet) -----
     function loadAnnouncement() {
       return sb.from("announcements").select("body, created_at").order("created_at", { ascending: false }).limit(1)
         .then(function (r) {
@@ -99,14 +113,17 @@
         });
     }
 
-    // Team roster
+    // ----- Team roster (also feeds the name lookup + assignee dropdown) -----
     function loadTeam() {
-      return sb.from("profiles").select("display_name, role").order("created_at", { ascending: true })
+      return sb.from("profiles").select("id, display_name, role").order("created_at", { ascending: true })
         .then(function (r) {
           if (r.error || !r.data || !r.data.length) return;
+          team = r.data;
+          names = {};
+          team.forEach(function (p) { names[p.id] = p.display_name; });
           var ul = $("team-list");
           ul.textContent = "";
-          r.data.forEach(function (p) {
+          team.forEach(function (p) {
             var li = el("li", "team-card");
             li.appendChild(el("strong", null, p.display_name));
             li.appendChild(el("span", null, p.role));
@@ -116,7 +133,39 @@
         });
     }
 
-    // Shout-out wall
+    // ----- Reactions on shout-outs -----
+    var EMOJIS = ["🎉", "👏", "🔥", "💛"];
+
+    function toggleReaction(shoutId, emoji, mine, b) {
+      b.disabled = true;
+      var q = mine
+        ? sb.from("shoutout_reactions").delete().eq("shoutout_id", shoutId).eq("user_id", me.id).eq("emoji", emoji)
+        : sb.from("shoutout_reactions").insert({ shoutout_id: shoutId, emoji: emoji });
+      q.then(function (r) {
+        if (r.error) { b.disabled = false; setMsg($("shout-msg"), "Couldn't save that reaction.", "error"); }
+        else loadShouts();
+      });
+    }
+
+    function reactionBar(s) {
+      var bar = el("div", "reacts");
+      var rs = s.shoutout_reactions || [];
+      EMOJIS.forEach(function (emoji) {
+        var who = rs.filter(function (x) { return x.emoji === emoji; });
+        var mine = who.some(function (x) { return me && x.user_id === me.id; });
+        var b = el("button", "react" + (mine ? " on" : ""));
+        b.type = "button";
+        b.setAttribute("aria-pressed", String(mine));
+        b.appendChild(el("span", null, emoji));
+        if (who.length) b.appendChild(el("span", "n", String(who.length)));
+        b.title = who.length ? who.map(function (x) { return nameOf(x.user_id); }).join(", ") : "React with " + emoji;
+        b.addEventListener("click", function () { toggleReaction(s.id, emoji, mine, b); });
+        bar.appendChild(b);
+      });
+      return bar;
+    }
+
+    // ----- Shout-out wall -----
     function renderShouts(rows) {
       var ul = $("shout-list");
       ul.textContent = "";
@@ -127,6 +176,7 @@
       rows.forEach(function (s) {
         var li = el("li", "shout");
         li.appendChild(el("p", "shout-text", s.body));
+        if (s.shoutout_reactions) li.appendChild(reactionBar(s));   // only once the reactions table exists
         var foot = el("div", "shout-foot");
         var by = el("span", "shout-by", (s.profiles && s.profiles.display_name) || "An exec");
         by.appendChild(el("small", null, when(s.created_at)));
@@ -150,10 +200,18 @@
 
     function loadShouts() {
       return sb.from("shoutouts")
-        .select("id, author_id, body, created_at, profiles(display_name)")
+        .select("id, author_id, body, created_at, profiles(display_name), shoutout_reactions(emoji, user_id)")
         .order("created_at", { ascending: false }).limit(50)
         .then(function (r) {
-          if (r.error) { $("shout-panel").hidden = true; return; }
+          if (r.error) {
+            // Reactions table may not exist yet: fall back to plain shout-outs.
+            return sb.from("shoutouts").select("id, author_id, body, created_at, profiles(display_name)")
+              .order("created_at", { ascending: false }).limit(50).then(function (r2) {
+                if (r2.error) { $("shout-panel").hidden = true; return; }
+                renderShouts(r2.data || []);
+                $("shout-panel").hidden = false;
+              });
+          }
           renderShouts(r.data || []);
           $("shout-panel").hidden = false;
         });
@@ -173,7 +231,7 @@
           if (r.error) { setMsg(smsg, "Couldn't post that. Try again.", "error"); return; }
           ta.value = ""; count.textContent = "0 / 280";
           setMsg(smsg, "", "");
-          if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches && typeof confettiBurst === "function") {
+          if (!reducedMotion() && typeof confettiBurst === "function") {
             var rect = sbtn.getBoundingClientRect();
             confettiBurst(rect.left + rect.width / 2, rect.top);
           }
@@ -185,6 +243,176 @@
       });
     }
 
+    // ----- Exec to-do board -----
+    function fillAssignee(select, selectedId) {
+      select.textContent = "";
+      var none = el("option", null, "Unassigned");
+      none.value = "";
+      select.appendChild(none);
+      team.forEach(function (p) {
+        var o = el("option", null, p.display_name + (me && p.id === me.id ? " (me)" : ""));
+        o.value = p.id;
+        select.appendChild(o);
+      });
+      select.value = selectedId || "";
+    }
+
+    function patchTodo(id, fields, ctrl) {
+      if (ctrl) ctrl.disabled = true;
+      sb.from("todos").update(fields).eq("id", id).then(function (r) {
+        if (r.error) {
+          if (ctrl) ctrl.disabled = false;
+          setMsg($("todo-msg"), "Couldn't update that task.", "error");
+        } else {
+          setMsg($("todo-msg"), "", "");
+          loadTodos();
+        }
+      });
+    }
+
+    function sortTodos(list) {
+      return list.slice().sort(function (a, b) {
+        if (a.status === "done" || b.status === "done") {
+          return String(b.completed_at || "").localeCompare(String(a.completed_at || ""));
+        }
+        var da = a.due_date || "9999-12-31", db2 = b.due_date || "9999-12-31";
+        if (da !== db2) return da < db2 ? -1 : 1;
+        return String(b.created_at).localeCompare(String(a.created_at));
+      });
+    }
+
+    function renderTodos() {
+      var today = localToday();
+      var open = todos.filter(function (t) { return t.status !== "done"; });
+      var mine = open.filter(function (t) { return me && t.assignee_id === me.id; });
+      var done = todos.filter(function (t) { return t.status === "done"; });
+      $("n-open").textContent = open.length;
+      $("n-mine").textContent = mine.length;
+      $("n-done").textContent = done.length;
+
+      document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
+        c.classList.toggle("on", c.getAttribute("data-filter") === todoFilter);
+      });
+
+      var shown = todoFilter === "mine" ? mine : todoFilter === "done" ? done.slice(0, 30) : open;
+      shown = sortTodos(shown);
+
+      var ul = $("todo-list");
+      ul.textContent = "";
+      if (!shown.length) {
+        ul.appendChild(el("li", "empty",
+          todoFilter === "done" ? "Nothing ticked off yet." :
+          todoFilter === "mine" ? "Nothing assigned to you. Nice." : "No open tasks. Add one above."));
+        return;
+      }
+
+      shown.forEach(function (t) {
+        var isDone = t.status === "done";
+        var overdue = !isDone && t.due_date && t.due_date < today;
+        var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : ""));
+
+        var top = el("div", "todo-top");
+        var cb = el("input");
+        cb.type = "checkbox";
+        cb.checked = isDone;
+        cb.setAttribute("aria-label", (isDone ? "Reopen: " : "Mark done: ") + t.title);
+        cb.addEventListener("change", function () {
+          patchTodo(t.id, cb.checked
+            ? { status: "done", completed_at: new Date().toISOString() }
+            : { status: "open", completed_at: null }, cb);
+          if (cb.checked && !reducedMotion() && typeof confettiBurst === "function") {
+            var rect = cb.getBoundingClientRect();
+            confettiBurst(rect.left + rect.width / 2, rect.top);
+          }
+        });
+        top.appendChild(cb);
+        top.appendChild(el("span", "todo-text", t.title));
+        li.appendChild(top);
+
+        var meta = el("div", "todo-meta");
+        var sel = el("select", "todo-assign");
+        sel.setAttribute("aria-label", "Assigned to");
+        fillAssignee(sel, t.assignee_id);
+        sel.addEventListener("change", function () {
+          patchTodo(t.id, { assignee_id: sel.value || null }, sel);
+        });
+        meta.appendChild(sel);
+        if (t.due_date) meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(t.due_date)));
+        if (isDone && t.completed_at) meta.appendChild(el("span", null, "Done " + when(t.completed_at)));
+        else if (t.created_by) meta.appendChild(el("span", null, "Added by " + nameOf(t.created_by)));
+
+        if (!isDone && me && t.assignee_id !== me.id) {
+          var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
+          take.type = "button";
+          take.addEventListener("click", function () { patchTodo(t.id, { assignee_id: me.id }, take); });
+          meta.appendChild(take);
+        }
+        if (me && t.created_by === me.id) {
+          var del = el("button", "link-btn", "Delete");
+          del.type = "button";
+          del.addEventListener("click", function () {
+            del.disabled = true;
+            sb.from("todos").delete().eq("id", t.id).then(function (r) {
+              if (r.error) { del.disabled = false; setMsg($("todo-msg"), "Couldn't delete that task.", "error"); }
+              else loadTodos();
+            });
+          });
+          meta.appendChild(del);
+        }
+        li.appendChild(meta);
+        ul.appendChild(li);
+      });
+    }
+
+    function loadTodos() {
+      return sb.from("todos")
+        .select("id, title, assignee_id, status, due_date, created_by, created_at, completed_at")
+        .order("created_at", { ascending: false }).limit(300)
+        .then(function (r) {
+          if (r.error) { $("todo-panel").hidden = true; return; }
+          todos = r.data || [];
+          renderTodos();
+          $("todo-panel").hidden = false;
+        });
+    }
+
+    function initTodoForm() {
+      var titleIn = $("todo-title-input"), assignee = $("todo-assignee"), due = $("todo-due"),
+          add = $("todo-add"), tmsg = $("todo-msg");
+      fillAssignee(assignee, "");
+
+      document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
+        c.addEventListener("click", function () {
+          todoFilter = c.getAttribute("data-filter");
+          renderTodos();
+        });
+      });
+
+      $("todo-form").addEventListener("submit", function (e) {
+        e.preventDefault();
+        var title = titleIn.value.trim();
+        if (!title) { setMsg(tmsg, "Describe the task first.", "error"); return; }
+        add.disabled = true;
+        setMsg(tmsg, "Adding…", "info");
+        sb.from("todos").insert({
+          title: title,
+          assignee_id: assignee.value || null,
+          due_date: due.value || null
+        }).then(function (r) {
+          add.disabled = false;
+          if (r.error) { setMsg(tmsg, "Couldn't add that task. Try again.", "error"); return; }
+          titleIn.value = ""; due.value = ""; assignee.value = "";
+          setMsg(tmsg, "", "");
+          todoFilter = "open";
+          loadTodos();
+        }).catch(function () {
+          add.disabled = false;
+          setMsg(tmsg, "Couldn't reach the server.", "error");
+        });
+      });
+    }
+
+    // ----- boot -----
     sb.auth.getSession().then(function (r) {
       var session = r.data && r.data.session;
       if (!session) return goLogin();
@@ -206,14 +434,17 @@
             $("welcome-role").textContent = role;
             card2.hidden = false;
 
-            if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
-                typeof confettiBurst === "function") {
+            if (!reducedMotion() && typeof confettiBurst === "function") {
               var rect = card2.getBoundingClientRect();
               confettiBurst(rect.left + rect.width / 2, rect.top + 60);
             }
 
             initShoutForm();
-            return Promise.all([loadAnnouncement(), loadShouts(), loadTeam()]);
+            // Team first: its names + ids feed the shout-out reactions and the to-do board.
+            return loadTeam().then(function () {
+              initTodoForm();
+              return Promise.all([loadAnnouncement(), loadTodos(), loadShouts()]);
+            });
           });
       });
     }).catch(function () {
