@@ -23,9 +23,10 @@
   </div>
 </header>
 
-<main class="stage">
+<main class="stage stage-top">
   <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
-  <div class="wrap">
+  <div class="wrap dash">
+
     <div class="card" id="welcome-card" hidden>
       <div class="mingalaba myanmar" aria-hidden="true">မင်္ဂလာပါ</div>
       <span class="eyebrow">Exec area</span>
@@ -37,6 +38,33 @@
         <button class="btn" id="signout-btn" type="button">Sign out</button>
       </div>
     </div>
+
+    <section class="panel announce" id="announce" hidden aria-labelledby="announce-title">
+      <span class="eyebrow" id="announce-title">Announcement</span>
+      <p class="announce-body" id="announce-body"></p>
+      <p class="meta" id="announce-meta"></p>
+    </section>
+
+    <section class="panel" id="shout-panel" hidden aria-labelledby="shout-title">
+      <h2 id="shout-title">Shout-out wall</h2>
+      <p class="panel-sub">Cheer on a fellow exec, share a win, or just say hi.</p>
+      <form class="shout-form" id="shout-form">
+        <label class="sr-only" for="shout-body">Your shout-out</label>
+        <textarea id="shout-body" maxlength="280" rows="3" placeholder="Who deserves a shout-out today?"></textarea>
+        <div class="shout-row">
+          <span class="meta" id="shout-count">0 / 280</span>
+          <button class="btn" id="shout-btn" type="submit">Post</button>
+        </div>
+      </form>
+      <p class="msg" id="shout-msg" role="status" aria-live="polite"></p>
+      <ul class="shout-list" id="shout-list"></ul>
+    </section>
+
+    <section class="panel" id="team-panel" hidden aria-labelledby="team-title">
+      <h2 id="team-title">The team</h2>
+      <ul class="team-list" id="team-list"></ul>
+    </section>
+
   </div>
 </main>
 

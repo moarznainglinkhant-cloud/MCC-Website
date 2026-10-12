@@ -102,3 +102,46 @@ footer.slim{ background:var(--footer-bg); color:var(--footer-ink-soft); font-siz
 footer.slim .wrap{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; padding-block:22px; }
 footer.slim .mark{ display:flex; align-items:center; gap:10px; }
 footer.slim img{ width:26px; height:26px; border-radius:50%; }
+
+/* ---------- DASHBOARD (exec.html) ---------- */
+.sr-only{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+.stage-top{ align-items:flex-start; }
+.dash{ flex-direction:column; align-items:center; gap:22px; }
+.dash .card, .dash .panel{ max-width:720px; width:100%; }
+.panel{
+  background:var(--bg-raised); border:1px solid var(--line); box-shadow:var(--card-shadow);
+  padding: clamp(22px,4.5vw,36px);
+}
+.panel[hidden]{ display:none; }
+.panel h2{ font-size:clamp(1.4rem,3vw,1.8rem); margin-bottom:4px; }
+.panel-sub{ color:var(--ink-soft); margin-bottom:18px; }
+.meta{ font-size:0.78rem; color:var(--ink-soft); }
+
+.announce{ background:var(--navy); border-color:var(--navy); color:var(--footer-ink); }
+.announce .eyebrow{ color:var(--gold); }
+.announce-body{ font-family:'Fraunces', serif; font-size:clamp(1.15rem,2.6vw,1.45rem); line-height:1.4; margin-block:8px 10px; white-space:pre-line; }
+.announce .meta{ color:var(--footer-ink-soft); }
+
+.shout-form textarea{
+  width:100%; padding:13px 14px; font:inherit; color:var(--ink); resize:vertical; min-height:84px;
+  background:#fff; border:1px solid var(--line); border-radius:10px;
+}
+.shout-form textarea:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+.shout-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:10px; }
+.shout-row .btn{ padding:11px 22px; }
+.shout-list{ list-style:none; margin:14px 0 0; padding:0; display:flex; flex-direction:column; gap:12px; }
+.shout{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--bg); }
+.shout-text{ white-space:pre-wrap; overflow-wrap:anywhere; }
+.shout-foot{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
+.shout-by{ font-size:0.8rem; font-weight:700; }
+.shout-by small{ font-weight:500; color:var(--ink-soft); margin-left:6px; }
+.link-btn{
+  background:none; border:none; padding:2px 4px; cursor:pointer; font:inherit; font-size:0.78rem;
+  color:var(--red-ink); text-decoration:underline; text-underline-offset:3px;
+}
+.empty{ color:var(--ink-soft); font-style:italic; text-align:center; padding:8px 0; }
+
+.team-list{ list-style:none; margin:14px 0 0; padding:0; display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:12px; }
+.team-card{ border:1px solid var(--line); border-radius:12px; padding:14px 16px; background:var(--bg); }
+.team-card strong{ display:block; font-family:'Fraunces',serif; font-size:1.1rem; overflow-wrap:anywhere; }
+.team-card span{ font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--gold); }
