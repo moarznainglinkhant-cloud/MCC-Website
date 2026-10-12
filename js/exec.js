@@ -136,11 +136,15 @@
     // ----- Reactions on shout-outs -----
     var EMOJIS = ["🎉", "👏", "🔥", "💛"];
 
-    function toggleReaction(shoutId, emoji, mine, b) {
+    // One reaction per exec per shout-out: click yours again to remove it, click another to switch.
+    function toggleReaction(shoutId, emoji, current, b) {
       b.disabled = true;
-      var q = mine
-        ? sb.from("shoutout_reactions").delete().eq("shoutout_id", shoutId).eq("user_id", me.id).eq("emoji", emoji)
-        : sb.from("shoutout_reactions").insert({ shoutout_id: shoutId, emoji: emoji });
+      var t = sb.from("shoutout_reactions");
+      var q = current === emoji
+        ? t.delete().eq("shoutout_id", shoutId).eq("user_id", me.id)
+        : current
+          ? t.update({ emoji: emoji }).eq("shoutout_id", shoutId).eq("user_id", me.id)
+          : t.insert({ shoutout_id: shoutId, emoji: emoji });
       q.then(function (r) {
         if (r.error) { b.disabled = false; setMsg($("shout-msg"), "Couldn't save that reaction.", "error"); }
         else loadShouts();
@@ -150,16 +154,18 @@
     function reactionBar(s) {
       var bar = el("div", "reacts");
       var rs = s.shoutout_reactions || [];
+      var mineRow = rs.filter(function (x) { return me && x.user_id === me.id; })[0];
+      var current = mineRow ? mineRow.emoji : null;
       EMOJIS.forEach(function (emoji) {
         var who = rs.filter(function (x) { return x.emoji === emoji; });
-        var mine = who.some(function (x) { return me && x.user_id === me.id; });
+        var mine = current === emoji;
         var b = el("button", "react" + (mine ? " on" : ""));
         b.type = "button";
         b.setAttribute("aria-pressed", String(mine));
         b.appendChild(el("span", null, emoji));
         if (who.length) b.appendChild(el("span", "n", String(who.length)));
         b.title = who.length ? who.map(function (x) { return nameOf(x.user_id); }).join(", ") : "React with " + emoji;
-        b.addEventListener("click", function () { toggleReaction(s.id, emoji, mine, b); });
+        b.addEventListener("click", function () { toggleReaction(s.id, emoji, current, b); });
         bar.appendChild(b);
       });
       return bar;
