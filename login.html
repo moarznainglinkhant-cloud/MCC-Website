@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Myanmar Culture Club (University of Toronto) — site designed & built by Naing Lin Khant (Moarz). -->
+<title>Exec Sign In — Myanmar Culture Club</title>
+<meta name="author" content="Naing Lin Khant (Moarz)">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="same-origin">
+<link rel="icon" type="image/png" href="images/brand/logo.png">
+<link rel="stylesheet" href="css/exec.css">
+</head>
+<body data-page="login">
+
+<header class="nav">
+  <div class="wrap nav-row">
+    <a href="index.html" class="brand">
+      <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
+      <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
+    </a>
+    <a class="nav-link" href="index.html">Back to the site</a>
+  </div>
+</header>
+
+<main class="stage">
+  <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
+  <div class="wrap">
+    <div class="card">
+      <span class="eyebrow">Exec area</span>
+      <h1>Sign in</h1>
+      <p class="sub">For Myanmar Culture Club executives only.</p>
+      <form class="form" id="login-form" novalidate>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="username" inputmode="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+        <button class="btn" id="login-btn" type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+</main>
+
+<footer class="slim">
+  <div class="wrap">
+    <div class="mark">
+      <img src="images/brand/logo.png" alt="">
+      <span>Myanmar Culture Club · Exec area</span>
+    </div>
+    <span>&copy; 2026 MCC</span>
+  </div>
+</footer>
+
+<script src="js/supabase.js"></script>
+<script src="js/exec-config.js"></script>
+<script src="js/site.js"></script>
+<script src="js/exec.js"></script>
+</body>
+</html>

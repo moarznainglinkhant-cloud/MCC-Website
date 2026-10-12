@@ -1,0 +1,9 @@
+{
+  "name": "mcc-supabase-bundle",
+  "private": true,
+  "scripts": {
+    "build": "esbuild entry.js --bundle --minify --format=iife --target=es2019 --outfile=dist/supabase.js"
+  },
+  "dependencies": { "@supabase/supabase-js": "^2" },
+  "devDependencies": { "esbuild": "^0.24.0" }
+}
