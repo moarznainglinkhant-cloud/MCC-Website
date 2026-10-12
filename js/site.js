@@ -108,6 +108,8 @@ const I18N = {
     fun_fact_another: "Another Fact",
     fun_fact_back: "Back Home",
 
+    footer_analytics: "This site uses Google Analytics to understand visitor traffic.",
+
     events_eyebrow: "MCC Calendar",
     events_h1: "Every gathering, in one place.",
     events_lede: "From food nights to festival celebrations, here's what the Myanmar Culture Club has coming up — and what we've hosted before. Can't make it in person? Follow along on Instagram so you never miss the next one.",
@@ -158,6 +160,8 @@ const I18N = {
     fun_fact_eyebrow: "စိတ်ဝင်စားစရာ",
     fun_fact_another: "နောက်တစ်ခု",
     fun_fact_back: "ပင်မစာမျက်နှာသို့",
+
+    footer_analytics: "ဤဝဘ်ဆိုက်သည် ဧည့်သည်များ၏ အသုံးပြုမှုကို နားလည်ရန် Google Analytics ကို အသုံးပြုပါသည်။",
 
     events_eyebrow: "MCC ပြက္ခဒိန်",
     events_h1: "စုစည်းပွဲအားလုံး တစ်နေရာတည်းတွင်။",
