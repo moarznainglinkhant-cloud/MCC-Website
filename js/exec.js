@@ -547,6 +547,68 @@
       });
     }
 
+    // ----- Start the dashboard (runs once, after the password has been chosen) -----
+    function startDashboard() {
+      $("dash-main").hidden = false;
+      initShoutForm();
+      // Team first: its names + ids feed the shout-out reactions and the to-do board.
+      return loadTeam().then(function () {
+        initTodoForm();
+        return Promise.all([loadAnnouncement(), loadSheetEvents().then(loadTodos), loadShouts()]);
+      });
+    }
+
+    // ----- Choose / change password -----
+    var MIN_PASSWORD = 10;
+    function initPasswordForm(passwordSet, onFirstSet) {
+      var panel = $("pw-panel"), form = $("pw-form"), pmsg = $("pw-msg"), btn = $("pw-btn");
+      var pwNew = $("pw-new"), pwConfirm = $("pw-confirm");
+      var forced = !passwordSet;
+
+      function applyMode() {
+        $("pw-title").textContent = forced ? "Set your own password" : "Change your password";
+        $("pw-sub").textContent = forced
+          ? "You're signed in with a temporary password. Choose your own now. Only you will know it, and you'll use it from here on."
+          : "Pick something you don't use anywhere else.";
+        panel.classList.toggle("forced", forced);
+      }
+      applyMode();
+      panel.hidden = false;
+
+      $("pw-show").addEventListener("change", function () {
+        var t = this.checked ? "text" : "password";
+        pwNew.type = t; pwConfirm.type = t;
+      });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var a = pwNew.value, b = pwConfirm.value;
+        if (a.length < MIN_PASSWORD) { setMsg(pmsg, "Use at least " + MIN_PASSWORD + " characters.", "error"); return; }
+        if (a !== b) { setMsg(pmsg, "The two passwords don't match.", "error"); return; }
+        btn.disabled = true;
+        setMsg(pmsg, "Saving…", "info");
+        sb.auth.updateUser({ password: a, data: { password_set: true } }).then(function (r) {
+          btn.disabled = false;
+          if (r.error) {
+            setMsg(pmsg, "Couldn't change your password: " + (r.error.message || "please try again") + ".", "error");
+            return;
+          }
+          pwNew.value = ""; pwConfirm.value = "";
+          if (forced) {
+            forced = false;
+            applyMode();
+            setMsg(pmsg, "Password saved. It's only known to you now.", "info");
+            onFirstSet();
+          } else {
+            setMsg(pmsg, "Password changed.", "info");
+          }
+        }).catch(function () {
+          btn.disabled = false;
+          setMsg(pmsg, "Couldn't reach the server.", "error");
+        });
+      });
+    }
+
     // ----- boot -----
     sb.auth.getSession().then(function (r) {
       var session = r.data && r.data.session;
@@ -574,12 +636,13 @@
               confettiBurst(rect.left + rect.width / 2, rect.top + 60);
             }
 
-            initShoutForm();
-            // Team first: its names + ids feed the shout-out reactions and the to-do board.
-            return loadTeam().then(function () {
-              initTodoForm();
-              return Promise.all([loadAnnouncement(), loadSheetEvents().then(loadTodos), loadShouts()]);
-            });
+            // First sign-in: the exec must replace the temporary password you gave them
+            // before they see anything else. (This is a courtesy gate, not a security
+            // boundary: it keeps passwords known only to their owners.)
+            var passwordSet = !!(user.user_metadata && user.user_metadata.password_set);
+            initPasswordForm(passwordSet, startDashboard);
+            if (!passwordSet) return;
+            return startDashboard();
           });
       });
     }).catch(function () {

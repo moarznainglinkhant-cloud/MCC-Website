@@ -39,6 +39,8 @@
       </div>
     </div>
 
+    <div class="dash-main" id="dash-main" hidden>
+
     <section class="panel announce" id="announce" hidden aria-labelledby="announce-title">
       <span class="eyebrow" id="announce-title">Announcement</span>
       <p class="announce-body" id="announce-body"></p>
@@ -93,6 +95,25 @@
     <section class="panel" id="team-panel" hidden aria-labelledby="team-title">
       <h2 id="team-title">The team</h2>
       <ul class="team-list" id="team-list"></ul>
+    </section>
+
+    </div>
+
+    <section class="panel" id="pw-panel" hidden aria-labelledby="pw-title">
+      <h2 id="pw-title">Change your password</h2>
+      <p class="panel-sub" id="pw-sub">Pick something you don't use anywhere else.</p>
+      <form class="pw-form" id="pw-form" novalidate>
+        <label class="field-inline">New password
+          <input type="password" id="pw-new" autocomplete="new-password" minlength="10" required>
+        </label>
+        <label class="field-inline">Confirm new password
+          <input type="password" id="pw-confirm" autocomplete="new-password" required>
+        </label>
+        <label class="group-toggle pw-show"><input type="checkbox" id="pw-show"> Show passwords</label>
+        <button class="btn" id="pw-btn" type="submit">Save password</button>
+      </form>
+      <p class="meta">At least 10 characters. A few random words is a good way to make a long one you can remember.</p>
+      <p class="msg" id="pw-msg" role="status" aria-live="polite"></p>
     </section>
 
   </div>

@@ -575,6 +575,8 @@
     if (!r.data || !r.data.session) return goLogin();
     return sb.auth.getUser().then(function (u) {
       if (u.error || !u.data || !u.data.user) return sb.auth.signOut().then(goLogin);
+      var meta = u.data.user.user_metadata || {};
+      if (!meta.password_set) { location.replace("exec.html"); return; }   // choose your own password first
       me = { id: u.data.user.id };
       return loadAll().then(init);
     });

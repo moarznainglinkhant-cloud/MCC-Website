@@ -274,3 +274,11 @@ footer.slim img{ width:26px; height:26px; border-radius:50%; }
 .blocks{ list-style:none; margin:12px 0 0; padding:0; display:flex; flex-wrap:wrap; gap:8px; }
 .blk{ display:inline-flex; align-items:center; gap:10px; border:1px solid var(--line); border-radius:999px; padding:5px 8px 5px 14px; font-size:0.85rem; background:var(--bg); }
 .blocks .empty{ text-align:left; padding:0; }
+
+/* ---------- PASSWORD PANEL + dashboard wrapper ---------- */
+.dash-main{ display:flex; flex-direction:column; align-items:center; gap:22px; width:100%; }
+.dash-main[hidden]{ display:none; }
+.pw-form{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; }
+.pw-form .field-inline{ flex:1 1 220px; }
+.pw-show{ margin-left:0; flex:1 1 100%; }
+#pw-panel.forced{ border-color:var(--gold); border-width:2px; }
