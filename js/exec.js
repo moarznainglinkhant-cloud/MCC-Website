@@ -122,6 +122,10 @@
         });
     }
 
+    // Set to true to show the "The team" panel again. The roster still loads either way,
+    // because names and the to-do assignee list depend on it.
+    var SHOW_TEAM_PANEL = false;
+
     // ----- Team roster (also feeds the name lookup + assignee dropdown) -----
     function loadTeam() {
       return sb.from("profiles").select("id, display_name, role").order("created_at", { ascending: true })
@@ -138,7 +142,7 @@
             li.appendChild(el("span", null, p.role));
             ul.appendChild(li);
           });
-          $("team-panel").hidden = false;
+          $("team-panel").hidden = !SHOW_TEAM_PANEL;
         });
     }
 
