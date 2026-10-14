@@ -303,7 +303,17 @@
       }
       return t.due_date || "";
     }
-    function pool() { return onlyMine && me ? todos.filter(function (t) { return t.assignee_id === me.id; }) : todos; }
+    var query = "";             // search box text (List, Board and Calendar views)
+    var collapsedGroups = {};   // event name -> true while its group is folded away in the List view
+    function matchesQuery(t) {
+      if (!query) return true;
+      var hay = (t.title + " " + (t.event_name || "") + " " + (t.assignee_id ? nameOf(t.assignee_id) : "unassigned")).toLowerCase();
+      return query.toLowerCase().split(/\s+/).every(function (w) { return hay.indexOf(w) !== -1; });
+    }
+    function pool() {
+      var l = onlyMine && me ? todos.filter(function (t) { return t.assignee_id === me.id; }) : todos;
+      return query ? l.filter(matchesQuery) : l;
+    }
 
     function fillAssignee(select, selectedId) {
       select.textContent = "";
@@ -411,13 +421,117 @@
       return order.map(function (k) { return { name: k, items: map[k] }; });
     }
 
-    function todoItem(t, today) {
+    // Compact one-line row; the edit controls open on demand (and stay open across refreshes).
+    var expanded = {};          // task id -> true while its edit panel is open
+    function initials(name) {
+      var p = String(name || "").replace(/\(me\)/i, "").trim().split(/\s+/);
+      return ((p[0] || "?").charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : "")).toUpperCase();
+    }
+
+    function buildEditPanel(t, today) {
+      var isDone = t.status === "done";
+      var due = dueOf(t);
+      var box = el("div", "tedit");
+
+      var titleIn = el("input", "t-title-in");
+      titleIn.type = "text"; titleIn.maxLength = 200; titleIn.value = t.title;
+      titleIn.setAttribute("aria-label", "Task");
+      function saveTitle() {
+        var v = titleIn.value.trim();
+        if (v && v !== t.title) patchTodo(t.id, { title: v }, titleIn);
+        else titleIn.value = t.title;
+      }
+      titleIn.addEventListener("change", saveTitle);
+      titleIn.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); titleIn.blur(); } });
+      box.appendChild(titleIn);
+
+      var grid = el("div", "tgrid");
+      function field(label, ctl) {
+        var l = el("label", "tfield");
+        l.appendChild(el("span", null, label));
+        l.appendChild(ctl);
+        grid.appendChild(l);
+      }
+      var sel = el("select", "todo-assign");
+      fillAssignee(sel, t.assignee_id);
+      sel.addEventListener("change", function () { patchTodo(t.id, { assignee_id: sel.value || null }, sel); });
+      field("Owner", sel);
+
+      if (hasExtras) {
+        var pr = el("select", "todo-assign");
+        fillPriority(pr, t.priority);
+        pr.addEventListener("change", function () { patchTodo(t.id, { priority: pr.value }, pr); });
+        field("Priority", pr);
+
+        var ev = el("select", "todo-assign");
+        var none = el("option", null, "No event");
+        none.value = "";
+        ev.appendChild(none);
+        knownEvents().forEach(function (n) { var o = el("option", null, n); o.value = n; ev.appendChild(o); });
+        ev.value = t.event_name || "";
+        ev.addEventListener("change", function () { patchTodo(t.id, { event_name: ev.value || null }, ev); });
+        field("Event", ev);
+      }
+
+      var dIn = el("input", "todo-assign");
+      dIn.type = "date";
+      dIn.value = due;
+      dIn.addEventListener("change", function () {
+        var f = { due_date: dIn.value || null };
+        if (hasOffset) f.due_offset = null;     // a hand-picked date replaces any "days before the event" rule
+        patchTodo(t.id, f, dIn);
+      });
+      field("Due", dIn);
+      box.appendChild(grid);
+
+      if (hasOffset && t.due_offset != null && t.event_name && due) {
+        box.appendChild(el("p", "meta t-note", (t.due_offset === 0 ? "Due on the event day" : "Due " + t.due_offset + (t.due_offset === 1 ? " day" : " days") + " before the event") + ", so it follows the event's date. Picking a date above makes it fixed."));
+      }
+
+      var foot = el("div", "t-foot");
+      var info = isDone && t.completed_at ? "Done " + when(t.completed_at)
+        : t.created_by ? "Added by " + nameOf(t.created_by) + (t.created_at ? " · " + when(t.created_at) : "") : "";
+      if (info) foot.appendChild(el("span", "meta", info));
+      var acts = el("div", "t-acts");
+      if (hasOffset && !isDone) {
+        var go = el("button", "link-btn", t.status === "doing" ? "Pause" : "Start");
+        go.type = "button";
+        go.addEventListener("click", function () { patchTodo(t.id, { status: t.status === "doing" ? "open" : "doing", completed_at: null }, go); });
+        acts.appendChild(go);
+      }
+      if (!isDone && me && t.assignee_id !== me.id) {
+        var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
+        take.type = "button";
+        take.addEventListener("click", function () { patchTodo(t.id, { assignee_id: me.id }, take); });
+        acts.appendChild(take);
+      }
+      if (me && t.created_by === me.id) {
+        var del = el("button", "link-btn", "Delete");
+        del.type = "button";
+        del.addEventListener("click", function () {
+          del.disabled = true;
+          sb.from("todos").delete().eq("id", t.id).then(function (r) {
+            if (r.error) { del.disabled = false; setMsg($("todo-msg"), "Couldn't delete that task.", "error"); }
+            else { delete expanded[t.id]; loadTodos(); }
+          });
+        });
+        acts.appendChild(del);
+      }
+      foot.appendChild(acts);
+      box.appendChild(foot);
+      return box;
+    }
+
+    // opts: hideEvent (the event is already shown by a heading), hideWho (the owner is already shown by a heading)
+    function todoItem(t, today, opts) {
+      opts = opts || {};
       var isDone = t.status === "done";
       var due = dueOf(t);
       var overdue = !isDone && due && due < today;
-      var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : ""));
+      var prioKey = PRANK.hasOwnProperty(t.priority) ? t.priority : "medium";
+      var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : "") + (t.status === "doing" ? " doing" : ""));
 
-      var top = el("div", "todo-top");
+      var row = el("div", "trow");
       var cb = el("input");
       cb.type = "checkbox";
       cb.checked = isDone;
@@ -431,75 +545,49 @@
           confettiBurst(rect.left + rect.width / 2, rect.top);
         }
       });
-      top.appendChild(cb);
-      top.appendChild(el("span", "todo-text", t.title));
-      if (t.status === "doing") top.appendChild(el("span", "pill-doing", "In progress"));
-      li.appendChild(top);
+      row.appendChild(cb);
 
-      var meta = el("div", "todo-meta");
+      var name = el("button", "t-name", t.title);
+      name.type = "button";
+      name.title = t.title;
+      var isOpen = !!expanded[t.id];
+      name.setAttribute("aria-expanded", String(isOpen));
+      row.appendChild(name);
 
-      if (hasExtras) {
-        var pr = el("select", "todo-assign prio prio-" + (PRANK.hasOwnProperty(t.priority) ? t.priority : "medium"));
-        pr.setAttribute("aria-label", "Priority");
-        fillPriority(pr, t.priority);
-        pr.addEventListener("change", function () { patchTodo(t.id, { priority: pr.value }, pr); });
-        meta.appendChild(pr);
+      var chips = el("span", "t-chips");
+      if (t.status === "doing") chips.appendChild(el("span", "pill-doing", "Doing"));
+      if (hasExtras && !isDone && prioKey !== "medium") chips.appendChild(el("span", "tchip prio-" + prioKey, prioKey === "high" ? "High" : "Low"));
+      if (hasExtras && t.event_name && !opts.hideEvent) chips.appendChild(el("span", "tchip ev", t.event_name));
+      if (due && !isDone) chips.appendChild(el("span", "tchip due" + (overdue ? " late" : ""), (overdue ? "Overdue · " : "") + dueLabel(due)));
+      if (!opts.hideWho) {
+        var who = t.assignee_id ? nameOf(t.assignee_id) : "";
+        var av = el("span", "avatar" + (who ? "" : " none"), who ? initials(who) : "");
+        av.title = who || "Unassigned";
+        av.setAttribute("aria-label", who ? "Owner: " + who : "Unassigned");
+        chips.appendChild(av);
       }
+      row.appendChild(chips);
 
-      var sel = el("select", "todo-assign");
-      sel.setAttribute("aria-label", "Assigned to");
-      fillAssignee(sel, t.assignee_id);
-      sel.addEventListener("change", function () { patchTodo(t.id, { assignee_id: sel.value || null }, sel); });
-      meta.appendChild(sel);
+      var chev = el("button", "t-chev", "▾");
+      chev.type = "button";
+      chev.setAttribute("aria-label", "Details for: " + t.title);
+      chev.setAttribute("aria-expanded", String(isOpen));
+      row.appendChild(chev);
+      li.appendChild(row);
 
-      if (hasExtras) {
-        var ev = el("select", "todo-assign");
-        ev.setAttribute("aria-label", "Event");
-        var none = el("option", null, "No event");
-        none.value = "";
-        ev.appendChild(none);
-        knownEvents().forEach(function (n) {
-          var o = el("option", null, n);
-          o.value = n;
-          ev.appendChild(o);
-        });
-        ev.value = t.event_name || "";
-        ev.addEventListener("change", function () { patchTodo(t.id, { event_name: ev.value || null }, ev); });
-        meta.appendChild(ev);
+      var panel = null;
+      function sync() {
+        var open = !!expanded[t.id];
+        li.classList.toggle("open", open);
+        name.setAttribute("aria-expanded", String(open));
+        chev.setAttribute("aria-expanded", String(open));
+        if (open && !panel) { panel = buildEditPanel(t, today); li.appendChild(panel); }
+        if (panel) panel.hidden = !open;
       }
-
-      if (due) {
-        var rel = hasOffset && t.due_offset != null ? (t.due_offset === 0 ? " · event day" : " · " + t.due_offset + " d before event") : "";
-        meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(due) + rel));
-      }
-      if (isDone && t.completed_at) meta.appendChild(el("span", null, "Done " + when(t.completed_at)));
-      else if (t.created_by) meta.appendChild(el("span", null, "Added by " + nameOf(t.created_by)));
-
-      if (hasOffset && !isDone) {
-        var go = el("button", "link-btn", t.status === "doing" ? "Pause" : "Start");
-        go.type = "button";
-        go.addEventListener("click", function () { patchTodo(t.id, { status: t.status === "doing" ? "open" : "doing", completed_at: null }, go); });
-        meta.appendChild(go);
-      }
-      if (!isDone && me && t.assignee_id !== me.id) {
-        var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
-        take.type = "button";
-        take.addEventListener("click", function () { patchTodo(t.id, { assignee_id: me.id }, take); });
-        meta.appendChild(take);
-      }
-      if (me && t.created_by === me.id) {
-        var del = el("button", "link-btn", "Delete");
-        del.type = "button";
-        del.addEventListener("click", function () {
-          del.disabled = true;
-          sb.from("todos").delete().eq("id", t.id).then(function (r) {
-            if (r.error) { del.disabled = false; setMsg($("todo-msg"), "Couldn't delete that task.", "error"); }
-            else loadTodos();
-          });
-        });
-        meta.appendChild(del);
-      }
-      li.appendChild(meta);
+      function toggle() { expanded[t.id] = !expanded[t.id]; if (!expanded[t.id]) delete expanded[t.id]; sync(); }
+      name.addEventListener("click", toggle);
+      chev.addEventListener("click", toggle);
+      sync();
       return li;
     }
 
@@ -519,12 +607,15 @@
       });
 
       var shown = todoFilter === "mine" ? mine : todoFilter === "done" ? done.slice(0, 30) : open;
+      var total = shown.length;
+      if (query) shown = shown.filter(matchesQuery);
       shown = sortTodos(shown);
 
       var ul = $("todo-list");
       ul.textContent = "";
       if (!shown.length) {
         ul.appendChild(el("li", "empty",
+          query ? "No tasks match \u201C" + query + "\u201D." :
           todoFilter === "done" ? "Nothing ticked off yet." :
           todoFilter === "mine" ? "Nothing assigned to you. Nice." : "No open tasks. Add one above."));
         return;
@@ -532,17 +623,31 @@
 
       if (hasExtras && groupByEvent) {
         groupTodos(shown).forEach(function (g) {
+          var key = g.name || "";
+          var folded = !query && !!collapsedGroups[key];
           var head = el("li", "group-head");
-          head.appendChild(el("h3", null, g.name || "No event"));
+          var hb = el("button", "gh-btn");
+          hb.type = "button";
+          hb.setAttribute("aria-expanded", String(!folded));
+          hb.appendChild(el("span", "gh-chev", folded ? "\u25B8" : "\u25BE"));
+          hb.appendChild(el("h3", null, g.name || "No event"));
           var sub = [];
           if (g.name && eventDates[g.name]) sub.push(dueLabel(eventDates[g.name]) + " (" + countdownText(eventDates[g.name]).toLowerCase() + ")");
           sub.push(g.items.length + (g.items.length === 1 ? " task" : " tasks"));
-          head.appendChild(el("span", null, sub.join(" · ")));
+          hb.appendChild(el("span", "gh-sub", sub.join(" \u00B7 ")));
+          hb.addEventListener("click", function () {
+            if (collapsedGroups[key]) delete collapsedGroups[key]; else collapsedGroups[key] = true;
+            renderList();
+          });
+          head.appendChild(hb);
           ul.appendChild(head);
-          g.items.forEach(function (t) { ul.appendChild(todoItem(t, today)); });
+          if (!folded) g.items.forEach(function (t) { ul.appendChild(todoItem(t, today, { hideEvent: true })); });
         });
       } else {
         shown.forEach(function (t) { ul.appendChild(todoItem(t, today)); });
+      }
+      if (todoFilter === "done" && !query && done.length > 30) {
+        ul.appendChild(el("li", "empty", "Showing the 30 most recent."));
       }
     }
 
@@ -592,6 +697,7 @@
       });
       ["list", "board", "cal", "event", "person"].forEach(function (v) { $("tv-" + v).hidden = v !== tview; });
       $("only-mine-wrap").hidden = tview === "list";
+      $("todo-search-wrap").hidden = tview === "event" || tview === "person";
     }
 
     function titleCase(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
@@ -696,9 +802,9 @@
     }
 
     // ----- By event -----
-    function taskList(tasks, today) {
+    function taskList(tasks, today, opts) {
       var ul = el("ul", "todo-list");
-      sortTodos(tasks).forEach(function (t) { ul.appendChild(todoItem(t, today)); });
+      sortTodos(tasks).forEach(function (t) { ul.appendChild(todoItem(t, today, opts)); });
       return ul;
     }
 
@@ -732,7 +838,7 @@
         card.appendChild(el("p", "meta prog-text", doneAll.length + " of " + all.length + " done"));
       }
       var open = all.filter(function (t) { return t.status !== "done" && (!onlyMine || (me && t.assignee_id === me.id)); });
-      if (open.length) card.appendChild(taskList(open, today));
+      if (open.length) card.appendChild(taskList(open, today, { hideEvent: true }));
       else if (!all.length) {
         card.appendChild(el("p", "empty", "No tasks yet."));
       } else if (all.every(function (t) { return t.status === "done"; })) {
@@ -749,7 +855,7 @@
       if (doneAll.length) {
         var det = el("details", "ec-done");
         det.appendChild(el("summary", null, doneAll.length + " done"));
-        det.appendChild(taskList(doneAll, today));
+        det.appendChild(taskList(doneAll, today, { hideEvent: true }));
         card.appendChild(det);
       }
       return card;
@@ -840,11 +946,11 @@
         if (!open.length) {
           card.appendChild(el("p", "empty", g.tasks.length ? "All caught up." : "Nothing assigned."));
         } else {
-          card.appendChild(taskList(sortTodos(open).slice(0, 5), today));
+          card.appendChild(taskList(sortTodos(open).slice(0, 5), today, { hideWho: true }));
           if (open.length > 5) {
             var det = el("details", "ec-done");
             det.appendChild(el("summary", null, (open.length - 5) + " more open"));
-            det.appendChild(taskList(sortTodos(open).slice(5), today));
+            det.appendChild(taskList(sortTodos(open).slice(5), today, { hideWho: true }));
             card.appendChild(det);
           }
         }
@@ -987,6 +1093,11 @@
         });
       });
       $("only-mine").addEventListener("change", function () { onlyMine = this.checked; renderTodos(); });
+      var sIn = $("todo-search"), sT = null;
+      sIn.addEventListener("input", function () {
+        clearTimeout(sT);
+        sT = setTimeout(function () { query = sIn.value.trim(); renderTodos(); }, 120);
+      });
 
       grp.checked = groupByEvent;
       grp.addEventListener("change", function () { groupByEvent = grp.checked; renderTodos(); });

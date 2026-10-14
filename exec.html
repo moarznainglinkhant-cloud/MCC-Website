@@ -151,7 +151,12 @@
               <button type="button" class="vtab" data-tv="event" aria-pressed="false">By event</button>
               <button type="button" class="vtab" data-tv="person" aria-pressed="false">By person</button>
             </div>
-            <label class="group-toggle" id="only-mine-wrap" hidden><input type="checkbox" id="only-mine"> Only my tasks</label>
+            <div class="vtools">
+              <label class="group-toggle" id="only-mine-wrap" hidden><input type="checkbox" id="only-mine"> Only my tasks</label>
+              <div class="tsearch" id="todo-search-wrap">
+                <input type="search" id="todo-search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off" maxlength="60">
+              </div>
+            </div>
           </div>
 
           <div class="vwrap" id="tv-list">
