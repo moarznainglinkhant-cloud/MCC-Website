@@ -185,7 +185,7 @@
       var ul = $("shout-list");
       ul.textContent = "";
       if (!rows.length) {
-        ul.appendChild(el("li", "empty", "No shout-outs yet. Be the first!"));
+        ul.appendChild(el("li", "empty", "Nothing here yet. Say hi!"));
         return;
       }
       rows.forEach(function (s) {
