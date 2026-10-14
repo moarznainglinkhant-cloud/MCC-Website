@@ -78,10 +78,11 @@
     return Promise.all([
       sb.from("profiles").select("id, display_name, role").order("created_at", { ascending: true }),
       sb.from("profiles").select("id, is_core"),
+      sb.from("profiles").select("id, team"),
       sb.from("availability").select("user_id, cells, updated_at"),
       sb.from("unavailable_dates").select("user_id, day").gte("day", today).limit(2000)
     ]).then(function (r) {
-      var pr = r[0], core = r[1], av = r[2], bl = r[3];
+      var pr = r[0], core = r[1], tm = r[2], av = r[3], bl = r[4];
       if (pr.error || !pr.data) throw new Error("profiles");
       team = pr.data;
       byId = {};
@@ -90,6 +91,9 @@
       hasCore = !core.error && !!core.data;
       coreIds = {};
       if (hasCore) core.data.forEach(function (p) { if (p.is_core) coreIds[p.id] = true; });
+
+      teamOf = {};
+      if (!tm.error && tm.data) tm.data.forEach(function (p) { if (p.team) teamOf[p.id] = String(p.team).trim(); });
 
       if (av.error || bl.error) { var e = new Error("setup"); e.setup = true; throw e; }
       avail = {};
@@ -306,8 +310,10 @@
   // =====================================================================
   //  Find a time
   // =====================================================================
-  var required = {};      // id -> true
-  var heat = null;
+  var required = {};      // who is in this meeting: id -> true (never empty once loaded)
+  var teamOf = {};        // id -> team name, e.g. "A"
+  var menuOpen = false;   // the "+ Add" list
+  var glance = null;
 
   // "0" busy, "1" free, "2" if needed, null = this exec hasn't set availability.
   function stateAt(uid, d, s, dateStr, dateDay) {
@@ -315,6 +321,11 @@
     if (!a) return null;
     if (dateStr && d === dateDay && blocks[uid] && blocks[uid][dateStr]) return "0";
     return a.cells.charAt(d * N + s) || "0";
+  }
+
+  function members() {
+    var m = team.filter(function (p) { return required[p.id]; });
+    return m.length ? m : team;
   }
 
   function settings() {
@@ -333,9 +344,9 @@
   }
 
   // Who is free / if-needed / busy / unknown over blocks [start, start + dur) on day d.
-  function evalWindow(d, start, dur, st) {
+  function evalWindow(d, start, dur, st, people) {
     var w = { d: d, start: start, dur: dur, free: [], maybe: [], busy: [], unknown: [], reqBlocked: [] };
-    team.forEach(function (p) {
+    (people || members()).forEach(function (p) {
       var any0 = false, any2 = false, unknown = false;
       for (var s = start; s < start + dur; s++) {
         var v = stateAt(p.id, d, s, st.date, st.dateDay);
@@ -343,7 +354,7 @@
         if (v === "0") any0 = true; else if (v === "2") any2 = true;
       }
       if (unknown) w.unknown.push(p.id);
-      else if (any0) { w.busy.push(p.id); if (required[p.id]) w.reqBlocked.push(p.id); }
+      else if (any0) { w.busy.push(p.id); w.reqBlocked.push(p.id); }
       else if (any2) w.maybe.push(p.id);
       else w.free.push(p.id);
     });
@@ -385,7 +396,7 @@
   }
 
   function nameList(ids) {
-    return ids.map(function (id) { return label(id) + (required[id] ? " ★" : ""); }).join(", ");
+    return ids.map(function (id) { return label(id); }).join(", ");
   }
 
   var DUR_WORDS = { 1: "30-minute", 2: "1-hour", 3: "1.5-hour", 4: "2-hour", 6: "3-hour" };
@@ -413,21 +424,22 @@
 
   function plainNames(ids) { return ids.map(function (id) { return byId[id] ? byId[id].display_name : "An exec"; }).join(", "); }
 
-  function resultCard(w) {
+  function resultCard(w, num) {
     var count = w.count || 1;
     var end = endOf(w);
     var li = el("li", "result");
     var head = el("div", "result-head");
-    head.appendChild(el("strong", null, DAYS_LONG[w.d] + " · " + slotLabel(w.start) + " – " + slotLabel(end)));
-    var known = team.length - w.unknown.length;
+    var title = el("strong");
+    if (num) title.appendChild(el("span", "r-num", String(num)));
+    title.appendChild(document.createTextNode(DAYS_LONG[w.d] + " · " + slotLabel(w.start) + " – " + slotLabel(end)));
+    head.appendChild(title);
+    var known = members().length - w.unknown.length;
     var n = w.free.length + w.maybe.length;
-    head.appendChild(el("span", "badge" + (w.reqBlocked.length ? " bad" : ""), n + " of " + known + " free"));
+    head.appendChild(el("span", "badge" + (known && n < known ? " bad" : ""), n + " of " + known + " free"));
     li.appendChild(head);
     if (count > 1) li.appendChild(el("p", "r-line dim", "Open window. A " + durText() + " meeting fits anywhere in it."));
-    if (w.reqBlocked.length) li.appendChild(el("p", "r-line bad", "Required but busy: " + nameList(w.reqBlocked)));
     if (w.maybe.length) li.appendChild(el("p", "r-line", "If needed: " + nameList(w.maybe)));
-    var others = w.busy.filter(function (id) { return !required[id]; });
-    if (others.length) li.appendChild(el("p", "r-line", "Can't make it: " + nameList(others)));
+    if (w.busy.length) li.appendChild(el("p", "r-line bad", "Can't make it: " + nameList(w.busy)));
     if (w.unknown.length) li.appendChild(el("p", "r-line dim", "No availability set: " + nameList(w.unknown)));
     if (!w.busy.length && !w.maybe.length && !w.unknown.length) li.appendChild(el("p", "r-line good", "Everyone is free."));
     var cp = el("button", "link-btn r-copy", "Copy as message");
@@ -443,13 +455,56 @@
   }
 
   function renderStatus() {
-    var set = team.filter(function (p) { return avail[p.id]; });
-    var unset = team.filter(function (p) { return !avail[p.id]; });
+    var mem = members();
+    var set = mem.filter(function (p) { return avail[p.id]; });
+    var unset = mem.filter(function (p) { return !avail[p.id]; });
     var stale = set.filter(function (p) { return Date.now() - new Date(avail[p.id].updated_at).getTime() > STALE_DAYS * 86400000; });
-    var txt = set.length + " of " + team.length + " execs have set their availability.";
-    if (unset.length) txt += " Not set: " + unset.map(function (p) { return p.display_name; }).join(", ") + ".";
-    if (stale.length) txt += " Possibly out of date (over " + STALE_DAYS + " days): " + stale.map(function (p) { return p.display_name; }).join(", ") + ".";
-    $("f-status").textContent = txt;
+    var txt = "";
+    if (unset.length) txt += unset.map(function (p) { return p.display_name; }).join(", ") + (unset.length > 1 ? " haven't" : " hasn't") + " set availability yet, so can't be checked. ";
+    if (stale.length) txt += "Possibly out of date (over " + STALE_DAYS + " days): " + stale.map(function (p) { return p.display_name; }).join(", ") + ".";
+    $("f-status").textContent = txt.trim();
+  }
+
+  // ----- calendar of the best times -----
+  // Green = everyone in the meeting is free, yellow = more than half, grey = fewer.
+  function slotStatus(d, s, st) {
+    var known = 0, n = 0;
+    members().forEach(function (p) {
+      var v = stateAt(p.id, d, s, st.date, st.dateDay);
+      if (v === null) return;
+      known++;
+      if (v === "1" || v === "2") n++;
+    });
+    var cls = !known ? "none" : n === known ? "all" : n * 2 > known ? "most" : n ? "some" : "none";
+    return { n: n, known: known, cls: cls };
+  }
+
+  function renderCalendar(st, shown) {
+    var host = $("f-cal");
+    host.textContent = "";
+    if (st.until <= st.from) return;
+    var picks = {};
+    shown.slice(0, 3).forEach(function (w, i) {
+      for (var s = w.start; s < endOf(w); s++) picks[w.d * N + s] = { rank: i + 1, first: s === w.start, last: s === endOf(w) - 1 };
+    });
+    var grid = el("div", "agrid cal");
+    grid.appendChild(el("div", "corner"));
+    for (var d = 0; d < 7; d++) grid.appendChild(el("div", "dh" + (st.days.indexOf(d) === -1 ? " off" : ""), DAYS[d]));
+    for (var s2 = st.from; s2 < st.until; s2++) {
+      grid.appendChild(el("div", "tl", s2 % 2 === 0 ? hourLabel(s2) : ""));
+      for (d = 0; d < 7; d++) {
+        var info = slotStatus(d, s2, st);
+        var pk = picks[d * N + s2];
+        var c = el("div", "cell cal-" + info.cls + (st.days.indexOf(d) === -1 ? " off" : "") +
+          (pk ? " pk" + (pk.first ? " pk-first" : "") + (pk.last ? " pk-last" : "") : ""));
+        c.setAttribute("data-d", d);
+        c.setAttribute("data-s", s2);
+        c.title = DAYS[d] + " " + slotLabel(s2) + (info.known ? " · " + info.n + " of " + info.known + " free" : "");
+        if (pk && pk.first) c.appendChild(el("span", "pk-n", String(pk.rank)));
+        grid.appendChild(c);
+      }
+    }
+    host.appendChild(grid);
   }
 
   function recompute() {
@@ -465,43 +520,39 @@
     results.textContent = "";
     var hint = $("f-hint");
     hint.textContent = "";
+    var shown = [];
 
     if (st.until - st.from < st.dur) {
       hint.textContent = "The time range is shorter than the meeting length. Widen it.";
-    } else if (!Object.keys(avail).length) {
-      hint.textContent = "Nobody has set their availability yet. Use the My availability tab to start.";
+    } else if (!members().some(function (p) { return avail[p.id]; })) {
+      hint.textContent = "Nobody in this meeting has set their availability yet. Use the My availability tab to start.";
     } else {
       var all = [];
       st.days.forEach(function (d) {
         for (var s = st.from; s + st.dur <= st.until; s++) all.push(evalWindow(d, s, st.dur, st));
       });
       all = mergeRuns(all);
-      var anyRequired = Object.keys(required).length > 0;
       var ok = all.filter(function (w) { return !w.reqBlocked.length; });
-      var shown, closest = false;
-      if (st.strict && anyRequired) {
+      var closest = false;
+      if (st.strict) {
         shown = pickBest(ok, 8);
         if (!shown.length) { shown = pickBest(all, 6); closest = true; }
       } else {
         shown = pickBest(all, 8);
       }
-      if (closest) hint.textContent = "No time works for every required exec. Here are the closest options:";
-      else if (anyRequired && st.strict) hint.textContent = "Times when every required exec is available (★ = required), best first:";
-      else hint.textContent = "Best first. Tap names above to say who has to be there.";
       if (!shown.length) hint.textContent = "No times fit those settings.";
-      var blind = team.filter(function (p) { return required[p.id] && !avail[p.id]; });
-      if (blind.length && shown.length) {
-        hint.textContent += " Heads up: " + blind.map(function (p) { return p.display_name; }).join(", ") + (blind.length > 1 ? " haven't" : " hasn't") + " set availability yet, so can't be checked.";
-      }
-      shown.forEach(function (w) { results.appendChild(resultCard(w)); });
+      else if (closest) hint.textContent = "No time works for everyone. Here are the closest options:";
+      else if (st.strict) hint.textContent = "Times when everyone in the meeting can make it, best first:";
+      else hint.textContent = "Best first:";
+      shown.forEach(function (w, i) { results.appendChild(resultCard(w, i < 3 ? i + 1 : 0)); });
     }
 
-    renderHeat(st);
+    renderCalendar(st, shown);
+    if (glance) renderGlance();
   }
 
-  function slotInfo(d, s, st) {
-    var w = evalWindow(d, s, 1, st);
-    var box = $("f-info");
+  function slotInfo(d, s, st, box, people) {
+    var w = evalWindow(d, s, 1, st, people);
     box.textContent = "";
     box.appendChild(el("strong", null, DAYS_LONG[d] + " · " + slotLabel(s)));
     function line(title, ids, cls) {
@@ -513,65 +564,133 @@
     }
     line("Free", w.free, "good");
     line("If needed", w.maybe);
-    line("Can't make it", w.busy, w.reqBlocked.length ? "bad" : "");
+    line("Can't make it", w.busy);
     line("No availability set", w.unknown, "dim");
   }
 
-  function renderHeat(st) {
-    var first = !heat;
-    if (first) {
-      heat = buildGrid($("f-heat"), false);
-      heat.grid.addEventListener("click", function (e) {
+  // ----- week at a glance: the whole team, darker = more people free -----
+  var NO_DATE = { date: "", dateDay: null };
+  function renderGlance() {
+    if (!glance) {
+      glance = buildGrid($("g-heat"), false);
+      glance.grid.addEventListener("click", function (e) {
         var c = e.target.closest(".cell");
         if (!c) return;
         var i = +c.getAttribute("data-i");
-        slotInfo(Math.floor(i / N), i % N, settings());
+        slotInfo(Math.floor(i / N), i % N, NO_DATE, $("g-info"), team);
       });
     }
-    var total = team.filter(function (p) { return avail[p.id]; }).length || 1;
-    var anyRequired = Object.keys(required).length > 0;
+    var known = team.filter(function (p) { return avail[p.id]; });
+    var total = known.length || 1;
     for (var d = 0; d < 7; d++) {
       for (var s = 0; s < N; s++) {
-        var cell = heat.cells[d * N + s];
-        var n = 0, reqBad = false;
-        team.forEach(function (p) {
-          var v = stateAt(p.id, d, s, st.date, st.dateDay);
+        var cell = glance.cells[d * N + s];
+        var n = 0;
+        known.forEach(function (p) {
+          var v = stateAt(p.id, d, s, "", null);
           if (v === "1" || v === "2") n++;
-          else if (v === "0" && required[p.id]) reqBad = true;
         });
-        var offDay = st.days.indexOf(d) === -1;
-        var offTime = s < st.from || s >= st.until;
-        cell.className = "cell heat" + ((offDay || offTime || (st.strict && anyRequired && reqBad)) ? " off" : "") + (n === total ? " all" : "");
+        cell.className = "cell heat" + (n === total ? " all" : "");
         cell.style.background = n ? "rgba(75,122,60," + (0.1 + 0.85 * n / total).toFixed(2) + ")" : "";
         var txt = n ? String(n) : "";
         if (cell.textContent !== txt) cell.textContent = txt;
       }
     }
+    var unset = team.filter(function (p) { return !avail[p.id]; });
+    $("g-status").textContent = known.length + " of " + team.length + " execs have set their availability." +
+      (unset.length ? " Not set: " + unset.map(function (p) { return p.display_name; }).join(", ") + "." : "");
   }
 
+  // ----- who is in the meeting -----
+  function sameSet(ids) {
+    var keys = Object.keys(required);
+    return keys.length === ids.length && ids.every(function (id) { return required[id]; });
+  }
+
+  function presetList() {
+    var out = [{ label: "Everyone", ids: team.map(function (p) { return p.id; }) }];
+    var core = Object.keys(coreIds).filter(function (id) { return byId[id]; });
+    if (hasCore && core.length) out.push({ label: "Core execs", ids: core });
+    var groups = {};
+    team.forEach(function (p) { var t = teamOf[p.id]; if (t) (groups[t] = groups[t] || []).push(p.id); });
+    Object.keys(groups).sort().forEach(function (t) {
+      out.push({ label: /^team\b/i.test(t) ? t : "Team " + t, ids: groups[t] });
+    });
+    return out;
+  }
+
+  function personText(p) { return p.display_name + (p.id === me.id ? " (me)" : ""); }
+
   function renderPeople() {
+    var pre = $("f-presets");
+    pre.textContent = "";
+    presetList().forEach(function (pr) {
+      var b = el("button", "chip" + (sameSet(pr.ids) ? " on" : ""), pr.label);
+      b.type = "button";
+      b.setAttribute("aria-pressed", String(sameSet(pr.ids)));
+      b.addEventListener("click", function () { setRequired(pr.ids); });
+      pre.appendChild(b);
+    });
+
     var box = $("f-people");
     box.textContent = "";
-    team.forEach(function (p) {
-      var lab = el("label", "who-item" + (avail[p.id] ? "" : " unset"));
-      if (!avail[p.id]) lab.title = "Hasn't set their availability yet";
-      var cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = !!required[p.id];
-      cb.addEventListener("change", function () {
-        if (cb.checked) required[p.id] = true; else delete required[p.id];
-        recompute();
-      });
-      lab.appendChild(cb);
-      lab.appendChild(el("span", null, p.display_name + (p.id === me.id ? " (me)" : "")));
-      if (p.role && p.role !== "exec") lab.appendChild(el("small", null, p.role));
-      box.appendChild(lab);
+    var mem = team.filter(function (p) { return required[p.id]; });
+    mem.forEach(function (p) {
+      var chip = el("span", "who-chip" + (avail[p.id] ? "" : " unset"));
+      if (!avail[p.id]) chip.title = "Hasn't set their availability yet";
+      chip.appendChild(el("b", null, personText(p)));
+      if (p.role && p.role !== "exec") chip.appendChild(el("small", null, p.role));
+      if (mem.length > 1) {
+        var x = el("button", "chip-x", "×");
+        x.type = "button";
+        x.setAttribute("aria-label", "Remove " + p.display_name + " from this meeting");
+        x.addEventListener("click", function () { delete required[p.id]; renderPeople(); recompute(); });
+        chip.appendChild(x);
+      }
+      box.appendChild(chip);
     });
+
+    var rest = team.filter(function (p) { return !required[p.id]; });
+    if (rest.length) {
+      var wrap = el("span", "who-add");
+      var plus = el("button", "chip who-plus", "+ Add");
+      plus.type = "button";
+      plus.setAttribute("aria-expanded", String(menuOpen));
+      var menu = el("div", "who-menu");
+      menu.hidden = !menuOpen;
+      menu.setAttribute("role", "group");
+      menu.setAttribute("aria-label", "Add someone to this meeting");
+      rest.forEach(function (p) {
+        var it = el("button", "who-opt");
+        it.type = "button";
+        it.appendChild(el("span", null, personText(p)));
+        if (p.role && p.role !== "exec") it.appendChild(el("small", null, p.role));
+        it.addEventListener("click", function (e) {
+          e.stopPropagation();
+          required[p.id] = true;
+          renderPeople();
+          recompute();
+        });
+        menu.appendChild(it);
+      });
+      plus.addEventListener("click", function (e) {
+        e.stopPropagation();
+        menuOpen = !menuOpen;
+        menu.hidden = !menuOpen;
+        plus.setAttribute("aria-expanded", String(menuOpen));
+      });
+      wrap.appendChild(plus);
+      wrap.appendChild(menu);
+      box.appendChild(wrap);
+    } else {
+      menuOpen = false;
+    }
   }
 
   function setRequired(ids) {
     required = {};
-    ids.forEach(function (id) { required[id] = true; });
+    ids.forEach(function (id) { if (byId[id]) required[id] = true; });
+    if (!Object.keys(required).length) team.forEach(function (p) { required[p.id] = true; });
     renderPeople();
     recompute();
   }
@@ -596,7 +715,11 @@
     var dateIn = $("f-date");
     dateIn.min = localToday();
 
+    team.forEach(function (p) { required[p.id] = true; });   // start with everyone
     renderPeople();
+    document.addEventListener("click", function () {
+      if (menuOpen) { menuOpen = false; renderPeople(); }
+    });
 
     ["f-day", "f-dur", "f-from", "f-until", "f-strict"].forEach(function (id) {
       $(id).addEventListener("change", recompute);
@@ -606,12 +729,27 @@
       else day.disabled = false;
       recompute();
     });
-    $("f-all").addEventListener("click", function () { setRequired(team.map(function (p) { return p.id; })); });
-    $("f-none").addEventListener("click", function () { setRequired([]); });
-    if (hasCore) {
-      $("f-core").hidden = false;
-      $("f-core").addEventListener("click", function () { setRequired(Object.keys(coreIds)); });
+
+    // calendar / list switch for the best times
+    var viewPref = "cal";
+    try { viewPref = localStorage.getItem("mcc_meetview") === "list" ? "list" : "cal"; } catch (x) { /* ignore */ }
+    function setResultsView(v) {
+      $("f-cal-wrap").hidden = v !== "cal";
+      $("f-results").hidden = v !== "list";
+      $("rv-cal").classList.toggle("on", v === "cal");
+      $("rv-list").classList.toggle("on", v === "list");
+      $("rv-cal").setAttribute("aria-pressed", String(v === "cal"));
+      $("rv-list").setAttribute("aria-pressed", String(v === "list"));
+      try { localStorage.setItem("mcc_meetview", v); } catch (x) { /* ignore */ }
     }
+    $("rv-cal").addEventListener("click", function () { setResultsView("cal"); });
+    $("rv-list").addEventListener("click", function () { setResultsView("list"); });
+    setResultsView(viewPref);
+    $("f-cal").addEventListener("click", function (e) {
+      var c = e.target.closest(".cell");
+      if (!c) return;
+      slotInfo(+c.getAttribute("data-d"), +c.getAttribute("data-s"), settings(), $("f-info"));
+    });
     recompute();
   }
 
@@ -619,13 +757,14 @@
   //  Tabs + boot
   // =====================================================================
   function showTab(name) {
-    ["find", "mine"].forEach(function (t) {
+    ["find", "glance", "mine"].forEach(function (t) {
       var on = t === name;
       $("pane-" + t).hidden = !on;
       var tab = $("tab-" + t);
       tab.classList.toggle("on", on);
       tab.setAttribute("aria-selected", String(on));
     });
+    if (name === "glance") renderGlance();
   }
 
   function init() {
