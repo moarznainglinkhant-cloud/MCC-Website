@@ -202,6 +202,17 @@
 
         <!-- Find a time -->
         <section class="panel" id="pane-find" role="tabpanel" aria-labelledby="tab-find" hidden>
+          <fieldset class="who">
+            <legend>Who has to be there? <span class="meta">Tap names to require them</span></legend>
+            <div class="who-actions">
+              <button type="button" class="chip" id="f-all">Everyone</button>
+              <button type="button" class="chip" id="f-none">No one</button>
+              <button type="button" class="chip" id="f-core" hidden>Core execs</button>
+            </div>
+            <div class="who-list" id="f-people"></div>
+            <label class="group-toggle"><input type="checkbox" id="f-strict" checked> Only show times when every required exec is available</label>
+          </fieldset>
+
           <div class="f-controls">
             <label class="field-inline">Day
               <select id="f-day"></select>
@@ -221,17 +232,6 @@
           </div>
           <p class="meta" id="f-date-hint">Pick a date to take everyone's "can't make it" days into account.</p>
 
-          <fieldset class="who">
-            <legend>Who has to be there?</legend>
-            <div class="who-actions">
-              <button type="button" class="chip" id="f-all">Everyone</button>
-              <button type="button" class="chip" id="f-none">No one</button>
-              <button type="button" class="chip" id="f-core" hidden>Core execs</button>
-            </div>
-            <div class="who-list" id="f-people"></div>
-            <label class="group-toggle"><input type="checkbox" id="f-strict" checked> Only show times when every required exec is available</label>
-          </fieldset>
-
           <p class="meta" id="f-status"></p>
 
           <h2 class="h-sub">Best times</h2>
@@ -246,11 +246,12 @@
 
         <!-- My availability -->
         <section class="panel" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>
-          <p class="panel-sub">Pick a brush, then drag across the blocks to paint when you're usually free. Tap a day name to fill that whole day. Anything you leave blank counts as busy.</p>
+          <p class="panel-sub">Pick a brush, then drag across the blocks to paint when you're usually free. Tap a day name to fill that whole day. Anything you leave blank counts as busy. Easier if most of your week is free: press \u201CStart with everything free\u201D, then paint the times you can't do.</p>
           <div class="brushes" role="group" aria-label="Brush">
             <button type="button" class="brush on" data-b="1"><i class="sw s1"></i>Free</button>
             <button type="button" class="brush" data-b="2"><i class="sw s2"></i>If needed</button>
             <button type="button" class="brush" data-b="0"><i class="sw s0"></i>Busy</button>
+            <button type="button" class="link-btn" id="m-fill" title="Marks 9 am to 10 pm free, then you paint over what you can't do">Start with everything free</button>
             <button type="button" class="link-btn" id="m-clear">Clear all</button>
           </div>
           <div class="paint-row" id="m-paint-row" hidden>

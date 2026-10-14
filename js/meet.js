@@ -208,6 +208,14 @@
         document.querySelectorAll(".brush").forEach(function (x) { x.classList.toggle("on", x === b); });
       });
     });
+    $("m-fill").addEventListener("click", function () {
+      // Handy start: everyone is free 9 am - 10 pm, then paint over what they can't do (like the old sheet).
+      for (var d = 0; d < 7; d++) for (var s = 2; s < 28; s++) myCells[d * N + s] = "1";
+      refreshEditor();
+      setDirty(true);
+      brush = "0";
+      document.querySelectorAll(".brush").forEach(function (x) { x.classList.toggle("on", x.getAttribute("data-b") === "0"); });
+    });
     $("m-clear").addEventListener("click", function () {
       myCells = blankCells().split("");
       refreshEditor();
@@ -347,8 +355,22 @@
     var aa = a.free.length + a.maybe.length, bb = b.free.length + b.maybe.length;
     if (aa !== bb) return bb - aa;
     if (a.free.length !== b.free.length) return b.free.length - a.free.length;
+    var ca = a.count || 1, cb = b.count || 1;
+    if (ca !== cb) return cb - ca;                 // a longer open window beats a short one
     if (a.d !== b.d) return a.d - b.d;
     return a.start - b.start;
+  }
+
+  // A run of back-to-back start times with the very same people free is shown as one open window.
+  function endOf(w) { return w.start + w.dur + ((w.count || 1) - 1); }
+  function mergeRuns(all) {
+    var out = [], prev = null, prevSig = "";
+    all.forEach(function (w) {
+      var sig = [w.free.join(), w.maybe.join(), w.busy.join(), w.unknown.join(), w.reqBlocked.join()].join("|");
+      if (prev && prev.d === w.d && w.start === prev.start + prev.count && sig === prevSig) { prev.count++; }
+      else { w.count = 1; out.push(w); prev = w; prevSig = sig; }
+    });
+    return out;
   }
 
   // Best non-overlapping windows (greedy), at most `max`.
@@ -356,7 +378,7 @@
     var chosen = [];
     list.slice().sort(rank).forEach(function (w) {
       if (chosen.length >= max) return;
-      var clash = chosen.some(function (c) { return c.d === w.d && w.start < c.start + c.dur && c.start < w.start + w.dur; });
+      var clash = chosen.some(function (c) { return c.d === w.d && w.start < endOf(c) && c.start < endOf(w); });
       if (!clash) chosen.push(w);
     });
     return chosen;
@@ -366,19 +388,57 @@
     return ids.map(function (id) { return label(id) + (required[id] ? " ★" : ""); }).join(", ");
   }
 
+  var DUR_WORDS = { 1: "30-minute", 2: "1-hour", 3: "1.5-hour", 4: "2-hour", 6: "3-hour" };
+  function durText() { return DUR_WORDS[+$("f-dur").value] || "this-length"; }
+
+  function copyText(text, btn) {
+    function done(ok) {
+      var old = btn.getAttribute("data-label") || btn.textContent;
+      btn.setAttribute("data-label", old);
+      btn.textContent = ok ? "Copied" : "Copy failed";
+      setTimeout(function () { btn.textContent = old; }, 1600);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(false); });
+    } else {
+      var ta = document.createElement("textarea");
+      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(ta);
+      done(ok);
+    }
+  }
+
+  function plainNames(ids) { return ids.map(function (id) { return byId[id] ? byId[id].display_name : "An exec"; }).join(", "); }
+
   function resultCard(w) {
+    var count = w.count || 1;
+    var end = endOf(w);
     var li = el("li", "result");
     var head = el("div", "result-head");
-    head.appendChild(el("strong", null, DAYS_LONG[w.d] + " · " + slotLabel(w.start) + " – " + slotLabel(w.start + w.dur)));
+    head.appendChild(el("strong", null, DAYS_LONG[w.d] + " · " + slotLabel(w.start) + " – " + slotLabel(end)));
+    var known = team.length - w.unknown.length;
     var n = w.free.length + w.maybe.length;
-    head.appendChild(el("span", "badge" + (w.reqBlocked.length ? " bad" : ""), n + " of " + team.length + " available"));
+    head.appendChild(el("span", "badge" + (w.reqBlocked.length ? " bad" : ""), n + " of " + known + " free"));
     li.appendChild(head);
+    if (count > 1) li.appendChild(el("p", "r-line dim", "Open window. A " + durText() + " meeting fits anywhere in it."));
     if (w.reqBlocked.length) li.appendChild(el("p", "r-line bad", "Required but busy: " + nameList(w.reqBlocked)));
     if (w.maybe.length) li.appendChild(el("p", "r-line", "If needed: " + nameList(w.maybe)));
     var others = w.busy.filter(function (id) { return !required[id]; });
     if (others.length) li.appendChild(el("p", "r-line", "Can't make it: " + nameList(others)));
     if (w.unknown.length) li.appendChild(el("p", "r-line dim", "No availability set: " + nameList(w.unknown)));
     if (!w.busy.length && !w.maybe.length && !w.unknown.length) li.appendChild(el("p", "r-line good", "Everyone is free."));
+    var cp = el("button", "link-btn r-copy", "Copy as message");
+    cp.type = "button";
+    cp.addEventListener("click", function () {
+      var t = DAYS_LONG[w.d] + " " + slotLabel(w.start) + " – " + slotLabel(end) + " works for " + plainNames(w.free.concat(w.maybe)) + ".";
+      if (count > 1) t += " (A " + durText() + " meeting fits anywhere in that window.)";
+      if (w.maybe.length) t += " " + plainNames(w.maybe) + " only if needed.";
+      copyText(t, cp);
+    });
+    li.appendChild(cp);
     return li;
   }
 
@@ -415,6 +475,7 @@
       st.days.forEach(function (d) {
         for (var s = st.from; s + st.dur <= st.until; s++) all.push(evalWindow(d, s, st.dur, st));
       });
+      all = mergeRuns(all);
       var anyRequired = Object.keys(required).length > 0;
       var ok = all.filter(function (w) { return !w.reqBlocked.length; });
       var shown, closest = false;
@@ -426,8 +487,12 @@
       }
       if (closest) hint.textContent = "No time works for every required exec. Here are the closest options:";
       else if (anyRequired && st.strict) hint.textContent = "Times when every required exec is available (★ = required), best first:";
-      else hint.textContent = "Best first. Tick who has to be there to filter these.";
+      else hint.textContent = "Best first. Tap names above to say who has to be there.";
       if (!shown.length) hint.textContent = "No times fit those settings.";
+      var blind = team.filter(function (p) { return required[p.id] && !avail[p.id]; });
+      if (blind.length && shown.length) {
+        hint.textContent += " Heads up: " + blind.map(function (p) { return p.display_name; }).join(", ") + (blind.length > 1 ? " haven't" : " hasn't") + " set availability yet, so can't be checked.";
+      }
       shown.forEach(function (w) { results.appendChild(resultCard(w)); });
     }
 
@@ -463,7 +528,7 @@
         slotInfo(Math.floor(i / N), i % N, settings());
       });
     }
-    var total = team.length || 1;
+    var total = team.filter(function (p) { return avail[p.id]; }).length || 1;
     var anyRequired = Object.keys(required).length > 0;
     for (var d = 0; d < 7; d++) {
       for (var s = 0; s < N; s++) {
@@ -476,8 +541,10 @@
         });
         var offDay = st.days.indexOf(d) === -1;
         var offTime = s < st.from || s >= st.until;
-        cell.className = "cell heat" + ((offDay || offTime || (st.strict && anyRequired && reqBad)) ? " off" : "");
-        cell.style.background = n ? "rgba(75,122,60," + (0.12 + 0.8 * n / total).toFixed(2) + ")" : "";
+        cell.className = "cell heat" + ((offDay || offTime || (st.strict && anyRequired && reqBad)) ? " off" : "") + (n === total ? " all" : "");
+        cell.style.background = n ? "rgba(75,122,60," + (0.1 + 0.85 * n / total).toFixed(2) + ")" : "";
+        var txt = n ? String(n) : "";
+        if (cell.textContent !== txt) cell.textContent = txt;
       }
     }
   }
@@ -486,7 +553,8 @@
     var box = $("f-people");
     box.textContent = "";
     team.forEach(function (p) {
-      var lab = el("label", "who-item");
+      var lab = el("label", "who-item" + (avail[p.id] ? "" : " unset"));
+      if (!avail[p.id]) lab.title = "Hasn't set their availability yet";
       var cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = !!required[p.id];
@@ -495,7 +563,8 @@
         recompute();
       });
       lab.appendChild(cb);
-      lab.appendChild(el("span", null, label(p.id) + (p.id === me.id ? " (me)" : "")));
+      lab.appendChild(el("span", null, p.display_name + (p.id === me.id ? " (me)" : "")));
+      if (p.role && p.role !== "exec") lab.appendChild(el("small", null, p.role));
       box.appendChild(lab);
     });
   }
