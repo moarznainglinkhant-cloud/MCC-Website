@@ -29,6 +29,22 @@
     if (s < 86400 * 7) return Math.floor(s / 86400) + " d ago";
     return d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
   }
+  // Visit tracking (best effort, never blocks the page). One id per browser tab visit.
+  var SID_KEY = "mcc_sid";
+  function newSid() {
+    if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16);
+    });
+  }
+  function getSid(create) {
+    var id = null;
+    try { id = sessionStorage.getItem(SID_KEY); } catch (e) { /* ignore */ }
+    if (!id && create) { id = newSid(); try { sessionStorage.setItem(SID_KEY, id); } catch (e) { /* ignore */ } }
+    return id;
+  }
+  function clearSid() { try { sessionStorage.removeItem(SID_KEY); } catch (e) { /* ignore */ } }
+
   function reducedMotion() { return window.matchMedia("(prefers-reduced-motion: reduce)").matches; }
   function localToday() {
     var d = new Date();
@@ -99,7 +115,13 @@
           $("password").value = "";
           return;
         }
-        location.href = "exec.html";
+        clearSid();
+        var go = function () { location.href = "exec.html"; };
+        var t = setTimeout(go, 1500);           // never hold the sign-in up for tracking
+        try {
+          sb.rpc("track_activity", { p_session: getSid(true), p_signin: true })
+            .then(function () { clearTimeout(t); go(); }, function () { clearTimeout(t); go(); });
+        } catch (e) { clearTimeout(t); go(); }
       }).catch(function () {
         btn.disabled = false;
         setMsg(msg, "Couldn't reach the server. Check your connection and try again.", "error");
@@ -114,6 +136,20 @@
     var names = {};           // id -> display_name
     var todos = [];
     var todoFilter = "open";
+
+    // Pings once on open, then every minute while the tab is visible (and once when it's hidden).
+    var heartbeatOn = false;
+    function startHeartbeat() {
+      if (heartbeatOn) return;
+      heartbeatOn = true;
+      var sid = getSid(true);
+      function ping() {
+        try { sb.rpc("track_activity", { p_session: sid, p_signin: false }).then(function () {}, function () {}); } catch (e) { /* ignore */ }
+      }
+      ping();
+      setInterval(function () { if (document.visibilityState === "visible") ping(); }, 60000);
+      document.addEventListener("visibilitychange", function () { ping(); });
+    }
 
     function goLogin() { location.replace("login.html"); }
     function nameOf(id) { return names[id] || "An exec"; }
@@ -1343,7 +1379,7 @@
       b.addEventListener("click", function () {
         b.disabled = true;
         try { sessionStorage.removeItem("mcc_welcomed"); } catch (e) { /* ignore */ }
-        sb.auth.signOut().then(goLogin, goLogin);
+        clearSid(); sb.auth.signOut().then(goLogin, goLogin);
       });
     });
 
@@ -1362,6 +1398,7 @@
             var name = (prof && prof.display_name) || (user.email || "").split("@")[0] || "friend";
             var role = (prof && prof.role) || "exec";
             me = { id: user.id, name: name, role: role, email: user.email || "" };
+            startHeartbeat();
 
             $("welcome-name").textContent = "Welcome, " + name;
             $("welcome-sub").textContent = "You're signed in as " + me.email;
