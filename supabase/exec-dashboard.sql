@@ -1,4 +1,4 @@
--- MCC exec area, part 2: announcement banner, shout-out wall, team list.
+-- MCC exec area, part 2: announcement banner, lounge, team list.
 -- Run AFTER setup.sql. Paste into Supabase -> SQL Editor -> Run. Safe to run again.
 
 -- ---------- Team list: any signed-in exec can see every exec's name + role ----------
@@ -58,5 +58,5 @@ create index if not exists shoutouts_created_at_idx on public.shoutouts (created
 
 -- ---------- A first announcement so the banner has something to show ----------
 insert into public.announcements (body)
-select 'Welcome to the exec area! This is a private space for the MCC team. Post a shout-out below.'
+select 'Welcome to the exec area! This is a private space for the MCC team. Drop a note in the lounge.'
 where not exists (select 1 from public.announcements);
