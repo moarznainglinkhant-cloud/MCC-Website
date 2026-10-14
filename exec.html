@@ -131,18 +131,6 @@
         </div>
 
         <section class="panel" id="todo-panel" hidden aria-label="Exec to-do board">
-          <form class="todo-form" id="todo-form">
-            <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task" enterkeyhint="done">
-            <button type="button" class="link-btn more-toggle" id="todo-more" aria-expanded="false" aria-controls="todo-form">More options</button>
-            <input class="extra opt" id="todo-event" type="text" maxlength="80" list="todo-events" placeholder="Event (optional)" aria-label="Event" autocomplete="off">
-            <datalist id="todo-events"></datalist>
-            <select class="opt" id="todo-assignee" aria-label="Assign to"></select>
-            <select class="extra opt" id="todo-priority" aria-label="Priority"></select>
-            <select class="extra offset-only opt" id="todo-rel" aria-label="Due date type"></select>
-            <input class="opt" id="todo-due" type="date" aria-label="Due date (optional)">
-            <button class="btn" id="todo-add" type="submit">Add</button>
-          </form>
-          <p class="msg" id="todo-msg" role="status" aria-live="polite"></p>
           <div class="viewbar">
             <div class="vtabs" role="group" aria-label="Board view">
               <button type="button" class="vtab on" data-tv="list" aria-pressed="true">List</button>
@@ -151,21 +139,42 @@
               <button type="button" class="vtab" data-tv="event" aria-pressed="false">By event</button>
               <button type="button" class="vtab" data-tv="person" aria-pressed="false">By person</button>
             </div>
+            <button type="button" class="btn new-task-btn" id="todo-new" aria-expanded="false" aria-controls="todo-form">+ New task</button>
+          </div>
+
+          <form class="todo-form" id="todo-form" hidden>
+            <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task" enterkeyhint="done" autocomplete="off">
+            <input class="extra opt" id="todo-event" type="text" maxlength="80" list="todo-events" placeholder="Event (optional)" aria-label="Event" autocomplete="off">
+            <datalist id="todo-events"></datalist>
+            <select class="opt" id="todo-assignee" aria-label="Assign to"></select>
+            <select class="extra opt" id="todo-priority" aria-label="Priority"></select>
+            <select class="extra offset-only opt" id="todo-rel" aria-label="Due date type"></select>
+            <input class="opt" id="todo-due" type="date" aria-label="Due date (optional)">
+            <div class="form-actions">
+              <button type="button" class="link-btn more-toggle" id="todo-more" aria-expanded="false" aria-controls="todo-form">More options</button>
+              <span class="spacer"></span>
+              <button type="button" class="btn ghost" id="todo-cancel">Cancel</button>
+              <button class="btn" id="todo-add" type="submit">Add task</button>
+            </div>
+          </form>
+          <p class="msg" id="todo-msg" role="status" aria-live="polite"></p>
+
+          <div class="toolbar">
+            <div class="filters" id="todo-filters" role="group" aria-label="Filter tasks">
+              <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
+              <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
+              <span id="n-mine" hidden></span>
+            </div>
             <div class="vtools">
-              <label class="group-toggle" id="only-mine-wrap" hidden><input type="checkbox" id="only-mine"> Only my tasks</label>
               <div class="tsearch" id="todo-search-wrap">
-                <input type="search" id="todo-search" placeholder="Search tasks" aria-label="Search tasks" autocomplete="off" maxlength="60">
+                <input type="search" id="todo-search" placeholder="Search" aria-label="Search tasks" autocomplete="off" maxlength="60">
               </div>
+              <label class="group-toggle" id="only-mine-wrap"><input type="checkbox" id="only-mine"> Only mine</label>
+              <label class="group-toggle extra" id="group-wrap"><input type="checkbox" id="todo-group" checked> Group by event</label>
             </div>
           </div>
 
           <div class="vwrap" id="tv-list">
-            <div class="filters" role="group" aria-label="Filter tasks">
-              <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
-              <button type="button" class="chip" data-filter="mine">Mine <b id="n-mine">0</b></button>
-              <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
-              <label class="group-toggle extra"><input type="checkbox" id="todo-group" checked> Group by event</label>
-            </div>
             <ul class="todo-list" id="todo-list"></ul>
           </div>
           <div class="vwrap" id="tv-board" hidden></div>

@@ -593,20 +593,21 @@
 
     function renderList() {
       var today = localToday();
-      var open = todos.filter(function (t) { return t.status !== "done"; });
-      var mine = open.filter(function (t) { return me && t.assignee_id === me.id; });
-      var done = todos.filter(function (t) { return t.status === "done"; });
+      var mineAll = todos.filter(function (t) { return t.status !== "done" && me && t.assignee_id === me.id; });
+      var base = onlyMine && me ? todos.filter(function (t) { return t.assignee_id === me.id; }) : todos;
+      var open = base.filter(function (t) { return t.status !== "done"; });
+      var done = base.filter(function (t) { return t.status === "done"; });
       $("n-open").textContent = open.length;
-      $("n-mine").textContent = mine.length;
       $("n-done").textContent = done.length;
-      $("home-tasks-n").textContent = mine.length;
-      $("home-tasks-sub").textContent = mine.length ? "Assigned to you. Tap to open." : "Nothing assigned to you right now";
+      $("home-tasks-n").textContent = mineAll.length;
+      $("home-tasks-sub").textContent = mineAll.length ? "Assigned to you. Tap to open." : "Nothing assigned to you right now";
+      if (todoFilter !== "done") todoFilter = "open";
 
-      document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
+      document.querySelectorAll("#todo-panel .chip[data-filter]").forEach(function (c) {
         c.classList.toggle("on", c.getAttribute("data-filter") === todoFilter);
       });
 
-      var shown = todoFilter === "mine" ? mine : todoFilter === "done" ? done.slice(0, 30) : open;
+      var shown = todoFilter === "done" ? done.slice(0, 30) : open;
       var total = shown.length;
       if (query) shown = shown.filter(matchesQuery);
       shown = sortTodos(shown);
@@ -617,7 +618,7 @@
         ul.appendChild(el("li", "empty",
           query ? "No tasks match \u201C" + query + "\u201D." :
           todoFilter === "done" ? "Nothing ticked off yet." :
-          todoFilter === "mine" ? "Nothing assigned to you. Nice." : "No open tasks. Add one above."));
+          onlyMine ? "Nothing assigned to you. Nice." : "No open tasks. Tap \u201C+ New task\u201D to add one."));
         return;
       }
 
@@ -696,24 +697,36 @@
         b.setAttribute("aria-pressed", String(on));
       });
       ["list", "board", "cal", "event", "person"].forEach(function (v) { $("tv-" + v).hidden = v !== tview; });
-      $("only-mine-wrap").hidden = tview === "list";
+      $("todo-filters").hidden = tview !== "list";
+      $("group-wrap").hidden = tview !== "list";
       $("todo-search-wrap").hidden = tview === "event" || tview === "person";
     }
 
     function titleCase(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
     function pad(n) { return String(n).padStart(2, "0"); }
-    function setFormOpen(open) {
+    function setFormOpen(open) {            // the extra fields (event, owner, priority, due)
       $("todo-form").classList.toggle("open", open);
       var b = $("todo-more");
       b.setAttribute("aria-expanded", String(open));
       b.textContent = open ? "Fewer options" : "More options";
     }
-    function focusAddForm(eventName) {
-      var evIn = $("todo-event");
-      if (eventName != null && evIn) { evIn.value = eventName; setFormOpen(true); }
-      $("todo-form").scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "center" });
-      $("todo-title-input").focus({ preventScroll: true });
+    function showAddForm(show, eventName) {   // the whole "new task" card; closed unless asked for
+      var f = $("todo-form");
+      f.hidden = !show;
+      $("todo-new").setAttribute("aria-expanded", String(show));
+      $("todo-new").hidden = show;
+      if (show) {
+        if (eventName != null && $("todo-event")) { $("todo-event").value = eventName; setFormOpen(true); }
+        f.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "nearest" });
+        $("todo-title-input").focus({ preventScroll: true });
+      } else {
+        $("todo-title-input").value = "";
+        setFormOpen(false);
+        setMsg($("todo-msg"), "", "");
+        $("todo-new").focus({ preventScroll: true });
+      }
     }
+    function focusAddForm(eventName) { showAddForm(true, eventName); }
 
     // ----- Board (kanban) -----
     var BOARD_COLS = [["open", "To do"], ["doing", "In progress"], ["done", "Done"]];
@@ -1085,6 +1098,9 @@
       });
 
       $("todo-more").addEventListener("click", function () { setFormOpen(!$("todo-form").classList.contains("open")); });
+      $("todo-new").addEventListener("click", function () { showAddForm(true); });
+      $("todo-cancel").addEventListener("click", function () { showAddForm(false); });
+      $("todo-form").addEventListener("keydown", function (e) { if (e.key === "Escape") showAddForm(false); });
       document.querySelectorAll(".vtab").forEach(function (b) {
         b.addEventListener("click", function () {
           tview = b.getAttribute("data-tv");
@@ -1102,7 +1118,7 @@
       grp.checked = groupByEvent;
       grp.addEventListener("change", function () { groupByEvent = grp.checked; renderTodos(); });
 
-      document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
+      document.querySelectorAll("#todo-panel .chip[data-filter]").forEach(function (c) {
         c.addEventListener("click", function () {
           todoFilter = c.getAttribute("data-filter");
           renderTodos();
@@ -1129,10 +1145,11 @@
         sb.from("todos").insert(row).then(function (r) {
           add.disabled = false;
           if (r.error) { setMsg(tmsg, "Couldn't add that task. Try again.", "error"); return; }
-          // Keep the event filled in (handy when adding several tasks for one event).
-          titleIn.value = ""; due.value = ""; assignee.value = ""; prio.value = "medium";
-          relSel.value = ""; due.hidden = false;
-          setMsg(tmsg, "", "");
+          due.value = ""; assignee.value = ""; prio.value = "medium";
+          relSel.value = ""; due.hidden = false; evIn.value = "";
+          showAddForm(false);
+          setMsg(tmsg, "Task added.", "info");
+          setTimeout(function () { if (tmsg.textContent === "Task added.") setMsg(tmsg, "", ""); }, 2500);
           todoFilter = "open";
           loadTodos();
         }).catch(function () {

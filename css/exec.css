@@ -160,17 +160,11 @@ footer.slim img{ width:26px; height:26px; border-radius:50%; }
 .react .n{ font-size:0.78rem; font-weight:700; }
 
 /* ---------- TO-DO BOARD ---------- */
-.todo-form{ display:grid; grid-template-columns: 1fr auto auto auto; gap:10px; align-items:center; }
 .todo-form input, .todo-form select, .todo-assign{
   font:inherit; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:10px; padding:11px 12px; min-width:0;
 }
 .todo-form input:focus-visible, .todo-form select:focus-visible, .todo-assign:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
 .todo-form .btn{ padding:11px 22px; }
-@media (max-width:640px){
-  .todo-form{ grid-template-columns: 1fr 1fr; }
-  .todo-form .todo-input{ grid-column: 1 / -1; }
-  .todo-form .btn{ grid-column: 1 / -1; }
-}
 .filters{ display:flex; flex-wrap:wrap; gap:8px; margin-top:6px; }
 .chip{
   font:inherit; font-size:0.78rem; font-weight:600; cursor:pointer; color:var(--ink);
@@ -182,12 +176,9 @@ footer.slim img{ width:26px; height:26px; border-radius:50%; }
 .todo-assign{ padding:4px 8px; font-size:0.78rem; border-radius:8px; }
 
 /* ---------- TO-DO: priority, events, grouping ---------- */
-.todo-form{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
-.todo-form .todo-input{ flex:1 1 100%; }
 .todo-form input:not(.todo-input), .todo-form select{ flex:1 1 130px; }
-.todo-form .btn{ flex:0 0 auto; }
 .no-extras .extra{ display:none !important; }
-.group-toggle{ margin-left:auto; display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:600; color:var(--ink-soft); cursor:pointer; }
+.group-toggle{ display:inline-flex; align-items:center; gap:6px; font-size:0.78rem; font-weight:600; color:var(--ink-soft); cursor:pointer; }
 .group-toggle input{ accent-color:var(--navy); width:16px; height:16px; }
 .prio{ font-weight:700; border-width:2px; }
 .prio-high{ color:#8C2A1F; border-color:var(--red); background:color-mix(in srgb, var(--red) 10%, #fff); }
@@ -371,9 +362,24 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
    TO-DO VIEWS: board, calendar, by event, by person
    ===================================================================== */
 .no-offset .offset-only{ display:none !important; }
-.more-toggle{ display:none; }
-.viewbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; margin:4px 0 14px; padding-top:14px; border-top:1px solid var(--line); }
-.viewbar .group-toggle{ margin-left:0; }
+.more-toggle{ display:inline-block; padding:6px 0; }
+.viewbar{ display:flex; flex-wrap:nowrap; align-items:center; justify-content:space-between; gap:10px 16px; margin:0 0 14px; }
+.viewbar .vtabs{ flex:1 1 auto; min-width:0; }
+.new-task-btn{ flex:none; padding:10px 20px; white-space:nowrap; }
+.new-task-btn[hidden]{ display:none; }
+.group-toggle{ margin-left:0; }
+
+/* quiet 'new task' card: closed until asked for, extra fields tucked behind 'More options' */
+.todo-form{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:0 0 14px; padding:14px; border:1px solid var(--gold); border-radius:14px; background:var(--bg); }
+.todo-form[hidden]{ display:none; }
+.todo-form:not(.open) .opt{ display:none !important; }
+.todo-form .todo-input{ flex:1 1 100%; }
+.form-actions{ flex:1 1 100%; display:flex; align-items:center; gap:10px; }
+.form-actions .spacer{ flex:1; }
+.form-actions .btn{ padding:10px 20px; }
+.toolbar{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; margin:0 0 12px; }
+.toolbar .filters{ margin-top:0; }
+.toolbar[hidden], .filters[hidden], .group-toggle[hidden]{ display:none; }
 .vtabs{ display:flex; gap:6px; overflow-x:auto; max-width:100%; padding-bottom:2px; scrollbar-width:none; }
 .vtabs::-webkit-scrollbar{ display:none; }
 .vtab{ flex:none; font:inherit; font-size:0.82rem; font-weight:700; cursor:pointer; color:var(--ink); background:transparent; border:1px solid var(--line); border-radius:999px; padding:8px 16px; white-space:nowrap; }
@@ -596,8 +602,8 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
   .tsearch input{ width:100%; font-size:16px; padding:10px 16px; }
   .vtools{ width:100%; }
   .gh-btn{ padding:12px 14px; align-items:center; }
-  .gh-btn h3{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .gh-sub{ flex:none; }
+  .gh-btn h3{ min-width:0; flex:1 1 auto; overflow-wrap:anywhere; }
+  .gh-sub{ flex:0 1 46%; white-space:normal; text-align:right; line-height:1.3; }
   .who-item{ min-height:40px; }
   .who-item input, .group-toggle input{ width:20px; height:20px; }
   .group-toggle{ font-size:0.85rem; }
@@ -624,8 +630,13 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
   .cal-day .cal-task.prio-high{ background:var(--red); }
   .cal-day .cal-task.prio-medium{ background:var(--gold); }
   .cal-day .cal-task.prio-low{ background:var(--green); }
-  .todo-form .more-toggle{ display:inline-block; flex:1 1 100%; text-align:left; padding:4px 0; }
-  .todo-form:not(.open) .opt{ display:none !important; }
+  .viewbar{ flex-wrap:wrap; }
+  .viewbar .vtabs{ flex:1 1 100%; order:2; }
+  .new-task-btn{ order:1; flex:1 1 100%; }
+  .form-actions .btn{ flex:1; }
+  .form-actions .spacer{ display:none; }
+  .form-actions .more-toggle{ flex:1 1 100%; text-align:left; order:-1; }
+  .form-actions{ flex-wrap:wrap; }
 }
 @media (max-width:380px){
   .nav-item{ font-size:0.66rem; }
