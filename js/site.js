@@ -62,7 +62,7 @@ const MYANMAR_FUN_FACTS = [
    — event names/dates/descriptions come from the Sheet and stay
    English-only, so posting an event never requires writing it twice.
 
-   Draft translations below have not been reviewed by a native
+   Draft translations below were written by Claude, not a native
    speaker — have someone fluent skim them before you consider this
    "done." To fix a string, just edit the "mm" value for its key.
    ============================================================ */
@@ -232,6 +232,7 @@ const TESTING_SHOW_LATEST_EVENT_AS_NEXT = true;
 const CLUB_TIMEZONE = "America/Toronto";
 
 const FALLBACK_EVENTS_CSV = `id,name,date,end_time,time,location,description,photo,link
+mcc-run,MCC Run,2026-10-10,,10:30 AM,Convocation Hall to Evergreen Brickworks,"MCC's first-ever run: from Convocation Hall to Evergreen Brickworks, with a farmers market at the finish for lunch. Run, jog or walk — all paces welcome.",images/events/mcc-run.jpg,
 home-away-from-home,Home Away From Home,2026-09-22,19:30,5:30–7:30 PM,"KP 208, Koffler House · 569 Spadina Cres","An evening celebrating Burmese culture — food, conversation, and community. Meet fellow Burmese students, and hear from representatives of the Embassy of Myanmar in Ottawa on consular services, including passport renewal.",images/events/home-away-from-home.jpg,https://forms.gle/wE9f6srzzx7xUEpq8
 welcome-picnic,MCC Welcome Picnic,2026-09-20,,,Front Campus,,images/events/welcome-picnic.jpg,
 toronto-ready,Toronto Ready,2026-08-24,,,Online · Zoom,,images/events/toronto-ready.jpg,
