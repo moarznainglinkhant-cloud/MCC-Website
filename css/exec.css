@@ -70,6 +70,11 @@ header.nav{
   background:#fff; border:1px solid var(--line); border-radius:10px;
 }
 .field input:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+.pw-wrap{ position:relative; }
+.pw-wrap input{ padding-right:72px; }
+.pw-toggle{ position:absolute; top:50%; right:8px; transform:translateY(-50%); background:none; border:0; padding:8px 10px; font:inherit; font-size:0.78rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); cursor:pointer; border-radius:8px; }
+.pw-toggle:hover{ color:var(--ink); }
+.pw-toggle:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; }
 .msg{ min-height:1.4em; font-size:0.9rem; text-align:center; }
 .msg.error{ color:var(--red-ink); }
 .msg.info{ color:var(--ink-soft); }

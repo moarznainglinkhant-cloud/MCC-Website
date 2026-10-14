@@ -39,6 +39,19 @@
     return isNaN(d) ? ymd : d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
   }
 
+  // ---------- show/hide password on the sign-in form ----------
+  (function () {
+    var t = $("pw-toggle"), i = $("password");
+    if (!t || !i) return;
+    t.addEventListener("click", function () {
+      var show = i.type === "password";
+      i.type = show ? "text" : "password";
+      t.textContent = show ? "Hide" : "Show";
+      t.setAttribute("aria-pressed", show ? "true" : "false");
+      i.focus();
+    });
+  })();
+
   // ---------- not configured yet ----------
   if (!configured || !window.supabase) {
     var m = $("msg");

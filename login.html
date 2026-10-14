@@ -40,7 +40,10 @@
         </div>
         <div class="field">
           <label for="password">Password</label>
-          <input id="password" name="password" type="password" autocomplete="current-password" required>
+          <div class="pw-wrap">
+            <input id="password" name="password" type="password" autocomplete="current-password" required>
+            <button type="button" class="pw-toggle" id="pw-toggle" aria-pressed="false" aria-controls="password">Show</button>
+          </div>
         </div>
         <p class="msg" id="msg" role="status" aria-live="polite"></p>
         <button class="btn" id="login-btn" type="submit">Sign in</button>
