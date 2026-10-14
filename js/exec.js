@@ -266,6 +266,44 @@
     var groupByEvent = true;
     var eventNames = [];        // event names from the public events Sheet
     var eventDates = {};        // name -> YYYY-MM-DD
+    var eventInfo = {};         // name -> { date, time, location }
+    var hasOffset = false;      // true once the to-do upgrade SQL has run (In progress status + relative due dates)
+    var tview = "list";         // list | board | cal | event | person
+    var onlyMine = false;       // "Only my tasks" for the board / calendar / event / person views
+    var calMonth = null;        // first day of the month shown in the calendar
+    var calSel = "";            // YYYY-MM-DD selected in the calendar
+    try {
+      var savedView = localStorage.getItem("mcc_tview");
+      if (/^(list|board|cal|event|person)$/.test(savedView || "")) tview = savedView;
+    } catch (e) { /* ignore */ }
+
+    function toYMD(d) {
+      return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+    function parseYMD(x) { return new Date(x + "T00:00:00"); }
+    function shiftYMD(x, days) { var d = parseYMD(x); d.setDate(d.getDate() + days); return toYMD(d); }
+    function daysFrom(x) { return Math.round((parseYMD(x) - parseYMD(localToday())) / 86400000); }
+    function countdownText(x) {
+      var n = daysFrom(x);
+      if (n === 0) return "Today";
+      if (n === 1) return "Tomorrow";
+      if (n === -1) return "Yesterday";
+      var a = Math.abs(n), txt = a <= 45 ? a + " days" : Math.round(a / 7) + " weeks";
+      return n > 0 ? "in " + txt : txt + " ago";
+    }
+    function countdownClass(x) { var n = daysFrom(x); return n < 0 ? "past" : n <= 7 ? "soon" : "later"; }
+    function longDay(x) {
+      var d = parseYMD(x);
+      return isNaN(d) ? x : d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+    }
+    // A task's real due date: relative ("3 days before the picnic") follows the event's date in the Sheet.
+    function dueOf(t) {
+      if (hasOffset && t.due_offset != null && t.event_name && eventInfo[t.event_name] && eventInfo[t.event_name].date) {
+        return shiftYMD(eventInfo[t.event_name].date, -t.due_offset);
+      }
+      return t.due_date || "";
+    }
+    function pool() { return onlyMine && me ? todos.filter(function (t) { return t.assignee_id === me.id; }) : todos; }
 
     function fillAssignee(select, selectedId) {
       select.textContent = "";
@@ -315,10 +353,13 @@
       var fallback = typeof FALLBACK_EVENTS_CSV !== "undefined" ? FALLBACK_EVENTS_CSV : "";
       return loadCSV(EVENTS_CSV_URL, fallback).then(function (rows) {
         var sp = splitEvents(rows);
-        eventNames = []; eventDates = {};
+        eventNames = []; eventDates = {}; eventInfo = {};
         sp.upcoming.concat(sp.past.slice(0, 12)).forEach(function (e) {
           var n = (e.name || "").trim();
-          if (n) { eventNames.push(n); eventDates[n] = e.date || ""; }
+          if (n) {
+            eventNames.push(n); eventDates[n] = e.date || "";
+            eventInfo[n] = { date: e.date || "", time: (e.time || "").trim(), location: (e.location || "").trim() };
+          }
         });
       }).catch(function () { /* suggestions are optional */ });
     }
@@ -328,7 +369,9 @@
       sb.from("todos").update(fields).eq("id", id).then(function (r) {
         if (r.error) {
           if (ctrl) ctrl.disabled = false;
-          setMsg($("todo-msg"), "Couldn't update that task.", "error");
+          setMsg($("todo-msg"), fields.status === "doing"
+            ? "Couldn't move that task. 'In progress' needs the to-do upgrade SQL to be run in Supabase first."
+            : "Couldn't update that task.", "error");
         } else {
           setMsg($("todo-msg"), "", "");
           loadTodos();
@@ -345,7 +388,7 @@
         var pa = PRANK.hasOwnProperty(a.priority) ? PRANK[a.priority] : 1;
         var pb = PRANK.hasOwnProperty(b.priority) ? PRANK[b.priority] : 1;
         if (pa !== pb) return pa - pb;
-        var da = a.due_date || "9999-12-31", db2 = b.due_date || "9999-12-31";
+        var da = dueOf(a) || "9999-12-31", db2 = dueOf(b) || "9999-12-31";
         if (da !== db2) return da < db2 ? -1 : 1;
         return String(b.created_at).localeCompare(String(a.created_at));
       });
@@ -370,7 +413,8 @@
 
     function todoItem(t, today) {
       var isDone = t.status === "done";
-      var overdue = !isDone && t.due_date && t.due_date < today;
+      var due = dueOf(t);
+      var overdue = !isDone && due && due < today;
       var li = el("li", "todo" + (isDone ? " done" : "") + (overdue ? " overdue" : ""));
 
       var top = el("div", "todo-top");
@@ -389,6 +433,7 @@
       });
       top.appendChild(cb);
       top.appendChild(el("span", "todo-text", t.title));
+      if (t.status === "doing") top.appendChild(el("span", "pill-doing", "In progress"));
       li.appendChild(top);
 
       var meta = el("div", "todo-meta");
@@ -423,10 +468,19 @@
         meta.appendChild(ev);
       }
 
-      if (t.due_date) meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(t.due_date)));
+      if (due) {
+        var rel = hasOffset && t.due_offset != null ? (t.due_offset === 0 ? " · event day" : " · " + t.due_offset + " d before event") : "";
+        meta.appendChild(el("span", "due", (overdue ? "Overdue · " : "Due ") + dueLabel(due) + rel));
+      }
       if (isDone && t.completed_at) meta.appendChild(el("span", null, "Done " + when(t.completed_at)));
       else if (t.created_by) meta.appendChild(el("span", null, "Added by " + nameOf(t.created_by)));
 
+      if (hasOffset && !isDone) {
+        var go = el("button", "link-btn", t.status === "doing" ? "Pause" : "Start");
+        go.type = "button";
+        go.addEventListener("click", function () { patchTodo(t.id, { status: t.status === "doing" ? "open" : "doing", completed_at: null }, go); });
+        meta.appendChild(go);
+      }
       if (!isDone && me && t.assignee_id !== me.id) {
         var take = el("button", "link-btn", t.assignee_id ? "Take it" : "I'll do it");
         take.type = "button";
@@ -449,7 +503,7 @@
       return li;
     }
 
-    function renderTodos() {
+    function renderList() {
       var today = localToday();
       var open = todos.filter(function (t) { return t.status !== "done"; });
       var mine = open.filter(function (t) { return me && t.assignee_id === me.id; });
@@ -481,7 +535,7 @@
           var head = el("li", "group-head");
           head.appendChild(el("h3", null, g.name || "No event"));
           var sub = [];
-          if (g.name && eventDates[g.name]) sub.push(dueLabel(eventDates[g.name]));
+          if (g.name && eventDates[g.name]) sub.push(dueLabel(eventDates[g.name]) + " (" + countdownText(eventDates[g.name]).toLowerCase() + ")");
           sub.push(g.items.length + (g.items.length === 1 ? " task" : " tasks"));
           head.appendChild(el("span", null, sub.join(" · ")));
           ul.appendChild(head);
@@ -496,25 +550,412 @@
       function finish(data) {
         todos = data || [];
         $("todo-panel").classList.toggle("no-extras", !hasExtras);
+        $("todo-panel").classList.toggle("no-offset", !hasOffset);
         refreshEventList();
         renderTodos();
         $("todo-panel").hidden = false;
         $("todo-missing").hidden = true;
         stamp("todo");
       }
-      return sb.from("todos").select(BASE_COLS + ", priority, event_name")
-        .order("created_at", { ascending: false }).limit(300)
-        .then(function (r) {
-          if (!r.error) { hasExtras = true; return finish(r.data); }
-          // Priority / event columns not added yet: fall back to the basic board.
-          return sb.from("todos").select(BASE_COLS)
-            .order("created_at", { ascending: false }).limit(300)
-            .then(function (r2) {
-              if (r2.error) { $("todo-panel").hidden = true; $("todo-missing").hidden = false; return; }
-              hasExtras = false;
-              finish(r2.data);
-            });
+      function q(cols) { return sb.from("todos").select(cols).order("created_at", { ascending: false }).limit(300); }
+      // Newest schema first, then fall back so an older database keeps working.
+      return q(BASE_COLS + ", priority, event_name, due_offset").then(function (r) {
+        if (!r.error) { hasExtras = true; hasOffset = true; return finish(r.data); }
+        return q(BASE_COLS + ", priority, event_name").then(function (r2) {
+          if (!r2.error) { hasExtras = true; hasOffset = false; return finish(r2.data); }
+          return q(BASE_COLS).then(function (r3) {
+            if (r3.error) { $("todo-panel").hidden = true; $("todo-missing").hidden = false; return; }
+            hasExtras = false; hasOffset = false;
+            finish(r3.data);
+          });
         });
+      });
+    }
+
+    // =====================================================================
+    //  To-do views: board, calendar, by event, by person
+    // =====================================================================
+    function renderTodos() {
+      renderList();           // also keeps the counts and the Home task number up to date
+      syncViewTabs();
+      if (tview === "board") renderBoard();
+      else if (tview === "cal") renderCal();
+      else if (tview === "event") renderByEvent();
+      else if (tview === "person") renderByPerson();
+    }
+
+    function syncViewTabs() {
+      document.querySelectorAll(".vtab").forEach(function (b) {
+        var on = b.getAttribute("data-tv") === tview;
+        b.classList.toggle("on", on);
+        b.setAttribute("aria-pressed", String(on));
+      });
+      ["list", "board", "cal", "event", "person"].forEach(function (v) { $("tv-" + v).hidden = v !== tview; });
+      $("only-mine-wrap").hidden = tview === "list";
+    }
+
+    function titleCase(w) { return w.charAt(0).toUpperCase() + w.slice(1); }
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function setFormOpen(open) {
+      $("todo-form").classList.toggle("open", open);
+      var b = $("todo-more");
+      b.setAttribute("aria-expanded", String(open));
+      b.textContent = open ? "Fewer options" : "More options";
+    }
+    function focusAddForm(eventName) {
+      var evIn = $("todo-event");
+      if (eventName != null && evIn) { evIn.value = eventName; setFormOpen(true); }
+      $("todo-form").scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "center" });
+      $("todo-title-input").focus({ preventScroll: true });
+    }
+
+    // ----- Board (kanban) -----
+    var BOARD_COLS = [["open", "To do"], ["doing", "In progress"], ["done", "Done"]];
+    function statusOf(t) { return t.status === "doing" || t.status === "done" ? t.status : "open"; }
+
+    function moveTodo(t, to) {
+      if (statusOf(t) === to) return;
+      if (to === "doing" && !hasOffset) {
+        setMsg($("todo-msg"), "'In progress' needs the one-time to-do upgrade SQL in Supabase first.", "error");
+        renderTodos();
+        return;
+      }
+      patchTodo(t.id, { status: to, completed_at: to === "done" ? new Date().toISOString() : null });
+    }
+
+    function boardCard(t, today) {
+      var due = dueOf(t), isDone = t.status === "done", overdue = !isDone && due && due < today;
+      var c = el("div", "bcard" + (overdue ? " overdue" : "") + (isDone ? " done" : ""));
+      c.draggable = true;
+      c.appendChild(el("div", "bc-title", t.title));
+      var m = el("div", "bc-meta");
+      if (hasExtras) {
+        var p = PRANK.hasOwnProperty(t.priority) ? t.priority : "medium";
+        m.appendChild(el("span", "bchip prio prio-" + p, titleCase(p)));
+        if (t.event_name) m.appendChild(el("span", "bchip ev", t.event_name));
+      }
+      if (due) m.appendChild(el("span", "bchip due" + (overdue ? " late" : ""), (overdue ? "Overdue · " : "") + dueLabel(due)));
+      c.appendChild(m);
+      var foot = el("div", "bc-foot");
+      foot.appendChild(el("span", "bc-who", t.assignee_id ? nameOf(t.assignee_id) : "Unassigned"));
+      var st = el("select", "todo-assign");
+      st.setAttribute("aria-label", "Status of: " + t.title);
+      BOARD_COLS.forEach(function (cn) {
+        var o = el("option", null, cn[1]);
+        o.value = cn[0];
+        if (cn[0] === "doing" && !hasOffset) o.disabled = true;
+        st.appendChild(o);
+      });
+      st.value = statusOf(t);
+      st.addEventListener("change", function () { moveTodo(t, st.value); });
+      foot.appendChild(st);
+      c.appendChild(foot);
+      c.addEventListener("dragstart", function (e) {
+        e.dataTransfer.setData("text/plain", String(t.id));
+        e.dataTransfer.effectAllowed = "move";
+        c.classList.add("dragging");
+      });
+      c.addEventListener("dragend", function () { c.classList.remove("dragging"); });
+      return c;
+    }
+
+    function renderBoard() {
+      var host = $("tv-board");
+      host.textContent = "";
+      if (!hasOffset) {
+        host.appendChild(el("p", "meta v-note", "'In progress' needs a one-time database upgrade. Until then you can still move tasks between To do and Done."));
+      }
+      var today = localToday(), list = pool();
+      var wrap = el("div", "board");
+      BOARD_COLS.forEach(function (cn) {
+        var items = sortTodos(list.filter(function (t) { return statusOf(t) === cn[0]; }));
+        var shown = cn[0] === "done" ? items.slice(0, 25) : items;
+        var col = el("section", "bcol");
+        col.setAttribute("data-status", cn[0]);
+        var head = el("div", "bcol-head");
+        head.appendChild(el("h3", null, cn[1]));
+        head.appendChild(el("span", "bcount", String(items.length)));
+        col.appendChild(head);
+        var body = el("div", "bcol-body");
+        if (!shown.length) body.appendChild(el("p", "empty", cn[0] === "done" ? "Nothing finished yet." : "Nothing here."));
+        shown.forEach(function (t) { body.appendChild(boardCard(t, today)); });
+        if (items.length > shown.length) body.appendChild(el("p", "meta", "+ " + (items.length - shown.length) + " older done tasks"));
+        body.addEventListener("dragover", function (e) { e.preventDefault(); col.classList.add("over"); });
+        body.addEventListener("dragleave", function () { col.classList.remove("over"); });
+        body.addEventListener("drop", function (e) {
+          e.preventDefault();
+          col.classList.remove("over");
+          var id = e.dataTransfer.getData("text/plain");
+          var t = todos.filter(function (x) { return String(x.id) === id; })[0];
+          if (t) moveTodo(t, cn[0]);
+        });
+        col.appendChild(body);
+        wrap.appendChild(col);
+      });
+      host.appendChild(wrap);
+    }
+
+    // ----- By event -----
+    function taskList(tasks, today) {
+      var ul = el("ul", "todo-list");
+      sortTodos(tasks).forEach(function (t) { ul.appendChild(todoItem(t, today)); });
+      return ul;
+    }
+
+    function eventCard(name, e, today) {
+      var card = el("section", "ecard");
+      var head = el("div", "ec-head");
+      var tl = el("div");
+      tl.appendChild(el("h3", null, name || "No event"));
+      if (e && e.date) {
+        var bits = [longDay(e.date)];
+        if (e.info.time) bits.push(e.info.time);
+        if (e.info.location) bits.push(e.info.location);
+        tl.appendChild(el("p", "meta", bits.join(" · ")));
+      }
+      head.appendChild(tl);
+      if (e && e.date) head.appendChild(el("span", "cd " + countdownClass(e.date), countdownText(e.date)));
+      card.appendChild(head);
+
+      var all = e ? e.tasks : [];
+      var doneAll = all.filter(function (t) { return t.status === "done"; });
+      if (all.length) {
+        var pct = Math.round(100 * doneAll.length / all.length);
+        var prog = el("div", "prog");
+        prog.setAttribute("role", "progressbar");
+        prog.setAttribute("aria-valuemin", "0"); prog.setAttribute("aria-valuemax", "100"); prog.setAttribute("aria-valuenow", String(pct));
+        prog.setAttribute("aria-label", doneAll.length + " of " + all.length + " tasks done");
+        var bar = el("i");
+        bar.style.width = pct + "%";
+        prog.appendChild(bar);
+        card.appendChild(prog);
+        card.appendChild(el("p", "meta prog-text", doneAll.length + " of " + all.length + " done"));
+      }
+      var open = all.filter(function (t) { return t.status !== "done" && (!onlyMine || (me && t.assignee_id === me.id)); });
+      if (open.length) card.appendChild(taskList(open, today));
+      else if (!all.length) {
+        card.appendChild(el("p", "empty", "No tasks yet."));
+      } else if (all.every(function (t) { return t.status === "done"; })) {
+        card.appendChild(el("p", "empty", "Everything is done."));
+      } else {
+        card.appendChild(el("p", "empty", "Nothing open for you here."));
+      }
+      if (name) {
+        var add = el("button", "link-btn ec-add", "Add a task for this event");
+        add.type = "button";
+        add.addEventListener("click", function () { focusAddForm(name); });
+        card.appendChild(add);
+      }
+      if (doneAll.length) {
+        var det = el("details", "ec-done");
+        det.appendChild(el("summary", null, doneAll.length + " done"));
+        det.appendChild(taskList(doneAll, today));
+        card.appendChild(det);
+      }
+      return card;
+    }
+
+    function renderByEvent() {
+      var host = $("tv-event");
+      host.textContent = "";
+      if (!hasExtras) {
+        host.appendChild(el("p", "meta v-note", "Linking tasks to events needs the priority and event upgrade SQL. Run it in Supabase, then refresh."));
+        return;
+      }
+      var today = localToday();
+      var byEvent = {};
+      todos.forEach(function (t) { var k = (t.event_name || "").trim(); (byEvent[k] = byEvent[k] || []).push(t); });
+      var names = {};
+      Object.keys(byEvent).forEach(function (k) { if (k) names[k] = 1; });
+      Object.keys(eventInfo).forEach(function (n) { var d = eventInfo[n].date; if (d && d >= today) names[n] = 1; });
+      var list = Object.keys(names).map(function (n) {
+        var i = eventInfo[n] || {};
+        return { name: n, date: i.date || "", info: i, tasks: byEvent[n] || [] };
+      });
+      function openN(e) { return e.tasks.filter(function (t) { return t.status !== "done"; }).length; }
+      function byDate(a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : a.name.localeCompare(b.name); }
+      var upcoming = list.filter(function (e) { return e.date && e.date >= today; }).sort(byDate);
+      var undated = list.filter(function (e) { return !e.date; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+      var past = list.filter(function (e) { return e.date && e.date < today && openN(e) > 0; }).sort(function (a, b) { return byDate(b, a); });
+
+      function section(title, items) {
+        if (!items.length) return;
+        host.appendChild(el("h2", "h-sub", title));
+        var grid = el("div", "egrid");
+        items.forEach(function (e) { grid.appendChild(eventCard(e.name, e, today)); });
+        host.appendChild(grid);
+      }
+      section("Upcoming events", upcoming);
+      section("Not on the calendar", undated);
+      section("Past events with open tasks", past);
+      var loose = byEvent[""] || [];
+      if (loose.length) {
+        host.appendChild(el("h2", "h-sub", "No event"));
+        var g2 = el("div", "egrid");
+        g2.appendChild(eventCard("", { date: "", info: {}, tasks: loose }, today));
+        host.appendChild(g2);
+      }
+      if (!host.firstChild) host.appendChild(el("p", "empty", "No events or tasks yet."));
+    }
+
+    // ----- By person -----
+    function renderByPerson() {
+      var host = $("tv-person");
+      host.textContent = "";
+      var today = localToday();
+      var people = team.slice().sort(function (a, b) {
+        if (me && a.id === me.id) return -1;
+        if (me && b.id === me.id) return 1;
+        return a.display_name.localeCompare(b.display_name);
+      }).map(function (p) {
+        return { id: p.id, name: p.display_name + (me && p.id === me.id ? " (me)" : ""), role: p.role, tasks: todos.filter(function (t) { return t.assignee_id === p.id; }) };
+      });
+      var nobody = todos.filter(function (t) { return !t.assignee_id; });
+      if (nobody.length) people.push({ id: "", name: "Unassigned", role: "", tasks: nobody });
+      if (onlyMine && me) people = people.filter(function (g) { return g.id === me.id; });
+      function openOf(g) { return g.tasks.filter(function (t) { return t.status !== "done"; }); }
+      var most = Math.max(1, Math.max.apply(null, people.map(function (g) { return openOf(g).length; }).concat([1])));
+
+      var grid = el("div", "pgrid");
+      people.forEach(function (g) {
+        var open = openOf(g), done = g.tasks.length - open.length;
+        var late = open.filter(function (t) { var d = dueOf(t); return d && d < today; }).length;
+        var card = el("section", "pcard");
+        var head = el("div", "pc-head");
+        var left = el("div");
+        left.appendChild(el("h3", null, g.name));
+        if (g.role) left.appendChild(el("span", "pc-role", g.role));
+        head.appendChild(left);
+        var counts = el("div", "pc-counts");
+        counts.appendChild(el("b", null, String(open.length)));
+        counts.appendChild(document.createTextNode(" open"));
+        if (late) counts.appendChild(el("span", "late-badge", late + " overdue"));
+        head.appendChild(counts);
+        card.appendChild(head);
+        var load = el("div", "prog load");
+        var bar = el("i");
+        bar.style.width = Math.round(100 * open.length / most) + "%";
+        load.appendChild(bar);
+        card.appendChild(load);
+        if (!open.length) {
+          card.appendChild(el("p", "empty", g.tasks.length ? "All caught up." : "Nothing assigned."));
+        } else {
+          card.appendChild(taskList(sortTodos(open).slice(0, 5), today));
+          if (open.length > 5) {
+            var det = el("details", "ec-done");
+            det.appendChild(el("summary", null, (open.length - 5) + " more open"));
+            det.appendChild(taskList(sortTodos(open).slice(5), today));
+            card.appendChild(det);
+          }
+        }
+        if (done) card.appendChild(el("p", "meta", done + " done"));
+        grid.appendChild(card);
+      });
+      host.appendChild(grid);
+      if (!people.length) host.appendChild(el("p", "empty", "Nothing to show."));
+    }
+
+    // ----- Calendar -----
+    var MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    function renderCal() {
+      var host = $("tv-cal");
+      host.textContent = "";
+      var today = localToday();
+      if (!calMonth) { var n = new Date(); calMonth = new Date(n.getFullYear(), n.getMonth(), 1); }
+      if (!calSel) calSel = today;
+      var y = calMonth.getFullYear(), m = calMonth.getMonth();
+
+      var head = el("div", "cal-head");
+      function nav(label, text, fn) {
+        var b = el("button", "cal-nav", text);
+        b.type = "button";
+        b.setAttribute("aria-label", label);
+        b.addEventListener("click", fn);
+        return b;
+      }
+      head.appendChild(nav("Previous month", "\u2039", function () { calMonth = new Date(y, m - 1, 1); renderCal(); }));
+      head.appendChild(el("h3", "cal-title", MONTHS[m] + " " + y));
+      head.appendChild(nav("Next month", "\u203A", function () { calMonth = new Date(y, m + 1, 1); renderCal(); }));
+      var tb = el("button", "chip cal-today", "Today");
+      tb.type = "button";
+      tb.addEventListener("click", function () { var d = new Date(); calMonth = new Date(d.getFullYear(), d.getMonth(), 1); calSel = localToday(); renderCal(); });
+      head.appendChild(tb);
+      host.appendChild(head);
+
+      var items = {};
+      function slot(d) { return items[d] || (items[d] = { tasks: [], events: [] }); }
+      pool().forEach(function (t) { var d = dueOf(t); if (d) slot(d).tasks.push(t); });
+      Object.keys(eventInfo).forEach(function (nm) { var d = eventInfo[nm].date; if (d) slot(d).events.push(nm); });
+
+      var grid = el("div", "cal-grid");
+      ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].forEach(function (d) { grid.appendChild(el("div", "cal-dow", d)); });
+      var offset = (new Date(y, m, 1).getDay() + 6) % 7;
+      var weeks = Math.ceil((offset + new Date(y, m + 1, 0).getDate()) / 7);
+      for (var i = 0; i < weeks * 7; i++) {
+        var d = new Date(y, m, 1 - offset + i), key = toYMD(d);
+        var info = items[key] || { tasks: [], events: [] };
+        var open = info.tasks.filter(function (t) { return t.status !== "done"; });
+        var cell = el("button", "cal-day" + (d.getMonth() !== m ? " out" : "") + (key === today ? " today" : "") + (key === calSel ? " sel" : ""));
+        cell.type = "button";
+        cell.setAttribute("data-day", key);
+        cell.setAttribute("aria-label", longDay(key) + ": " + info.events.length + " events, " + open.length + " open tasks");
+        cell.setAttribute("aria-pressed", String(key === calSel));
+        cell.appendChild(el("span", "cal-num", String(d.getDate())));
+        var list = el("span", "cal-items");
+        var chips = [];
+        info.events.forEach(function (nm) { chips.push(el("span", "cal-ev", nm)); });
+        open.forEach(function (t) {
+          var p = PRANK.hasOwnProperty(t.priority) ? t.priority : "medium";
+          chips.push(el("span", "cal-task prio-" + p, t.title));
+        });
+        chips.slice(0, 3).forEach(function (c) { list.appendChild(c); });
+        if (chips.length > 3) list.appendChild(el("span", "cal-more", "+" + (chips.length - 3)));
+        cell.appendChild(list);
+        cell.addEventListener("click", function () {
+          calSel = this.getAttribute("data-day");
+          renderCal();
+          var again = $("tv-cal").querySelector(".cal-day.sel");
+          if (again) again.focus({ preventScroll: true });
+        });
+        grid.appendChild(cell);
+      }
+      host.appendChild(grid);
+      var legend = el("p", "meta cal-legend");
+      legend.appendChild(el("span", "cal-ev lg", "Event"));
+      legend.appendChild(document.createTextNode(" "));
+      legend.appendChild(el("span", "cal-task prio-medium lg", "Task due"));
+      host.appendChild(legend);
+
+      // Selected day
+      var sel = items[calSel] || { tasks: [], events: [] };
+      var detail = el("section", "cal-detail");
+      var dh = el("div", "ec-head");
+      var dl = el("div");
+      dl.appendChild(el("h3", null, longDay(calSel)));
+      dh.appendChild(dl);
+      dh.appendChild(el("span", "cd " + countdownClass(calSel), countdownText(calSel)));
+      detail.appendChild(dh);
+      sel.events.forEach(function (nm) {
+        var i = eventInfo[nm] || {};
+        var row = el("div", "cal-evrow");
+        row.appendChild(el("strong", null, nm));
+        var bits = [];
+        if (i.time) bits.push(i.time);
+        if (i.location) bits.push(i.location);
+        if (bits.length) row.appendChild(el("span", "meta", bits.join(" · ")));
+        detail.appendChild(row);
+      });
+      if (sel.tasks.length) detail.appendChild(taskList(sel.tasks, today));
+      if (!sel.tasks.length && !sel.events.length) detail.appendChild(el("p", "empty", "Nothing scheduled this day."));
+      host.appendChild(detail);
+
+      var loose = pool().filter(function (t) { return t.status !== "done" && !dueOf(t); });
+      if (loose.length) {
+        var det = el("details", "ec-done cal-loose");
+        det.appendChild(el("summary", null, loose.length + (loose.length === 1 ? " task" : " tasks") + " without a due date"));
+        det.appendChild(taskList(loose, today));
+        host.appendChild(det);
+      }
     }
 
     function initTodoForm() {
@@ -523,6 +964,29 @@
           add = $("todo-add"), tmsg = $("todo-msg");
       fillAssignee(assignee, "");
       fillPriority(prio, "medium");
+
+      // "Due" can be a fixed date, or a number of days before the event (follows the event's date in the Sheet).
+      var relSel = $("todo-rel");
+      [["", "Due on a date"], ["0", "Due on event day"], ["1", "Due 1 day before"], ["2", "Due 2 days before"],
+       ["3", "Due 3 days before"], ["7", "Due 1 week before"], ["14", "Due 2 weeks before"]].forEach(function (x) {
+        var o = el("option", null, x[1]);
+        o.value = x[0];
+        relSel.appendChild(o);
+      });
+      relSel.addEventListener("change", function () {
+        due.hidden = relSel.value !== "";
+        if (relSel.value !== "") due.value = "";
+      });
+
+      $("todo-more").addEventListener("click", function () { setFormOpen(!$("todo-form").classList.contains("open")); });
+      document.querySelectorAll(".vtab").forEach(function (b) {
+        b.addEventListener("click", function () {
+          tview = b.getAttribute("data-tv");
+          try { localStorage.setItem("mcc_tview", tview); } catch (e) { /* ignore */ }
+          renderTodos();
+        });
+      });
+      $("only-mine").addEventListener("change", function () { onlyMine = this.checked; renderTodos(); });
 
       grp.checked = groupByEvent;
       grp.addEventListener("change", function () { groupByEvent = grp.checked; renderTodos(); });
@@ -543,6 +1007,12 @@
           row.priority = prio.value;
           row.event_name = evIn.value.trim().slice(0, 80) || null;
         }
+        if (hasOffset && relSel.value !== "") {
+          var ev = row.event_name && eventInfo[row.event_name];
+          if (!ev || !ev.date) { setMsg(tmsg, "Pick an event that has a date on the events Sheet to set a due date relative to it.", "error"); return; }
+          row.due_offset = +relSel.value;
+          row.due_date = shiftYMD(ev.date, -row.due_offset);
+        }
         add.disabled = true;
         setMsg(tmsg, "Adding…", "info");
         sb.from("todos").insert(row).then(function (r) {
@@ -550,6 +1020,7 @@
           if (r.error) { setMsg(tmsg, "Couldn't add that task. Try again.", "error"); return; }
           // Keep the event filled in (handy when adding several tasks for one event).
           titleIn.value = ""; due.value = ""; assignee.value = ""; prio.value = "medium";
+          relSel.value = ""; due.hidden = false;
           setMsg(tmsg, "", "");
           todoFilter = "open";
           loadTodos();
