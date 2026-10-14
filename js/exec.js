@@ -600,7 +600,7 @@
       $("n-open").textContent = open.length;
       $("n-done").textContent = done.length;
       $("home-tasks-n").textContent = mineAll.length;
-      $("home-tasks-sub").textContent = mineAll.length ? "Assigned to you. Tap to open." : "Nothing assigned to you right now";
+      $("home-tasks-sub").textContent = mineAll.length ? "" : "Nothing assigned to you right now";
       if (todoFilter !== "done") todoFilter = "open";
 
       document.querySelectorAll("#todo-panel .chip[data-filter]").forEach(function (c) {

@@ -542,8 +542,6 @@
       }
       if (!shown.length) hint.textContent = "No times fit those settings.";
       else if (closest) hint.textContent = "No time works for everyone. Here are the closest options:";
-      else if (st.strict) hint.textContent = "Times when everyone in the meeting can make it, best first:";
-      else hint.textContent = "Best first:";
       shown.forEach(function (w, i) { results.appendChild(resultCard(w, i < 3 ? i + 1 : 0)); });
     }
 
