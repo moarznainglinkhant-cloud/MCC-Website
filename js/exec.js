@@ -54,17 +54,26 @@
     return;
   }
 
+  // A password-recovery link arrives as exec.html#access_token=...&type=recovery. Only then
+  // do we let the client read the session out of the URL (it stays off everywhere else).
+  var isRecovery = page === "exec" && /[#&]type=recovery(&|$)/.test(location.hash);
+
   var sb = window.supabase.createClient(cfg.url, cfg.key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: isRecovery }
   });
 
   // ---------- login page ----------
   if (page === "login") {
     var form = $("login-form"), msg = $("msg"), btn = $("login-btn");
 
-    sb.auth.getSession().then(function (r) {
-      if (r.data && r.data.session) location.replace("exec.html");
-    });
+    if (/error_code=|error=access_denied/.test(location.hash)) {
+      setMsg(msg, "That reset link has expired or was already used. Ask the Website Coordinator for a fresh one.", "error");
+      if (window.history && history.replaceState) history.replaceState(null, "", location.pathname);
+    } else {
+      sb.auth.getSession().then(function (r) {
+        if (r.data && r.data.session) location.replace("exec.html");
+      });
+    }
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -560,15 +569,26 @@
 
     // ----- Choose / change password -----
     var MIN_PASSWORD = 10;
+    function pwError(err) {
+      var code = (err && (err.code || err.error_code)) || "", text = (err && err.message) || "";
+      if (code === "same_password" || /different from the old/i.test(text)) return "That's the same as your current password. Pick a new one.";
+      if (code === "weak_password" || /weak|at least one character/i.test(text)) return "That password is too easy to guess. Try a few random words, or add numbers and capital letters.";
+      if (code === "reauthentication_needed" || /reauthenticat/i.test(text)) return "For security, please sign out, sign back in, and try again.";
+      if (/rate limit|too many/i.test(text)) return "Too many tries. Wait a minute and try again.";
+      if (err && (err.status === 401 || err.status === 403)) return "Your session has expired. Sign in again, then try again.";
+      return "Couldn't change your password. Please try again.";
+    }
     function initPasswordForm(passwordSet, onFirstSet) {
       var panel = $("pw-panel"), form = $("pw-form"), pmsg = $("pw-msg"), btn = $("pw-btn");
       var pwNew = $("pw-new"), pwConfirm = $("pw-confirm");
       var forced = !passwordSet;
 
       function applyMode() {
-        $("pw-title").textContent = forced ? "Set your own password" : "Change your password";
+        $("pw-title").textContent = forced ? (isRecovery ? "Choose a new password" : "Set your own password") : "Change your password";
         $("pw-sub").textContent = forced
-          ? "You're signed in with a temporary password. Choose your own now. Only you will know it, and you'll use it from here on."
+          ? (isRecovery
+              ? "Pick a new password to finish resetting. Only you will know it."
+              : "You're signed in with a temporary password. Choose your own now. Only you will know it, and you'll use it from here on.")
           : "Pick something you don't use anywhere else.";
         panel.classList.toggle("forced", forced);
       }
@@ -590,12 +610,13 @@
         sb.auth.updateUser({ password: a, data: { password_set: true } }).then(function (r) {
           btn.disabled = false;
           if (r.error) {
-            setMsg(pmsg, "Couldn't change your password: " + (r.error.message || "please try again") + ".", "error");
+            setMsg(pmsg, pwError(r.error), "error");
             return;
           }
           pwNew.value = ""; pwConfirm.value = "";
           if (forced) {
             forced = false;
+            if (isRecovery && window.history && history.replaceState) history.replaceState(null, "", location.pathname);
             applyMode();
             setMsg(pmsg, "Password saved. It's only known to you now.", "info");
             onFirstSet();
@@ -639,7 +660,7 @@
             // First sign-in: the exec must replace the temporary password you gave them
             // before they see anything else. (This is a courtesy gate, not a security
             // boundary: it keeps passwords known only to their owners.)
-            var passwordSet = !!(user.user_metadata && user.user_metadata.password_set);
+            var passwordSet = !isRecovery && !!(user.user_metadata && user.user_metadata.password_set);
             initPasswordForm(passwordSet, startDashboard);
             if (!passwordSet) return;
             return startDashboard();
