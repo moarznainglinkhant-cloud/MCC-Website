@@ -45,12 +45,8 @@
     if (m) setMsg(m, "The exec area isn't connected to its database yet.", "info");
     var f = $("login-form");
     if (f) f.querySelectorAll("input,button").forEach(function (x) { x.disabled = true; });
-    var card = $("welcome-card");
-    if (card) {
-      card.hidden = false;
-      $("welcome-name").textContent = "Not set up yet";
-      $("welcome-sub").textContent = "Add the Supabase URL and key in js/exec-config.js.";
-    }
+    var bt = $("boot-text");
+    if (bt) bt.textContent = "The exec area isn't connected to its database yet. Add the Supabase URL and key in js/exec-config.js.";
     return;
   }
 
@@ -100,8 +96,7 @@
 
   // ---------- exec dashboard ----------
   if (page === "exec") {
-    var card2 = $("welcome-card");
-    var me = null;            // { id, name, role }
+    var me = null;            // { id, name, role, email }
     var team = [];            // [{ id, display_name, role }]
     var names = {};           // id -> display_name
     var todos = [];
@@ -233,6 +228,7 @@
           }
           renderShouts(r.data || []);
           $("shout-panel").hidden = false;
+          stamp("home");
         });
     }
 
@@ -461,6 +457,8 @@
       $("n-open").textContent = open.length;
       $("n-mine").textContent = mine.length;
       $("n-done").textContent = done.length;
+      $("home-tasks-n").textContent = mine.length;
+      $("home-tasks-sub").textContent = mine.length ? "Assigned to you. Tap to open." : "Nothing assigned to you right now";
 
       document.querySelectorAll("#todo-panel .chip").forEach(function (c) {
         c.classList.toggle("on", c.getAttribute("data-filter") === todoFilter);
@@ -501,6 +499,8 @@
         refreshEventList();
         renderTodos();
         $("todo-panel").hidden = false;
+        $("todo-missing").hidden = true;
+        stamp("todo");
       }
       return sb.from("todos").select(BASE_COLS + ", priority, event_name")
         .order("created_at", { ascending: false }).limit(300)
@@ -510,7 +510,7 @@
           return sb.from("todos").select(BASE_COLS)
             .order("created_at", { ascending: false }).limit(300)
             .then(function (r2) {
-              if (r2.error) { $("todo-panel").hidden = true; return; }
+              if (r2.error) { $("todo-panel").hidden = true; $("todo-missing").hidden = false; return; }
               hasExtras = false;
               finish(r2.data);
             });
@@ -560,15 +560,84 @@
       });
     }
 
-    // ----- Start the dashboard (runs once, after the password has been chosen) -----
-    function startDashboard() {
-      $("dash-main").hidden = false;
+    // ----- App shell: views, routing, lazy loading -----
+    var VIEWS = ["home", "todo", "meet", "account"];
+    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", account: "Account" };
+    var locked = false;       // true until a new exec has chosen their own password
+    var appStarted = false, viewNow = null, welcomed = false;
+    var loadedAt = {};        // view key -> ms timestamp of last data load
+    function stamp(k) { loadedAt[k] = Date.now(); }
+    function fresh(k, secs) { return loadedAt[k] && Date.now() - loadedAt[k] < secs * 1000; }
+
+    function viewFromHash() {
+      var h = (location.hash || "").replace(/^#/, "").split("?")[0];
+      return VIEWS.indexOf(h) > -1 ? h : "home";
+    }
+    function navigate(name) {
+      if (location.hash === "#" + name) showView(name, true); else location.hash = "#" + name;
+    }
+    function setLocked(v) {
+      locked = v;
+      document.querySelectorAll(".nav-item").forEach(function (a) {
+        var lock = v && a.getAttribute("data-view") !== "account";
+        a.classList.toggle("locked", lock);
+        if (lock) a.setAttribute("aria-disabled", "true"); else a.removeAttribute("aria-disabled");
+      });
+    }
+
+    function startApp() {
+      if (appStarted) return Promise.resolve();
+      appStarted = true;
       initShoutForm();
-      // Team first: its names + ids feed the shout-out reactions and the to-do board.
+      // Team first: its names + ids feed the lounge reactions and the to-do board.
       return loadTeam().then(function () {
         initTodoForm();
-        return Promise.all([loadAnnouncement(), loadSheetEvents().then(loadTodos), loadShouts()]);
+        return Promise.all([loadAnnouncement(), loadShouts(), loadSheetEvents().then(loadTodos)]);
+      }).then(function () { enterView(viewNow); });
+    }
+
+    function maybeWelcome() {
+      if (welcomed) return;
+      welcomed = true;
+      var seen = false;
+      try { seen = !!sessionStorage.getItem("mcc_welcomed"); sessionStorage.setItem("mcc_welcomed", "1"); } catch (e) { /* ignore */ }
+      if (seen || reducedMotion() || typeof confettiBurst !== "function") return;
+      var rect = $("welcome-card").getBoundingClientRect();
+      confettiBurst(rect.left + rect.width / 2, rect.top + 60);
+    }
+
+    // Runs whenever a view is shown (and once data is ready). Data is refreshed if it's gone stale.
+    function enterView(name) {
+      if (!appStarted || !name) return;
+      if (name === "home") {
+        maybeWelcome();
+        if (!fresh("home", 20)) { loadAnnouncement(); loadShouts(); }
+      } else if (name === "todo") {
+        if (!fresh("todo", 15)) loadTodos();
+      } else if (name === "meet") {
+        if (window.MCCMeet) window.MCCMeet.init(sb, me.id);     // starts once; retries if a load failed
+      }
+    }
+
+    function showView(name, focusHeading) {
+      if (locked) name = "account";
+      VIEWS.forEach(function (v) { $("view-" + v).hidden = v !== name; });
+      document.querySelectorAll(".nav-item").forEach(function (a) {
+        if (a.getAttribute("data-view") === name) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
       });
+      $("top-title").textContent = TITLES[name];
+      document.title = TITLES[name] + " \u2014 Myanmar Culture Club";
+      var changed = viewNow !== name;
+      viewNow = name;
+      if (changed) {
+        window.scrollTo({ top: 0, behavior: "instant" });
+        if (focusHeading) {
+          var h = $("view-" + name).querySelector("h1");
+          if (h) h.focus({ preventScroll: true });
+        }
+      }
+      enterView(name);
     }
 
     // ----- Choose / change password -----
@@ -635,6 +704,37 @@
     }
 
     // ----- boot -----
+    function bootFail(text) {
+      var bt = $("boot-text");
+      bt.textContent = text + " ";
+      var a = el("a", null, "Back to sign in");
+      a.href = "login.html";
+      bt.appendChild(a);
+      $("boot").classList.add("failed");
+    }
+
+    window.addEventListener("hashchange", function () { if (appStarted || viewNow) showView(viewFromHash(), true); });
+
+    // Phones: hide the bottom tab bar while the on-screen keyboard is up.
+    function isField(t) { return t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !/^(checkbox|radio|button|submit)$/.test(t.type || ""); }
+    document.addEventListener("focusin", function (e) { if (isField(e.target)) document.body.classList.add("typing"); });
+    document.addEventListener("focusout", function () {
+      setTimeout(function () { if (!isField(document.activeElement)) document.body.classList.remove("typing"); }, 60);
+    });
+
+    document.querySelector(".side-nav").addEventListener("click", function (e) {
+      var a = e.target.closest(".nav-item");
+      if (a && locked && a.getAttribute("data-view") !== "account") e.preventDefault();
+    });
+
+    document.querySelectorAll('[data-action="signout"]').forEach(function (b) {
+      b.addEventListener("click", function () {
+        b.disabled = true;
+        try { sessionStorage.removeItem("mcc_welcomed"); } catch (e) { /* ignore */ }
+        sb.auth.signOut().then(goLogin, goLogin);
+      });
+    });
+
     sb.auth.getSession().then(function (r) {
       var session = r.data && r.data.session;
       if (!session) return goLogin();
@@ -649,36 +749,38 @@
             var prof = p.data;
             var name = (prof && prof.display_name) || (user.email || "").split("@")[0] || "friend";
             var role = (prof && prof.role) || "exec";
-            me = { id: user.id, name: name, role: role };
+            me = { id: user.id, name: name, role: role, email: user.email || "" };
 
             $("welcome-name").textContent = "Welcome, " + name;
-            $("welcome-sub").textContent = "You're signed in as " + (user.email || "");
+            $("welcome-sub").textContent = "You're signed in as " + me.email;
             $("welcome-role").textContent = role;
-            card2.hidden = false;
-
-            if (!reducedMotion() && typeof confettiBurst === "function") {
-              var rect = card2.getBoundingClientRect();
-              confettiBurst(rect.left + rect.width / 2, rect.top + 60);
-            }
+            $("side-name").textContent = name;
+            $("side-role").textContent = role;
+            $("account-sub").textContent = name + " · " + role + " · " + me.email;
+            $("boot").hidden = true;
+            $("app-shell").hidden = false;
 
             // First sign-in: the exec must replace the temporary password you gave them
             // before they see anything else. (This is a courtesy gate, not a security
             // boundary: it keeps passwords known only to their owners.)
             var passwordSet = !isRecovery && !!(user.user_metadata && user.user_metadata.password_set);
-            initPasswordForm(passwordSet, startDashboard);
-            if (!passwordSet) return;
-            return startDashboard();
+            initPasswordForm(passwordSet, function () {
+              setLocked(false);
+              startApp();
+              navigate("home");
+            });
+            if (!passwordSet) {
+              setLocked(true);
+              if (window.history && history.replaceState) history.replaceState(null, "", location.pathname + "#account");
+              showView("account");
+              return;
+            }
+            showView(viewFromHash());
+            return startApp();
           });
       });
     }).catch(function () {
-      $("welcome-name").textContent = "Something went wrong";
-      $("welcome-sub").textContent = "Couldn't load your profile. Try signing in again.";
-      card2.hidden = false;
-    });
-
-    $("signout-btn").addEventListener("click", function () {
-      this.disabled = true;
-      sb.auth.signOut().then(goLogin, goLogin);
+      bootFail("Couldn't load your profile.");
     });
   }
 })();

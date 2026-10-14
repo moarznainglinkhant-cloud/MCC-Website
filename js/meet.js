@@ -1,11 +1,9 @@
 // Exec-only meeting finder: each exec paints a standing weekly availability grid and lists
 // one-off days they can't make it; anyone can then find the best meeting times for the people
-// who have to be there. Backend: Supabase. Needs js/supabase.js and js/exec-config.js first.
+// who have to be there. Backend: Supabase.
+// It lives inside exec.html and is started (once) by exec.js: window.MCCMeet.init(client, userId).
 (function () {
   "use strict";
-
-  var cfg = window.MCC_EXEC_CONFIG || {};
-  var configured = cfg.url && cfg.key && cfg.url.indexOf("PASTE_") !== 0 && cfg.key.indexOf("PASTE_") !== 0;
 
   var DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   var DAYS_LONG = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -55,16 +53,7 @@
 
   var msgEl = $("meet-msg");
 
-  // ---------- not configured ----------
-  if (!configured || !window.supabase) {
-    setMsg(msgEl, "The exec area isn't connected to its database yet.", "info");
-    return;
-  }
-
-  var sb = window.supabase.createClient(cfg.url, cfg.key, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
-  });
-
+  var sb = null;          // shared Supabase client, handed in by exec.js
   var me = null;
   var team = [];          // [{ id, display_name, role }]
   var byId = {};
@@ -75,7 +64,6 @@
   var myCells = [];       // my grid as an array of "0" | "1" | "2"
   var dirty = false;
 
-  function goLogin() { location.replace("login.html"); }
   function label(id) {
     var p = byId[id];
     if (!p) return "An exec";
@@ -164,6 +152,13 @@
     setDirty(false);
 
     var painting = false;
+    var paintMode = false;          // touch screens: off = page scrolls and taps paint one block
+    var lastType = "mouse";
+    if (navigator.maxTouchPoints > 0) $("m-paint-row").hidden = false;
+    $("m-paint").addEventListener("change", function () {
+      paintMode = this.checked;
+      editor.grid.classList.toggle("paint", paintMode);
+    });
     function paintFrom(target) {
       var c = target && target.closest ? target.closest(".cell") : null;
       if (!c || !editor.grid.contains(c)) return;
@@ -172,6 +167,8 @@
     }
     var lastX = 0, lastY = 0;
     editor.grid.addEventListener("pointerdown", function (e) {
+      lastType = e.pointerType || "mouse";
+      if (lastType === "touch" && !paintMode) return;       // let the page scroll; a tap paints via "click"
       if (!e.target.closest(".cell")) return;
       e.preventDefault();
       painting = true;
@@ -192,6 +189,9 @@
     });
     ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (ev) {
       editor.grid.addEventListener(ev, function () { painting = false; });
+    });
+    editor.grid.addEventListener("click", function (e) {
+      if (lastType === "touch" && !paintMode) paintFrom(e.target);
     });
 
     editor.heads.forEach(function (h) {
@@ -571,20 +571,21 @@
     if (mine) setMsg(msgEl, "Start by painting when you're usually free, then press Save.", "info");
   }
 
-  sb.auth.getSession().then(function (r) {
-    if (!r.data || !r.data.session) return goLogin();
-    return sb.auth.getUser().then(function (u) {
-      if (u.error || !u.data || !u.data.user) return sb.auth.signOut().then(goLogin);
-      var meta = u.data.user.user_metadata || {};
-      if (!meta.password_set) { location.replace("exec.html"); return; }   // choose your own password first
-      me = { id: u.data.user.id };
-      return loadAll().then(init);
-    });
-  }).catch(function (err) {
-    if (err && err.setup) {
-      setMsg(msgEl, "The meeting finder isn't set up in the database yet. Run the setup SQL in Supabase, then refresh.", "error");
-    } else {
-      setMsg(msgEl, "Couldn't load the meeting finder. Try signing in again.", "error");
+  var started = null;
+  window.MCCMeet = {
+    init: function (client, userId) {
+      if (started) return started;
+      sb = client;
+      me = { id: userId };
+      started = loadAll().then(init).catch(function (err) {
+        started = null;                       // allow a retry on the next visit
+        if (err && err.setup) {
+          setMsg(msgEl, "The meeting finder isn't set up in the database yet. Run the setup SQL in Supabase, then refresh.", "error");
+        } else {
+          setMsg(msgEl, "Couldn't load the meeting finder. Check your connection and try again.", "error");
+        }
+      });
+      return started;
     }
-  });
+  };
 })();

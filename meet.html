@@ -2,130 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- Myanmar Culture Club (University of Toronto) — site designed & built by Naing Lin Khant (Moarz). -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Meeting Finder — Myanmar Culture Club</title>
-<meta name="author" content="Naing Lin Khant (Moarz)">
 <meta name="robots" content="noindex, nofollow">
-<meta name="referrer" content="same-origin">
+<meta http-equiv="refresh" content="0; url=exec.html#meet">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
-<link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
-<link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
-<link rel="stylesheet" href="css/exec.css">
+<script>location.replace("exec.html#meet");</script>
 </head>
-<body data-page="meet">
-
-<header class="nav">
-  <div class="wrap nav-row">
-    <a href="index.html" class="brand">
-      <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
-      <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
-    </a>
-    <a class="nav-link" href="exec.html">Back to the exec area</a>
-  </div>
-</header>
-
-<main class="stage stage-top">
-  <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
-  <div class="wrap dash wide">
-
-    <section class="panel">
-      <span class="eyebrow">Exec area</span>
-      <h1 class="page-h1">Meeting finder</h1>
-      <p class="panel-sub">Set when you're usually free, then find a time that works for the people who have to be there.</p>
-      <div class="tabs" role="tablist" aria-label="Meeting finder">
-        <button type="button" class="tab on" role="tab" id="tab-find" data-tab="find" aria-selected="true" aria-controls="pane-find">Find a time</button>
-        <button type="button" class="tab" role="tab" id="tab-mine" data-tab="mine" aria-selected="false" aria-controls="pane-mine">My availability</button>
-      </div>
-      <p class="msg" id="meet-msg" role="status" aria-live="polite"></p>
-    </section>
-
-    <!-- ===== Find a time ===== -->
-    <section class="panel" id="pane-find" role="tabpanel" aria-labelledby="tab-find" hidden>
-      <div class="f-controls">
-        <label class="field-inline">Day
-          <select id="f-day"></select>
-        </label>
-        <label class="field-inline">Date (optional)
-          <input type="date" id="f-date">
-        </label>
-        <label class="field-inline">Length
-          <select id="f-dur"></select>
-        </label>
-        <label class="field-inline">Not before
-          <select id="f-from"></select>
-        </label>
-        <label class="field-inline">Not after
-          <select id="f-until"></select>
-        </label>
-      </div>
-      <p class="meta" id="f-date-hint">Pick a date to take everyone's "can't make it" days into account.</p>
-
-      <fieldset class="who">
-        <legend>Who has to be there?</legend>
-        <div class="who-actions">
-          <button type="button" class="chip" id="f-all">Everyone</button>
-          <button type="button" class="chip" id="f-none">No one</button>
-          <button type="button" class="chip" id="f-core" hidden>Core execs</button>
-        </div>
-        <div class="who-list" id="f-people"></div>
-        <label class="group-toggle"><input type="checkbox" id="f-strict" checked> Only show times when every required exec is available</label>
-      </fieldset>
-
-      <p class="meta" id="f-status"></p>
-
-      <h2 class="h-sub">Best times</h2>
-      <p class="meta" id="f-hint"></p>
-      <ul class="results" id="f-results"></ul>
-
-      <h2 class="h-sub">Week at a glance</h2>
-      <p class="meta">Darker green means more execs available. Faded blocks are outside your filters. Tap a block to see who's free. ★ marks a required exec.</p>
-      <div class="grid-wrap" id="f-heat"></div>
-      <div class="slot-info" id="f-info" aria-live="polite">Tap a block to see who's free.</div>
-    </section>
-
-    <!-- ===== My availability ===== -->
-    <section class="panel" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>
-      <p class="panel-sub">Pick a brush, then drag across the blocks to paint when you're usually free. Tap a day name to fill that whole day. Anything you leave blank counts as busy.</p>
-      <div class="brushes" role="group" aria-label="Brush">
-        <button type="button" class="brush on" data-b="1"><i class="sw s1"></i>Free</button>
-        <button type="button" class="brush" data-b="2"><i class="sw s2"></i>If needed</button>
-        <button type="button" class="brush" data-b="0"><i class="sw s0"></i>Busy</button>
-        <button type="button" class="link-btn" id="m-clear">Clear all</button>
-      </div>
-      <div class="grid-wrap" id="m-grid"></div>
-      <div class="save-row">
-        <button class="btn" id="m-save" type="button">Save availability</button>
-        <span class="meta" id="m-status"></span>
-      </div>
-
-      <h2 class="h-sub">Days you can't make it</h2>
-      <p class="panel-sub">One-off clashes like a midterm or a trip. These override your weekly pattern on those dates. Others see that you're unavailable, not why.</p>
-      <form class="blk-form" id="blk-form">
-        <label class="field-inline">From <input type="date" id="blk-from"></label>
-        <label class="field-inline">To (optional) <input type="date" id="blk-to"></label>
-        <button class="btn" type="submit">Add</button>
-      </form>
-      <p class="msg" id="blk-msg" role="status" aria-live="polite"></p>
-      <ul class="blocks" id="blk-list"></ul>
-    </section>
-
-  </div>
-</main>
-
-<footer class="slim">
-  <div class="wrap">
-    <div class="mark">
-      <img src="images/brand/logo.png" alt="">
-      <span>Myanmar Culture Club · Exec area</span>
-    </div>
-    <span>&copy; 2026 MCC</span>
-  </div>
-</footer>
-
-<script src="js/supabase.js"></script>
-<script src="js/exec-config.js"></script>
-<script src="js/meet.js"></script>
+<body>
+<p>The meeting finder now lives in the exec area. <a href="exec.html#meet">Continue</a></p>
 </body>
 </html>

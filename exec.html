@@ -8,133 +8,277 @@
 <meta name="author" content="Naing Lin Khant (Moarz)">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="same-origin">
+<meta name="theme-color" content="#1C2440">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
 <link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/exec.css">
 </head>
-<body data-page="exec">
+<body data-page="exec" class="app">
 
-<header class="nav">
-  <div class="wrap nav-row">
-    <a href="index.html" class="brand">
-      <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
-      <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
+<a class="skip-link" href="#app-content">Skip to content</a>
+
+<div class="boot" id="boot" role="status" aria-live="polite">
+  <img src="images/brand/favicon-192.png" alt="" width="56" height="56">
+  <p id="boot-text">Loading…</p>
+</div>
+
+<div class="app-shell" id="app-shell" hidden>
+
+  <!-- Sidebar on laptops; becomes the bottom tab bar on phones -->
+  <aside class="side" id="side">
+    <a class="side-brand" href="#home">
+      <img src="images/brand/favicon-192.png" alt="" width="40" height="40">
+      <span>Myanmar Culture Club<small>Exec area</small></span>
     </a>
-    <a class="nav-link" href="index.html">Back to the site</a>
-  </div>
-</header>
 
-<main class="stage stage-top">
-  <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
-  <div class="wrap dash">
+    <nav class="side-nav" aria-label="Exec area">
+      <a class="nav-item" href="#home" data-view="home">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
+        <span>Home</span>
+      </a>
+      <a class="nav-item" href="#todo" data-view="todo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.2 2.5 2.5 4.5-5"/></svg>
+        <span>To-do</span>
+      </a>
+      <a class="nav-item" href="#meet" data-view="meet">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+        <span>Meetings</span>
+      </a>
+      <a class="nav-item" href="#account" data-view="account">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
+        <span>Account</span>
+      </a>
+    </nav>
 
-    <div class="card" id="welcome-card" hidden>
-      <div class="mingalaba myanmar" aria-hidden="true">မင်္ဂလာပါ</div>
-      <span class="eyebrow">Exec area</span>
-      <h1 id="welcome-name">Welcome</h1>
-      <span class="role-chip" id="welcome-role">exec</span>
-      <p class="sub" id="welcome-sub" style="margin-top:18px"></p>
-      <div class="actions">
-        <a class="btn ghost" href="index.html">Back to the site</a>
-        <button class="btn" id="signout-btn" type="button">Sign out</button>
+    <div class="side-foot">
+      <div class="side-me">
+        <strong id="side-name"></strong>
+        <span id="side-role"></span>
       </div>
+      <a class="side-link" href="index.html">Back to the site</a>
+      <button class="side-link" type="button" data-action="signout">Sign out</button>
     </div>
+  </aside>
 
-    <div class="dash-main" id="dash-main" hidden>
+  <div class="app-main">
 
-    <section class="panel announce" id="announce" hidden aria-labelledby="announce-title">
-      <span class="eyebrow" id="announce-title">Announcement</span>
-      <p class="announce-body" id="announce-body"></p>
-      <p class="meta" id="announce-meta"></p>
-    </section>
+    <!-- Slim top bar, phones only -->
+    <header class="app-top">
+      <img src="images/brand/favicon-192.png" alt="" width="32" height="32">
+      <span class="app-top-title" id="top-title">Home</span>
+    </header>
 
-    <section class="panel link-panel">
-      <div>
-        <h2>Meeting finder</h2>
-        <p class="panel-sub" style="margin-bottom:0">Set when you're usually free, then find a time that works for the people who have to be there.</p>
-      </div>
-      <a class="btn" href="meet.html">Open</a>
-    </section>
+    <main class="app-content" id="app-content" tabindex="-1">
+      <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
 
-    <section class="panel" id="todo-panel" hidden aria-labelledby="todo-title">
-      <h2 id="todo-title">Exec to-do board</h2>
-      <p class="panel-sub">Add a task, give it an owner, tick it off. Everyone sees everything.</p>
-      <form class="todo-form" id="todo-form">
-        <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task">
-        <input class="extra" id="todo-event" type="text" maxlength="80" list="todo-events" placeholder="Event (optional)" aria-label="Event" autocomplete="off">
-        <datalist id="todo-events"></datalist>
-        <select id="todo-assignee" aria-label="Assign to"></select>
-        <select class="extra" id="todo-priority" aria-label="Priority"></select>
-        <input id="todo-due" type="date" aria-label="Due date (optional)">
-        <button class="btn" id="todo-add" type="submit">Add</button>
-      </form>
-      <p class="msg" id="todo-msg" role="status" aria-live="polite"></p>
-      <div class="filters" role="group" aria-label="Filter tasks">
-        <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
-        <button type="button" class="chip" data-filter="mine">Mine <b id="n-mine">0</b></button>
-        <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
-        <label class="group-toggle extra"><input type="checkbox" id="todo-group" checked> Group by event</label>
-      </div>
-      <ul class="todo-list" id="todo-list"></ul>
-    </section>
-
-    <section class="panel" id="shout-panel" hidden aria-labelledby="shout-title">
-      <h2 id="shout-title">The lounge</h2>
-      <p class="panel-sub">Leave a note for the team: a win, a thank-you, a random thought, or just hi.</p>
-      <form class="shout-form" id="shout-form">
-        <label class="sr-only" for="shout-body">Your note</label>
-        <textarea id="shout-body" maxlength="280" rows="3" placeholder="What's on your mind?"></textarea>
-        <div class="shout-row">
-          <span class="meta" id="shout-count">0 / 280</span>
-          <button class="btn" id="shout-btn" type="submit">Post</button>
+      <!-- ===================== HOME ===================== -->
+      <section class="view" id="view-home" data-view="home" hidden aria-labelledby="welcome-name">
+        <div class="hero" id="welcome-card">
+          <div class="mingalaba myanmar" aria-hidden="true">မင်္ဂလာပါ</div>
+          <span class="eyebrow">Exec area</span>
+          <h1 id="welcome-name" tabindex="-1">Welcome</h1>
+          <span class="role-chip" id="welcome-role">exec</span>
+          <p class="sub" id="welcome-sub"></p>
         </div>
-      </form>
-      <p class="msg" id="shout-msg" role="status" aria-live="polite"></p>
-      <ul class="shout-list" id="shout-list"></ul>
-    </section>
 
-    <section class="panel" id="team-panel" hidden aria-labelledby="team-title">
-      <h2 id="team-title">The team</h2>
-      <ul class="team-list" id="team-list"></ul>
-    </section>
+        <section class="panel announce" id="announce" hidden aria-labelledby="announce-title">
+          <span class="eyebrow" id="announce-title">Announcement</span>
+          <p class="announce-body" id="announce-body"></p>
+          <p class="meta" id="announce-meta"></p>
+        </section>
 
-    </div>
+        <div class="quick">
+          <a class="quick-card" href="#todo">
+            <span class="quick-num" id="home-tasks-n">–</span>
+            <span class="quick-label"><strong>Your open tasks</strong><small id="home-tasks-sub">Open the to-do board</small></span>
+          </a>
+          <a class="quick-card" href="#meet">
+            <span class="quick-num" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            </span>
+            <span class="quick-label"><strong>Find a meeting time</strong><small>See when the right people are free</small></span>
+          </a>
+        </div>
 
-    <section class="panel" id="pw-panel" hidden aria-labelledby="pw-title">
-      <h2 id="pw-title">Change your password</h2>
-      <p class="panel-sub" id="pw-sub">Pick something you don't use anywhere else.</p>
-      <form class="pw-form" id="pw-form" novalidate>
-        <label class="field-inline">New password
-          <input type="password" id="pw-new" autocomplete="new-password" minlength="10" required>
-        </label>
-        <label class="field-inline">Confirm new password
-          <input type="password" id="pw-confirm" autocomplete="new-password" required>
-        </label>
-        <label class="group-toggle pw-show"><input type="checkbox" id="pw-show"> Show passwords</label>
-        <button class="btn" id="pw-btn" type="submit">Save password</button>
-      </form>
-      <p class="meta">At least 10 characters. A few random words is a good way to make a long one you can remember.</p>
-      <p class="msg" id="pw-msg" role="status" aria-live="polite"></p>
-    </section>
+        <section class="panel" id="shout-panel" hidden aria-labelledby="shout-title">
+          <h2 id="shout-title">The lounge</h2>
+          <p class="panel-sub">Leave a note for the team: a win, a thank-you, a random thought, or just hi.</p>
+          <form class="shout-form" id="shout-form">
+            <label class="sr-only" for="shout-body">Your note</label>
+            <textarea id="shout-body" maxlength="280" rows="3" placeholder="What's on your mind?"></textarea>
+            <div class="shout-row">
+              <span class="meta" id="shout-count">0 / 280</span>
+              <button class="btn" id="shout-btn" type="submit">Post</button>
+            </div>
+          </form>
+          <p class="msg" id="shout-msg" role="status" aria-live="polite"></p>
+          <ul class="shout-list" id="shout-list"></ul>
+        </section>
 
+        <section class="panel" id="team-panel" hidden aria-labelledby="team-title">
+          <h2 id="team-title">The team</h2>
+          <ul class="team-list" id="team-list"></ul>
+        </section>
+      </section>
+
+      <!-- ===================== TO-DO ===================== -->
+      <section class="view" id="view-todo" data-view="todo" hidden aria-labelledby="todo-h1">
+        <div class="view-head">
+          <h1 id="todo-h1" tabindex="-1">To-do board</h1>
+          <p class="panel-sub">Add a task, give it an owner, tick it off. Everyone sees everything.</p>
+        </div>
+
+        <section class="panel" id="todo-panel" hidden aria-label="Exec to-do board">
+          <form class="todo-form" id="todo-form">
+            <input class="todo-input" id="todo-title-input" type="text" maxlength="140" placeholder="What needs doing?" aria-label="Task" enterkeyhint="done">
+            <input class="extra" id="todo-event" type="text" maxlength="80" list="todo-events" placeholder="Event (optional)" aria-label="Event" autocomplete="off">
+            <datalist id="todo-events"></datalist>
+            <select id="todo-assignee" aria-label="Assign to"></select>
+            <select class="extra" id="todo-priority" aria-label="Priority"></select>
+            <input id="todo-due" type="date" aria-label="Due date (optional)">
+            <button class="btn" id="todo-add" type="submit">Add</button>
+          </form>
+          <p class="msg" id="todo-msg" role="status" aria-live="polite"></p>
+          <div class="filters" role="group" aria-label="Filter tasks">
+            <button type="button" class="chip on" data-filter="open">Open <b id="n-open">0</b></button>
+            <button type="button" class="chip" data-filter="mine">Mine <b id="n-mine">0</b></button>
+            <button type="button" class="chip" data-filter="done">Done <b id="n-done">0</b></button>
+            <label class="group-toggle extra"><input type="checkbox" id="todo-group" checked> Group by event</label>
+          </div>
+          <ul class="todo-list" id="todo-list"></ul>
+        </section>
+
+        <section class="panel" id="todo-missing" hidden>
+          <p class="panel-sub" style="margin:0">The to-do board isn't set up in the database yet. Run the to-do setup SQL in Supabase, then refresh.</p>
+        </section>
+      </section>
+
+      <!-- ===================== MEETINGS ===================== -->
+      <section class="view wide" id="view-meet" data-view="meet" hidden aria-labelledby="meet-h1">
+        <div class="view-head">
+          <h1 id="meet-h1" tabindex="-1">Meeting finder</h1>
+          <p class="panel-sub">Set when you're usually free, then find a time that works for the people who have to be there.</p>
+          <div class="tabs" role="tablist" aria-label="Meeting finder">
+            <button type="button" class="tab on" role="tab" id="tab-find" data-tab="find" aria-selected="true" aria-controls="pane-find">Find a time</button>
+            <button type="button" class="tab" role="tab" id="tab-mine" data-tab="mine" aria-selected="false" aria-controls="pane-mine">My availability</button>
+          </div>
+          <p class="msg left" id="meet-msg" role="status" aria-live="polite"></p>
+        </div>
+
+        <!-- Find a time -->
+        <section class="panel" id="pane-find" role="tabpanel" aria-labelledby="tab-find" hidden>
+          <div class="f-controls">
+            <label class="field-inline">Day
+              <select id="f-day"></select>
+            </label>
+            <label class="field-inline">Date (optional)
+              <input type="date" id="f-date">
+            </label>
+            <label class="field-inline">Length
+              <select id="f-dur"></select>
+            </label>
+            <label class="field-inline">Not before
+              <select id="f-from"></select>
+            </label>
+            <label class="field-inline">Not after
+              <select id="f-until"></select>
+            </label>
+          </div>
+          <p class="meta" id="f-date-hint">Pick a date to take everyone's "can't make it" days into account.</p>
+
+          <fieldset class="who">
+            <legend>Who has to be there?</legend>
+            <div class="who-actions">
+              <button type="button" class="chip" id="f-all">Everyone</button>
+              <button type="button" class="chip" id="f-none">No one</button>
+              <button type="button" class="chip" id="f-core" hidden>Core execs</button>
+            </div>
+            <div class="who-list" id="f-people"></div>
+            <label class="group-toggle"><input type="checkbox" id="f-strict" checked> Only show times when every required exec is available</label>
+          </fieldset>
+
+          <p class="meta" id="f-status"></p>
+
+          <h2 class="h-sub">Best times</h2>
+          <p class="meta" id="f-hint"></p>
+          <ul class="results" id="f-results"></ul>
+
+          <h2 class="h-sub">Week at a glance</h2>
+          <p class="meta">Darker green means more execs available. Faded blocks are outside your filters. Tap a block to see who's free. ★ marks a required exec.</p>
+          <div class="grid-wrap" id="f-heat"></div>
+          <div class="slot-info" id="f-info" aria-live="polite">Tap a block to see who's free.</div>
+        </section>
+
+        <!-- My availability -->
+        <section class="panel" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>
+          <p class="panel-sub">Pick a brush, then drag across the blocks to paint when you're usually free. Tap a day name to fill that whole day. Anything you leave blank counts as busy.</p>
+          <div class="brushes" role="group" aria-label="Brush">
+            <button type="button" class="brush on" data-b="1"><i class="sw s1"></i>Free</button>
+            <button type="button" class="brush" data-b="2"><i class="sw s2"></i>If needed</button>
+            <button type="button" class="brush" data-b="0"><i class="sw s0"></i>Busy</button>
+            <button type="button" class="link-btn" id="m-clear">Clear all</button>
+          </div>
+          <div class="paint-row" id="m-paint-row" hidden>
+            <label class="group-toggle"><input type="checkbox" id="m-paint"><span>Drag to paint<span class="meta">Off: tap blocks one at a time and the page scrolls normally. On: drag your finger across blocks.</span></span></label>
+          </div>
+          <div class="grid-wrap" id="m-grid"></div>
+          <div class="save-row">
+            <button class="btn" id="m-save" type="button">Save availability</button>
+            <span class="meta" id="m-status"></span>
+          </div>
+
+          <h2 class="h-sub">Days you can't make it</h2>
+          <p class="panel-sub">One-off clashes like a midterm or a trip. These override your weekly pattern on those dates. Others see that you're unavailable, not why.</p>
+          <form class="blk-form" id="blk-form">
+            <label class="field-inline">From <input type="date" id="blk-from"></label>
+            <label class="field-inline">To (optional) <input type="date" id="blk-to"></label>
+            <button class="btn" type="submit">Add</button>
+          </form>
+          <p class="msg" id="blk-msg" role="status" aria-live="polite"></p>
+          <ul class="blocks" id="blk-list"></ul>
+        </section>
+      </section>
+
+      <!-- ===================== ACCOUNT ===================== -->
+      <section class="view" id="view-account" data-view="account" hidden aria-labelledby="account-h1">
+        <div class="view-head">
+          <h1 id="account-h1" tabindex="-1">Account</h1>
+          <p class="panel-sub" id="account-sub"></p>
+        </div>
+
+        <section class="panel" id="pw-panel" hidden aria-labelledby="pw-title">
+          <h2 id="pw-title">Change your password</h2>
+          <p class="panel-sub" id="pw-sub">Pick something you don't use anywhere else.</p>
+          <form class="pw-form" id="pw-form" novalidate>
+            <label class="field-inline">New password
+              <input type="password" id="pw-new" autocomplete="new-password" minlength="10" required>
+            </label>
+            <label class="field-inline">Confirm new password
+              <input type="password" id="pw-confirm" autocomplete="new-password" required>
+            </label>
+            <label class="group-toggle pw-show"><input type="checkbox" id="pw-show"> Show passwords</label>
+            <button class="btn" id="pw-btn" type="submit">Save password</button>
+          </form>
+          <p class="meta">At least 10 characters. A few random words is a good way to make a long one you can remember.</p>
+          <p class="msg" id="pw-msg" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel account-actions" id="account-actions">
+          <a class="btn ghost" href="index.html">Back to the site</a>
+          <button class="btn" type="button" data-action="signout">Sign out</button>
+        </section>
+      </section>
+
+    </main>
   </div>
-</main>
-
-<footer class="slim">
-  <div class="wrap">
-    <div class="mark">
-      <img src="images/brand/logo.png" alt="">
-      <span>Myanmar Culture Club · Exec area</span>
-    </div>
-    <span>&copy; 2026 MCC</span>
-  </div>
-</footer>
+</div>
 
 <script src="js/supabase.js"></script>
 <script src="js/exec-config.js"></script>
 <script src="js/site.js"></script>
 <script src="js/exec.js"></script>
+<script src="js/meet.js"></script>
 </body>
 </html>
