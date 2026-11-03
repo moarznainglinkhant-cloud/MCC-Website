@@ -65,7 +65,7 @@ const I18N = {
   en: {
     label_welcome: "Welcome",
     label_next_event: "Next Event",
-    label_all_events: "All Events",
+    label_all_events: "Events",
     label_newsletter: "Newsletter",
     label_connect: "Connect",
     label_join_newsletter_nav: "Join Newsletter",
@@ -114,7 +114,7 @@ const I18N = {
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
     label_next_event: "လာမည့်အခမ်းအနား",
-    label_all_events: "အခမ်းအနားအားလုံး",
+    label_all_events: "အခမ်းအနားများ",
     label_newsletter: "သတငးလွာ",
     label_connect: "ဆက်သွယ်ရန်",
     label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
