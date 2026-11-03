@@ -12,7 +12,6 @@ events.html              ← all-events page
 js/site.js               ← the ONLY file you'll ever need to edit for setup
 data/events.csv          ← sample event data (used until you connect your Sheet)
 data/hero.csv            ← sample homepage photo data (used until you connect your Sheet)
-data/settings.csv        ← sample site settings, e.g. how many Past Events cards to show
 images/brand/logo.png    ← club logo
 images/events/*.jpg      ← event photos
 ```
@@ -23,14 +22,15 @@ Instead of asking someone to edit code every time an event changes, the
 site reads its event data from a table at runtime — a table you keep in a
 Google Sheet. Here's the flow:
 
-1. You keep a Google Sheet with your events (one row per event), a second
-   small sheet with your 3 homepage photos, and a third tiny sheet for
-   site settings (right now, just how many Past Events cards to show).
-2. You publish all three sheets to the web as CSV (a free, built-in Google
+1. You keep a Google Sheet with your events (one row per event), and a
+   second small sheet with your 3 homepage photos.
+2. You publish both sheets to the web as CSV (a free, built-in Google
    Sheets feature — no add-ons).
 3. The website fetches those CSV links every time someone loads the page,
    and builds the "Next Event," "Coming Up," "Past Events," and homepage
-   photos sections from whatever's in the sheet **at that moment**.
+   photos sections from whatever's in the sheet **at that moment**. Past
+   Events always shows everything that's ever been added — nothing is
+   capped or hidden.
 4. The "next event" is never picked by hand — the site looks at the
    current time in Toronto, finds the soonest event that hasn't ended yet,
    and shows that one. The moment an event's end time passes, it
@@ -39,8 +39,8 @@ Google Sheet. Here's the flow:
    it's no longer next. Nothing to toggle.
 
 Until you set step 1–2 up, the site quietly falls back to the sample data
-bundled in `data/events.csv`, `data/hero.csv`, and `data/settings.csv`, so
-nothing is ever broken or blank.
+bundled in `data/events.csv` and `data/hero.csv`, so nothing is ever
+broken or blank.
 
 ## Step-by-step: connecting your Google Sheet
 
@@ -51,14 +51,12 @@ and make three tabs (right-click the tab bar → rename, or use the + button):
 
 - **Events**
 - **Hero**
-- **Settings**
 
 The easiest way to get the right columns: in each tab, go to
 **File → Import → Upload**, and upload `data/events.csv` into the "Events"
-tab, `data/hero.csv` into the "Hero" tab, and `data/settings.csv` into the
-"Settings" tab (choose "Replace current sheet" on import each time). That
-gives you the exact column headers already filled in with the current
-content — just edit from there.
+tab and `data/hero.csv` into the "Hero" tab (choose "Replace current
+sheet" on import each time). That gives you the exact column headers
+already filled in with the current content — just edit from there.
 
 **Events tab columns:**
 
@@ -110,21 +108,6 @@ By default the three slots point at `images/welcome_vertical.jpg`,
 photos into the `images/` folder using those exact filenames and they'll
 show up with no other changes needed, or point the `photo` column at
 different filenames/URLs entirely.
-
-**Settings tab columns:**
-
-| Column | What goes here |
-|---|---|
-| `key` | the setting's name — right now just `past_events_count` |
-| `value` | the setting's value |
-
-This is a small, general-purpose key/value table rather than one column
-per setting, so more settings can be added later without changing the
-sheet's shape. Today it controls one thing: how many Past Events cards
-show on the events page. Set `past_events_count` to `12`, `15`, `30`,
-whatever you like — the page always shows your most recent events up to
-that number (older ones just don't render; nothing is deleted from the
-sheet). Leave it blank or delete the row and it defaults to 12.
 
 ### 2. Publish each tab to the web
 

@@ -268,11 +268,6 @@
   @media (max-width:760px){ .events-grid{ grid-template-columns:1fr; } }
 
   /* ---------- PAST EVENTS ---------- */
-  .past-note{
-    display:inline-flex; align-items:center; gap:10px; margin-bottom:22px;
-    background:var(--bg-sunk); border:1px dashed var(--line); border-radius:999px;
-    padding:9px 18px; font-size:0.78rem; color:var(--ink-soft);
-  }
   .past-gallery{ display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:18px; }
   .past-card{
     display:flex; flex-direction:column; background:var(--bg-raised); border:1px solid var(--line);
@@ -472,7 +467,6 @@
           <h2 data-i18n="past_events_h2">What we've hosted</h2>
         </div>
       </div>
-      <div class="past-note" id="js-past-note">Everything we've hosted — 5 events so far.</div>
       <div class="past-gallery" id="js-past-gallery">
         <div class="past-card">
           <div class="photo"><img src="images/events/welcome-picnic.jpg" alt="MCC Welcome Picnic — Sept 20, 2026, Front Campus" loading="lazy"></div>

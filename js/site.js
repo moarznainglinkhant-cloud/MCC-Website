@@ -22,11 +22,6 @@
 
 const EVENTS_CSV_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1409409640&single=true&output=csv";
 const HERO_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1259347518&single=true&output=csv";
-const SETTINGS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1117657583&single=true&output=csv";
-
-// Used when the "Settings" sheet doesn't have a past_events_count row
-// (or it's blank/not a number yet).
-const DEFAULT_PAST_EVENTS_COUNT = 12;
 
 /* ============================================================
    "I'M FEELING LUCKY" FUN FACTS (fun-fact.html)
@@ -110,8 +105,6 @@ const I18N = {
     coming_up_h2: "More on the calendar",
     past_events_eyebrow: "Past Events",
     past_events_h2: "What we've hosted",
-    past_note_showing_recent: "Showing our {n} most recent events.",
-    past_note_everything: "Everything we've hosted — {n} events so far.",
   },
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
@@ -156,8 +149,6 @@ const I18N = {
     coming_up_h2: "ပြက္ခဒိန်ပေါ်ရှိ နောက်ထပ်များ",
     past_events_eyebrow: "ယခင်အခမ်းအနားများ",
     past_events_h2: "ကျွန်ုပ်တို့ ကျင်းပခဲ့သည်များ",
-    past_note_showing_recent: "လတ်တလော အခမ်းအနား {n} ခုကို ပြသထားပါသည်။",
-    past_note_everything: "ကျွန်ုပ်တို့ ကျင်းပခဲ့သမျှ — အခမ်းအနား {n} ခု ရှိပါပြီ။",
   },
 };
 
@@ -246,12 +237,6 @@ const FALLBACK_HERO_CSV = `slot,photo,alt
 1,images/welcome_vertical.jpg,Welcome collage photo
 2,images/welcome_top.jpg,Welcome collage photo
 3,images/welcome_bottom.jpg,Welcome collage photo`;
-
-// Generic key/value settings table — right now just controls how many
-// Past Events cards show, but the shape leaves room to add more site
-// settings later without changing the CSV format again.
-const FALLBACK_SETTINGS_CSV = `key,value
-past_events_count,20`;
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sept","Oct","Nov","Dec"];
 
@@ -458,14 +443,12 @@ function renderComingUp(rest) {
   `).join("");
 }
 
-// `past` is already sorted most-recent-first (see splitEvents), so
-// slicing to `limit` keeps the newest N and drops the older ones — no
-// need to pick which events to show, just how many.
-function renderPastGallery(past, limit) {
+// `past` is already sorted most-recent-first (see splitEvents). Every
+// past event renders here -- nothing is capped or hidden.
+function renderPastGallery(past) {
   const gallery = document.getElementById("js-past-gallery");
   if (!gallery) return;
-  const shown = past.slice(0, limit);
-  gallery.innerHTML = shown.map(ev => `
+  gallery.innerHTML = past.map(ev => `
     <div class="past-card reveal">
       <div class="photo"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}${ev.location ? ", " + escapeHtml(ev.location) : ""}" loading="lazy"></div>
       <div class="info">
@@ -474,21 +457,6 @@ function renderPastGallery(past, limit) {
       </div>
     </div>
   `).join("");
-
-  const note = document.getElementById("js-past-note");
-  if (note) {
-    note.classList.toggle("myanmar", getLang() === "mm");
-    note.textContent = past.length > shown.length
-      ? t("past_note_showing_recent").replace("{n}", shown.length)
-      : t("past_note_everything").replace("{n}", shown.length);
-  }
-}
-
-// Turns the Settings sheet's key/value rows into a plain {key: value} map.
-function settingsMap(rows) {
-  const map = {};
-  rows.forEach(r => { if (r.key) map[r.key.trim()] = (r.value || "").trim(); });
-  return map;
 }
 
 function renderHeroPhotos(heroRows) {
@@ -825,7 +793,7 @@ function safeUrl(str) {
 // Cached inputs to the three CSV-driven render functions above, so the
 // language toggle can re-render them in the new language instantly
 // without re-fetching the CSVs.
-let _cachedNext = null, _cachedRest = [], _cachedPast = [], _cachedPastLimit = DEFAULT_PAST_EVENTS_COUNT;
+let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
 function rerenderDynamicText() {
@@ -835,18 +803,14 @@ function rerenderDynamicText() {
   if (!_dataLoaded) return;
   renderFeaturedEvent(_cachedNext);
   renderComingUp(_cachedRest);
-  renderPastGallery(_cachedPast, _cachedPastLimit);
+  renderPastGallery(_cachedPast);
 }
 
 async function initSiteData() {
-  const [eventRows, heroRows, settingsRows] = await Promise.all([
+  const [eventRows, heroRows] = await Promise.all([
     loadCSV(EVENTS_CSV_URL, FALLBACK_EVENTS_CSV),
     loadCSV(HERO_CSV_URL, FALLBACK_HERO_CSV),
-    loadCSV(SETTINGS_CSV_URL, FALLBACK_SETTINGS_CSV),
   ]);
-
-  const settings = settingsMap(settingsRows);
-  const pastLimit = parseInt(settings.past_events_count, 10) || DEFAULT_PAST_EVENTS_COUNT;
 
   const { upcoming, past } = splitEvents(eventRows);
   let next = upcoming[0] || null;
@@ -862,12 +826,11 @@ async function initSiteData() {
   _cachedNext = next;
   _cachedRest = rest;
   _cachedPast = pastForGallery;
-  _cachedPastLimit = pastLimit;
   _dataLoaded = true;
 
   renderFeaturedEvent(next);
   renderComingUp(rest);
-  renderPastGallery(pastForGallery, pastLimit);
+  renderPastGallery(pastForGallery);
   renderHeroPhotos(heroRows);
 
   // Runs after the dynamic sections above are in the DOM, so it picks up
