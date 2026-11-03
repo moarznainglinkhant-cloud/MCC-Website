@@ -94,6 +94,8 @@ const I18N = {
 
     fun_fact_eyebrow: "Fun Fact",
     fun_fact_another: "Another Fact",
+    home_fact_eyebrow: "Did You Know?",
+    home_fact_more: "More fun facts →",
     fun_fact_back: "Back Home",
 
     footer_analytics: "This site uses Google Analytics to understand visitor traffic.",
@@ -138,6 +140,8 @@ const I18N = {
 
     fun_fact_eyebrow: "စိတ်ဝင်စားစရာ",
     fun_fact_another: "နောက်တစ်ခု",
+    home_fact_eyebrow: "သိပါသလား?",
+    home_fact_more: "နောက်ထပ် စိတ်ဝင်စားသန်မ်း →",
     fun_fact_back: "ပင်မစာမျက်နှာသို့",
 
     footer_analytics: "ဤဝဘ်ဆိုက်သည် ဧည့်သည်များ၏ အသုံးပြုမှုကို နားလည်ရန် Google Analytics ကို အသုံးပြုပါသည်။",
