@@ -78,6 +78,11 @@ const I18N = {
 
 
     event_h2: "See what MCC is hosting",
+    countdown_days: "Days",
+    countdown_hours: "Hours",
+    countdown_mins: "Min",
+    countdown_secs: "Sec",
+    countdown_now: "Happening now!",
     register_now: "Register Now",
     stay_tuned_tag: "Stay tuned",
     no_event_h3: "New event not available right now",
@@ -94,8 +99,6 @@ const I18N = {
 
     fun_fact_eyebrow: "Fun Fact",
     fun_fact_another: "Another Fact",
-    home_fact_eyebrow: "Did You Know?",
-    home_fact_more: "More fun facts →",
     fun_fact_back: "Back Home",
 
     footer_analytics: "This site uses Google Analytics to understand visitor traffic.",
@@ -124,6 +127,11 @@ const I18N = {
 
 
     event_h2: "MCC ၏ လာမည့်အစီအစဉ်များကြည့်ရန်",
+    countdown_days: "ရက်",
+    countdown_hours: "နာရီ",
+    countdown_mins: "မိနစ်",
+    countdown_secs: "စက္ကန့်",
+    countdown_now: "ယခုလက်ရှိ ဖြစ်ပျက်နေသည်!",
     register_now: "အခုပင်စာရင်းသွင်းပါ",
     stay_tuned_tag: "စောင့်ကြည့်ပါ",
     no_event_h3: "လက်ရှိတွင် အခမ်းအနားအသစ်မရှိသေးပါ",
@@ -140,8 +148,6 @@ const I18N = {
 
     fun_fact_eyebrow: "စိတ်ဝင်စားစရာ",
     fun_fact_another: "နောက်တစ်ခု",
-    home_fact_eyebrow: "သိပါသလား?",
-    home_fact_more: "နောက်ထပ် စိတ်ဝင်စားသန်မ်း →",
     fun_fact_back: "ပင်မစာမျက်နှာသို့",
 
     footer_analytics: "ဤဝဘ်ဆိုက်သည် ဧည့်သည်များ၏ အသုံးပြုမှုကို နားလည်ရန် Google Analytics ကို အသုံးပြုပါသည်။",
@@ -393,10 +399,119 @@ function eventMetaRow(ev) {
     </div>`;
 }
 
+/* ---------- COUNTDOWN TO NEXT EVENT (homepage only) ----------
+   `#js-countdown` only exists in index.html's markup, so initCountdown()
+   is a safe no-op anywhere else (events.html included) -- same pattern
+   as every other render function in this file. */
+
+// Best-effort guess at the event's START time from the free-text `time`
+// column (e.g. "7-9 PM", "5:30-7:30 PM", "10:30 AM"). Only makes the
+// countdown feel precise -- if it can't confidently parse one, the
+// countdown falls back to midnight on the event's date, which for an
+// event that's still "upcoming" is never already in the past.
+function parseEventStartHHMMSS(ev) {
+  const raw = (ev.time || "").trim();
+  if (!raw) return null;
+  const first = raw.split(/[-–—]| to /i)[0].trim();
+
+  // The first segment already carries its own AM/PM (e.g. the "9 AM" in
+  // "9 AM-4 PM", or a plain "3 PM" with no range at all).
+  let m = first.match(/^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+  if (m) return parseTimeToHHMMSS(`${m[1]}:${m[2] || "00"} ${m[3]}`);
+
+  // No AM/PM on the first segment -- a bare hour or hour:minute, like the
+  // "7" in "7-9 PM" or the "5:30" in "5:30-7:30 PM". Borrow whichever
+  // AM/PM is named anywhere else in the string (ranges almost always
+  // share one), rather than defaulting to a 24h reading that would turn
+  // "5:30-7:30 PM" into 5:30 AM.
+  const hourMin = first.match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if (!hourMin) return null;
+  const meridiem = raw.match(/([AaPp][Mm])/);
+  if (meridiem) return parseTimeToHHMMSS(`${hourMin[1]}:${hourMin[2] || "00"} ${meridiem[1]}`);
+
+  // No AM/PM anywhere in the field -- treat it as a plain 24h time.
+  return parseTimeToHHMMSS(`${hourMin[1]}:${hourMin[2] || "00"}`);
+}
+
+// Converts a Toronto wall-clock "YYYY-MM-DDTHH:MM:SS" string into the real
+// UTC instant it refers to -- correctly handling EST/EDT without a
+// timezone library. Works by guessing, checking what that guess reads as
+// in Toronto, then correcting by the difference; converges in one pass
+// since the only error source is a whole-number-of-minutes DST offset.
+function torontoWallToUTC(wallStr) {
+  const guess = new Date(wallStr + "Z");
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: CLUB_TIMEZONE,
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false,
+  }).formatToParts(guess);
+  const get = type => parts.find(p => p.type === type).value;
+  const guessWallMs = Date.parse(`${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}Z`);
+  const targetWallMs = Date.parse(wallStr + "Z");
+  return new Date(guess.getTime() + (targetWallMs - guessWallMs));
+}
+
+let _countdownTimer = null;
+
+function initCountdown(ev) {
+  const box = document.getElementById("js-countdown");
+  const nowBox = document.getElementById("js-countdown-now");
+  if (!box) return;
+
+  clearInterval(_countdownTimer);
+  _countdownTimer = null;
+
+  if (!ev) { box.hidden = true; if (nowBox) nowBox.hidden = true; return; }
+
+  const startHHMMSS = parseEventStartHHMMSS(ev) || "00:00:00";
+  const target = torontoWallToUTC(`${ev.date}T${startHHMMSS}`);
+  const nums = {
+    d: document.getElementById("cd-days"),
+    h: document.getElementById("cd-hours"),
+    m: document.getElementById("cd-mins"),
+    s: document.getElementById("cd-secs"),
+  };
+  const reduceMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function tick() {
+    const diffMs = target.getTime() - Date.now();
+    if (diffMs <= 0) {
+      clearInterval(_countdownTimer);
+      _countdownTimer = null;
+      box.hidden = true;
+      if (nowBox) nowBox.hidden = false;
+      return;
+    }
+    const totalSec = Math.floor(diffMs / 1000);
+    const vals = {
+      d: Math.floor(totalSec / 86400),
+      h: Math.floor((totalSec % 86400) / 3600),
+      m: Math.floor((totalSec % 3600) / 60),
+      s: totalSec % 60,
+    };
+    Object.keys(vals).forEach(k => {
+      const str = String(vals[k]).padStart(2, "0");
+      if (nums[k].textContent === str) return;
+      nums[k].textContent = str;
+      if (reduceMotion) return;
+      nums[k].classList.remove("tick");
+      void nums[k].offsetWidth; // restart the pulse animation
+      nums[k].classList.add("tick");
+    });
+  }
+
+  box.hidden = false;
+  if (nowBox) nowBox.hidden = true;
+  tick();
+  _countdownTimer = setInterval(tick, 1000);
+}
+
 function renderFeaturedEvent(ev) {
   const visual = document.getElementById("js-event-visual");
   const body = document.getElementById("js-event-body");
   if (!body) return;
+  initCountdown(ev);
   const mmClass = getLang() === "mm" ? "myanmar" : "";
 
   if (!ev) {

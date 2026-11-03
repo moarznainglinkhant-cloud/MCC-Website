@@ -297,34 +297,42 @@
     box-shadow:0 8px 18px rgba(0,0,0,0.18);
   }
 
-  /* ---------- FACT TEASER ---------- */
-  .fact-teaser{ padding-block: 0 clamp(40px,6vw,72px); }
-  .fact-teaser .wrap{ display:flex; justify-content:center; }
-  .fact-teaser-card{
-    max-width:600px; width:100%;
-    background:var(--bg-raised); border:1px solid var(--line);
-    padding: clamp(24px,4vw,40px);
-    text-align:center;
-    box-shadow: var(--card-shadow);
-  }
-  .fact-teaser-card .eyebrow{ color:var(--gold); }
-  .fact-teaser-card .fact-emoji{ display:block; font-size:1.9rem; margin-block:10px 4px; line-height:1; }
-  .fact-teaser-card .fact-text{
-    font-family:'Fraunces', serif; font-style:italic; font-weight:500;
-    font-size:clamp(1.02rem, 2.1vw, 1.22rem); line-height:1.5; color:var(--ink);
-    margin-block: 2px clamp(18px,3vw,26px);
-    min-height:2lh;
-  }
-  .fact-teaser-card .fact-actions{ display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:18px; }
-  .fact-teaser-card .btn{ padding:10px 20px; font-size:0.76rem; }
-  .fact-more{ font-size:0.84rem; font-weight:600; color:var(--ink-soft); text-decoration:none; }
-  .fact-more:hover{ color:var(--ink); text-decoration:underline; text-underline-offset:3px; }
-
   /* ---------- EVENT ---------- */
   .event{ padding-block: clamp(40px,6vw,76px); }
   .event-head{ max-width:60ch; margin-bottom:40px; }
   .event-head h2{ font-size:clamp(2rem,4vw,2.9rem); margin-top:10px; }
   .event-head p{ color:var(--ink-soft); margin-top:14px; font-size:1.02rem; }
+
+  /* ---------- COUNTDOWN ---------- */
+  .countdown{ display:flex; align-items:flex-start; gap:10px; margin-bottom:28px; flex-wrap:wrap; }
+  .countdown[hidden]{ display:none; }
+  .countdown-unit{
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    background:var(--navy); border-radius:10px; min-width:68px;
+    padding: 12px 10px 10px;
+    box-shadow: 0 6px 16px rgba(28,36,64,0.22);
+  }
+  .countdown-num{
+    font-family:'Fraunces', serif; font-weight:700; font-size:clamp(1.6rem,3vw,2.1rem);
+    color:var(--footer-ink); line-height:1; font-variant-numeric: tabular-nums;
+  }
+  @keyframes countdown-pulse{ 0%{ transform:scale(1); } 35%{ transform:scale(1.16); } 100%{ transform:scale(1); } }
+  .countdown-num.tick{ animation: countdown-pulse .45s ease; }
+  .countdown-label{
+    font-size:0.62rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+    color: var(--gold);
+  }
+  .countdown-sep{ font-family:'Fraunces', serif; font-weight:700; font-size:1.6rem; color:var(--ink-soft); margin-top:10px; }
+  .countdown-now{
+    display:inline-flex; align-items:center; gap:8px; margin-bottom:28px;
+    background:color-mix(in srgb, var(--green) 14%, var(--bg-raised)); border:1px solid var(--green);
+    color:#2E4F27; border-radius:999px; padding:10px 18px; font-size:0.85rem; font-weight:700;
+  }
+  .countdown-now[hidden]{ display:none; }
+  @media (max-width:480px){
+    .countdown-unit{ min-width:56px; padding:10px 6px 8px; }
+    .countdown-sep{ display:none; }
+  }
 
   .event-card{
     display:grid; grid-template-columns: 1fr 1.15fr;
@@ -516,29 +524,35 @@
     </div>
   </section>
 
-  <section class="fact-teaser">
-    <div class="wrap">
-      <div class="fact-teaser-card reveal">
-        <span class="eyebrow" data-i18n="home_fact_eyebrow">Did You Know?</span>
-        <span class="fact-emoji" id="js-fact-emoji" aria-hidden="true">✦</span>
-        <p class="fact-text" id="js-fact-text">Loading a fact about Myanmar…</p>
-        <div class="fact-actions">
-          <button type="button" class="btn ghost" id="js-fact-reroll">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg>
-            <span data-i18n="fun_fact_another">Another Fact</span>
-          </button>
-          <a class="fact-more" href="fun-fact.html" data-i18n="home_fact_more">More fun facts &rarr;</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section class="event" id="event">
     <div class="wrap">
       <div class="event-head">
         <span class="eyebrow" data-i18n="label_next_event">Next Event</span>
         <h2 data-i18n="event_h2">See what MCC is hosting</h2>
       </div>
+
+      <div class="countdown" id="js-countdown" hidden>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cd-days">00</span>
+          <span class="countdown-label" data-i18n="countdown_days">Days</span>
+        </div>
+        <span class="countdown-sep" aria-hidden="true">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cd-hours">00</span>
+          <span class="countdown-label" data-i18n="countdown_hours">Hours</span>
+        </div>
+        <span class="countdown-sep" aria-hidden="true">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cd-mins">00</span>
+          <span class="countdown-label" data-i18n="countdown_mins">Min</span>
+        </div>
+        <span class="countdown-sep" aria-hidden="true">:</span>
+        <div class="countdown-unit">
+          <span class="countdown-num" id="cd-secs">00</span>
+          <span class="countdown-label" data-i18n="countdown_secs">Sec</span>
+        </div>
+      </div>
+      <span class="countdown-now" id="js-countdown-now" hidden>🎉 <span data-i18n="countdown_now">Happening now!</span></span>
 
       <div class="event-card reveal">
         <div class="event-visual" id="js-event-visual">
