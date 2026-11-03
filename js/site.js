@@ -81,15 +81,8 @@ const I18N = {
     hero_lede: "The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.",
     hero_cta_next: "See Our Next Event",
 
-    strip1_h: "Student-run, UofT-wide",
-    strip1_p: "Open to every faculty and every year — no Burmese background required, just curiosity.",
-    strip2_h: "Food, festivals & language",
-    strip2_p: "From Thingyan water festival to mohinga nights and Burmese language chats.",
-    strip3_h: "A community away from home",
-    strip3_p: "For the Myanmar diaspora and anyone who wants to learn alongside us.",
 
     event_h2: "See what MCC is hosting",
-    event_intro: "Our next gathering, straight from the calendar. Check back often — new events go up here first.",
     register_now: "Register Now",
     stay_tuned_tag: "Stay tuned",
     no_event_h3: "New event not available right now",
@@ -98,7 +91,6 @@ const I18N = {
     rsvp: "RSVP",
 
     footer_h2: "Let's stay in touch.",
-    footer_p: "Follow along for event drops, cultural spotlights, and the occasional mohinga craving. New members welcome any time of year.",
     contact_email_label: "Email",
     contact_email_copied: "Copied to clipboard!",
     contact_linktree_label: "Everything else",
@@ -135,15 +127,8 @@ const I18N = {
     hero_lede: "Myanmar Culture Club သည် တိုရွန်တိုတက္ကသိုလ်သို့ မြန်မာ့အစားအစာ၊ ပွဲတော်များ၊ ဘာသာစကားနှင့် ဇာတ်လမ်းများကို ယူဆောင်လာပါသည်။ ဤအစဉ်အလာများကြားတွင် ကြီးပြင်းခဲ့သူဖြစ်စေ၊ ယခုမှစတင်၍ ရှာဖွေလေ့လာနေသူဖြစ်စေ၊ ကျွန်ုပ်တို့စားပွဲတွင် သင့်အတွက် နေရာတစ်နေရာ ရှိပါသည်။",
     hero_cta_next: "လာမည့်အခမ်းအနားကြည့်ရန်",
 
-    strip1_h: "ကျောင်းသားများကိုယ်တိုင်စီမံ၊ တက္ကသိုလ်တစ်ခုလုံးအတွက်",
-    strip1_p: "အဌာနတိုင်း၊ နှစ်အလိုက်ကျောင်းသားများအားလုံးအတွက် ဖွင့်ထားပါသည် — မြန်မာ့နောက်ခံလိုအပ်ချက်မရှိပါ၊ စူးစမ်းလိုစိတ်တစ်ခုတည်း လိုအပ်ပါသည်။",
-    strip2_h: "အစားအစာ၊ ပွဲတော်များနှင့် ဘာသာစကား",
-    strip2_p: "သင်္ကြန်ပွဲတော်မှသည် မုန့်ဟင်းခါးညများ၊ မြန်မာစကားပြောဆိုမှုများအထိ။",
-    strip3_h: "အိမ်ကွာသော်လည်း အသိုင်းအဝိုင်း",
-    strip3_p: "မြန်မာမျိုးနွယ်စုများနှင့် ကျွန်ုပ်တို့နှင့်အတူ လေ့လာလိုသူတိုင်းအတွက်။",
 
     event_h2: "MCC ၏ လာမည့်အစီအစဉ်များကြည့်ရန်",
-    event_intro: "ကျွန်ုပ်တို့၏ ပြက္ခဒိန်မှ လာမည့်စုစည်းပွဲ။ မကြာခဏ ပြန်ကြည့်ပါ — အခမ်းအနားအသစ်များကို ဒီနေရာတွင် အရင်ဆုံးတင်ပါသည်။",
     register_now: "အခုပင်စာရင်းသွင်းပါ",
     stay_tuned_tag: "စောင့်ကြည့်ပါ",
     no_event_h3: "လက်ရှိတွင် အခမ်းအနားအသစ်မရှိသေးပါ",
@@ -152,7 +137,6 @@ const I18N = {
     rsvp: "စာရင်းသွင်းရန်",
 
     footer_h2: "ဆက်သွယ်နေကြပါစို့။",
-    footer_p: "အခမ်းအနားသတင်းများ၊ ယဉ်ကျေးမှုဆိုင်ရာ အထူးဖော်ပြချက်များနှင့် တစ်ခါတစ်ရံ မုန့်ဟင်းခါးစားချင်စိတ်များအတွက် လိုက်နာကြည့်ရှုပါ။ အသင်းဝင်သစ်များကို နှစ်တစ်လျှောက်လုံး ကြိုဆိုပါသည်။",
     contact_email_label: "အီးမေးလ်",
     contact_email_copied: "ကူးယူပြီးပါပြီ!",
     contact_linktree_label: "အခြားအရာများ",
@@ -524,10 +508,10 @@ function renderHeroPhotos(heroRows) {
 
 // Fades/slides ".reveal" elements in as they scroll into view (once each —
 // they don't re-hide if you scroll back up). Elements inside a grid
-// (the about strip, the Coming Up cards, the Past Events gallery) get a
-// small staggered delay so they arrive one after another rather than all
-// at once. Respects prefers-reduced-motion: reduce (see the CSS rule of
-// the same name) by just showing everything immediately, no observer.
+// (the Coming Up cards, the Past Events gallery) get a small staggered
+// delay so they arrive one after another rather than all at once.
+// Respects prefers-reduced-motion: reduce (see the CSS rule of the same
+// name) by just showing everything immediately, no observer.
 function initScrollReveal() {
   try {
     const targets = document.querySelectorAll(".reveal");
@@ -540,7 +524,7 @@ function initScrollReveal() {
       return;
     }
 
-    [".strip .wrap", ".events-grid", ".past-gallery"].forEach(sel => {
+    [".events-grid", ".past-gallery"].forEach(sel => {
       const group = document.querySelector(sel);
       if (!group) return;
       group.querySelectorAll(".reveal").forEach((el, i) => {
