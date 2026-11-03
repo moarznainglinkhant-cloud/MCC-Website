@@ -135,6 +135,7 @@
     var team = [];            // [{ id, display_name, role }]
     var names = {};           // id -> display_name
     var todos = [];
+    var newsletters = [];
     var todoFilter = "open";
 
     // Pings once on open, then every minute while the tab is visible (and once when it's hidden).
@@ -1208,9 +1209,132 @@
       });
     }
 
+    // ----- Newsletters (metadata only -- the text lives in a Google Doc) -----
+    function newsletterItem(n) {
+      var li = el("li", "nl-row");
+
+      var main = el("div", "nl-main");
+      main.appendChild(el("span", "nl-name", n.name));
+      main.appendChild(el("span", "nl-meta", "Edited " + when(n.updated_at)));
+      li.appendChild(main);
+
+      var statusSel = el("select", "nl-status nl-status-" + n.status);
+      [["draft", "Draft"], ["in_review", "In review"], ["published", "Published"]].forEach(function (pair) {
+        var o = el("option", null, pair[1]);
+        o.value = pair[0];
+        if (pair[0] === n.status) o.selected = true;
+        statusSel.appendChild(o);
+      });
+      statusSel.setAttribute("aria-label", "Status for " + n.name);
+      statusSel.addEventListener("change", function () {
+        var val = statusSel.value, prev = n.status;
+        statusSel.disabled = true;
+        sb.from("newsletters").update({ status: val }).eq("id", n.id).then(function (r) {
+          statusSel.disabled = false;
+          if (r.error) {
+            setMsg($("nl-msg"), "Couldn't update status. Try again.", "error");
+            statusSel.value = prev;
+            return;
+          }
+          n.status = val;
+          statusSel.className = "nl-status nl-status-" + val;
+        });
+      });
+      li.appendChild(statusSel);
+
+      var acts = el("div", "nl-acts");
+      var openLink = el("a", "link-btn", "Open doc");
+      openLink.href = n.edit_link;
+      openLink.target = "_blank";
+      openLink.rel = "noopener";
+      acts.appendChild(openLink);
+
+      var del = el("button", "link-btn", "Delete");
+      del.type = "button";
+      del.addEventListener("click", function () {
+        del.disabled = true;
+        sb.from("newsletters").delete().eq("id", n.id).then(function (r) {
+          if (r.error) { del.disabled = false; setMsg($("nl-msg"), "Couldn't delete that. Try again.", "error"); }
+          else loadNewsletters();
+        });
+      });
+      acts.appendChild(del);
+      li.appendChild(acts);
+
+      return li;
+    }
+
+    function renderNewsletters() {
+      var list = $("nl-list");
+      list.innerHTML = "";
+      if (!newsletters.length) {
+        list.appendChild(el("li", "empty", "No newsletters yet. Add one above."));
+        return;
+      }
+      newsletters.forEach(function (n) { list.appendChild(newsletterItem(n)); });
+    }
+
+    function loadNewsletters() {
+      return sb.from("newsletters")
+        .select("id, name, status, edit_link, publish_link, updated_at")
+        .order("updated_at", { ascending: false })
+        .then(function (r) {
+          if (r.error) { $("nl-panel").hidden = true; $("nl-missing").hidden = false; return; }
+          newsletters = r.data || [];
+          $("nl-panel").hidden = false;
+          $("nl-missing").hidden = true;
+          renderNewsletters();
+          stamp("newsletters");
+        });
+    }
+
+    function initNewsletterForm() {
+      var btnNew = $("nl-new"), form = $("nl-form"), cancel = $("nl-cancel");
+      var nameIn = $("nl-name-input"), editIn = $("nl-edit-input"), pubIn = $("nl-publish-input"), statusIn = $("nl-status-input");
+      var msg = $("nl-msg"), add = $("nl-add");
+
+      function showForm(show) {
+        form.hidden = !show;
+        btnNew.setAttribute("aria-expanded", String(show));
+        btnNew.hidden = show;
+        if (show) {
+          form.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "nearest" });
+          nameIn.focus({ preventScroll: true });
+        }
+      }
+      btnNew.addEventListener("click", function () { showForm(true); });
+      cancel.addEventListener("click", function () { showForm(false); });
+      form.addEventListener("keydown", function (e) { if (e.key === "Escape") showForm(false); });
+
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var name = nameIn.value.trim();
+        var editLink = editIn.value.trim();
+        var pubLink = pubIn.value.trim();
+        if (!name) { setMsg(msg, "Give it a name first.", "error"); return; }
+        if (!/^https:\/\//.test(editLink)) { setMsg(msg, "Paste the Google Doc's edit link (starts with https://).", "error"); return; }
+        if (pubLink && !/^https:\/\//.test(pubLink)) { setMsg(msg, "The publish-to-web link should start with https://.", "error"); return; }
+        var row = { name: name, edit_link: editLink, publish_link: pubLink || null, status: statusIn.value };
+        add.disabled = true;
+        setMsg(msg, "Adding\u2026", "info");
+        sb.from("newsletters").insert(row).then(function (r) {
+          add.disabled = false;
+          if (r.error) { setMsg(msg, "Couldn't add that. Try again.", "error"); return; }
+          nameIn.value = ""; editIn.value = ""; pubIn.value = ""; statusIn.value = "draft";
+          showForm(false);
+          setMsg(msg, "Newsletter added.", "info");
+          setTimeout(function () { if (msg.textContent === "Newsletter added.") setMsg(msg, "", ""); }, 2500);
+          loadNewsletters();
+        }).catch(function () {
+          add.disabled = false;
+          setMsg(msg, "Couldn't reach the server.", "error");
+        });
+      });
+    }
+
     // ----- App shell: views, routing, lazy loading -----
-    var VIEWS = ["home", "todo", "meet", "account"];
-    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", account: "Account" };
+    var VIEWS = ["home", "todo", "meet", "newsletters", "account"];
+    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", account: "Account" };
     var locked = false;       // true until a new exec has chosen their own password
     var appStarted = false, viewNow = null, welcomed = false;
     var loadedAt = {};        // view key -> ms timestamp of last data load
@@ -1237,6 +1361,7 @@
       if (appStarted) return Promise.resolve();
       appStarted = true;
       initShoutForm();
+      initNewsletterForm();
       // Team first: its names + ids feed the lounge reactions and the to-do board.
       return loadTeam().then(function () {
         initTodoForm();
@@ -1264,6 +1389,8 @@
         if (!fresh("todo", 15)) loadTodos();
       } else if (name === "meet") {
         if (window.MCCMeet) window.MCCMeet.init(sb, me.id);     // starts once; retries if a load failed
+      } else if (name === "newsletters") {
+        if (!fresh("newsletters", 15)) loadNewsletters();
       }
     }
 

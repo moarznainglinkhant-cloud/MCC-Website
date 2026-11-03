@@ -46,6 +46,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
         <span>Meetings</span>
       </a>
+      <a class="nav-item" href="#newsletters" data-view="newsletters">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M4 7.5 12 13l8-5.5"/></svg>
+        <span>Newsletters</span>
+      </a>
       <a class="nav-item" href="#account" data-view="account">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
         <span>Account</span>
@@ -286,6 +290,44 @@
           </form>
           <p class="msg" id="blk-msg" role="status" aria-live="polite"></p>
           <ul class="blocks" id="blk-list"></ul>
+        </section>
+      </section>
+
+      <!-- ===================== NEWSLETTERS ===================== -->
+      <section class="view" id="view-newsletters" data-view="newsletters" hidden aria-labelledby="nl-h1">
+        <div class="view-head">
+          <h1 id="nl-h1" tabindex="-1">Newsletters</h1>
+          <p class="panel-sub">Draft in Google Docs, track status here. Published issues show up on the public site automatically.</p>
+        </div>
+
+        <section class="panel" id="nl-panel" hidden aria-label="Newsletters">
+          <div class="viewbar">
+            <span></span>
+            <button type="button" class="btn new-task-btn" id="nl-new" aria-expanded="false" aria-controls="nl-form">+ New newsletter</button>
+          </div>
+
+          <form class="nl-form" id="nl-form" hidden>
+            <input class="opt" id="nl-name-input" type="text" maxlength="160" placeholder="Issue name (e.g. November 2026)" aria-label="Issue name" autocomplete="off">
+            <input class="opt" id="nl-edit-input" type="url" placeholder="Google Doc edit link" aria-label="Google Doc edit link" autocomplete="off">
+            <input class="opt" id="nl-publish-input" type="url" placeholder="Publish-to-web link (optional until ready)" aria-label="Publish-to-web link" autocomplete="off">
+            <select class="opt" id="nl-status-input" aria-label="Status">
+              <option value="draft">Draft</option>
+              <option value="in_review">In review</option>
+              <option value="published">Published</option>
+            </select>
+            <div class="form-actions">
+              <span class="spacer"></span>
+              <button type="button" class="btn ghost" id="nl-cancel">Cancel</button>
+              <button class="btn" id="nl-add" type="submit">Add newsletter</button>
+            </div>
+          </form>
+          <p class="msg" id="nl-msg" role="status" aria-live="polite"></p>
+
+          <ul class="todo-list nl-list" id="nl-list"></ul>
+        </section>
+
+        <section class="panel" id="nl-missing" hidden>
+          <p class="panel-sub" style="margin:0">Newsletters isn't set up in the database yet. Run supabase/exec-newsletters.sql in Supabase, then refresh.</p>
         </section>
       </section>
 
