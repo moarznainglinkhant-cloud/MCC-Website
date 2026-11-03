@@ -11,6 +11,13 @@
   --footer-bg:#1C2440; --footer-ink:#F6F1E4; --footer-ink-soft: rgba(246,241,228,0.68);
   color-scheme: light;
 }
+
+/* Per-exec background preference, set in Account -> Background. Overrides the three
+   surface variables everything else in this file already uses, so the whole portal
+   (sidebar, cards, panels) flips in one place. Stored in localStorage, not shared. */
+:root[data-exec-bg="white"]{
+  --bg:#FFFFFF; --bg-raised:#FFFFFF; --bg-sunk:#F3F2EF;
+}
 *{ box-sizing:border-box; }
 html{ scroll-behavior:smooth; }
 body{
@@ -693,6 +700,20 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
   .nav-item{ font-size:0.66rem; }
   .view-head h1{ font-size:1.7rem; }
 }
+
+/* ---------- BACKGROUND PICKER (Account) ---------- */
+.bg-choice{ display:flex; gap:12px; flex-wrap:wrap; margin-top:4px; }
+.bg-opt{
+  display:flex; align-items:center; gap:10px; padding:10px 16px; border-radius:12px;
+  border:1.5px solid var(--line); background:var(--bg-raised); cursor:pointer;
+  font-family:'Work Sans', sans-serif; font-size:0.86rem; font-weight:600; color:var(--ink);
+  transition: border-color .15s ease, background .15s ease;
+}
+.bg-opt:hover{ border-color:var(--gold); }
+.bg-opt[aria-checked="true"]{ border-color:var(--gold); background:color-mix(in srgb, var(--gold) 10%, var(--bg-raised)); }
+.bg-swatch{ width:22px; height:22px; border-radius:50%; border:1px solid var(--line); flex:none; }
+.bg-swatch-cream{ background:#F6F1E4; }
+.bg-swatch-white{ background:#FFFFFF; }
 
 /* ---------- NEWSLETTERS ---------- */
 

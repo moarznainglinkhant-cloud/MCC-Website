@@ -1415,6 +1415,30 @@
       });
     }
 
+    // ----- Background preference (Account) -- per-browser via localStorage,
+    // overrides the --bg/--bg-raised/--bg-sunk vars the whole app is built on -----
+    function initAppearance() {
+      var KEY = "mcc_exec_bg";
+      var opts = document.querySelectorAll("#bg-choice .bg-opt");
+      if (!opts.length) return;
+      var saved = "cream";
+      try { if (localStorage.getItem(KEY) === "white") saved = "white"; } catch (e) { /* ignore */ }
+
+      function apply(v) {
+        document.documentElement.setAttribute("data-exec-bg", v === "white" ? "white" : "cream");
+        opts.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-bg") === v)); });
+      }
+      apply(saved);
+
+      opts.forEach(function (b) {
+        b.addEventListener("click", function () {
+          var v = b.getAttribute("data-bg");
+          try { localStorage.setItem(KEY, v); } catch (e) { /* ignore */ }
+          apply(v);
+        });
+      });
+    }
+
     // ----- App shell: views, routing, lazy loading -----
     var VIEWS = ["home", "todo", "meet", "newsletters", "account"];
     var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", account: "Account" };
@@ -1446,6 +1470,7 @@
       initShoutForm();
       initNewsletterForm();
       initNewsletterPreview();
+      initAppearance();
       // Team first: its names + ids feed the lounge reactions and the to-do board.
       return loadTeam().then(function () {
         initTodoForm();

@@ -14,6 +14,15 @@
 <link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
 <link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
 <link rel="stylesheet" href="css/exec.css">
+<script>
+(function(){
+  try {
+    if (localStorage.getItem("mcc_exec_bg") === "white") {
+      document.documentElement.setAttribute("data-exec-bg", "white");
+    }
+  } catch (e) { /* ignore */ }
+})();
+</script>
 </head>
 <body data-page="exec" class="app">
 
@@ -373,6 +382,21 @@
           </form>
           <p class="meta">At least 10 characters. A few random words is a good way to make a long one you can remember.</p>
           <p class="msg" id="pw-msg" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="panel" id="bg-panel" aria-labelledby="bg-title">
+          <h2 id="bg-title">Background</h2>
+          <p class="panel-sub">Pick how the portal looks for you. Only changes it on this browser.</p>
+          <div class="bg-choice" id="bg-choice" role="radiogroup" aria-label="Background color">
+            <button type="button" class="bg-opt" data-bg="cream" role="radio" aria-checked="true">
+              <span class="bg-swatch bg-swatch-cream" aria-hidden="true"></span>
+              Cream (current)
+            </button>
+            <button type="button" class="bg-opt" data-bg="white" role="radio" aria-checked="false">
+              <span class="bg-swatch bg-swatch-white" aria-hidden="true"></span>
+              White
+            </button>
+          </div>
         </section>
 
         <section class="panel account-actions" id="account-actions">
