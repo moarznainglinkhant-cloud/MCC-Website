@@ -232,6 +232,7 @@ const TESTING_SHOW_LATEST_EVENT_AS_NEXT = false;
 const CLUB_TIMEZONE = "America/Toronto";
 
 const FALLBACK_EVENTS_CSV = `id,name,date,end_time,time,location,description,photo,link
+taste-of-southeast-asia,Taste of Southeast Asia,2026-11-10,21:00,7–9 PM,William Doo Auditorium,"A multi-club celebration of Southeast Asian food and culture — MCC co-hosted with FSA, UTVSA, UofT MSSA, UofT ISA, UTTSA, and more. Tickets: $10 early bird, $12 walk-in — link in bio.",images/events/taste-of-southeast-asia.jpg,
 mcc-run,MCC Run,2026-10-10,,10:30 AM,Convocation Hall to Evergreen Brickworks,"MCC's first-ever run: from Convocation Hall to Evergreen Brickworks, with a farmers market at the finish for lunch. Run, jog or walk — all paces welcome.",images/events/mcc-run.jpg,
 home-away-from-home,Home Away From Home,2026-09-22,19:30,5:30–7:30 PM,"KP 208, Koffler House · 569 Spadina Cres","An evening celebrating Burmese culture — food, conversation, and community. Meet fellow Burmese students, and hear from representatives of the Embassy of Myanmar in Ottawa on consular services, including passport renewal.",images/events/home-away-from-home.jpg,https://forms.gle/wE9f6srzzx7xUEpq8
 welcome-picnic,MCC Welcome Picnic,2026-09-20,,,Front Campus,,images/events/welcome-picnic.jpg,
@@ -888,6 +889,313 @@ async function initSiteData() {
   initScrollReveal();
 }
 
+/* ============================================================
+   SNOWY NIGHT EASTER EGG
+   ------------------------------------------------------------
+   Type "snow" anywhere on the site (outside a text box), or add
+   #snow to the end of any page's URL, and an animated ASCII
+   scene fills the screen: snow falling on the CN Tower, Hart
+   House + Soldiers' Tower and a Shwedagon-style pagoda, with
+   the club's name brushed in Myanmar script. Esc / click closes
+   it. The browser's dev console also gets a small hint.
+   Reduced-motion visitors get the finished scene, no animation.
+   ============================================================ */
+function initSnowEasterEgg() {
+  const W = 78, H = 26;                       // grid size; last row = ground
+  const sprite = s => s.replace(/^\n|\n$/g, "").split("\n");
+
+  const CN_TOWER = sprite(String.raw`
+     |
+     |
+     |
+     |
+    _|_
+   (___)
+     |
+     |
+     |
+   _/ \_
+  /_____\
+ (_______)
+  \_____/
+    | |
+    | |
+    | |
+    | |
+    | |
+    | |
+   /| |\
+  / | | \
+ /  | |  \
+/___|_|___\
+`);
+  // Hart House (Collegiate Gothic) with Soldiers' Tower on its west end
+  const HART_HOUSE = sprite(String.raw`
+   ^   ^
+  /|\_/|\
+  |  #  |
+  |_____|
+  |  _  |  _   _   _   _   _   _   _   _
+  | |#| |_| |_| |_| |_| |_| |_| |_| |_| |
+  | |_| |   _     _    /\    _     _    |
+  |  _  |  |#|   |#|  /  \  |#|   |#|   |
+  | |#| |  |_|   |_| | /\ | |_|   |_|   |
+  | |_| |   _     _  | || |  _     _    |
+  |  _  |  |#|   |#| | || | |#|   |#|   |
+  |_|_|_|__|_|___|_|_|_||_|_|_|___|_|___|
+`);
+  const PAGODA = sprite(String.raw`
+     |
+     ^
+    /=\
+    |*|
+   /===\
+  /_____\
+  |=====|
+ /=======\
+/_________\
+===========
+`);
+  const FONT = {
+    M: ["█   █", "██ ██", "█ █ █", "█   █", "█   █"],
+    C: [" ████", "█    ", "█    ", "█    ", " ████"],
+  };
+  const LOGO = [0, 1, 2, 3, 4].map(r =>
+    ["M", "C", "C"].map(c => FONT[c][r]).join("  ").replace(/./g, ch => ch + ch));
+  // "Myanmar Culture Club" in syllable clusters, so each is brushed in whole
+  const BURMESE = ["မြန်", "မာ", " ", "ယဉ်", "ကျေး", "မှု", " ", "အ", "သင်း"];
+  const SUB = "Myanmar Culture Club  ·  University of Toronto";
+  const URL_TEXT = "uoftmcc.ca";
+
+  const BUILDINGS = [{ art: CN_TOWER, x: 2, kind: "cn" },
+                     { art: HART_HOUSE, x: 17, kind: "hart" },
+                     { art: PAGODA, x: 66, kind: "pagoda" }];
+  const LABELS = [["CN Tower", 7], ["Hart House", 39], ["Shwedagon", 71]];
+
+  const NIGHT = "#12162A";
+  const DAWN = ["#12162A", "#14193A", "#171C40", "#1B2046", "#20244D", "#262752", "#2D2A57",
+    "#352C5B", "#3E2E5E", "#482F5F", "#53315F", "#5E325E", "#6A345C", "#76365A", "#823857",
+    "#8E3B53", "#993E4F", "#A3424B", "#AD4747", "#B64D43", "#BE5440", "#C55B3D", "#CB633B",
+    "#D06B3A", "#D4733A"];
+  const GOLD = ["#B8862B", "#C99634", "#DAA63E", "#E8B84D", "#F2C960", "#F8DA7A", "#FCE79A",
+    "#F8DA7A", "#F2C960", "#E8B84D", "#DAA63E", "#C99634"];
+  const LEDS = ["#FF4A3D", "#FF8A3D", "#FFC23D", "#E8F04A", "#7CF06A", "#4AE3D6", "#4AA8FF",
+    "#7A6BFF", "#C46BFF", "#FF6BD0"];
+  const END = 200;                            // frame where the scene is "complete"
+
+  const key = (x, y) => x + "," + y;
+  const solid = new Set();                    // building cells snow can land on
+  BUILDINGS.forEach(b => {
+    const top = H - 1 - b.art.length;
+    b.art.forEach((line, dy) => [...line].forEach((ch, dx) => {
+      if (ch !== " ") solid.add(key(b.x + dx, top + dy));
+    }));
+  });
+
+  function newState() {
+    return {
+      stars: Array.from({ length: 45 }, () =>
+        [Math.floor(Math.random() * W), Math.floor(Math.random() * 13)]),
+      flakes: [], settled: new Set(), ground: new Array(W).fill(0),
+    };
+  }
+
+  // Builds one frame: a grid of [char, colour] plus where night meets dawn.
+  function compose(t, st, snowing) {
+    const g = Array.from({ length: H }, () => Array.from({ length: W }, () => [" ", null]));
+    const put = (x, y, ch, c) => { if (x >= 0 && x < W && y >= 0 && y < H) g[y][x] = [ch, c]; };
+    const cutoff = Math.max(0, H - Math.floor(t * H / 90));
+
+    st.stars.forEach(([x, y]) => {
+      if (y < cutoff) put(x, y, Math.random() < 0.3 ? ".·*+"[Math.floor(Math.random() * 4)] : "·", "#F6F1E4");
+    });
+
+    if (snowing) {
+      const n = t < 30 ? 2 : 4;
+      for (let i = 0; i < n; i++) {
+        st.flakes.push({ x: Math.random() * (W - 1), y: 0, vy: 0.25 + Math.random() * 0.35,
+                         ph: Math.random() * 6.3, ch: "*··.+"[Math.floor(Math.random() * 5)] });
+      }
+    }
+    st.flakes = st.flakes.filter(f => {
+      f.y += f.vy;
+      f.x = Math.min(W - 1, Math.max(0, f.x + 0.35 * Math.sin(t * 0.12 + f.ph)));
+      const x = Math.round(f.x), y = Math.floor(f.y);
+      if (y + 1 >= H - 1) { st.ground[x]++; return false; }
+      if (solid.has(key(x, y + 1)) || st.settled.has(key(x, y + 1))) {
+        if (!solid.has(key(x, y)) && solid.has(key(x, y + 1))) st.settled.add(key(x, y));
+        return false;
+      }
+      put(x, y, f.ch, f.ch === "*" ? "#FFFFFF" : "#C9D2EA");
+      return true;
+    });
+
+    BUILDINGS.forEach(b => {
+      const top = H - 1 - b.art.length;
+      b.art.forEach((line, dy) => [...line].forEach((ch, dx) => {
+        if (ch === " ") return;
+        let c;
+        if (b.kind === "cn") {
+          if (dy === 0) c = Math.floor(t / 8) % 2 ? "#FF4A3D" : "#5A1A16";   // antenna beacon
+          else if ([5, 10, 11, 12].includes(dy)) c = LEDS[(Math.floor(t / 3) + dx) % LEDS.length];
+          else c = "#D6D9E0";
+        } else if (b.kind === "hart") {
+          if (ch === "#") c = (dx * 7 + dy * 3) % 90 < t ? "#FFE28A" : "#4A3A22"; // lights come on
+          else c = ch === "^" ? "#F6E3C0" : "#E3C79A";
+        } else {
+          c = "*^".includes(ch) ? "#FFE27A" : "#F2B632";
+        }
+        put(b.x + dx, top + dy, ch, c);
+      }));
+    });
+    st.settled.forEach(k => { const [x, y] = k.split(",").map(Number); put(x, y, "▄", "#FFFFFF"); });
+
+    const lx = Math.floor((W - LOGO[0].length) / 2);
+    const reveal = Math.max(0, (t - 10) * 2);
+    LOGO.forEach((line, dy) => [...line.slice(0, reveal)].forEach((ch, dx) => {
+      if (ch !== " ") put(lx + dx, 1 + dy, ch, GOLD[(((dx + dy - t) % GOLD.length) + GOLD.length) % GOLD.length]);
+    }));
+
+    const sx = Math.floor((W - SUB.length) / 2);
+    [...SUB.slice(0, Math.max(0, t - 110))].forEach((ch, i) => put(sx + i, 9, ch, "#F6F1E4"));
+    if (t > 160) {
+      const ux = Math.floor((W - URL_TEXT.length) / 2);
+      [...URL_TEXT].forEach((ch, i) => put(ux + i, 10, ch, Math.floor(t / 6) % 2 ? "#E8B84D" : "#FCE79A"));
+    }
+    return { g, cutoff };
+  }
+
+  const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  function toHTML({ g, cutoff }, st) {
+    let html = "";
+    const run = (text, style) => (style ? `<span style="${style}">${esc(text)}</span>` : esc(text));
+    g.forEach((row, y) => {
+      const bg = y < cutoff ? NIGHT : DAWN[Math.min(y, DAWN.length - 1)];
+      html += `<span class="snowegg-row" style="background:${bg}">`;
+      let cur = null, buf = "";
+      row.forEach(([ch, c]) => {
+        if (c !== cur) { if (buf) html += run(buf, cur && `color:${cur}`); buf = ""; cur = c; }
+        buf += ch;
+      });
+      html += run(buf, cur && `color:${cur}`) + "</span>";
+    });
+    const ground = new Array(W).fill(" ");
+    LABELS.forEach(([text, cx]) => [...text].forEach((ch, i) => { ground[cx - Math.floor(text.length / 2) + i] = ch; }));
+    html += `<span class="snowegg-row">`;
+    let cur = null, buf = "";
+    ground.forEach((ch, x) => {
+      const s = st.ground[x] >= 3 ? "background:#F4F6FB;color:#1C2440" : "background:#2F5226;color:#CFE6C2";
+      if (s !== cur) { if (buf) html += run(buf, cur); buf = ""; cur = s; }
+      buf += ch;
+    });
+    return html + run(buf, cur) + "</span>";
+  }
+
+  function plainText({ g }) {
+    return g.map(row => row.map(c => c[0]).join("").replace(/\s+$/, "")).join("\n");
+  }
+
+  // Dev-console hello for anyone who peeks under the hood.
+  try {
+    console.log("%c" + plainText(compose(END, { stars: [], flakes: [], settled: new Set(), ground: [] }, false)),
+      "font-family:monospace;color:#C08A2E;line-height:1.1");
+    console.log("%cမင်္ဂလာပါ! Psst — type \"snow\" anywhere on the site. ❄", "font-weight:bold;color:#1C2440");
+  } catch (_) { /* console unavailable — no big deal */ }
+
+  let overlay = null;
+
+  function open() {
+    if (overlay) return;
+    if (!document.getElementById("snowegg-style")) {
+      const style = document.createElement("style");
+      style.id = "snowegg-style";
+      style.textContent = `
+        .snowegg{position:fixed;inset:0;z-index:10000;background:#0B0E1C;display:flex;
+          flex-direction:column;align-items:center;justify-content:center;gap:14px;
+          padding:16px;cursor:pointer;opacity:0;transition:opacity .4s ease}
+        .snowegg.is-open{opacity:1}
+        .snowegg-stage{position:relative;font-size:min(15px, calc((100vw - 32px) / 47.5));
+          border-radius:10px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+        .snowegg-pre{margin:0;font:inherit;font-family:ui-monospace,Menlo,Consolas,monospace;
+          line-height:1.15;font-weight:600;color:#F6F1E4;white-space:pre}
+        .snowegg-row{display:block}
+        .snowegg-mm{position:absolute;left:0;right:0;top:calc(6.55 * 1.15em);text-align:center;
+          color:#F2C960;font-size:1.45em;line-height:1.2;white-space:nowrap;pointer-events:none;
+          text-shadow:0 0 12px rgba(242,201,96,.45)}
+        .snowegg-brush{color:#FFFFFF;margin-left:.1em}
+        .snowegg-hint{margin:0;color:rgba(246,241,228,.6);font:500 13px 'Work Sans',system-ui,sans-serif}
+        @media (prefers-reduced-motion: reduce){.snowegg{transition:none}}`;
+      document.head.appendChild(style);
+    }
+
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const returnFocus = document.activeElement;
+    const prevOverflow = document.documentElement.style.overflow;
+
+    overlay = document.createElement("div");
+    overlay.className = "snowegg";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-label",
+      "Easter egg: an ASCII-art snowy night over the CN Tower, Hart House and a pagoda, with the words Myanmar Culture Club");
+    overlay.tabIndex = -1;
+    overlay.innerHTML =
+      `<div class="snowegg-stage" aria-hidden="true"><pre class="snowegg-pre"></pre>` +
+      `<div class="snowegg-mm myanmar" lang="my"></div></div>` +
+      `<p class="snowegg-hint">You found it ❄ — press Esc or click anywhere to close</p>`;
+    document.body.appendChild(overlay);
+    document.documentElement.style.overflow = "hidden";
+    overlay.focus();
+    requestAnimationFrame(() => overlay && overlay.classList.add("is-open"));
+
+    const pre = overlay.querySelector(".snowegg-pre");
+    const mm = overlay.querySelector(".snowegg-mm");
+    const st = newState();
+    let t = 0, timer = null;
+
+    function draw() {
+      pre.innerHTML = toHTML(compose(t, st, !reduce), st);
+      const shown = Math.max(0, Math.floor((t - 55) / 6));
+      mm.innerHTML = esc(BURMESE.slice(0, shown).join("")) +
+        (shown > 0 && shown <= BURMESE.length ? `<span class="snowegg-brush">~</span>` : "");
+    }
+
+    if (reduce) { t = END; draw(); }
+    else timer = setInterval(() => { draw(); t++; }, 50);   // keeps snowing until closed
+
+    function close() {
+      clearInterval(timer);
+      document.removeEventListener("keydown", onKey, true);
+      document.documentElement.style.overflow = prevOverflow;
+      overlay.remove();
+      overlay = null;
+      if (location.hash === "#snow") history.replaceState(null, "", location.pathname + location.search);
+      if (returnFocus && returnFocus.focus) returnFocus.focus();
+    }
+    function onKey(e) {
+      if (e.key === "Escape") { e.preventDefault(); close(); }
+      else if (e.key === "Tab") e.preventDefault();          // keep focus in the dialog
+    }
+    document.addEventListener("keydown", onKey, true);
+    overlay.addEventListener("click", close);
+  }
+
+  // Secret word: "snow", typed anywhere that isn't a form field.
+  let typed = "";
+  document.addEventListener("keydown", e => {
+    if (overlay || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
+    const el = e.target;
+    if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
+    typed = (typed + e.key.toLowerCase()).slice(-4);
+    if (typed === "snow") { typed = ""; open(); }
+  });
+
+  // ...or a link ending in #snow (handy on phones, which have no keyboard).
+  if (location.hash === "#snow") open();
+  window.addEventListener("hashchange", () => { if (location.hash === "#snow") open(); });
+}
+
 // Applies saved-language text to the static HTML before anything else runs,
 // so there's no flash of English before it switches.
 document.addEventListener("DOMContentLoaded", applyTranslations);
@@ -900,3 +1208,4 @@ document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
 document.addEventListener("DOMContentLoaded", initFunFact);
+document.addEventListener("DOMContentLoaded", initSnowEasterEgg);
