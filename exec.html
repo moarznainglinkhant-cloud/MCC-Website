@@ -331,6 +331,22 @@
         </section>
       </section>
 
+      <div class="nl-preview-overlay" id="nl-preview-overlay" hidden>
+        <div class="nl-preview-modal" role="dialog" aria-modal="true" aria-labelledby="nl-preview-title">
+          <div class="nl-preview-head">
+            <div class="nl-preview-head-text">
+              <h3 class="nl-preview-title" id="nl-preview-title"></h3>
+              <p class="nl-preview-meta" id="nl-preview-meta"></p>
+            </div>
+            <button type="button" class="nl-preview-close" id="nl-preview-close" aria-label="Close preview">&times;</button>
+          </div>
+          <div class="nl-preview-body">
+            <p class="nl-preview-state" id="nl-preview-state">Loading…</p>
+            <div class="nl-article-body" id="nl-preview-content" hidden></div>
+          </div>
+        </div>
+      </div>
+
       <!-- ===================== ACCOUNT ===================== -->
       <section class="view" id="view-account" data-view="account" hidden aria-labelledby="account-h1">
         <div class="view-head">

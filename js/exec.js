@@ -1243,6 +1243,11 @@
       li.appendChild(statusSel);
 
       var acts = el("div", "nl-acts");
+      var preview = el("button", "link-btn", "Preview");
+      preview.type = "button";
+      preview.addEventListener("click", function () { openNewsletterPreview(n); });
+      acts.appendChild(preview);
+
       var openLink = el("a", "link-btn", "Open doc");
       openLink.href = n.edit_link;
       openLink.target = "_blank";
@@ -1332,6 +1337,84 @@
       });
     }
 
+    // ----- Newsletter preview (reuses the same Google-Doc sanitizing the public
+    // newsletter.html page does, so execs see what visitors will actually see) -----
+    function sanitizeDocContent(root) {
+      root.querySelectorAll("p.subtitle").forEach(function (p) {
+        p.setAttribute("data-nl", "subtitle");
+      });
+      root.querySelectorAll("p.title").forEach(function (p) {
+        var h = root.ownerDocument.createElement("h1");
+        h.innerHTML = p.innerHTML;
+        p.replaceWith(h);
+      });
+      root.querySelectorAll("a[href]").forEach(function (a) {
+        try {
+          var u = new URL(a.getAttribute("href"), location.href);
+          if (u.hostname === "www.google.com" && u.pathname === "/url" && u.searchParams.get("q")) {
+            a.setAttribute("href", u.searchParams.get("q"));
+          }
+          a.setAttribute("target", "_blank");
+          a.setAttribute("rel", "noopener");
+        } catch (e) { /* leave it as-is */ }
+      });
+      root.querySelectorAll("*").forEach(function (node) {
+        node.removeAttribute("style");
+        if (node.tagName !== "A" && node.tagName !== "IMG") node.removeAttribute("class");
+        node.removeAttribute("id");
+      });
+      root.removeAttribute("id");
+      return root;
+    }
+
+    function closeNewsletterPreview() {
+      $("nl-preview-overlay").hidden = true;
+    }
+
+    function openNewsletterPreview(n) {
+      var overlay = $("nl-preview-overlay"), stateEl = $("nl-preview-state"), body = $("nl-preview-content");
+      $("nl-preview-title").textContent = n.name;
+      $("nl-preview-meta").textContent = "Edited " + when(n.updated_at);
+      body.hidden = true;
+      body.innerHTML = "";
+      stateEl.hidden = false;
+      overlay.hidden = false;
+
+      if (!n.publish_link) {
+        stateEl.textContent = "This issue doesn't have a publish-to-web link yet, so there's nothing to preview. In the Google Doc: File → Share → Publish to web → Publish, then add that link to this newsletter.";
+        return;
+      }
+      stateEl.textContent = "Loading…";
+      fetch(n.publish_link)
+        .then(function (resp) {
+          if (!resp.ok) throw new Error("fetch failed: " + resp.status);
+          return resp.text();
+        })
+        .then(function (html) {
+          var parsed = new DOMParser().parseFromString(html, "text/html");
+          var root = parsed.querySelector("#contents .doc-content") || parsed.querySelector("#contents");
+          if (!root) throw new Error("couldn't find the document's content");
+          sanitizeDocContent(root);
+          body.innerHTML = "";
+          body.appendChild(document.importNode(root, true));
+          stateEl.hidden = true;
+          body.hidden = false;
+        })
+        .catch(function () {
+          stateEl.textContent = "Couldn't load this newsletter right now. Make sure “Publish to web” is still on for that doc.";
+        });
+    }
+
+    function initNewsletterPreview() {
+      $("nl-preview-close").addEventListener("click", closeNewsletterPreview);
+      $("nl-preview-overlay").addEventListener("click", function (e) {
+        if (e.target === $("nl-preview-overlay")) closeNewsletterPreview();
+      });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !$("nl-preview-overlay").hidden) closeNewsletterPreview();
+      });
+    }
+
     // ----- App shell: views, routing, lazy loading -----
     var VIEWS = ["home", "todo", "meet", "newsletters", "account"];
     var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", account: "Account" };
@@ -1362,6 +1445,7 @@
       appStarted = true;
       initShoutForm();
       initNewsletterForm();
+      initNewsletterPreview();
       // Team first: its names + ids feed the lounge reactions and the to-do board.
       return loadTeam().then(function () {
         initTodoForm();
