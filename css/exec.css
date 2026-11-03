@@ -705,10 +705,16 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
 }
 .nl-preview-overlay[hidden]{ display:none; }
 .nl-preview-modal{
-  background:#fff; color:#1C2440; width:100%; max-width:760px; max-height:88vh;
-  border-radius:16px; box-shadow:0 24px 60px rgba(0,0,0,0.35);
+  position:relative; background:#fff; color:#1C2440; width:100%; max-width:760px; max-height:88vh;
+  border-radius:4px; border:1px solid #C08A2E;
+  box-shadow: 0 0 0 7px #fff, 0 0 0 8px #C08A2E, 0 24px 60px rgba(0,0,0,0.35);
   display:flex; flex-direction:column; overflow:hidden;
 }
+.nl-frame-corner{ position:absolute; width:26px; height:26px; color:#C08A2E; opacity:0.85; pointer-events:none; z-index:2; }
+.nl-frame-corner-tl{ top:12px; left:12px; }
+.nl-frame-corner-tr{ top:12px; right:12px; transform:scaleX(-1); }
+.nl-frame-corner-bl{ bottom:12px; left:12px; transform:scaleY(-1); }
+.nl-frame-corner-br{ bottom:12px; right:12px; transform:scale(-1,-1); }
 .nl-preview-head{
   display:flex; align-items:flex-start; justify-content:space-between; gap:16px;
   padding:20px 24px; border-bottom:1px solid rgba(28,36,64,0.12); background:#fff; flex:none;

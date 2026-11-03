@@ -394,6 +394,23 @@
   .nl-article-body img{ max-width:100%; height:auto; border-radius:10px; margin:0.6em 0; }
   .nl-article-body strong{ font-weight:700; }
 
+  /* A quiet calligraphy-style frame around a single published issue --
+     plain white paper, a thin double gold rule, small brush-flourish corners. */
+  .nl-frame{
+    position:relative; background:#fff; border:1px solid var(--gold);
+    border-radius:4px; padding:clamp(28px,5vw,56px);
+    box-shadow: 0 0 0 7px #fff, 0 0 0 8px var(--gold);
+  }
+  .nl-frame-corner{ position:absolute; width:30px; height:30px; color:var(--gold); opacity:0.85; pointer-events:none; }
+  .nl-frame-corner-tl{ top:14px; left:14px; }
+  .nl-frame-corner-tr{ top:14px; right:14px; transform:scaleX(-1); }
+  .nl-frame-corner-bl{ bottom:14px; left:14px; transform:scaleY(-1); }
+  .nl-frame-corner-br{ bottom:14px; right:14px; transform:scale(-1,-1); }
+  @media (max-width:560px){
+    .nl-frame{ padding:30px 20px; box-shadow: 0 0 0 5px #fff, 0 0 0 6px var(--gold); }
+    .nl-frame-corner{ width:22px; height:22px; }
+  }
+
 </style>
 </head>
 <body data-page="newsletter">
@@ -456,12 +473,18 @@
   <section class="section" id="newsletter-article" hidden>
     <div class="wrap">
       <a class="nl-back" href="newsletter.html">&larr; All newsletters</a>
-      <div class="nl-article-head">
-        <h1 id="nl-article-title"></h1>
-        <p class="nl-article-meta" id="nl-article-meta"></p>
+      <div class="nl-frame">
+        <svg class="nl-frame-corner nl-frame-corner-tl" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 5 C5 22 9 34 30 38" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M9 9 C10 20 14 28 26 31" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.7"/><circle cx="34" cy="40" r="2" fill="currentColor"/></svg>
+        <svg class="nl-frame-corner nl-frame-corner-tr" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 5 C5 22 9 34 30 38" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M9 9 C10 20 14 28 26 31" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.7"/><circle cx="34" cy="40" r="2" fill="currentColor"/></svg>
+        <svg class="nl-frame-corner nl-frame-corner-bl" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 5 C5 22 9 34 30 38" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M9 9 C10 20 14 28 26 31" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.7"/><circle cx="34" cy="40" r="2" fill="currentColor"/></svg>
+        <svg class="nl-frame-corner nl-frame-corner-br" viewBox="0 0 48 48" aria-hidden="true"><path d="M5 5 C5 22 9 34 30 38" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M9 9 C10 20 14 28 26 31" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round" opacity="0.7"/><circle cx="34" cy="40" r="2" fill="currentColor"/></svg>
+        <div class="nl-article-head">
+          <h1 id="nl-article-title"></h1>
+          <p class="nl-article-meta" id="nl-article-meta"></p>
+        </div>
+        <p class="nl-article-state" id="nl-article-state">Loading…</p>
+        <div class="nl-article-body" id="nl-article-body-wrap"></div>
       </div>
-      <p class="nl-article-state" id="nl-article-state">Loading…</p>
-      <div class="nl-article-body" id="nl-article-body-wrap"></div>
     </div>
   </section>
 
