@@ -1723,12 +1723,23 @@ function initEventTilt() {
 // site uses: past events (Sheet), the team (Team tab, or data/team.csv), the latest published
 // newsletter (Supabase, public read), and the fun facts list above.
 const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "", count: 0 };
+
+// Events tile posters — edit these two lists to curate it (matched against the event's name or
+// poster filename, ignoring capitals). The count ("22 events since 2022") still includes every event.
+const BENTO_POSTERS_HIDE = ["multicultural-bazaar", "mcc-mixer"];            // never shown in the tile
+const BENTO_POSTERS_FIRST = ["sea of love", "thingyan", "general meeting", "home away from home"]; // shown first
 const BENTO_COLORS = ["#AE3628", "#C08A2E", "#4B7A3C", "#1C2440", "#8C2A1F"];
 
 function renderBento(past) {
   const root = document.getElementById("js-bento");
   if (!root) return;
-  const withPhoto = past.filter(ev => ev.photo);
+  const key = ev => ((ev.name || "") + " " + (ev.photo || "")).toLowerCase();
+  const rank = ev => { const k = key(ev); const i = BENTO_POSTERS_FIRST.findIndex(w => k.includes(w)); return i < 0 ? 999 : i; };
+  const withPhoto = past
+    .filter(ev => ev.photo && !BENTO_POSTERS_HIDE.some(w => key(ev).includes(w)))
+    .map((ev, i) => ({ ev, i }))
+    .sort((a, b) => (rank(a.ev) - rank(b.ev)) || (a.i - b.i))
+    .map(x => x.ev);
   const years = past.map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
   BENTO.count = past.length;
   BENTO.since = years[0] || "";
@@ -1753,10 +1764,6 @@ function renderBentoText() {
   if (ev && BENTO.count) {
     ev.innerHTML = escapeHtml(t("bento_events_big")).replace("{n}", `<b>${BENTO.count}</b>`).replace("{y}", escapeHtml(BENTO.since));
   }
-  const sub = document.getElementById("js-bento-team-sub");
-  if (sub && BENTO.team) {
-    sub.textContent = t("bento_about_sub").replace("{n}", BENTO.team.people).replace("{d}", BENTO.team.depts);
-  }
 }
 
 // Poster columns drift slowly on their own; scrolling the page speeds them up for a moment,
@@ -1765,7 +1772,7 @@ function initBentoPosters(box) {
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (reduce) return;
   const cols = Array.from(box.querySelectorAll(".t-col"));
-  const st = { off: cols.map((_, i) => i * 90), boost: 0, lastY: window.scrollY, last: 0, raf: null, visible: false };
+  const st = { off: cols.map(() => 0), boost: 0, lastY: window.scrollY, last: 0, raf: null, visible: false };
   const base = [16, 22, 18];                       // px per second, per column
   function frame(now) {
     st.raf = null;
