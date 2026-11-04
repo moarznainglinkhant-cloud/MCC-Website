@@ -1732,7 +1732,11 @@ function initGreeting() {
     const ink = make("greet-ink");
     ink.setAttribute("mask", "url(#greet-mask)");
     const pen = make("greet-pen");
-    whole.replaceWith(defs, ink, pen);
+    // The letters overlap where they join (e.g. the ာ in လာ), so their separate outlines cross inside
+    // the word. A copy of the word filled with the page colour sits over the pen and hides the inner
+    // half of every outline — only the clean outer edge of the whole word shows. The ink goes on top.
+    const cover = make("greet-cover");
+    whole.replaceWith(defs, pen, cover, ink);
     const pens = Array.from(pen.children);
     const sylls = pens.map(t => {
       const b = t.getBBox();
