@@ -243,30 +243,14 @@
     align-items:center;
   }
   .hero-copy{ position:relative; z-index:2; }
-  /* Hero greeting: "မင်္ဂလာပါ" in Yinmar. On the first visit of a session it writes itself
-     (the outline traces, then the ink fills in), settles into place, and the rest of the hero
-     fades up after it. Played by the class set in the inline script in the hero; static otherwise. */
-  .hero h1.greet-h1{ line-height:1; }
-  .greet{ display:block; height:clamp(3.3rem, 7.1vw, 5.8rem); width:auto; max-width:100%; overflow:visible; color:var(--ink); margin-left:-3px; }
-  .greet text{ font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px; fill:currentColor; stroke:currentColor; stroke-width:0; }
-  .greet-play .greet{ transform-origin:0 60%; transform:scale(1.38) translateY(14%); }
-  .greet-play .greet text{ fill-opacity:0; stroke-width:1.3; stroke-dasharray:900; stroke-dashoffset:900; }
-  .greet-play .hero-copy > :not(.greet-h1){ opacity:0; transform:translateY(14px); }
-  .greet-play .hero-visual{ opacity:0; }
-  .greet-go .greet{ animation:greet-settle 1s 1.55s cubic-bezier(.22,1,.36,1) forwards; }
-  .greet-go .greet text{ animation:greet-draw 1.7s cubic-bezier(.45,0,.25,1) forwards, greet-ink .8s 1.15s ease forwards; }
-  .greet-go .hero-copy > :not(.greet-h1){ animation:greet-up .9s cubic-bezier(.22,1,.36,1) forwards; }
-  .greet-go .hero-copy > :nth-child(1){ animation-delay:1.8s; }
-  .greet-go .hero-copy > :nth-child(3){ animation-delay:1.92s; }
-  .greet-go .hero-copy > :nth-child(n+4){ animation-delay:2.04s; }
-  .greet-go .hero-visual{ animation:greet-fade 1.2s 1.9s ease forwards; }
-  @keyframes greet-draw{ to{ stroke-dashoffset:0; } }
-  @keyframes greet-ink{ to{ fill-opacity:1; stroke-width:0; } }
-  @keyframes greet-settle{ to{ transform:none; } }
-  @keyframes greet-up{ to{ opacity:1; transform:none; } }
-  @keyframes greet-fade{ to{ opacity:1; } }
-  @media (prefers-reduced-motion: reduce){
-    .greet-play .greet, .greet-play .greet text, .greet-play .hero-copy > *, .greet-play .hero-visual{ animation:none !important; transform:none !important; opacity:1 !important; fill-opacity:1 !important; stroke-width:0 !important; }
+  /* Hero greeting: a big "မင်္ဂလာပါ" under the hero that writes itself as you scroll — the outline
+     traces first, then the ink fills in — and runs backwards if you scroll back up (js/site.js). */
+  .greet-wrap{ position:relative; z-index:2; margin-top:clamp(28px, 5vw, 64px); }
+  .greet{ display:block; width:min(100%, 980px); height:auto; overflow:visible; color:var(--red-ink); }
+  .greet text{
+    font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px;
+    fill:currentColor; fill-opacity:var(--greet-ink, 1);
+    stroke:currentColor; stroke-width:var(--greet-stroke, 0); stroke-dasharray:900; stroke-dashoffset:var(--greet-dash, 0);
   }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
@@ -725,19 +709,7 @@
     <div class="wrap hero-grid">
       <div class="hero-copy">
         <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
-        <h1 class="greet-h1" aria-label="Mingalabar (မင်္ဂလာပါ)">
-          <svg class="greet" id="js-greet" viewBox="0 -96 560 132" aria-hidden="true"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
-          <script>
-          // First visit this session: hold the hero back so the greeting can write itself in (js/site.js starts it).
-          (function(){try{
-            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-            if (sessionStorage.getItem('mcc_greeted')) return;
-            sessionStorage.setItem('mcc_greeted','1');
-            var h=document.documentElement; h.classList.add('greet-play');
-            setTimeout(function(){ h.classList.add('greet-go'); }, 2500); // safety net if site.js never starts it
-          }catch(e){}})();
-        </script>
-        </h1>
+        <h1 data-i18n="hero_h1">Mingalabar</h1>
         <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.</p>
         <div class="cta-row">
           <a class="btn" href="#event" data-i18n="hero_cta_next">See Our Next Event</a>
@@ -751,6 +723,9 @@
           <div class="panel panel-c"><img src="images/welcome_bottom.jpg" alt="Welcome collage photo" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
         </div>
       </div>
+    </div>
+    <div class="wrap greet-wrap">
+      <svg class="greet" id="js-greet" viewBox="0 -96 560 132" role="img" aria-label="မင်္ဂလာပါ — Mingalabar"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
     </div>
   </section>
 

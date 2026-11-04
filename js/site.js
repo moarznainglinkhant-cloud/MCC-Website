@@ -1678,26 +1678,51 @@ function safeUrl(str) {
 let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
-// ---------- Homepage: "မင်္ဂလာပါ" greeting ----------
-// Fits the SVG snugly around the text once the Yinmar font has loaded, then (on the first visit
-// of a session, see the inline script in index.html) starts the write-in animation.
+// ---------- Homepage: "မင်္ဂလာပါ" greeting, written by your scroll ----------
+// The big Burmese greeting under the hero traces its outline and then fills with ink as it moves
+// up the screen, tied directly to the scroll (and reversing if you scroll back up).
+// Starts as it enters the bottom of the screen; finished by the time it reaches ~40% from the top.
 function initGreeting() {
   const svg = document.getElementById("js-greet");
   if (!svg) return;
-  const html = document.documentElement;
+  const text = svg.querySelector("text");
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fit = () => {
     try {
-      const bb = svg.querySelector("text").getBBox();
+      const bb = text.getBBox();
       if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
     } catch (e) { /* keep the default viewBox */ }
   };
-  const go = () => { fit(); if (html.classList.contains("greet-play")) requestAnimationFrame(() => html.classList.add("greet-go")); };
-  if (document.fonts && document.fonts.load) {
-    let done = false;
-    const once = () => { if (!done) { done = true; go(); } };
-    document.fonts.load('100px "Yinmar"', "မင်္ဂလာပါ").then(once, once);
-    setTimeout(once, 1200);                       // don't hold the hero back for a slow font
-  } else go();
+  if (document.fonts && document.fonts.load) document.fonts.load('100px "Yinmar"', "မင်္ဂလာပါ").then(fit, fit); else fit();
+  if (reduce) return;                               // just shows the finished greeting
+
+  const DASH = 900;
+  const st = { cur: null, raf: null, last: 0 };
+  const target = () => {
+    const r = svg.getBoundingClientRect(), vh = window.innerHeight;
+    return Math.max(0, Math.min(1, (vh - r.top) / (vh * 0.6 + r.height * 0.5)));
+  };
+  const clamp01 = x => Math.max(0, Math.min(1, x));
+  function frame(now) {
+    st.raf = null;
+    const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 1;
+    st.last = now;
+    const tg = target();
+    if (st.cur === null) st.cur = tg;
+    st.cur += (tg - st.cur) * (1 - Math.exp(-8 * dt));
+    if (Math.abs(tg - st.cur) < 0.0005) st.cur = tg;
+    const p = st.cur;
+    const trace = clamp01(p / 0.65);                 // outline draws over the first 65%
+    const ink = clamp01((p - 0.5) / 0.45);           // ink fills over the last half
+    svg.style.setProperty("--greet-dash", (DASH * (1 - trace)).toFixed(1));
+    svg.style.setProperty("--greet-stroke", (1.4 * (1 - ink)).toFixed(3));
+    svg.style.setProperty("--greet-ink", ink.toFixed(3));
+    if (st.cur !== tg) st.raf = requestAnimationFrame(frame); else st.last = 0;
+  }
+  const kick = () => { if (!st.raf) st.raf = requestAnimationFrame(frame); };
+  window.addEventListener("scroll", kick, { passive: true });
+  window.addEventListener("resize", kick);
+  kick();
 }
 
 // ---------- Homepage: the Next Event card tilts gently toward the cursor ----------
