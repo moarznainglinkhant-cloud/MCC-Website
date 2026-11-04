@@ -217,7 +217,11 @@
     height:100vh; height:100svh;
     overflow:hidden;
   }
-  .wheel{ position:absolute; left:0; top:0; width:0; height:0; will-change:transform; }
+  .wheel-glow{
+    position:absolute; left:0; top:0; width:1000px; height:1000px; z-index:0;
+    border-radius:50%; pointer-events:none;
+  }
+  .wheel{ position:absolute; left:0; top:0; width:0; height:0; z-index:1; will-change:transform; }
   .wheel-ring{
     position:absolute; left:0; top:0; border-radius:50%;
     transform:translate(-50%,-50%); pointer-events:none;
@@ -228,13 +232,14 @@
     position:absolute; left:0; top:0; width:12px; height:12px; border-radius:50%;
     box-shadow:0 0 0 3px var(--bg);
   }
+  .wheel-progress{ position:absolute; left:0; top:0; z-index:2; overflow:visible; pointer-events:none; }
+  .wheel-progress circle{ fill:none; stroke:var(--gold); stroke-width:2.5; stroke-linecap:round; }
   .wheel-hub{
-    position:absolute; width:200px; height:200px; border-radius:50%; z-index:3;
-    transform:translate(-50%,-50%);
+    position:absolute; left:0; top:0; width:200px; height:200px; border-radius:50%; z-index:3;
     background:var(--navy); color:var(--footer-ink);
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     font-family:'Fraunces', serif; font-weight:700; font-size:1.6rem; line-height:1.1;
-    box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--gold);
+    box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--gold), 0 24px 50px rgba(28,36,64,0.18);
   }
   .wheel-hub small{
     font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.6rem;
@@ -242,24 +247,41 @@
   }
   .cluster{
     position:absolute; left:0; top:0; z-index:2;
-    display:grid; gap:12px;
+    display:grid; gap:14px;
     will-change:transform, opacity;
   }
-  .cluster .person-card{ width:150px; }
+  .cluster .person-card{
+    width:200px; padding:24px 16px 20px;
+    transform: translateY(var(--rise,0px)) perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    transition: transform .18s ease-out, box-shadow .2s ease;
+  }
+  .cluster .person-card:hover{
+    transform: translateY(calc(var(--rise,0px) - 4px)) perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    box-shadow: 0 18px 36px rgba(28,36,64,0.14);
+  }
+  .cluster .person-photo{
+    width:96px; height:96px; font-size:1.35rem;
+    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
+  }
+  .cluster .person-card:hover .person-photo{ box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 7px var(--gold); }
+  .cluster .person-name{ font-size:0.98rem; }
+  .cluster .person-title{ font-size:0.72rem; padding:4px 13px; }
 
-  .wheel-title{
-    position:absolute; z-index:4; max-width:300px;
-    transform:translateY(-50%);
-    transition: opacity .22s ease, transform .22s ease;
-  }
-  .wheel-title.out{ opacity:0; transform:translateY(calc(-50% - 10px)); }
+  .wheel-title{ position:absolute; z-index:4; }
   .wheel-count{
-    font-family:'Work Sans',sans-serif; font-size:0.72rem; font-weight:700;
-    letter-spacing:0.16em; color:var(--ink-soft);
+    font-family:'Work Sans',sans-serif; font-size:0.74rem; font-weight:700;
+    letter-spacing:0.18em; color:var(--ink-soft);
   }
-  .wheel-name{ font-size:clamp(2rem,4vw,3.2rem); line-height:1.05; margin:10px 0 16px; }
-  .wheel-bar{ display:block; width:44px; height:4px; border-radius:2px; margin-bottom:12px; }
-  .wheel-meta{ color:var(--ink-soft); font-size:0.95rem; }
+  .wheel-count b{ color:var(--ink); font-weight:700; }
+  .wheel-name{
+    font-size:clamp(2.2rem,3.6vw,3.6rem); line-height:1.04;
+    margin:12px 0 20px; padding-bottom:0.08em;
+    overflow-x:visible; overflow-y:clip;
+  }
+  .wheel-name-inner{ display:inline-block; transition: transform .42s cubic-bezier(.2,.8,.2,1), opacity .42s ease; }
+  .wheel-name-inner.leave{ transform:translateY(-105%); opacity:0; }
+  .wheel-name-inner.enter{ transform:translateY(105%); opacity:0; transition:none; }
+  .wheel-bar{ display:block; width:56px; height:4px; border-radius:2px; transition: background-color .45s ease; }
 
   .wheel-index{
     position:absolute; right:clamp(18px,3vw,40px); top:50%; z-index:4;
@@ -278,14 +300,30 @@
   .wheel-index button.active .dot{ transform:scale(1.5); }
   @media (max-width:1199px){ .wheel-index{ display:none; } }
 
+  .wheel-cue{
+    position:absolute; left:50%; bottom:24px; z-index:4; transform:translateX(-50%);
+    display:flex; flex-direction:column; align-items:center; gap:8px; pointer-events:none;
+    font-family:'Work Sans',sans-serif; font-size:0.66rem; font-weight:700;
+    letter-spacing:0.2em; text-transform:uppercase; color:var(--ink-soft);
+  }
+  .wheel-cue i{
+    display:block; width:1px; height:34px; transform-origin:top;
+    background:linear-gradient(var(--ink-soft), rgba(95,90,72,0));
+    animation: wheel-cue 1.9s ease-in-out infinite;
+  }
+  @keyframes wheel-cue{ 0%{ transform:scaleY(0); opacity:1; } 60%{ transform:scaleY(1); opacity:1; } 100%{ transform:scaleY(1); opacity:0; } }
+
   /* Phones and small tablets: title on top, wheel turns up from the bottom. */
+  .wheel-sticky.is-mobile .wheel-glow{ width:700px; height:700px; }
   .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; font-size:1.3rem; }
-  .wheel-sticky.is-mobile .wheel-title{ max-width:none; text-align:center; transform:none; }
-  .wheel-sticky.is-mobile .wheel-title.out{ transform:translateY(-10px); }
+  .wheel-sticky.is-mobile .wheel-title{ text-align:center; }
   .wheel-sticky.is-mobile .wheel-bar{ margin-inline:auto; }
-  .wheel-sticky.is-mobile .wheel-name{ margin:6px 0 10px; }
-  .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:14px 10px 12px; gap:8px; }
-  .wheel-sticky.is-mobile .cluster .person-photo{ width:52px; height:52px; font-size:0.85rem; }
+  .wheel-sticky.is-mobile .wheel-name{ font-size:2.3rem; margin:8px 0 12px; }
+  .wheel-sticky.is-mobile .wheel-cue{ display:none; }
+  .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:18px 10px 14px; gap:8px; }
+  .wheel-sticky.is-mobile .cluster .person-photo{ width:68px; height:68px; font-size:1rem; }
+  .wheel-sticky.is-mobile .cluster .person-name{ font-size:0.86rem; }
+  .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.64rem; padding:3px 10px; }
 
   .person-card{
     display:flex; flex-direction:column; align-items:center; text-align:center;
@@ -458,15 +496,17 @@
 
   <section class="wheel-section" id="team" aria-label="Our team, by department">
     <div class="wheel-sticky" id="wheelSticky">
+      <div class="wheel-glow" id="wheelGlow" aria-hidden="true"></div>
       <div class="wheel" id="wheel"></div>
+      <svg class="wheel-progress" id="wheelProgress" aria-hidden="true"><circle id="wheelProgressArc"/></svg>
       <div class="wheel-hub" aria-hidden="true">MCC<small>UofT</small></div>
       <div class="wheel-title" id="wheelTitle">
-        <span class="wheel-count" id="wheelCount">01 / 07</span>
-        <h2 class="wheel-name" id="wheelName">Leadership</h2>
+        <span class="wheel-count"><b id="wheelCount">01</b> / 07</span>
+        <h2 class="wheel-name"><span class="wheel-name-inner" id="wheelName">Leadership</span></h2>
         <span class="wheel-bar" id="wheelBar"></span>
-        <p class="wheel-meta" id="wheelMeta">3 people</p>
       </div>
       <nav class="wheel-index" id="wheelIndex" aria-label="Jump to a department"></nav>
+      <div class="wheel-cue" id="wheelCue" aria-hidden="true"><span>Scroll</span><i></i></div>
     </div>
   </section>
 
@@ -584,13 +624,23 @@
   var wheel   = document.getElementById("wheel");
   var hub     = sticky ? sticky.querySelector(".wheel-hub") : null;
   var titleEl = document.getElementById("wheelTitle");
+  var nameEl  = document.getElementById("wheelName");
+  var countEl = document.getElementById("wheelCount");
+  var barEl   = document.getElementById("wheelBar");
+  var glow    = document.getElementById("wheelGlow");
+  var progSvg = document.getElementById("wheelProgress");
+  var progArc = document.getElementById("wheelProgressArc");
+  var cue     = document.getElementById("wheelCue");
   var indexEl = document.getElementById("wheelIndex");
-  if (!section || !sticky || !wheel || !hub || !titleEl) return;
+  var heroWrap = document.querySelector(".about-hero .wrap");
+  if (!section || !sticky || !wheel || !hub || !titleEl || !nameEl) return;
 
   var N = GROUPS.length;
   var STEP_DEG = 360 / N;
-  var STEP_VH = 75;          // scroll distance per department
-  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var STEP_VH = 80;          // scroll distance per department
+  var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  var reduceMotion = !!(mq && mq.matches);
+  var finePointer = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
 
   section.style.height = ((N - 1) * STEP_VH + 100) + "vh";
 
@@ -603,14 +653,17 @@
       '<span class="person-title">' + esc(p.title) + '</span>' +
     '</div>';
   }
+  function hexRgb(h){ var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
+  var RGB = GROUPS.map(function(g){ return hexRgb(g.color); });
+  function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
 
-  // ---------- build the wheel ----------
+  // ---------- build ----------
   var outerRing = document.createElement("div"); outerRing.className = "wheel-ring outer";
   var innerRing = document.createElement("div"); innerRing.className = "wheel-ring inner";
   wheel.appendChild(outerRing); wheel.appendChild(innerRing);
 
   var members = GROUPS.map(function(g){ return PEOPLE.filter(function(p){ return p.group === g.key; }); });
-  var dots = [], clusters = [], indexBtns = [];
+  var dots = [], clusters = [], cards = [], indexBtns = [];
   GROUPS.forEach(function(g, k){
     var dot = document.createElement("span");
     dot.className = "wheel-dot";
@@ -621,6 +674,7 @@
     c.className = "cluster";
     c.innerHTML = members[k].map(cardHTML).join("");
     wheel.appendChild(c); clusters.push(c);
+    cards.push(Array.prototype.slice.call(c.querySelectorAll(".person-card")));
 
     if (indexEl){
       var b = document.createElement("button");
@@ -632,7 +686,7 @@
   });
 
   // ---------- layout (recomputed on resize) ----------
-  var L = { mobile:false, cx:0, cy:0, R:0, rInner:0, F:0, pos:[] };
+  var L = { mobile:false, cx:0, cy:0, R:0, rInner:0, F:0, fit:1, fx:0, fy:0, pos:[] };
 
   function layout(){
     var W = sticky.clientWidth, H = sticky.clientHeight;
@@ -641,35 +695,41 @@
     L.mobile = W < 900;
     sticky.classList.toggle("is-mobile", L.mobile);
 
-    var cols = L.mobile ? 2 : (W >= 1200 ? 3 : 2);
+    var cols = L.mobile ? 2 : (W >= 1460 ? 3 : 2);
     clusters.forEach(function(c, k){
       var n = Math.min(cols, members[k].length);
       if (L.mobile){
-        c.style.width = Math.min(W - 32, 340) + "px";
+        c.style.width = Math.min(W - 32, 360) + "px";
         c.style.gridTemplateColumns = "repeat(" + n + ", minmax(0,1fr))";
       } else {
         c.style.width = "";
-        c.style.gridTemplateColumns = "repeat(" + n + ", 150px)";
+        c.style.gridTemplateColumns = "repeat(" + n + ", 200px)";
       }
     });
     var maxW = 0, maxH = 0;
     clusters.forEach(function(c){ maxW = Math.max(maxW, c.offsetWidth); maxH = Math.max(maxH, c.offsetHeight); });
 
     if (!L.mobile){
-      // Hub sits on the left edge; the department in focus faces right.
+      // Hub on the left edge; the department in focus faces right.
       L.F = 0;
       L.cx = 80;
       L.cy = NAV + (H - NAV) / 2;
       L.rInner = 150;
+      var titleW = Math.max(220, Math.min(320, W * 0.24));
       var titleLeft = L.cx + L.rInner + 40;
-      var titleRight = titleLeft + 300;
+      var titleRight = titleLeft + titleW;
       var rightPad = W >= 1200 ? 190 : 32;
-      var minX = titleRight + 40 + maxW / 2;
-      var maxX = W - rightPad - maxW / 2;
+      var availW = W - rightPad - (titleRight + 40);
+      var availH = H - NAV - 56;
+      L.fit = Math.min(1, availW / maxW, availH / maxH);
+      var half = maxW * L.fit / 2;
+      var minX = titleRight + 40 + half;
+      var maxX = W - rightPad - half;
       var focalX = maxX > minX ? minX + (maxX - minX) * 0.35 : minX;
       L.R = focalX - L.cx;
       titleEl.style.left = titleLeft + "px";
       titleEl.style.right = "";
+      titleEl.style.width = titleW + "px";
       titleEl.style.top = L.cy + "px";
     } else {
       // Hub peeks up from the bottom; the department in focus faces up.
@@ -680,10 +740,18 @@
       var titleTop = NAV + 18;
       titleEl.style.left = "16px";
       titleEl.style.right = "16px";
+      titleEl.style.width = "";
       titleEl.style.top = titleTop + "px";
-      var focalY = titleTop + titleEl.offsetHeight + 20 + maxH / 2;
-      L.R = Math.max(180, L.cy - focalY);
+      var topY = titleTop + titleEl.offsetHeight + 18;
+      var bottomY = L.cy - L.rInner - 22;
+      L.fit = Math.min(1, (bottomY - topY) / maxH);
+      var focalY = topY + maxH * L.fit / 2;
+      L.R = Math.max(160, L.cy - focalY);
     }
+
+    var Fr = L.F * Math.PI / 180;
+    L.fx = L.cx + L.R * Math.cos(Fr);
+    L.fy = L.cy + L.R * Math.sin(Fr);
 
     hub.style.left = L.cx + "px";
     hub.style.top = L.cy + "px";
@@ -692,6 +760,19 @@
     outerRing.style.width = outerRing.style.height = (L.R * 2) + "px";
     innerRing.style.width = innerRing.style.height = (L.rInner * 2) + "px";
 
+    var s = L.rInner * 2 + 6;
+    progSvg.setAttribute("width", s);
+    progSvg.setAttribute("height", s);
+    progSvg.style.left = L.cx + "px";
+    progSvg.style.top = L.cy + "px";
+    // Rotate so the arc starts at the focus point, then flip so it grows the way the wheel turns.
+    progSvg.style.transform = "translate(-50%,-50%) rotate(" + L.F + "deg) scaleY(-1)";
+    progArc.setAttribute("cx", s / 2);
+    progArc.setAttribute("cy", s / 2);
+    progArc.setAttribute("r", L.rInner);
+    L.circ = 2 * Math.PI * L.rInner;
+    progArc.style.strokeDasharray = L.circ + " " + L.circ;
+
     L.pos = GROUPS.map(function(g, k){
       var a = (L.F + k * STEP_DEG) * Math.PI / 180;
       return {
@@ -699,84 +780,154 @@
         dx: L.rInner * Math.cos(a), dy: L.rInner * Math.sin(a)
       };
     });
-    dots.forEach(function(d, k){
-      d.style.transform = "translate(" + L.pos[k].dx + "px," + L.pos[k].dy + "px) translate(-50%,-50%)";
-    });
   }
 
   // ---------- scroll -> progress ----------
   function scrollSpan(){ return Math.max(1, section.offsetHeight - window.innerHeight); }
-  function targetProgress(){
+  function readScroll(){
     var rect = section.getBoundingClientRect();
-    var t = Math.min(1, Math.max(0, -rect.top / scrollSpan()));
+    var vh = window.innerHeight;
+    var t = clamp01(-rect.top / scrollSpan());
     var raw = t * (N - 1);
     var k = Math.min(N - 2, Math.floor(raw));
     var f = raw - k;
-    return k + f * f * (3 - 2 * f);   // ease in/out, so the wheel rests on each department
+    return {
+      p: k + f * f * (3 - 2 * f),                    // eases so the wheel rests on each department
+      enter: rect.top > 0 ? clamp01(1 - rect.top / vh) : 1,
+      hero: clamp01(window.scrollY / Math.max(1, rect.top + window.scrollY))
+    };
   }
   function scrollToGroup(k){
     var top = window.scrollY + section.getBoundingClientRect().top + scrollSpan() * (k / (N - 1));
     window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
   }
 
-  // ---------- render ----------
+  // ---------- title ----------
   var active = -1, swapTimer = null;
   function setActive(k){
     if (k === active) return;
     var first = active === -1;
     active = k;
     indexBtns.forEach(function(b, j){ b.classList.toggle("active", j === k); });
-    var g = GROUPS[k], n = members[k].length;
-    function fill(){
-      document.getElementById("wheelCount").textContent = ("0" + (k + 1)).slice(-2) + " / " + ("0" + N).slice(-2);
-      document.getElementById("wheelName").textContent = g.label;
-      document.getElementById("wheelBar").style.background = g.color;
-      document.getElementById("wheelMeta").textContent = n + (n === 1 ? " person" : " people");
-    }
-    if (first || reduceMotion){ fill(); return; }
+    countEl.textContent = ("0" + (k + 1)).slice(-2);
+    barEl.style.backgroundColor = GROUPS[k].color;
+    if (first || reduceMotion){ nameEl.textContent = GROUPS[k].label; return; }
     window.clearTimeout(swapTimer);
-    titleEl.classList.add("out");
-    swapTimer = window.setTimeout(function(){ fill(); titleEl.classList.remove("out"); }, 200);
+    nameEl.classList.remove("enter");
+    nameEl.classList.add("leave");
+    swapTimer = window.setTimeout(function(){
+      nameEl.textContent = GROUPS[active].label;
+      nameEl.classList.remove("leave");
+      nameEl.classList.add("enter");
+      void nameEl.offsetWidth;          // commit the start position before sliding in
+      nameEl.classList.remove("enter");
+    }, 230);
   }
 
-  function apply(p){
-    var r = -p * STEP_DEG;
+  // ---------- render ----------
+  function apply(st){
+    var p = st.p, e = reduceMotion ? 1 : st.enter;
+    var easeE = 1 - Math.pow(1 - e, 3);
+    var r = -p * STEP_DEG - (1 - easeE) * 40;     // the wheel dials in as you arrive
     wheel.style.transform = "rotate(" + r + "deg)";
+
     clusters.forEach(function(c, k){
       var d = Math.abs(k - p);
-      var op = Math.max(0, 1 - d * 0.8);
-      var sc = 1 - Math.min(d, 1.5) * 0.16;
-      var blur = Math.min(d, 1) * 3;
+      var op = Math.max(0, 1 - d * 0.8) * easeE;
+      var sc = (1 - Math.min(d, 1.5) * 0.16) * L.fit;
+      var blur = Math.min(d, 1) * 4;
       c.style.opacity = op.toFixed(3);
       c.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
-      c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(3) + ")";
+      c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(4) + ")";
       c.style.pointerEvents = d < 0.4 ? "auto" : "none";
       c.style.visibility = op < 0.01 ? "hidden" : "visible";
+
+      // Cards rise in one after another as the department arrives, and leave the same way.
+      var arrive = Math.min(1, 1 - d) * easeE;
+      cards[k].forEach(function(card, j){
+        var v = reduceMotion ? 1 : clamp01((arrive - 0.15 - j * 0.07) / 0.45);
+        var ev = 1 - Math.pow(1 - v, 3);
+        card.style.setProperty("--rise", ((1 - ev) * 34).toFixed(1) + "px");
+        card.style.opacity = (0.15 + ev * 0.85).toFixed(3);
+      });
     });
+
+    dots.forEach(function(dot, k){
+      var d = Math.abs(k - p);
+      var s = 1 + Math.max(0, 1 - d) * 0.7;
+      dot.style.transform = "translate(" + L.pos[k].dx + "px," + L.pos[k].dy + "px) translate(-50%,-50%) scale(" + s.toFixed(3) + ")";
+    });
+
+    var frac = (p * STEP_DEG) / 360;
+    progArc.style.strokeDashoffset = (L.circ * (1 - frac)).toFixed(2);
+    progArc.style.opacity = easeE.toFixed(3);
+
+    // Glow shifts toward the colour of the department in focus.
+    var k0 = Math.min(N - 1, Math.floor(p)), k1 = Math.min(N - 1, k0 + 1), f = p - k0;
+    var rgb = [0,1,2].map(function(i){ return Math.round(RGB[k0][i] + (RGB[k1][i] - RGB[k0][i]) * f); }).join(",");
+    glow.style.background = "radial-gradient(circle at center, rgba(" + rgb + ",0.16) 0%, rgba(" + rgb + ",0.06) 38%, rgba(" + rgb + ",0) 64%)";
+    glow.style.transform = "translate(" + (L.fx - glow.offsetWidth / 2) + "px," + (L.fy - glow.offsetHeight / 2) + "px)";
+    glow.style.opacity = easeE.toFixed(3);
+
+    hub.style.transform = "translate(-50%,-50%) scale(" + (0.82 + 0.18 * easeE).toFixed(3) + ")";
+    var lift = ((1 - easeE) * 36).toFixed(1);
+    titleEl.style.opacity = easeE.toFixed(3);
+    titleEl.style.transform = (L.mobile ? "" : "translateY(-50%) ") + "translateY(" + lift + "px)";
+    if (cue) cue.style.opacity = (easeE * clamp01(1 - p * 2.5)).toFixed(3);
+
+    if (heroWrap && !reduceMotion){
+      var h = st.hero;
+      heroWrap.style.opacity = (1 - h * 0.85).toFixed(3);
+      heroWrap.style.transform = "translateY(" + (h * 48).toFixed(1) + "px) scale(" + (1 - h * 0.04).toFixed(4) + ")";
+    }
+
     setActive(Math.round(p));
   }
 
-  var current = 0, target = 0, raf = null;
+  var cur = null, tgt = null, raf = null;
   function tick(){
-    current += (target - current) * 0.14;
-    if (Math.abs(target - current) < 0.0005) current = target;
-    apply(current);
-    raf = current !== target ? window.requestAnimationFrame(tick) : null;
+    var done = true;
+    ["p", "enter", "hero"].forEach(function(key){
+      cur[key] += (tgt[key] - cur[key]) * 0.14;
+      if (Math.abs(tgt[key] - cur[key]) < 0.0005) cur[key] = tgt[key]; else done = false;
+    });
+    apply(cur);
+    raf = done ? null : window.requestAnimationFrame(tick);
   }
   function onScroll(){
-    target = targetProgress();
-    if (reduceMotion){ current = target; apply(current); return; }
+    tgt = readScroll();
+    if (reduceMotion){ cur = tgt; apply(cur); return; }
     if (!raf) raf = window.requestAnimationFrame(tick);
   }
 
+  // ---------- hover tilt (desktop pointers only) ----------
+  if (finePointer && !reduceMotion){
+    wheel.addEventListener("pointermove", function(ev){
+      var card = ev.target.closest ? ev.target.closest(".person-card") : null;
+      if (!card) return;
+      var b = card.getBoundingClientRect();
+      var x = (ev.clientX - b.left) / b.width - 0.5;
+      var y = (ev.clientY - b.top) / b.height - 0.5;
+      card.style.setProperty("--ry", (x * 10).toFixed(2) + "deg");
+      card.style.setProperty("--rx", (-y * 10).toFixed(2) + "deg");
+    });
+    wheel.addEventListener("pointerout", function(ev){
+      var card = ev.target.closest ? ev.target.closest(".person-card") : null;
+      if (card && !card.contains(ev.relatedTarget)){
+        card.style.setProperty("--rx", "0deg");
+        card.style.setProperty("--ry", "0deg");
+      }
+    });
+  }
+
   layout();
-  current = target = targetProgress();
-  apply(current);
+  cur = readScroll(); tgt = { p:cur.p, enter:cur.enter, hero:cur.hero };
+  apply(cur);
   window.addEventListener("scroll", onScroll, { passive:true });
   var resizeTimer = null;
   window.addEventListener("resize", function(){
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(function(){ layout(); apply(current); onScroll(); }, 120);
+    resizeTimer = window.setTimeout(function(){ layout(); apply(cur); onScroll(); }, 120);
   });
 })();
 </script>
