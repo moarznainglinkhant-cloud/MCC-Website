@@ -746,7 +746,11 @@ function teardownSnake() {
   const svg = g.querySelector(".snake-svg");
   if (svg) svg.remove();
   g.classList.remove("snake");
-  g.querySelectorAll(".past-card").forEach(c => { c.style.gridColumn = ""; c.style.gridRow = ""; c.classList.remove("lit", "ripple"); });
+  g.querySelectorAll(".past-card").forEach(c => {
+    c.style.gridColumn = ""; c.style.gridRow = ""; c.style.removeProperty("--fill");
+    c.classList.remove("lit", "ripple", "done");
+    const color = c.querySelector(".snake-color"); if (color) color.remove();
+  });
   if (SNAKE.counter) { SNAKE.counter.remove(); SNAKE.counter = null; }
   SNAKE.g = null;
 }
@@ -762,7 +766,17 @@ function buildSnake() {
 
   g.classList.add("snake");
   // The line does the revealing here, so the usual fade-in-on-scroll is switched off for these cards.
-  cards.forEach(c => { c.classList.add("is-visible"); c.style.transitionDelay = ""; });
+  cards.forEach(c => {
+    c.classList.add("is-visible"); c.style.transitionDelay = "";
+    const img = c.querySelector(".photo img");
+    if (img && !c.querySelector(".snake-color")) {
+      const color = img.cloneNode();
+      color.className = "snake-color";
+      color.alt = "";
+      color.setAttribute("aria-hidden", "true");
+      img.after(color);
+    }
+  });
 
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("class", "snake-svg");
@@ -836,7 +850,8 @@ function snakeLayout() {
   rows.forEach((row, r) => {
     const y = ys[r], ltr = r % 2 === 0, last = r === rows.length - 1;
     const hs = r === 0 ? xL : (ltr ? xL + R : xR - R);
-    const he = last ? cx(row[row.length - 1]) : (ltr ? xR - R : xL + R);
+    const lc = row[row.length - 1];             // last row: run to the far edge of the final poster
+    const he = last ? cx(lc) + (ltr ? 1 : -1) * lc.offsetWidth / 2 : (ltr ? xR - R : xL + R);
     row.forEach(c => thr.set(c, L + Math.abs(cx(c) - hs)));
     keys.push({ y: y - span, L });
     d += ` H ${he}`;
@@ -853,6 +868,7 @@ function snakeLayout() {
   SNAKE.total = SNAKE.line.getTotalLength();
   const k = L ? SNAKE.total / L : 1;               // keep our bookkeeping in step with the browser's
   SNAKE.thr = cards.map(c => thr.get(c) * k);
+  SNAKE.half = cards.map(c => (c.offsetWidth / 2) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
   SNAKE.line.style.strokeDasharray = SNAKE.glow.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
   SNAKE.trail.style.strokeDasharray = `${SNAKE_TRAIL} ${SNAKE.total + SNAKE_TRAIL}`;
@@ -936,11 +952,19 @@ function snakeFrame() {
   SNAKE.trail.style.opacity = moving && Math.abs(target - L) > 1 ? "" : "0";
   let lit = 0;
   SNAKE.cards.forEach((c, i) => {
-    if (L < SNAKE.thr[i] - 4) return;
-    lit++;
-    if (c.classList.contains("lit")) return;
-    c.classList.add("lit", "flash");
-    setTimeout(() => c.classList.remove("flash"), 1500);
+    // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
+    const h = SNAKE.half[i];
+    const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
+    const prev = Number(c.dataset.fill || 0);
+    if (f > prev) { c.dataset.fill = f.toFixed(3); c.style.setProperty("--fill", f.toFixed(3)); }
+    if (f > 0.02 && !c.classList.contains("lit")) c.classList.add("lit");
+    if (Math.max(f, prev) >= 0.999) {
+      lit++;
+      if (!c.classList.contains("done")) {
+        c.classList.add("done", "flash");
+        setTimeout(() => c.classList.remove("flash"), 1500);
+      }
+    }
   });
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
