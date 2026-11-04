@@ -782,19 +782,9 @@ function buildSnake() {
   svg.setAttribute("class", "snake-svg");
   svg.setAttribute("aria-hidden", "true");
   svg.innerHTML = `
-    <defs>
-      <linearGradient id="snake-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000">
-        <stop offset="0" stop-color="#C08A2E"/><stop offset="1" stop-color="#AE3628"/>
-      </linearGradient>
-      <filter id="snake-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
-      <filter id="snake-blur-sm" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
-    </defs>
     <path class="snake-guide"/>
-    <path class="snake-glow" filter="url(#snake-blur)"/>
     <path class="snake-line"/>
-    <path class="snake-trail" filter="url(#snake-blur-sm)"/>
-    <circle class="snake-halo" r="16" filter="url(#snake-blur)"/>
-    <circle class="snake-head" r="6"/>`;
+    <circle class="snake-head" r="4.5"/>`;
   g.prepend(svg);
   const q = sel => svg.querySelector(sel);
 
@@ -807,9 +797,8 @@ function buildSnake() {
 
   Object.assign(SNAKE, {
     g, cards, svg, counter, since: years[0] || "", litCount: -1,
-    grad: q("#snake-grad"), guide: q(".snake-guide"), glow: q(".snake-glow"), line: q(".snake-line"),
-    trail: q(".snake-trail"), halo: q(".snake-halo"), head: q(".snake-head"),
-    cur: null, max: 0, total: 0, thr: [], keys: [], raf: null
+    guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
+    cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
   });
   snakeCounter(SNAKE.finaleDone ? cards.length : 0);
   snakeLayout();
@@ -843,7 +832,7 @@ function snakeLayout() {
   const xL = -G, xR = W + G;
   const cx = c => c.offsetLeft + c.offsetWidth / 2;
   const pitch = ys.length > 1 ? ys[1] - ys[0] : 400;
-  const span = pitch * 0.32;
+  const span = pitch * 0.42;
 
   let d = `M ${xL} ${ys[0]}`, L = 0;
   const thr = new Map(), keys = [];
@@ -863,19 +852,23 @@ function snakeLayout() {
       L += Math.PI * R + Math.max(0, yn - y - 2 * R);
     }
   });
-  [SNAKE.guide, SNAKE.glow, SNAKE.line, SNAKE.trail].forEach(el => el.setAttribute("d", d));
-  SNAKE.grad.setAttribute("y2", String(g.offsetHeight || 1000));
+  [SNAKE.guide, SNAKE.line].forEach(el => el.setAttribute("d", d));
   SNAKE.total = SNAKE.line.getTotalLength();
   const k = L ? SNAKE.total / L : 1;               // keep our bookkeeping in step with the browser's
   SNAKE.thr = cards.map(c => thr.get(c) * k);
   SNAKE.half = cards.map(c => (c.offsetWidth / 2) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
-  SNAKE.line.style.strokeDasharray = SNAKE.glow.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
-  SNAKE.trail.style.strokeDasharray = `${SNAKE_TRAIL} ${SNAKE.total + SNAKE_TRAIL}`;
-  SNAKE.cur = null;
+  SNAKE.line.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
+  // Keep what's already drawn after a resize: hold the line where it was, as a share of the whole.
+  if (SNAKE.prevTotal && SNAKE.cur !== null) { SNAKE.cur = SNAKE.cur * SNAKE.total / SNAKE.prevTotal; SNAKE.max = SNAKE.max * SNAKE.total / SNAKE.prevTotal; }
+  SNAKE.prevTotal = SNAKE.total;
 }
 
-const SNAKE_TRAIL = 110;   // length of the bright comet tail behind the head, in px
+// How the line moves: it eases toward where your scroll says it should be, but never faster
+// than SNAKE_MAX_SPEED, so a quick flick of the wheel doesn't send it racing ahead.
+// Timed by the clock (not per frame), so it's equally smooth on 60Hz and 120Hz screens.
+const SNAKE_EASE = 2.4;          // how eagerly it closes the gap (per second)
+const SNAKE_MAX_SPEED = 520;     // px of line per second, at most
 
 function snakeCounter(n) {
   const c = SNAKE.counter;
@@ -884,8 +877,6 @@ function snakeCounter(n) {
   const tpl = t(done ? "snake_count_done" : "snake_count");
   const num = `<b>${n}</b>`;
   c.innerHTML = escapeHtml(tpl).replace("{n}", num).replace("{y}", escapeHtml(SNAKE.since));
-  c.classList.toggle("done", done);
-  if (SNAKE.litCount >= 0) { const b = c.querySelector("b"); if (b) b.classList.add("bump"); }
   SNAKE.litCount = n;
 }
 
@@ -895,14 +886,12 @@ function snakeFinale() {
   const n = SNAKE.cards.length;
   // ripple back from the last poster to the first
   SNAKE.cards.slice().reverse().forEach((c, i) => {
-    c.style.animationDelay = (i * 55) + "ms";
+    c.style.animationDelay = (i * 70) + "ms";
     c.classList.add("ripple");
-    setTimeout(() => { c.classList.remove("ripple"); c.style.animationDelay = ""; }, 1200 + i * 55);
+    setTimeout(() => { c.classList.remove("ripple"); c.style.animationDelay = ""; }, 1900 + i * 70);
   });
   SNAKE.litCount = -1;
   snakeCounter(n);
-  const last = SNAKE.cards[n - 1].getBoundingClientRect();
-  try { confettiBurst(last.left + last.width / 2, last.top + last.height * 0.4); } catch (e) { /* ignore */ }
 }
 
 function snakeTarget() {
@@ -931,44 +920,42 @@ function snakeKick() {
   SNAKE.raf = requestAnimationFrame(snakeFrame);
 }
 
-function snakeFrame() {
+function snakeFrame(now) {
   SNAKE.raf = null;
   if (!SNAKE.g) return;
+  const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 0;
+  SNAKE.last = now;
   SNAKE.max = Math.max(SNAKE.max, snakeTarget());  // once drawn, it stays drawn
   const target = SNAKE.max;
-  if (SNAKE.cur === null) SNAKE.cur = Math.min(target, 0);
-  SNAKE.cur += (target - SNAKE.cur) * 0.12;
-  if (Math.abs(target - SNAKE.cur) < 0.5) SNAKE.cur = target;
+  if (SNAKE.cur === null) SNAKE.cur = 0;
+  const gap = target - SNAKE.cur;
+  let step = gap * (1 - Math.exp(-SNAKE_EASE * dt));
+  // If it has fallen far behind (someone jumped down the page), let it catch up faster.
+  const vmax = SNAKE_MAX_SPEED + Math.max(0, Math.abs(gap) - 700) * 1.5;
+  step = Math.max(-vmax * dt, Math.min(vmax * dt, step));
+  SNAKE.cur += step;
+  if (Math.abs(target - SNAKE.cur) < 0.3) SNAKE.cur = target;
   const L = SNAKE.cur;
-  SNAKE.line.style.strokeDashoffset = SNAKE.glow.style.strokeDashoffset = String(SNAKE.total - L);
-  SNAKE.trail.style.strokeDashoffset = String(SNAKE_TRAIL - L);
+
+  SNAKE.line.style.strokeDashoffset = String(SNAKE.total - L);
   const pt = SNAKE.line.getPointAtLength(Math.max(0, Math.min(SNAKE.total, L)));
-  const moving = L > 0.5 && L < SNAKE.total - 0.5;
-  [SNAKE.head, SNAKE.halo].forEach(el => {
-    el.setAttribute("cx", pt.x.toFixed(1));
-    el.setAttribute("cy", pt.y.toFixed(1));
-    el.style.opacity = moving ? "" : "0";
-  });
-  SNAKE.trail.style.opacity = moving && Math.abs(target - L) > 1 ? "" : "0";
+  SNAKE.head.setAttribute("cx", pt.x.toFixed(1));
+  SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
+  SNAKE.head.style.opacity = L > 0.5 && L < SNAKE.total - 0.5 ? "" : "0";
+
   let lit = 0;
   SNAKE.cards.forEach((c, i) => {
     // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
     const h = SNAKE.half[i];
     const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
     const prev = Number(c.dataset.fill || 0);
-    if (f > prev) { c.dataset.fill = f.toFixed(3); c.style.setProperty("--fill", f.toFixed(3)); }
-    if (f > 0.02 && !c.classList.contains("lit")) c.classList.add("lit");
-    if (Math.max(f, prev) >= 0.999) {
-      lit++;
-      if (!c.classList.contains("done")) {
-        c.classList.add("done", "flash");
-        setTimeout(() => c.classList.remove("flash"), 1500);
-      }
-    }
+    if (f > prev) { c.dataset.fill = f.toFixed(4); c.style.setProperty("--fill", f.toFixed(4)); }
+    if (f > 0.01 && !c.classList.contains("lit")) c.classList.add("lit");
+    if (Math.max(f, prev) >= 0.999) lit++;
   });
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
-  if (SNAKE.cur !== target) snakeKick();
+  if (SNAKE.cur !== target) snakeKick(); else SNAKE.last = 0;
 }
 
 // ---------- "Since 2022" timeline (events page) ----------
