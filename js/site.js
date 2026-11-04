@@ -86,6 +86,7 @@ const I18N = {
     countdown_secs: "Sec",
     countdown_now: "Happening now!",
     register_now: "Register Now",
+    add_to_calendar: "Add to calendar",
     stay_tuned_tag: "Stay tuned",
     no_event_h3: "New event not available right now",
     no_event_p: "We're always planning something — keep checking back, and in the meantime take a look at everything we've hosted so far.",
@@ -147,6 +148,7 @@ const I18N = {
     countdown_secs: "စက္ကန့်",
     countdown_now: "ယခုလက်ရှိ ဖြစ်ပျက်နေသည်!",
     register_now: "အခုပင်စာရင်းသွင်းပါ",
+    add_to_calendar: "ပြက္ခဒိန်ထဲ ထည့်ရန်",
     stay_tuned_tag: "စောင့်ကြည့်ပါ",
     no_event_h3: "လက်ရှိတွင် အခမ်းအနားအသစ်မရှိသေးပါ",
     no_event_p: "ကျွန်ုပ်တို့ အမြဲတမ်းစီစဉ်နေပါသည် — ဆက်လက်ကြည့်ရှုပေးပါ၊ ယခုအချိန်တွင် ကျွန်ုပ်တို့ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ကြည့်ရှုနိုင်ပါသည်။",
@@ -428,7 +430,9 @@ function eventMetaRow(ev) {
   return `
     <div class="meta-row">
       <span class="meta-item">${calendarIcon()}${dateBit}</span>
-      ${ev.location ? `<span class="meta-item">${pinIcon()}${ev.location}</span>` : ""}
+      ${ev.location ? (mapUrl(ev.location)
+        ? `<span class="meta-item">${pinIcon()}<a class="meta-link" href="${mapUrl(ev.location)}" target="_blank" rel="noopener" title="Open in Google Maps">${ev.location}</a></span>`
+        : `<span class="meta-item">${pinIcon()}${ev.location}</span>`) : ""}
     </div>`;
 }
 
@@ -571,8 +575,95 @@ function renderFeaturedEvent(ev) {
     <h3>${escapeHtml(ev.name)}</h3>
     ${eventMetaRow(ev)}
     ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
+    ${calendarRow(ev, mmClass)}
     ${ev.link ? `<a class="btn ${mmClass}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${t("register_now")}</a>` : ""}
   `;
+}
+
+/* ---------- ADD TO CALENDAR + MAP LINK (next event) ---------- */
+// Online events have nothing to map.
+function mapUrl(location) {
+  const loc = (location || "").trim();
+  if (!loc || /\b(online|zoom|virtual|teams|discord)\b/i.test(loc)) return null;
+  const q = /toronto|north york|scarborough|mississauga|\bON\b/i.test(loc) ? loc : loc + ", Toronto";
+  return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q);
+}
+
+// End time: the end_time column if filled in, else the end of a range like "7-9 PM".
+function parseEventEndHHMMSS(ev) {
+  if (ev.end_time && ev.end_time.trim()) {
+    const v = parseTimeToHHMMSS(ev.end_time.trim());
+    if (v) return v;
+  }
+  const raw = (ev.time || "").trim();
+  const parts = raw.split(/[-–—]| to /i);
+  if (parts.length < 2) return null;
+  const last = parts[parts.length - 1].trim();
+  let m = last.match(/^(\d{1,2})(?::(\d{2}))?\s*([AaPp][Mm])$/);
+  if (m) return parseTimeToHHMMSS(`${m[1]}:${m[2] || "00"} ${m[3]}`);
+  m = last.match(/^(\d{1,2})(?::(\d{2}))?$/);
+  if (!m) return null;
+  const meridiem = raw.match(/([AaPp][Mm])/);
+  return parseTimeToHHMMSS(`${m[1]}:${m[2] || "00"}${meridiem ? " " + meridiem[1] : ""}`);
+}
+
+function calendarLinks(ev) {
+  const stamp = d => d.toISOString().replace(/\.\d{3}/, "").replace(/[-:]/g, "");   // 20261111T000000Z
+  const ymd = iso => iso.replace(/-/g, "");
+  const dayAfter = iso => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10).replace(/-/g, ""); };
+
+  const startT = parseEventStartHHMMSS(ev);
+  let start = null, end = null;
+  if (startT) {
+    start = torontoWallToUTC(`${ev.date}T${startT}`);
+    const endT = parseEventEndHHMMSS(ev);
+    if (endT) {
+      end = torontoWallToUTC(`${ev.date}T${endT}`);
+      if (end <= start) end = new Date(end.getTime() + 86400000);   // runs past midnight
+    }
+    if (!end) end = new Date(start.getTime() + 2 * 3600000);        // no end time given: assume 2 hours
+  }
+  const details = [ev.description, ev.link ? "Details: " + ev.link : "", "Myanmar Culture Club \u00b7 uoftmcc.ca"].filter(Boolean).join("\n\n");
+
+  const google = "https://calendar.google.com/calendar/render?action=TEMPLATE" +
+    "&text=" + encodeURIComponent(ev.name) +
+    "&dates=" + (start ? `${stamp(start)}/${stamp(end)}` : `${ymd(ev.date)}/${dayAfter(ev.date)}`) +
+    "&details=" + encodeURIComponent(details) +
+    (ev.location ? "&location=" + encodeURIComponent(ev.location) : "") +
+    "&ctz=" + encodeURIComponent(CLUB_TIMEZONE);
+
+  // .ics file for Apple Calendar, Outlook and most other calendar apps.
+  const esc = v => String(v).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const fold = line => line.length <= 73 ? line : line.match(/.{1,73}/g).join("\r\n ");
+  const lines = [
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Myanmar Culture Club//uoftmcc.ca//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    "UID:" + (ev.id || ymd(ev.date)) + "@uoftmcc.ca",
+    "DTSTAMP:" + stamp(new Date()),
+    ...(start ? ["DTSTART:" + stamp(start), "DTEND:" + stamp(end)]
+              : ["DTSTART;VALUE=DATE:" + ymd(ev.date), "DTEND;VALUE=DATE:" + dayAfter(ev.date)]),
+    "SUMMARY:" + esc(ev.name),
+    "DESCRIPTION:" + esc(details),
+    ...(ev.location ? ["LOCATION:" + esc(ev.location)] : []),
+    "URL:" + (ev.link || "https://uoftmcc.ca/events.html"),
+    "END:VEVENT", "END:VCALENDAR",
+  ].map(fold);
+  return {
+    google,
+    ics: "data:text/calendar;charset=utf-8," + encodeURIComponent(lines.join("\r\n") + "\r\n"),
+    file: (ev.id || "mcc-event").replace(/[^a-z0-9-]+/gi, "-") + ".ics",
+  };
+}
+
+function calendarRow(ev, mmClass) {
+  if (!ev || !ev.date) return "";
+  const cal = calendarLinks(ev);
+  return `
+    <div class="cal-row">
+      <span class="cal-label ${mmClass}">${calendarIcon()}${t("add_to_calendar")}</span>
+      <a class="cal-btn" href="${cal.google}" target="_blank" rel="noopener">Google</a>
+      <a class="cal-btn" href="${cal.ics}" download="${cal.file}">Apple / Outlook</a>
+    </div>`;
 }
 
 function renderComingUp(rest) {

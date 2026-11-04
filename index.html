@@ -7,7 +7,7 @@
 <title>Myanmar Culture Club</title>
 <meta name="author" content="Naing Lin Khant (Moarz)">
 <meta name="description" content="The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Open to every faculty and every year.">
-<link rel="canonical" href="https://moarznainglinkhant-cloud.github.io/MCC-Website/">
+<link rel="canonical" href="https://uoftmcc.ca/">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
@@ -18,15 +18,15 @@
 <meta property="og:site_name" content="Myanmar Culture Club">
 <meta property="og:title" content="Myanmar Culture Club — University of Toronto">
 <meta property="og:description" content="The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto. Open to every faculty and every year.">
-<meta property="og:url" content="https://moarznainglinkhant-cloud.github.io/MCC-Website/">
-<meta property="og:image" content="https://moarznainglinkhant-cloud.github.io/MCC-Website/images/og-banner.png">
+<meta property="og:url" content="https://uoftmcc.ca/">
+<meta property="og:image" content="https://uoftmcc.ca/images/og-banner.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Myanmar Culture Club — University of Toronto">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Myanmar Culture Club — University of Toronto">
 <meta name="twitter:description" content="The Myanmar Culture Club brings the food, festivals, languages, and stories of Myanmar to the University of Toronto.">
-<meta name="twitter:image" content="https://moarznainglinkhant-cloud.github.io/MCC-Website/images/og-banner.png">
+<meta name="twitter:image" content="https://uoftmcc.ca/images/og-banner.png">
 
 <script type="application/ld+json">
 {
@@ -493,6 +493,33 @@
   .past-card:hover{ box-shadow: 0 16px 32px rgba(28,36,64,0.12); }
   .past-card .photo{ overflow:hidden; }
   .panel{ border-radius:16px; }
+
+  /* Big screens: a slightly wider column and larger type, so wide monitors don't feel empty. */
+  @media (min-width:1600px){
+    html{ font-size:106.25%; }
+    body{ font-size:17px; }
+    .wrap{ max-width:1400px; }
+  }
+  @media (min-width:2000px){
+    html{ font-size:112.5%; }
+    body{ font-size:18px; }
+    .wrap{ max-width:1560px; }
+  }
+
+  /* Next event: add-to-calendar buttons and a map link on the location. */
+  .cal-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 22px; }
+  .cal-label{ display:inline-flex; align-items:center; gap:8px; font-size:0.82rem; font-weight:600; color:var(--ink-soft); margin-right:2px; }
+  .cal-label svg{ width:16px; height:16px; flex:none; color:var(--red-ink); }
+  .cal-btn{
+    display:inline-flex; align-items:center; padding:7px 14px; border-radius:999px;
+    border:1.5px solid var(--line); background:var(--bg-raised); color:var(--ink);
+    font-size:0.78rem; font-weight:700; text-decoration:none;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .cal-btn:hover{ background:var(--navy); color:var(--footer-ink); border-color:var(--navy); transform:translateY(-1px); }
+  .cal-btn:active{ transform:scale(.97); }
+  a.meta-link{ color:inherit; text-decoration:none; border-bottom:1px dashed rgba(140,42,31,0.35); transition: color .18s ease, border-color .18s ease; }
+  a.meta-link:hover{ color:var(--red-ink); border-bottom-color:var(--red-ink); }
 
   /* Photos that are still downloading fade in instead of popping. */
   img.fade-img{ opacity:0; transition: opacity .45s ease, transform .5s ease; }
