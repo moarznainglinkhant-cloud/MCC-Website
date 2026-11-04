@@ -118,6 +118,8 @@ const I18N = {
     tl_end_kicker: "To be continued",
     tl_end_title: "Come be part of the next one.",
     tl_end_cta: "See what's next",
+    snake_count: "{n} events since {y}",
+    snake_count_done: "{n} events and counting",
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
@@ -183,6 +185,8 @@ const I18N = {
     tl_end_kicker: "ဆက်လက်ရန်",
     tl_end_title: "နောက်ပွဲတွင် ပါဝင်ဆင်နွှဲလိုက်ပါ။",
     tl_end_cta: "လာမည့်ပွဲကို ကြည့်ရန်",
+    snake_count: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
+    snake_count_done: "အခမ်းအနား {n} ခု — ဆက်လက်ရှိနေဆဲ",
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
@@ -725,11 +729,14 @@ const PAST_PHONE_MQ = "(max-width: 820px)";
 let PAST_MQ_WIRED = false;
 
 // ---------- Desktop "connecting line" through the past-events grid ----------
-// The grid stays (lots of posters at once is the point). As you scroll, a red line snakes
+// The grid stays (lots of posters at once is the point). As you scroll, a glowing line snakes
 // through it: left to right along the first row, down the side, right to left along the next,
-// and so on. Posters start dimmed and light up for good once the line has passed them.
+// and so on. Posters start dimmed and sunken; when the line reaches one it lifts, colour sweeps
+// across it from the side the line came in, and a glint follows. It stays lit for good.
+// A counter in the corner ticks up with each poster, and when the line reaches the last
+// (oldest) one, a glow ripples back through the grid and confetti goes off.
 // Rows alternate direction so the line meets the events in order (newest first).
-const SNAKE = { g: null, listening: false };
+const SNAKE = { g: null, listening: false, finaleDone: false };
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function teardownSnake() {
@@ -739,7 +746,8 @@ function teardownSnake() {
   const svg = g.querySelector(".snake-svg");
   if (svg) svg.remove();
   g.classList.remove("snake");
-  g.querySelectorAll(".past-card").forEach(c => { c.style.gridColumn = ""; c.style.gridRow = ""; c.classList.remove("lit"); });
+  g.querySelectorAll(".past-card").forEach(c => { c.style.gridColumn = ""; c.style.gridRow = ""; c.classList.remove("lit", "ripple"); });
+  if (SNAKE.counter) { SNAKE.counter.remove(); SNAKE.counter = null; }
   SNAKE.g = null;
 }
 
@@ -753,16 +761,43 @@ function buildSnake() {
   if (reduce || phone || cards.length < 4) return;
 
   g.classList.add("snake");
+  // The line does the revealing here, so the usual fade-in-on-scroll is switched off for these cards.
+  cards.forEach(c => { c.classList.add("is-visible"); c.style.transitionDelay = ""; });
+
   const svg = document.createElementNS(SVG_NS, "svg");
   svg.setAttribute("class", "snake-svg");
   svg.setAttribute("aria-hidden", "true");
-  const guide = document.createElementNS(SVG_NS, "path"); guide.setAttribute("class", "snake-guide");
-  const line = document.createElementNS(SVG_NS, "path"); line.setAttribute("class", "snake-line");
-  const head = document.createElementNS(SVG_NS, "circle"); head.setAttribute("class", "snake-head"); head.setAttribute("r", "6");
-  svg.append(guide, line, head);
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="snake-grad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="1000">
+        <stop offset="0" stop-color="#C08A2E"/><stop offset="1" stop-color="#AE3628"/>
+      </linearGradient>
+      <filter id="snake-blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+      <filter id="snake-blur-sm" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>
+    </defs>
+    <path class="snake-guide"/>
+    <path class="snake-glow" filter="url(#snake-blur)"/>
+    <path class="snake-line"/>
+    <path class="snake-trail" filter="url(#snake-blur-sm)"/>
+    <circle class="snake-halo" r="16" filter="url(#snake-blur)"/>
+    <circle class="snake-head" r="6"/>`;
   g.prepend(svg);
+  const q = sel => svg.querySelector(sel);
 
-  Object.assign(SNAKE, { g, cards, guide, line, head, cur: null, max: 0, total: 0, thr: [], keys: [], raf: null });
+  // Live counter: "11 events since 2022".
+  const years = (_cachedPast || []).map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
+  const counter = document.createElement("div");
+  counter.className = "snake-count";
+  counter.setAttribute("aria-hidden", "true");
+  document.body.appendChild(counter);
+
+  Object.assign(SNAKE, {
+    g, cards, svg, counter, since: years[0] || "", litCount: -1,
+    grad: q("#snake-grad"), guide: q(".snake-guide"), glow: q(".snake-glow"), line: q(".snake-line"),
+    trail: q(".snake-trail"), halo: q(".snake-halo"), head: q(".snake-head"),
+    cur: null, max: 0, total: 0, thr: [], keys: [], raf: null
+  });
+  snakeCounter(SNAKE.finaleDone ? cards.length : 0);
   snakeLayout();
   SNAKE.ro = new ResizeObserver(() => { if (SNAKE.g) { snakeLayout(); snakeKick(); } });
   SNAKE.ro.observe(g);
@@ -784,6 +819,7 @@ function snakeLayout() {
     const r = Math.floor(i / cols), k = i % cols;
     c.style.gridRow = String(r + 1);
     c.style.gridColumn = String((r % 2 ? cols - 1 - k : k) + 1);
+    c.dataset.from = r % 2 ? "r" : "l";            // which side the line (and the colour) comes in from
   });
 
   const rows = [];
@@ -812,20 +848,53 @@ function snakeLayout() {
       L += Math.PI * R + Math.max(0, yn - y - 2 * R);
     }
   });
-  SNAKE.guide.setAttribute("d", d);
-  SNAKE.line.setAttribute("d", d);
+  [SNAKE.guide, SNAKE.glow, SNAKE.line, SNAKE.trail].forEach(el => el.setAttribute("d", d));
+  SNAKE.grad.setAttribute("y2", String(g.offsetHeight || 1000));
   SNAKE.total = SNAKE.line.getTotalLength();
   const k = L ? SNAKE.total / L : 1;               // keep our bookkeeping in step with the browser's
   SNAKE.thr = cards.map(c => thr.get(c) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
-  SNAKE.line.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
+  SNAKE.line.style.strokeDasharray = SNAKE.glow.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
+  SNAKE.trail.style.strokeDasharray = `${SNAKE_TRAIL} ${SNAKE.total + SNAKE_TRAIL}`;
   SNAKE.cur = null;
+}
+
+const SNAKE_TRAIL = 110;   // length of the bright comet tail behind the head, in px
+
+function snakeCounter(n) {
+  const c = SNAKE.counter;
+  if (!c || n === SNAKE.litCount) return;
+  const done = n >= SNAKE.cards.length && SNAKE.finaleDone;
+  const tpl = t(done ? "snake_count_done" : "snake_count");
+  const num = `<b>${n}</b>`;
+  c.innerHTML = escapeHtml(tpl).replace("{n}", num).replace("{y}", escapeHtml(SNAKE.since));
+  c.classList.toggle("done", done);
+  if (SNAKE.litCount >= 0) { const b = c.querySelector("b"); if (b) b.classList.add("bump"); }
+  SNAKE.litCount = n;
+}
+
+function snakeFinale() {
+  if (SNAKE.finaleDone) return;
+  SNAKE.finaleDone = true;
+  const n = SNAKE.cards.length;
+  // ripple back from the last poster to the first
+  SNAKE.cards.slice().reverse().forEach((c, i) => {
+    c.style.animationDelay = (i * 55) + "ms";
+    c.classList.add("ripple");
+    setTimeout(() => { c.classList.remove("ripple"); c.style.animationDelay = ""; }, 1200 + i * 55);
+  });
+  SNAKE.litCount = -1;
+  snakeCounter(n);
+  const last = SNAKE.cards[n - 1].getBoundingClientRect();
+  try { confettiBurst(last.left + last.width / 2, last.top + last.height * 0.4); } catch (e) { /* ignore */ }
 }
 
 function snakeTarget() {
   const r = SNAKE.g.getBoundingClientRect();
   const y = window.innerHeight * 0.62 - r.top;     // where the "pen" is, in grid coordinates
   const ks = SNAKE.keys;
+  // Hit the bottom of the page? Finish the line, so the last poster can always light up.
+  if (r.top < window.innerHeight && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) return SNAKE.total;
   if (!ks.length || y <= ks[0].y) return 0;
   if (y >= ks[ks.length - 1].y) return SNAKE.total;
   for (let i = 1; i < ks.length; i++) {
@@ -838,6 +907,10 @@ function snakeTarget() {
 }
 
 function snakeKick() {
+  if (SNAKE.g && SNAKE.counter) {
+    const r = SNAKE.g.getBoundingClientRect();
+    SNAKE.counter.classList.toggle("show", r.top < window.innerHeight * 0.7 && r.bottom > window.innerHeight * 0.3);
+  }
   if (!SNAKE.g || SNAKE.raf) return;
   SNAKE.raf = requestAnimationFrame(snakeFrame);
 }
@@ -851,12 +924,26 @@ function snakeFrame() {
   SNAKE.cur += (target - SNAKE.cur) * 0.12;
   if (Math.abs(target - SNAKE.cur) < 0.5) SNAKE.cur = target;
   const L = SNAKE.cur;
-  SNAKE.line.style.strokeDashoffset = String(SNAKE.total - L);
+  SNAKE.line.style.strokeDashoffset = SNAKE.glow.style.strokeDashoffset = String(SNAKE.total - L);
+  SNAKE.trail.style.strokeDashoffset = String(SNAKE_TRAIL - L);
   const pt = SNAKE.line.getPointAtLength(Math.max(0, Math.min(SNAKE.total, L)));
-  SNAKE.head.setAttribute("cx", pt.x.toFixed(1));
-  SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
-  SNAKE.head.style.opacity = L <= 0.5 || L >= SNAKE.total - 0.5 ? "0" : "1";
-  SNAKE.cards.forEach((c, i) => { if (L >= SNAKE.thr[i] - 4) c.classList.add("lit"); });
+  const moving = L > 0.5 && L < SNAKE.total - 0.5;
+  [SNAKE.head, SNAKE.halo].forEach(el => {
+    el.setAttribute("cx", pt.x.toFixed(1));
+    el.setAttribute("cy", pt.y.toFixed(1));
+    el.style.opacity = moving ? "" : "0";
+  });
+  SNAKE.trail.style.opacity = moving && Math.abs(target - L) > 1 ? "" : "0";
+  let lit = 0;
+  SNAKE.cards.forEach((c, i) => {
+    if (L < SNAKE.thr[i] - 4) return;
+    lit++;
+    if (c.classList.contains("lit")) return;
+    c.classList.add("lit", "flash");
+    setTimeout(() => c.classList.remove("flash"), 1500);
+  });
+  snakeCounter(lit);
+  if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
   if (SNAKE.cur !== target) snakeKick();
 }
 
