@@ -1678,51 +1678,75 @@ function safeUrl(str) {
 let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
-// ---------- Homepage: "မင်္ဂလာပါ" greeting, written by your scroll ----------
-// The big Burmese greeting under the hero traces its outline and then fills with ink as it moves
-// up the screen, tied directly to the scroll (and reversing if you scroll back up).
-// Starts as it enters the bottom of the screen; finished by the time it reaches ~40% from the top.
+// ---------- Homepage: "မင်္ဂလာပါ" greeting, written in ----------
+// Once the Yinmar font is ready, the greeting is split into its four syllables (မ · င်္ဂ · လာ · ပါ)
+// so they can be written one after another, left to right: each outline traces, then fills with
+// ink. It starts half a second after the page appears (so your eyes have landed), plays on every
+// visit, and plays again whenever you scroll away and come back up to it.
+const GREET_SYLLABLES = ["မ", "င်္ဂ", "လာ", "ပါ"];
+
 function initGreeting() {
   const svg = document.getElementById("js-greet");
   if (!svg) return;
-  const text = svg.querySelector("text");
+  const html = document.documentElement;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const fit = () => {
-    try {
-      const bb = text.getBBox();
-      if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
-    } catch (e) { /* keep the default viewBox */ }
-  };
-  if (document.fonts && document.fonts.load) document.fonts.load('100px "Yinmar"', "မင်္ဂလာပါ").then(fit, fit); else fit();
-  if (reduce) return;                               // just shows the finished greeting
+  const reveal = () => html.classList.remove("greet-pending");
 
-  const DASH = 900;
-  const st = { cur: null, raf: null, last: 0 };
-  const target = () => {
-    const r = svg.getBoundingClientRect(), vh = window.innerHeight;
-    return Math.max(0, Math.min(1, (vh - r.top) / (vh * 0.6 + r.height * 0.5)));
+  const build = () => {
+    const whole = svg.querySelector("text");
+    try {
+      if (!reduce && whole && whole.textContent === GREET_SYLLABLES.join("")) {
+        // Lay the syllables out exactly where the browser put them in the whole word.
+        let x = 0;
+        const parts = GREET_SYLLABLES.map((syl, i) => {
+          const tEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
+          tEl.setAttribute("y", "0");
+          tEl.setAttribute("lang", "my");
+          tEl.style.setProperty("--i", String(i));
+          tEl.textContent = syl;
+          return tEl;
+        });
+        const start = [0];
+        GREET_SYLLABLES.reduce((acc, syl, i) => {
+          const len = whole.getSubStringLength(acc, syl.length);
+          start[i + 1] = start[i] + len;
+          return acc + syl.length;
+        }, 0);
+        parts.forEach((tEl, i) => { tEl.setAttribute("x", start[i].toFixed(2)); });
+        whole.replaceWith(...parts);
+        x = start[GREET_SYLLABLES.length];
+      }
+      const bb = svg.getBBox();
+      if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
+    } catch (e) { /* keep the whole word as it is */ }
   };
-  const clamp01 = x => Math.max(0, Math.min(1, x));
-  function frame(now) {
-    st.raf = null;
-    const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 1;
-    st.last = now;
-    const tg = target();
-    if (st.cur === null) st.cur = tg;
-    st.cur += (tg - st.cur) * (1 - Math.exp(-8 * dt));
-    if (Math.abs(tg - st.cur) < 0.0005) st.cur = tg;
-    const p = st.cur;
-    const trace = clamp01(p / 0.65);                 // outline draws over the first 65%
-    const ink = clamp01((p - 0.5) / 0.45);           // ink fills over the last half
-    svg.style.setProperty("--greet-dash", (DASH * (1 - trace)).toFixed(1));
-    svg.style.setProperty("--greet-stroke", (1.4 * (1 - ink)).toFixed(3));
-    svg.style.setProperty("--greet-ink", ink.toFixed(3));
-    if (st.cur !== tg) st.raf = requestAnimationFrame(frame); else st.last = 0;
-  }
-  const kick = () => { if (!st.raf) st.raf = requestAnimationFrame(frame); };
-  window.addEventListener("scroll", kick, { passive: true });
-  window.addEventListener("resize", kick);
-  kick();
+
+  const write = () => {
+    svg.classList.remove("writing");
+    void svg.getBoundingClientRect();              // restart the animation
+    svg.classList.add("writing");
+    reveal();
+  };
+
+  const start = () => {
+    build();
+    if (reduce) { reveal(); return; }
+    setTimeout(write, 500);
+    // Write it again whenever it comes back into view after being scrolled away.
+    let away = false;
+    new IntersectionObserver(entries => {
+      const e = entries[0];
+      if (!e.isIntersecting) away = true;
+      else if (away) { away = false; write(); }
+    }, { threshold: 0 }).observe(svg);
+  };
+
+  if (document.fonts && document.fonts.load) {
+    let done = false;
+    const once = () => { if (!done) { done = true; start(); } };
+    document.fonts.load('100px "Yinmar"', GREET_SYLLABLES.join("")).then(once, once);
+    setTimeout(once, 1200);                         // don't hold it back for a slow font
+  } else start();
 }
 
 // ---------- Homepage: the Next Event card tilts gently toward the cursor ----------

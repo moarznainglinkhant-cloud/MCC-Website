@@ -243,15 +243,21 @@
     align-items:center;
   }
   .hero-copy{ position:relative; z-index:2; }
-  /* Hero greeting: a big "မင်္ဂလာပါ" under the hero that writes itself as you scroll — the outline
-     traces first, then the ink fills in — and runs backwards if you scroll back up (js/site.js). */
-  .greet-wrap{ position:relative; z-index:2; margin-top:clamp(28px, 5vw, 64px); }
-  .greet{ display:block; width:min(100%, 980px); height:auto; overflow:visible; color:var(--red-ink); }
-  .greet text{
-    font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px;
-    fill:currentColor; fill-opacity:var(--greet-ink, 1);
-    stroke:currentColor; stroke-width:var(--greet-stroke, 0); stroke-dasharray:900; stroke-dashoffset:var(--greet-dash, 0);
+  /* Hero greeting: "မင်္ဂလာပါ" above the heading. js/site.js splits it into its four syllables and
+     writes them in left to right — each outline traces, then fills with ink — on every visit,
+     and again whenever you scroll back up to it. */
+  .greet{ display:block; height:clamp(58px, 7.6vw, 104px); width:auto; max-width:100%; overflow:visible; color:var(--red-ink); margin:6px 0 2px -2px; }
+  .greet text{ font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px; fill:currentColor; }
+  .greet-pending .greet{ visibility:hidden; }
+  .greet.writing text{
+    fill-opacity:0; stroke:currentColor; stroke-width:1.5; stroke-linejoin:round;
+    stroke-dasharray:1200; stroke-dashoffset:1200;
+    animation:
+      greet-draw 1.15s calc(var(--i, 0) * 0.5s) cubic-bezier(.45,0,.25,1) forwards,
+      greet-ink .7s calc(var(--i, 0) * 0.5s + 0.85s) ease forwards;
   }
+  @keyframes greet-draw{ to{ stroke-dashoffset:0; } }
+  @keyframes greet-ink{ to{ fill-opacity:1; stroke-width:0; } }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;
@@ -708,6 +714,15 @@
     <div class="hero-gradient" id="hero-gradient" data-enabled="false" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
+        <svg class="greet" id="js-greet" viewBox="0 -96 560 132" role="img" aria-label="မင်္ဂလာပါ (Mingalabar)"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
+        <script>
+          // Hide the greeting until js/site.js writes it in (it un-hides itself after 3s if anything goes wrong).
+          (function(){try{
+            if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            var h=document.documentElement; h.classList.add('greet-pending');
+            setTimeout(function(){ h.classList.remove('greet-pending'); }, 3000);
+          }catch(e){}})();
+        </script>
         <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
         <h1 data-i18n="hero_h1">Mingalabar</h1>
         <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.</p>
@@ -723,9 +738,6 @@
           <div class="panel panel-c"><img src="images/welcome_bottom.jpg" alt="Welcome collage photo" loading="lazy" style="width:100%;height:100%;object-fit:cover;"></div>
         </div>
       </div>
-    </div>
-    <div class="wrap greet-wrap">
-      <svg class="greet" id="js-greet" viewBox="0 -96 560 132" role="img" aria-label="မင်္ဂလာပါ — Mingalabar"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
     </div>
   </section>
 
