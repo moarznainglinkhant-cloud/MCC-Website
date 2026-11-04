@@ -41,8 +41,10 @@
   }
 }
 </script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Yinmar&display=swap">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Yinmar&display=swap');
 
   :root{
     --bg:#F6F1E4;
@@ -79,6 +81,8 @@
 
   /* Soft cross-fade when navigating between pages, in browsers that support it — a plain instant navigation elsewhere. */
   @view-transition{ navigation:auto; }
+  header.nav{ view-transition-name: site-nav; }
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.2s; }
 
   /* ---------- SCROLL REVEAL ---------- */
   .reveal{ opacity:0; transform:translateY(18px); transition: opacity .6s ease, transform .6s ease; }
@@ -391,7 +395,7 @@
     </a>
     <nav class="links">
       <a href="index.html" data-i18n="label_welcome">Welcome</a>
-      <a href="#past-events" data-i18n="label_all_events">Events</a>
+      <a href="events.html" data-i18n="label_all_events">Events</a>
       <a href="about.html" data-i18n="label_about">About</a>
       <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
       <a href="newsletter.html" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
@@ -406,7 +410,7 @@
   </div>
   <div id="mobile-panel" hidden>
     <a href="index.html" data-i18n="label_welcome">Welcome</a>
-    <a href="#past-events" data-i18n="label_all_events">Events</a>
+    <a href="events.html" data-i18n="label_all_events">Events</a>
     <a href="about.html" data-i18n="label_about">About</a>
     <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
     <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>

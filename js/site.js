@@ -379,20 +379,29 @@ function safeParse(text) {
   }
 }
 
-async function loadCSV(url, fallbackText) {
-  if (!url || url.includes("PASTE_") || url.includes("YOUR_")) {
-    return safeParse(fallbackText);
-  }
+// Each browser keeps its last copy of the Sheets, so pages can show events instantly
+// and refresh from Google in the background.
+const CSV_CACHE_PREFIX = "mcc-csv-cache:";
+function readCachedCSV(url) {
+  try { return localStorage.getItem(CSV_CACHE_PREFIX + url); } catch (err) { return null; }
+}
+function writeCachedCSV(url, text) {
+  try { localStorage.setItem(CSV_CACHE_PREFIX + url, text); } catch (err) {}
+}
+
+// Fresh text from a published Sheet, or null if it isn't set up / can't be reached.
+async function fetchCSVText(url) {
+  if (!url || url.includes("PASTE_") || url.includes("YOUR_")) return null;
   try {
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    const rows = safeParse(text);
-    if (!rows.length) throw new Error("empty sheet");
-    return rows;
+    if (!safeParse(text).length) throw new Error("empty sheet");
+    writeCachedCSV(url, text);
+    return text;
   } catch (err) {
-    console.warn(`Falling back to bundled data for ${url}:`, err);
-    return safeParse(fallbackText);
+    console.warn(`Couldn't refresh ${url}:`, err);
+    return null;
   }
 }
 
@@ -943,12 +952,12 @@ function rerenderDynamicText() {
   renderPastGallery(_cachedPast);
 }
 
-async function initSiteData() {
-  const [eventRows, heroRows] = await Promise.all([
-    loadCSV(EVENTS_CSV_URL, FALLBACK_EVENTS_CSV),
-    loadCSV(HERO_CSV_URL, FALLBACK_HERO_CSV),
-  ]);
+function pageUsesSiteData() {
+  return ["js-event-visual", "js-event-body", "js-events-grid", "js-past-gallery", "js-hero-photos"]
+    .some(id => document.getElementById(id));
+}
 
+function renderSiteData(eventRows, heroRows) {
   const { upcoming, past } = splitEvents(eventRows);
   let next = upcoming[0] || null;
   const rest = upcoming.slice(1);
@@ -973,6 +982,30 @@ async function initSiteData() {
   // Runs after the dynamic sections above are in the DOM, so it picks up
   // their ".reveal" cards too, not just the ones already in the HTML.
   initScrollReveal();
+}
+
+async function initSiteData() {
+  // Pages with no events or homepage photos don't need the Sheets at all.
+  if (!pageUsesSiteData()) { initScrollReveal(); return; }
+
+  // Show this browser's last copy straight away (no waiting on Google)...
+  const cachedEvents = readCachedCSV(EVENTS_CSV_URL);
+  const cachedHero = readCachedCSV(HERO_CSV_URL);
+  let shown = null;
+  if (cachedEvents && cachedHero) {
+    renderSiteData(safeParse(cachedEvents), safeParse(cachedHero));
+    shown = cachedEvents + "\u0000" + cachedHero;
+  }
+
+  // ...then refresh from the Sheets, and only re-draw if something changed.
+  const [freshEvents, freshHero] = await Promise.all([
+    fetchCSVText(EVENTS_CSV_URL),
+    fetchCSVText(HERO_CSV_URL),
+  ]);
+  const eventsText = freshEvents || cachedEvents || FALLBACK_EVENTS_CSV;
+  const heroText = freshHero || cachedHero || FALLBACK_HERO_CSV;
+  if (eventsText + "\u0000" + heroText === shown) return;
+  renderSiteData(safeParse(eventsText), safeParse(heroText));
 }
 
 /* ============================================================
