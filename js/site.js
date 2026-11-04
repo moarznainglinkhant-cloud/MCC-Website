@@ -1678,6 +1678,28 @@ function safeUrl(str) {
 let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
+// ---------- Homepage: "မင်္ဂလာပါ" greeting ----------
+// Fits the SVG snugly around the text once the Yinmar font has loaded, then (on the first visit
+// of a session, see the inline script in index.html) starts the write-in animation.
+function initGreeting() {
+  const svg = document.getElementById("js-greet");
+  if (!svg) return;
+  const html = document.documentElement;
+  const fit = () => {
+    try {
+      const bb = svg.querySelector("text").getBBox();
+      if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
+    } catch (e) { /* keep the default viewBox */ }
+  };
+  const go = () => { fit(); if (html.classList.contains("greet-play")) requestAnimationFrame(() => html.classList.add("greet-go")); };
+  if (document.fonts && document.fonts.load) {
+    let done = false;
+    const once = () => { if (!done) { done = true; go(); } };
+    document.fonts.load('100px "Yinmar"', "မင်္ဂလာပါ").then(once, once);
+    setTimeout(once, 1200);                       // don't hold the hero back for a slow font
+  } else go();
+}
+
 // ---------- Homepage: the Next Event card tilts gently toward the cursor ----------
 // Mouse only (not touch), off for reduced motion. The card turns a few degrees and the poster
 // inside drifts the other way, which gives a sense of depth without any shine effects.
@@ -2303,4 +2325,5 @@ document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
 document.addEventListener("DOMContentLoaded", initFunFact);
 document.addEventListener("DOMContentLoaded", initEventTilt);
+document.addEventListener("DOMContentLoaded", initGreeting);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);

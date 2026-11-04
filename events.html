@@ -82,6 +82,14 @@
   /* Soft cross-fade when navigating between pages, in browsers that support it — a plain instant navigation elsewhere. */
   @view-transition{ navigation:auto; }
   header.nav{ view-transition-name: site-nav; }
+
+  /* Poster morph: the Next Event poster is the same element on the homepage and the events page,
+     so moving between them, it glides and resizes into its new spot instead of the page just swapping. */
+  #js-event-visual img{ view-transition-name: next-poster; }
+  ::view-transition-group(next-poster){ animation-duration:.65s; animation-timing-function:cubic-bezier(.22,1,.36,1); }
+  ::view-transition-old(next-poster), ::view-transition-new(next-poster){
+    width:100%; height:100%; object-fit:cover; object-position:center top; animation-duration:.65s;
+  }
   ::view-transition-old(root){ animation: vt-out .14s ease both; }
   ::view-transition-new(root){ animation: vt-in .3s .1s cubic-bezier(.2,.8,.2,1) both; }
   @keyframes vt-out{ to{ opacity:0; } }
@@ -610,6 +618,7 @@
 })();
 </script>
 <noscript><style>[data-pending]{ visibility:visible !important; }</style></noscript>
+<link rel="expect" href="#js-event-visual" blocking="render">
 </head>
 <body>
 
