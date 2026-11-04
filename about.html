@@ -218,7 +218,7 @@
     overflow:hidden;
   }
   .wheel-glow{
-    position:absolute; left:0; top:0; width:1000px; height:1000px; z-index:0;
+    position:absolute; left:0; top:0; width:1100px; height:1100px; z-index:0;
     border-radius:50%; pointer-events:none;
   }
   .wheel{ position:absolute; left:0; top:0; width:0; height:0; z-index:1; will-change:transform; }
@@ -236,38 +236,56 @@
   .wheel-progress circle{ fill:none; stroke:var(--gold); stroke-width:2.5; stroke-linecap:round; }
   .wheel-hub{
     position:absolute; left:0; top:0; width:200px; height:200px; border-radius:50%; z-index:3;
-    background:var(--navy); color:var(--footer-ink);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-weight:700; font-size:1.6rem; line-height:1.1;
-    box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--gold), 0 24px 50px rgba(28,36,64,0.18);
+    background:var(--navy); overflow:hidden;
+    box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--gold), 0 28px 60px rgba(28,36,64,0.22);
   }
-  .wheel-hub small{
-    font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.6rem;
-    letter-spacing:0.14em; text-transform:uppercase; opacity:0.7; margin-top:4px;
-  }
+  .wheel-hub img{ display:block; width:100%; height:100%; object-fit:cover; }
+
   .cluster{
     position:absolute; left:0; top:0; z-index:2;
-    display:grid; gap:14px;
+    display:grid; gap:16px;
     will-change:transform, opacity;
   }
   .cluster .person-card{
-    width:200px; padding:24px 16px 20px;
-    transform: translateY(var(--rise,0px)) perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-    transition: transform .18s ease-out, box-shadow .2s ease;
+    position:relative; isolation:isolate;
+    width:236px; padding:28px 18px 22px; border-radius:22px;
+    background:
+      radial-gradient(240px circle at var(--mx,50%) var(--my,-40%), rgba(192,138,46,0.13), rgba(192,138,46,0) 60%),
+      linear-gradient(180deg, #FFFDF8 0%, var(--bg-raised) 100%);
+    box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 10px 30px rgba(28,36,64,0.06);
+    transform: translateY(var(--rise,0px)) perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    transition: transform .18s ease-out, box-shadow .25s ease, border-color .25s ease;
   }
   .cluster .person-card:hover{
-    transform: translateY(calc(var(--rise,0px) - 4px)) perspective(700px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-    box-shadow: 0 18px 36px rgba(28,36,64,0.14);
+    transform: translateY(calc(var(--rise,0px) - 5px)) perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
+    border-color: rgba(192,138,46,0.45);
+    box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 24px 48px rgba(28,36,64,0.14);
   }
   .cluster .person-photo{
-    width:96px; height:96px; font-size:1.35rem;
-    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
+    width:116px; height:116px; font-size:1.45rem;
+    background: color-mix(in srgb, var(--tint, var(--gold)) 13%, var(--bg-raised));
+    color: var(--tint, var(--ink-soft));
+    box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold);
   }
-  .cluster .person-card:hover .person-photo{ box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 7px var(--gold); }
-  .cluster .person-name{ font-size:0.98rem; }
-  .cluster .person-title{ font-size:0.72rem; padding:4px 13px; }
+  .cluster .person-card:hover .person-photo{
+    background:var(--navy); color:var(--footer-ink);
+    box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 8px var(--gold);
+  }
+  .cluster .person-name{ font-size:1.04rem; margin-top:6px; }
+  .cluster .person-title{ font-size:0.74rem; padding:4px 13px; }
+  .person-line{ display:block; font-size:0.8rem; line-height:1.35; color:var(--ink-soft); }
 
   .wheel-title{ position:absolute; z-index:4; }
+  .wheel-num{
+    position:absolute; left:-28px; top:50%; z-index:-1; transform:translateY(-56%);
+    font-family:'Fraunces', serif; font-weight:700; line-height:1;
+    font-size:clamp(9rem,15vw,14rem); letter-spacing:-0.04em;
+    color:transparent; -webkit-text-stroke:1.5px rgba(28,36,64,0.10);
+    pointer-events:none; user-select:none;
+    transition: opacity .42s ease, transform .42s cubic-bezier(.2,.8,.2,1);
+  }
+  .wheel-num.leave{ opacity:0; transform:translateY(-66%); }
+  .wheel-num.enter{ opacity:0; transform:translateY(-46%); transition:none; }
   .wheel-count{
     font-family:'Work Sans',sans-serif; font-size:0.74rem; font-weight:700;
     letter-spacing:0.18em; color:var(--ink-soft);
@@ -282,6 +300,12 @@
   .wheel-name-inner.leave{ transform:translateY(-105%); opacity:0; }
   .wheel-name-inner.enter{ transform:translateY(105%); opacity:0; transition:none; }
   .wheel-bar{ display:block; width:56px; height:4px; border-radius:2px; transition: background-color .45s ease; }
+  .wheel-pips{ display:none; gap:6px; justify-content:center; margin-top:14px; }
+  .wheel-pips span{
+    width:6px; height:6px; border-radius:3px; background:var(--line);
+    transition: width .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease;
+  }
+  .wheel-pips span.on{ width:22px; background:var(--ink); }
 
   .wheel-index{
     position:absolute; right:clamp(18px,3vw,40px); top:50%; z-index:4;
@@ -313,17 +337,39 @@
   }
   @keyframes wheel-cue{ 0%{ transform:scaleY(0); opacity:1; } 60%{ transform:scaleY(1); opacity:1; } 100%{ transform:scaleY(1); opacity:0; } }
 
+  /* Closing moment: the wheel completes its turn and the crest settles in the middle. */
+  .wheel-close{
+    position:absolute; left:50%; top:0; z-index:5; width:min(640px, calc(100% - 32px));
+    text-align:center; opacity:0; pointer-events:none;
+  }
+  .wheel-close h2{ font-size:clamp(2rem,4vw,3.3rem); line-height:1.08; margin-bottom:26px; text-wrap:balance; }
+  .wheel-close-cta{ display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
+  .wheel-btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:14px 26px; border-radius:999px; text-decoration:none;
+    font-size:0.82rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    transition: transform .18s ease, background .18s ease, color .18s ease;
+  }
+  .wheel-btn:hover{ transform:translateY(-2px); }
+  .wheel-btn.solid{ background:var(--navy); color:var(--footer-ink); border:1px solid var(--navy); }
+  .wheel-btn.solid:hover{ background:var(--navy-deep); }
+  .wheel-btn.ghost{ background:transparent; color:var(--ink); border:1.5px solid var(--gold); }
+  .wheel-btn.ghost:hover{ background:var(--gold); color:var(--navy-deep); }
+
   /* Phones and small tablets: title on top, wheel turns up from the bottom. */
-  .wheel-sticky.is-mobile .wheel-glow{ width:700px; height:700px; }
-  .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; font-size:1.3rem; }
+  .wheel-sticky.is-mobile .wheel-glow{ width:720px; height:720px; }
+  .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; }
   .wheel-sticky.is-mobile .wheel-title{ text-align:center; }
-  .wheel-sticky.is-mobile .wheel-bar{ margin-inline:auto; }
-  .wheel-sticky.is-mobile .wheel-name{ font-size:2.3rem; margin:8px 0 12px; }
+  .wheel-sticky.is-mobile .wheel-num{ display:none; }
+  .wheel-sticky.is-mobile .wheel-bar{ display:none; }
+  .wheel-sticky.is-mobile .wheel-pips{ display:flex; }
+  .wheel-sticky.is-mobile .wheel-name{ font-size:2.3rem; margin:6px 0 0; }
   .wheel-sticky.is-mobile .wheel-cue{ display:none; }
-  .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:18px 10px 14px; gap:8px; }
-  .wheel-sticky.is-mobile .cluster .person-photo{ width:68px; height:68px; font-size:1rem; }
-  .wheel-sticky.is-mobile .cluster .person-name{ font-size:0.86rem; }
-  .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.64rem; padding:3px 10px; }
+  .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:20px 10px 16px; gap:8px; border-radius:18px; }
+  .wheel-sticky.is-mobile .cluster .person-photo{ width:78px; height:78px; font-size:1.1rem; box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold); }
+  .wheel-sticky.is-mobile .cluster .person-name{ font-size:0.9rem; margin-top:2px; }
+  .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.66rem; padding:3px 10px; }
+  .wheel-sticky.is-mobile .person-line{ font-size:0.74rem; }
 
   .person-card{
     display:flex; flex-direction:column; align-items:center; text-align:center;
@@ -499,14 +545,23 @@
       <div class="wheel-glow" id="wheelGlow" aria-hidden="true"></div>
       <div class="wheel" id="wheel"></div>
       <svg class="wheel-progress" id="wheelProgress" aria-hidden="true"><circle id="wheelProgressArc"/></svg>
-      <div class="wheel-hub" aria-hidden="true">MCC<small>UofT</small></div>
+      <div class="wheel-hub" aria-hidden="true"><img src="images/brand/logo.png" alt=""></div>
       <div class="wheel-title" id="wheelTitle">
+        <span class="wheel-num" id="wheelNum" aria-hidden="true">01</span>
         <span class="wheel-count"><b id="wheelCount">01</b> / 07</span>
         <h2 class="wheel-name"><span class="wheel-name-inner" id="wheelName">Leadership</span></h2>
         <span class="wheel-bar" id="wheelBar"></span>
+        <div class="wheel-pips" id="wheelPips" aria-hidden="true"></div>
       </div>
       <nav class="wheel-index" id="wheelIndex" aria-label="Jump to a department"></nav>
       <div class="wheel-cue" id="wheelCue" aria-hidden="true"><span>Scroll</span><i></i></div>
+      <div class="wheel-close" id="wheelClose">
+        <h2 data-i18n="about_close_h">There's always a seat for you at our table.</h2>
+        <div class="wheel-close-cta">
+          <a class="wheel-btn solid celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
+          <a class="wheel-btn ghost" href="index.html#event" data-i18n="hero_cta_next">See Our Next Event</a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -596,53 +651,49 @@
     { key:"associates",  label:"Associates",         color:"#5F5A48" }
   ];
 
+  // line: a short note shown under the title (year and program, etc.). Leave null until we have it.
   var PEOPLE = [
-    {i:"T",  name:"Thant Thiri Oo",       pref:"Tina",      title:"Co-President",           group:"leadership"},
-    {i:"M",  name:"Kaung Min Phyo",       pref:"Martin",    title:"Co-President",           group:"leadership"},
-    {i:"LL", name:"Eaint Htoo Pyae Aung", pref:"Lu Lu",     title:"Secretary",               group:"leadership"},
-    {i:"YY", name:"Yu Ya Saung Tan Sin",  pref:null,        title:"Treasurer",               group:"finance"},
-    {i:"M",  name:"Min Thu Ta",           pref:"Min",       title:"Treasurer",               group:"finance"},
-    {i:"N",  name:"Hsu Myat Noe Chan",    pref:"Noelle",    title:"Graphic Designer",        group:"media"},
-    {i:"H",  name:"Thant Thu Raeil Tun",  pref:"Hauk",      title:"Graphic Designer",        group:"media"},
-    {i:"B",  name:"King Ben Sen",         pref:"Ben",       title:"Social Media Manager",    group:"media"},
-    {i:"KK", name:"Khin Kyi Thar Swe",    pref:null,        title:"Social Media Manager",    group:"media"},
-    {i:"AP", name:"Aung Phone Myat",      pref:null,        title:"Freelance Photographer",  group:"media"},
-    {i:"M",  name:"Naing Lin Khant",      pref:"Moarz",     title:"Website Coordinator",     group:"website"},
-    {i:"S",  name:"Song Hnin Set",        pref:"Scarlett",  title:"Events Coordinator",      group:"events"},
-    {i:"S",  name:"Su April Aung",        pref:"Su",        title:"Events Coordinator",      group:"events"},
-    {i:"H",  name:"Ei Than Sin Oo",       pref:"Hazel",     title:"Events Coordinator",      group:"events"},
-    {i:"G",  name:"Eaint Chan Myae",      pref:"Grace",     title:"Events Coordinator",      group:"events"},
-    {i:"SK", name:"Su Thiri Khit",        pref:"Su Khit",   title:"Events Coordinator",      group:"events"},
-    {i:"H",  name:"Satt Paing Htoo",      pref:"Hugo",      title:"Events Coordinator",      group:"events"},
-    {i:"C",  name:"Eaint Myint Mo Kyaw",  pref:"Catherine", title:"External Relations",      group:"external"},
-    {i:"KS", name:"Khaing Su Wai",        pref:null,        title:"Associate",               group:"associates"},
-    {i:"A",  name:"Alvin Oakga",          pref:null,        title:"Associate",               group:"associates"}
+    {i:"T",  name:"Thant Thiri Oo",       pref:"Tina",      title:"Co-President",           group:"leadership", line:null},
+    {i:"M",  name:"Kaung Min Phyo",       pref:"Martin",    title:"Co-President",           group:"leadership", line:null},
+    {i:"LL", name:"Eaint Htoo Pyae Aung", pref:"Lu Lu",     title:"Secretary",               group:"leadership", line:null},
+    {i:"YY", name:"Yu Ya Saung Tan Sin",  pref:null,        title:"Treasurer",               group:"finance",    line:null},
+    {i:"M",  name:"Min Thu Ta",           pref:"Min",       title:"Treasurer",               group:"finance",    line:null},
+    {i:"N",  name:"Hsu Myat Noe Chan",    pref:"Noelle",    title:"Graphic Designer",        group:"media",      line:null},
+    {i:"H",  name:"Thant Thu Raeil Tun",  pref:"Hauk",      title:"Graphic Designer",        group:"media",      line:null},
+    {i:"B",  name:"King Ben Sen",         pref:"Ben",       title:"Social Media Manager",    group:"media",      line:null},
+    {i:"KK", name:"Khin Kyi Thar Swe",    pref:null,        title:"Social Media Manager",    group:"media",      line:null},
+    {i:"AP", name:"Aung Phone Myat",      pref:null,        title:"Freelance Photographer",  group:"media",      line:null},
+    {i:"M",  name:"Naing Lin Khant",      pref:"Moarz",     title:"Website Coordinator",     group:"website",    line:"2nd year · Computer Science"},
+    {i:"S",  name:"Song Hnin Set",        pref:"Scarlett",  title:"Events Coordinator",      group:"events",     line:null},
+    {i:"S",  name:"Su April Aung",        pref:"Su",        title:"Events Coordinator",      group:"events",     line:null},
+    {i:"H",  name:"Ei Than Sin Oo",       pref:"Hazel",     title:"Events Coordinator",      group:"events",     line:null},
+    {i:"G",  name:"Eaint Chan Myae",      pref:"Grace",     title:"Events Coordinator",      group:"events",     line:null},
+    {i:"SK", name:"Su Thiri Khit",        pref:"Su Khit",   title:"Events Coordinator",      group:"events",     line:null},
+    {i:"H",  name:"Satt Paing Htoo",      pref:"Hugo",      title:"Events Coordinator",      group:"events",     line:null},
+    {i:"C",  name:"Eaint Myint Mo Kyaw",  pref:"Catherine", title:"External Relations",      group:"external",   line:null},
+    {i:"KS", name:"Khaing Su Wai",        pref:null,        title:"Associate",               group:"associates", line:null},
+    {i:"A",  name:"Alvin Oakga",          pref:null,        title:"Associate",               group:"associates", line:null}
   ];
 
-  var section = document.getElementById("team");
-  var sticky  = document.getElementById("wheelSticky");
-  var wheel   = document.getElementById("wheel");
-  var hub     = sticky ? sticky.querySelector(".wheel-hub") : null;
-  var titleEl = document.getElementById("wheelTitle");
-  var nameEl  = document.getElementById("wheelName");
-  var countEl = document.getElementById("wheelCount");
-  var barEl   = document.getElementById("wheelBar");
-  var glow    = document.getElementById("wheelGlow");
-  var progSvg = document.getElementById("wheelProgress");
-  var progArc = document.getElementById("wheelProgressArc");
-  var cue     = document.getElementById("wheelCue");
-  var indexEl = document.getElementById("wheelIndex");
+  var $ = function(id){ return document.getElementById(id); };
+  var section = $("team"), sticky = $("wheelSticky"), wheel = $("wheel");
+  var hub = sticky ? sticky.querySelector(".wheel-hub") : null;
+  var titleEl = $("wheelTitle"), nameEl = $("wheelName"), numEl = $("wheelNum"), countEl = $("wheelCount");
+  var barEl = $("wheelBar"), pipsEl = $("wheelPips"), glow = $("wheelGlow");
+  var progSvg = $("wheelProgress"), progArc = $("wheelProgressArc");
+  var cue = $("wheelCue"), indexEl = $("wheelIndex"), closeEl = $("wheelClose");
   var heroWrap = document.querySelector(".about-hero .wrap");
-  if (!section || !sticky || !wheel || !hub || !titleEl || !nameEl) return;
+  if (!section || !sticky || !wheel || !hub || !titleEl || !nameEl || !closeEl) return;
 
   var N = GROUPS.length;
   var STEP_DEG = 360 / N;
-  var STEP_VH = 80;          // scroll distance per department
+  var UNITS = N + 0.5;        // N-1 department turns, one turn into the closing moment, then a short hold
+  var STEP_VH = 78;           // scroll distance per turn
   var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
   var reduceMotion = !!(mq && mq.matches);
   var finePointer = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
 
-  section.style.height = ((N - 1) * STEP_VH + 100) + "vh";
+  section.style.height = (UNITS * STEP_VH + 100) + "vh";
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function cardHTML(p){
@@ -651,11 +702,17 @@
       '<span class="person-photo" aria-hidden="true">' + esc(p.i) + '</span>' +
       '<span class="person-name">' + nm + '</span>' +
       '<span class="person-title">' + esc(p.title) + '</span>' +
+      (p.line ? '<span class="person-line">' + esc(p.line) + '</span>' : '') +
     '</div>';
   }
   function hexRgb(h){ var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
   var RGB = GROUPS.map(function(g){ return hexRgb(g.color); });
+  var GOLD = hexRgb("#C08A2E");
   function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
+  function lerp(a, b, t){ return a + (b - a) * t; }
+  function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
+  function easeInOut(t){ return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
+  function pad(n){ return ("0" + n).slice(-2); }
 
   // ---------- build ----------
   var outerRing = document.createElement("div"); outerRing.className = "wheel-ring outer";
@@ -663,7 +720,7 @@
   wheel.appendChild(outerRing); wheel.appendChild(innerRing);
 
   var members = GROUPS.map(function(g){ return PEOPLE.filter(function(p){ return p.group === g.key; }); });
-  var dots = [], clusters = [], cards = [], indexBtns = [];
+  var dots = [], clusters = [], cards = [], indexBtns = [], pips = [];
   GROUPS.forEach(function(g, k){
     var dot = document.createElement("span");
     dot.className = "wheel-dot";
@@ -672,6 +729,7 @@
 
     var c = document.createElement("div");
     c.className = "cluster";
+    c.style.setProperty("--tint", g.color);
     c.innerHTML = members[k].map(cardHTML).join("");
     wheel.appendChild(c); clusters.push(c);
     cards.push(Array.prototype.slice.call(c.querySelectorAll(".person-card")));
@@ -680,34 +738,44 @@
       var b = document.createElement("button");
       b.type = "button";
       b.innerHTML = esc(g.label) + '<span class="dot" style="background:' + g.color + '"></span>';
-      b.addEventListener("click", function(){ scrollToGroup(k); });
+      b.addEventListener("click", function(){ scrollToUnit(k); });
       indexEl.appendChild(b); indexBtns.push(b);
+    }
+    if (pipsEl){
+      var pip = document.createElement("span");
+      pipsEl.appendChild(pip); pips.push(pip);
     }
   });
 
   // ---------- layout (recomputed on resize) ----------
-  var L = { mobile:false, cx:0, cy:0, R:0, rInner:0, F:0, fit:1, fx:0, fy:0, pos:[] };
+  var L = { mobile:false, W:0, H:0, cx:0, cy:0, closeX:0, closeY:0, R:0, rInner:0, F:0, fx:0, fy:0, fit:[], pos:[], circ:0 };
+
+  // Pick the column count that lets each department show at the largest size.
+  function chooseColumns(c, n, maxCols, availW, availH, mobileW){
+    var best = { fit:-1, cols:1 };
+    for (var cols = 1; cols <= Math.min(maxCols, n); cols++){
+      if (L.mobile){
+        var w = n === 1 ? Math.min(mobileW, 240) : mobileW;
+        c.style.width = w + "px";
+        c.style.gridTemplateColumns = "repeat(" + cols + ", minmax(0,1fr))";
+      } else {
+        c.style.width = "";
+        c.style.gridTemplateColumns = "repeat(" + cols + ", 236px)";
+      }
+      var fit = Math.min(1, availW / c.offsetWidth, availH / c.offsetHeight);
+      if (fit > best.fit + 0.001){ best = { fit:fit, cols:cols, w:c.style.width, g:c.style.gridTemplateColumns }; }
+    }
+    c.style.width = best.w;
+    c.style.gridTemplateColumns = best.g;
+    return best.fit;
+  }
 
   function layout(){
-    var W = sticky.clientWidth, H = sticky.clientHeight;
+    var W = L.W = sticky.clientWidth, H = L.H = sticky.clientHeight;
     var nav = document.querySelector("header.nav");
     var NAV = nav ? nav.offsetHeight : 70;
     L.mobile = W < 900;
     sticky.classList.toggle("is-mobile", L.mobile);
-
-    var cols = L.mobile ? 2 : (W >= 1460 ? 3 : 2);
-    clusters.forEach(function(c, k){
-      var n = Math.min(cols, members[k].length);
-      if (L.mobile){
-        c.style.width = Math.min(W - 32, 360) + "px";
-        c.style.gridTemplateColumns = "repeat(" + n + ", minmax(0,1fr))";
-      } else {
-        c.style.width = "";
-        c.style.gridTemplateColumns = "repeat(" + n + ", 200px)";
-      }
-    });
-    var maxW = 0, maxH = 0;
-    clusters.forEach(function(c){ maxW = Math.max(maxW, c.offsetWidth); maxH = Math.max(maxH, c.offsetHeight); });
 
     if (!L.mobile){
       // Hub on the left edge; the department in focus faces right.
@@ -715,70 +783,62 @@
       L.cx = 80;
       L.cy = NAV + (H - NAV) / 2;
       L.rInner = 150;
-      var titleW = Math.max(220, Math.min(320, W * 0.24));
-      var titleLeft = L.cx + L.rInner + 40;
-      var titleRight = titleLeft + titleW;
-      var rightPad = W >= 1200 ? 190 : 32;
-      var availW = W - rightPad - (titleRight + 40);
-      var availH = H - NAV - 56;
-      L.fit = Math.min(1, availW / maxW, availH / maxH);
-      var half = maxW * L.fit / 2;
-      var minX = titleRight + 40 + half;
-      var maxX = W - rightPad - half;
-      var focalX = maxX > minX ? minX + (maxX - minX) * 0.35 : minX;
-      L.R = focalX - L.cx;
+      var titleW = Math.max(220, Math.min(300, W * 0.2));
+      var titleLeft = L.cx + L.rInner + 44;
+      var regionL = titleLeft + titleW + 36;
+      var regionR = W - (W >= 1200 ? 190 : 28);
+      var availW = regionR - regionL, availH = H - NAV - 44;
+      L.fit = clusters.map(function(c, k){ return chooseColumns(c, members[k].length, 3, availW, availH, 0); });
+      L.R = (regionL + regionR) / 2 - L.cx;
       titleEl.style.left = titleLeft + "px";
       titleEl.style.right = "";
       titleEl.style.width = titleW + "px";
       titleEl.style.top = L.cy + "px";
+      L.closeX = W / 2;
+      L.closeY = NAV + (H - NAV) * 0.36;
     } else {
       // Hub peeks up from the bottom; the department in focus faces up.
       L.F = -90;
       L.cx = W / 2;
       L.cy = H - 24;
       L.rInner = 112;
-      var titleTop = NAV + 18;
+      var titleTop = NAV + 16;
       titleEl.style.left = "16px";
       titleEl.style.right = "16px";
       titleEl.style.width = "";
       titleEl.style.top = titleTop + "px";
-      var topY = titleTop + titleEl.offsetHeight + 18;
-      var bottomY = L.cy - L.rInner - 22;
-      L.fit = Math.min(1, (bottomY - topY) / maxH);
-      var focalY = topY + maxH * L.fit / 2;
-      L.R = Math.max(160, L.cy - focalY);
+      var topY = titleTop + titleEl.offsetHeight + 16;
+      var bottomY = L.cy - L.rInner - 20;
+      var mobileW = Math.min(W - 28, 380);
+      L.fit = clusters.map(function(c, k){ return chooseColumns(c, members[k].length, 2, mobileW, bottomY - topY, mobileW); });
+      var tallest = 0;
+      clusters.forEach(function(c, k){ tallest = Math.max(tallest, c.offsetHeight * L.fit[k]); });
+      L.R = Math.max(160, L.cy - (topY + tallest / 2));
+      L.closeX = W / 2;
+      L.closeY = NAV + (H - NAV) * 0.3;
     }
 
     var Fr = L.F * Math.PI / 180;
     L.fx = L.cx + L.R * Math.cos(Fr);
     L.fy = L.cy + L.R * Math.sin(Fr);
 
-    hub.style.left = L.cx + "px";
-    hub.style.top = L.cy + "px";
-    wheel.style.left = L.cx + "px";
-    wheel.style.top = L.cy + "px";
     outerRing.style.width = outerRing.style.height = (L.R * 2) + "px";
     innerRing.style.width = innerRing.style.height = (L.rInner * 2) + "px";
 
     var s = L.rInner * 2 + 6;
     progSvg.setAttribute("width", s);
     progSvg.setAttribute("height", s);
-    progSvg.style.left = L.cx + "px";
-    progSvg.style.top = L.cy + "px";
-    // Rotate so the arc starts at the focus point, then flip so it grows the way the wheel turns.
-    progSvg.style.transform = "translate(-50%,-50%) rotate(" + L.F + "deg) scaleY(-1)";
     progArc.setAttribute("cx", s / 2);
     progArc.setAttribute("cy", s / 2);
     progArc.setAttribute("r", L.rInner);
     L.circ = 2 * Math.PI * L.rInner;
     progArc.style.strokeDasharray = L.circ + " " + L.circ;
 
+    closeEl.style.top = (L.closeY + L.rInner + (L.mobile ? 26 : 36)) + "px";
+
     L.pos = GROUPS.map(function(g, k){
       var a = (L.F + k * STEP_DEG) * Math.PI / 180;
-      return {
-        x: L.R * Math.cos(a), y: L.R * Math.sin(a),
-        dx: L.rInner * Math.cos(a), dy: L.rInner * Math.sin(a)
-      };
+      return { x: L.R * Math.cos(a), y: L.R * Math.sin(a), dx: L.rInner * Math.cos(a), dy: L.rInner * Math.sin(a) };
     });
   }
 
@@ -786,94 +846,123 @@
   function scrollSpan(){ return Math.max(1, section.offsetHeight - window.innerHeight); }
   function readScroll(){
     var rect = section.getBoundingClientRect();
-    var vh = window.innerHeight;
     var t = clamp01(-rect.top / scrollSpan());
-    var raw = t * (N - 1);
-    var k = Math.min(N - 2, Math.floor(raw));
-    var f = raw - k;
+    var raw = t * UNITS, p;
+    if (raw >= N) p = N;
+    else { var k = Math.floor(raw), f = raw - k; p = k + f * f * (3 - 2 * f); }   // rests on each department
     return {
-      p: k + f * f * (3 - 2 * f),                    // eases so the wheel rests on each department
-      enter: rect.top > 0 ? clamp01(1 - rect.top / vh) : 1,
+      p: p,
+      enter: rect.top > 0 ? clamp01(1 - rect.top / window.innerHeight) : 1,
       hero: clamp01(window.scrollY / Math.max(1, rect.top + window.scrollY))
     };
   }
-  function scrollToGroup(k){
-    var top = window.scrollY + section.getBoundingClientRect().top + scrollSpan() * (k / (N - 1));
+  function scrollToUnit(k){
+    var top = window.scrollY + section.getBoundingClientRect().top + scrollSpan() * (k / UNITS);
     window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
   }
 
   // ---------- title ----------
   var active = -1, swapTimer = null;
+  function slide(el, text){
+    el.classList.remove("enter");
+    el.classList.add("leave");
+    return function(){
+      el.textContent = text;
+      el.classList.remove("leave");
+      el.classList.add("enter");
+      void el.offsetWidth;                // commit the start position before sliding in
+      el.classList.remove("enter");
+    };
+  }
   function setActive(k){
     if (k === active) return;
     var first = active === -1;
     active = k;
     indexBtns.forEach(function(b, j){ b.classList.toggle("active", j === k); });
-    countEl.textContent = ("0" + (k + 1)).slice(-2);
+    pips.forEach(function(s, j){ s.classList.toggle("on", j === k); });
+    countEl.textContent = pad(k + 1);
     barEl.style.backgroundColor = GROUPS[k].color;
-    if (first || reduceMotion){ nameEl.textContent = GROUPS[k].label; return; }
+    if (first || reduceMotion){ nameEl.textContent = GROUPS[k].label; numEl.textContent = pad(k + 1); return; }
     window.clearTimeout(swapTimer);
-    nameEl.classList.remove("enter");
-    nameEl.classList.add("leave");
-    swapTimer = window.setTimeout(function(){
-      nameEl.textContent = GROUPS[active].label;
-      nameEl.classList.remove("leave");
-      nameEl.classList.add("enter");
-      void nameEl.offsetWidth;          // commit the start position before sliding in
-      nameEl.classList.remove("enter");
-    }, 230);
+    var a = slide(nameEl, GROUPS[k].label), b = slide(numEl, pad(k + 1));
+    swapTimer = window.setTimeout(function(){ a(); b(); }, 230);
   }
 
   // ---------- render ----------
   function apply(st){
-    var p = st.p, e = reduceMotion ? 1 : st.enter;
-    var easeE = 1 - Math.pow(1 - e, 3);
-    var r = -p * STEP_DEG - (1 - easeE) * 40;     // the wheel dials in as you arrive
+    var p = st.p;
+    var e = easeOut(reduceMotion ? 1 : st.enter);
+    var close = easeInOut(clamp01(p - (N - 1)));      // 0 until the last department, 1 at the closing moment
+    var focusP = Math.min(p, N - 1);
+
+    // The hub (and the wheel around it) glides to the middle for the closing moment.
+    var hx = lerp(L.cx, L.closeX, close), hy = lerp(L.cy, L.closeY, close);
+    var r = -p * STEP_DEG - (1 - e) * 40;              // dials in on arrival, completes a full turn at the end
+    wheel.style.left = hx + "px";
+    wheel.style.top = hy + "px";
     wheel.style.transform = "rotate(" + r + "deg)";
+    hub.style.left = hx + "px";
+    hub.style.top = hy + "px";
+    hub.style.transform = "translate(-50%,-50%) scale(" + (0.82 + 0.18 * e).toFixed(3) + ")";
+    progSvg.style.left = hx + "px";
+    progSvg.style.top = hy + "px";
+    progSvg.style.transform = "translate(-50%,-50%) rotate(" + L.F + "deg) scaleY(-1)";
+    outerRing.style.opacity = (1 - close).toFixed(3);
 
     clusters.forEach(function(c, k){
       var d = Math.abs(k - p);
-      var op = Math.max(0, 1 - d * 0.8) * easeE;
-      var sc = (1 - Math.min(d, 1.5) * 0.16) * L.fit;
+      var op = Math.max(0, 1 - d * 0.8) * e * (1 - close);
+      var sc = (1 - Math.min(d, 1.5) * 0.16) * L.fit[k];
       var blur = Math.min(d, 1) * 4;
       c.style.opacity = op.toFixed(3);
       c.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
       c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(4) + ")";
-      c.style.pointerEvents = d < 0.4 ? "auto" : "none";
+      c.style.pointerEvents = d < 0.4 && close < 0.2 ? "auto" : "none";
       c.style.visibility = op < 0.01 ? "hidden" : "visible";
 
       // Cards rise in one after another as the department arrives, and leave the same way.
-      var arrive = Math.min(1, 1 - d) * easeE;
+      var arrive = Math.min(1, 1 - d) * e;
       cards[k].forEach(function(card, j){
         var v = reduceMotion ? 1 : clamp01((arrive - 0.15 - j * 0.07) / 0.45);
-        var ev = 1 - Math.pow(1 - v, 3);
-        card.style.setProperty("--rise", ((1 - ev) * 34).toFixed(1) + "px");
+        var ev = easeOut(v);
+        card.style.setProperty("--rise", ((1 - ev) * 38).toFixed(1) + "px");
         card.style.opacity = (0.15 + ev * 0.85).toFixed(3);
       });
     });
 
     dots.forEach(function(dot, k){
-      var d = Math.abs(k - p);
-      var s = 1 + Math.max(0, 1 - d) * 0.7;
+      var d = Math.abs(k - focusP);
+      var s = 1 + Math.max(0, 1 - d) * 0.7 * (1 - close) + 0.35 * close;
       dot.style.transform = "translate(" + L.pos[k].dx + "px," + L.pos[k].dy + "px) translate(-50%,-50%) scale(" + s.toFixed(3) + ")";
     });
 
-    var frac = (p * STEP_DEG) / 360;
+    var frac = Math.min(1, (p * STEP_DEG) / 360);
     progArc.style.strokeDashoffset = (L.circ * (1 - frac)).toFixed(2);
-    progArc.style.opacity = easeE.toFixed(3);
+    progArc.style.opacity = e.toFixed(3);
 
-    // Glow shifts toward the colour of the department in focus.
-    var k0 = Math.min(N - 1, Math.floor(p)), k1 = Math.min(N - 1, k0 + 1), f = p - k0;
-    var rgb = [0,1,2].map(function(i){ return Math.round(RGB[k0][i] + (RGB[k1][i] - RGB[k0][i]) * f); }).join(",");
-    glow.style.background = "radial-gradient(circle at center, rgba(" + rgb + ",0.16) 0%, rgba(" + rgb + ",0.06) 38%, rgba(" + rgb + ",0) 64%)";
-    glow.style.transform = "translate(" + (L.fx - glow.offsetWidth / 2) + "px," + (L.fy - glow.offsetHeight / 2) + "px)";
-    glow.style.opacity = easeE.toFixed(3);
+    // Glow follows the department in focus, then settles behind the crest in gold.
+    var k0 = Math.min(N - 1, Math.floor(focusP)), k1 = Math.min(N - 1, k0 + 1), f = focusP - k0;
+    var rgb = [0,1,2].map(function(i){
+      var v = RGB[k0][i] + (RGB[k1][i] - RGB[k0][i]) * f;
+      return Math.round(lerp(v, GOLD[i], close));
+    }).join(",");
+    glow.style.background = "radial-gradient(circle at center, rgba(" + rgb + ",0.17) 0%, rgba(" + rgb + ",0.06) 38%, rgba(" + rgb + ",0) 64%)";
+    var gx = lerp(L.fx, hx, close), gy = lerp(L.fy, hy, close);
+    glow.style.transform = "translate(" + (gx - glow.offsetWidth / 2) + "px," + (gy - glow.offsetHeight / 2) + "px)";
+    glow.style.opacity = e.toFixed(3);
 
-    hub.style.transform = "translate(-50%,-50%) scale(" + (0.82 + 0.18 * easeE).toFixed(3) + ")";
-    var lift = ((1 - easeE) * 36).toFixed(1);
-    titleEl.style.opacity = easeE.toFixed(3);
+    var lift = ((1 - e) * 36 - close * 24).toFixed(1);
+    var titleOut = clamp01(close * 3);                  // gone before the crest glides over it
+    titleEl.style.opacity = (e * (1 - titleOut)).toFixed(3);
     titleEl.style.transform = (L.mobile ? "" : "translateY(-50%) ") + "translateY(" + lift + "px)";
-    if (cue) cue.style.opacity = (easeE * clamp01(1 - p * 2.5)).toFixed(3);
+    titleEl.style.visibility = titleOut > 0.99 ? "hidden" : "visible";
+    if (indexEl) indexEl.style.opacity = (1 - titleOut).toFixed(3);
+    if (cue) cue.style.opacity = (e * clamp01(1 - p * 2.5)).toFixed(3);
+
+    var reveal = easeOut(clamp01((close - 0.5) / 0.5));  // closing line arrives once the crest has settled
+    closeEl.style.opacity = reveal.toFixed(3);
+    closeEl.style.transform = "translateX(-50%) translateY(" + ((1 - reveal) * 34).toFixed(1) + "px)";
+    closeEl.style.pointerEvents = reveal > 0.6 ? "auto" : "none";
 
     if (heroWrap && !reduceMotion){
       var h = st.hero;
@@ -881,7 +970,7 @@
       heroWrap.style.transform = "translateY(" + (h * 48).toFixed(1) + "px) scale(" + (1 - h * 0.04).toFixed(4) + ")";
     }
 
-    setActive(Math.round(p));
+    setActive(Math.round(focusP));
   }
 
   var cur = null, tgt = null, raf = null;
@@ -900,22 +989,25 @@
     if (!raf) raf = window.requestAnimationFrame(tick);
   }
 
-  // ---------- hover tilt (desktop pointers only) ----------
+  // ---------- hover: tilt + light that follows the cursor (desktop pointers only) ----------
   if (finePointer && !reduceMotion){
     wheel.addEventListener("pointermove", function(ev){
       var card = ev.target.closest ? ev.target.closest(".person-card") : null;
       if (!card) return;
       var b = card.getBoundingClientRect();
-      var x = (ev.clientX - b.left) / b.width - 0.5;
-      var y = (ev.clientY - b.top) / b.height - 0.5;
-      card.style.setProperty("--ry", (x * 10).toFixed(2) + "deg");
-      card.style.setProperty("--rx", (-y * 10).toFixed(2) + "deg");
+      var x = (ev.clientX - b.left) / b.width, y = (ev.clientY - b.top) / b.height;
+      card.style.setProperty("--ry", ((x - 0.5) * 10).toFixed(2) + "deg");
+      card.style.setProperty("--rx", ((0.5 - y) * 10).toFixed(2) + "deg");
+      card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+      card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
     });
     wheel.addEventListener("pointerout", function(ev){
       var card = ev.target.closest ? ev.target.closest(".person-card") : null;
       if (card && !card.contains(ev.relatedTarget)){
         card.style.setProperty("--rx", "0deg");
         card.style.setProperty("--ry", "0deg");
+        card.style.removeProperty("--mx");
+        card.style.removeProperty("--my");
       }
     });
   }

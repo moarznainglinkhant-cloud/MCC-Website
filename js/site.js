@@ -114,6 +114,7 @@ const I18N = {
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
+    about_close_h: "There's always a seat for you at our table.",
   },
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
@@ -167,6 +168,7 @@ const I18N = {
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
+    about_close_h: "ကျွန်ုပ်တို့စားပွဲတွင် သင့်အတွက် နေရာတစ်နေရာ ရှိပါသည်။",
   },
 };
 
