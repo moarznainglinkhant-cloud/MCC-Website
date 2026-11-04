@@ -210,8 +210,106 @@
   .about-hero h1{ font-size:clamp(2.1rem,5vw,3.2rem); margin-block:10px 16px; }
   .about-hero p{ color:var(--ink-soft); font-size:1.05rem; max-width:62ch; }
 
-  /* ---------- PEOPLE GRID ---------- */
-  .people-section{ padding-block: clamp(8px,2vw,16px) clamp(40px,6vw,64px); }
+  /* ---------- PEOPLE / MANDALA WHEEL ---------- */
+  .mandala-section{ padding-block: clamp(8px,2vw,16px) clamp(40px,6vw,64px); }
+  .mandala-toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    flex-wrap:wrap; margin-bottom:16px;
+  }
+  .dept-jump{ display:flex; flex-wrap:wrap; gap:8px; }
+  .dept-chip{
+    appearance:none; display:inline-flex; align-items:center; gap:7px;
+    border:1px solid var(--line); background:var(--bg-raised); border-radius:999px;
+    padding:8px 15px; font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.76rem;
+    color:var(--ink); cursor:pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  }
+  .dept-chip:hover{ transform:translateY(-1px); }
+  .dept-chip .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
+  .dept-chip.active{ background:var(--navy); color:#F6F1E4; border-color:var(--navy); }
+  .view-toggle-btn{
+    appearance:none; border:1.5px solid var(--gold); background:transparent; color:var(--ink);
+    font-family:'Work Sans',sans-serif; font-weight:700; font-size:0.74rem; letter-spacing:0.03em;
+    padding:8px 16px; border-radius:999px; cursor:pointer;
+    transition: background .18s ease, color .18s ease;
+  }
+  .view-toggle-btn:hover{ background:var(--gold); color:var(--navy-deep); }
+
+  .mandala-viewport{
+    position:relative; width:100%; height:min(74vh, 640px); min-height:430px;
+    border:1px solid var(--line); border-radius:20px; overflow:hidden;
+    background: radial-gradient(circle at 50% 50%, var(--bg-raised) 0%, var(--bg-sunk) 75%);
+    cursor:grab; touch-action:none;
+  }
+  .mandala-viewport.dragging{ cursor:grabbing; }
+  .mandala-canvas{
+    position:absolute; left:0; top:0; width:1360px; height:1360px;
+    transform-origin:0 0;
+    opacity:0; transition:opacity .6s ease;
+  }
+  .mandala-canvas.ready{ opacity:1; }
+  .mandala-canvas.animating{ transition: transform .65s cubic-bezier(.3,.9,.3,1), opacity .6s ease; }
+
+  .mandala-ring{
+    position:absolute; left:680px; top:680px;
+    transform:translate(-50%,-50%);
+    border:1px dashed var(--line); border-radius:50%; pointer-events:none;
+  }
+  .mandala-ring.r1{ width:760px; height:760px; animation: mandala-spin-cw 150s linear infinite; }
+  .mandala-ring.r2{ width:940px; height:940px; border-style:dotted; opacity:0.6; animation: mandala-spin-ccw 230s linear infinite; }
+  @keyframes mandala-spin-cw{ from{ transform:translate(-50%,-50%) rotate(0deg); } to{ transform:translate(-50%,-50%) rotate(360deg); } }
+  @keyframes mandala-spin-ccw{ from{ transform:translate(-50%,-50%) rotate(360deg); } to{ transform:translate(-50%,-50%) rotate(0deg); } }
+
+  .mandala-hub{
+    position:absolute; left:680px; top:680px;
+    transform:translate(-50%,-50%);
+    width:122px; height:122px; border-radius:50%; z-index:6;
+    background:var(--navy); color:#F6F1E4; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.3rem;
+    box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold), 0 14px 30px rgba(28,36,64,0.25);
+    animation: mandala-pulse 3.4s ease-in-out infinite;
+  }
+  .mandala-hub small{ display:block; font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.58rem; letter-spacing:0.1em; opacity:0.75; margin-top:2px; }
+  @keyframes mandala-pulse{
+    0%,100%{ box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold), 0 14px 30px rgba(28,36,64,0.25); }
+    50%{ box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 10px var(--gold), 0 18px 38px rgba(28,36,64,0.3); }
+  }
+
+  .spoke-line{ position:absolute; left:680px; top:680px; height:1px; background:var(--line); transform-origin:0 0; z-index:1; }
+
+  .cluster{
+    position:absolute; width:220px; z-index:4;
+    display:flex; flex-direction:column; align-items:center; gap:10px;
+    transform:translate(-50%,-50%) scale(.6);
+    opacity:0;
+    transition: opacity .5s ease, transform .5s cubic-bezier(.3,1.4,.4,1);
+  }
+  .cluster.in{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .cluster-label{
+    appearance:none; cursor:pointer; display:flex; align-items:center; gap:7px;
+    font-family:'Work Sans',sans-serif; font-weight:700; font-size:0.74rem;
+    letter-spacing:0.03em; padding:6px 14px; border-radius:999px;
+    background:var(--bg-raised); border:1.5px solid var(--line); color:var(--ink);
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .cluster-label:hover{ transform:translateY(-2px) scale(1.04); }
+  .cluster-label .dot{ width:8px; height:8px; border-radius:50%; }
+  .cluster-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:9px; width:100%; }
+
+  .zoom-controls{
+    position:absolute; right:14px; bottom:14px; z-index:8;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .zoom-controls button{
+    width:36px; height:36px; border-radius:10px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--ink); font-size:1.15rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow: var(--card-shadow);
+    transition: background .15s ease, transform .15s ease;
+  }
+  .zoom-controls button:hover{ background:var(--bg-sunk); transform:translateY(-1px); }
+  .zoom-hint{ margin-top:10px; font-size:0.76rem; color:var(--ink-soft); text-align:center; }
+
   .people-grid{
     display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
     gap:20px;
@@ -220,31 +318,42 @@
     display:flex; flex-direction:column; align-items:center; text-align:center;
     gap:10px;
     background:var(--bg-raised); border:1px solid var(--line); border-radius:16px;
-    padding:26px 18px 22px;
+    padding:18px 14px 16px;
     box-shadow: var(--card-shadow);
     transition: transform .2s ease, box-shadow .2s ease;
   }
+  .mandala-section .people-grid .person-card{ padding:26px 18px 22px; }
   .person-card:hover{ transform:translateY(-3px); box-shadow: 0 10px 24px rgba(28,36,64,0.1); }
   .person-photo{
-    width:92px; height:92px; border-radius:50%;
+    width:66px; height:66px; border-radius:50%;
     background:var(--bg-sunk); color:var(--ink-soft);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem;
-    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
+    font-family:'Fraunces', serif; font-weight:600; font-size:1rem;
+    box-shadow: 0 0 0 3px var(--bg-raised), 0 0 0 5px var(--gold);
     transition: background .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease;
+  }
+  .mandala-section .people-grid .person-photo{
+    width:92px; height:92px; font-size:1.3rem;
+    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
   }
   .person-card:hover .person-photo{
     background:var(--navy); color:var(--footer-ink);
     box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 7px var(--gold);
     transform:scale(1.05);
   }
-  .person-name{ font-weight:600; font-size:0.98rem; line-height:1.3; }
+  .person-name{ font-weight:600; font-size:0.84rem; line-height:1.3; }
+  .mandala-section .people-grid .person-name{ font-size:0.98rem; }
   .person-name .pref{ color:var(--ink-soft); font-weight:500; }
   .person-title{
     display:inline-block;
     background:var(--bg-sunk); color:var(--red-ink);
-    font-size:0.72rem; font-weight:700; letter-spacing:0.01em;
-    padding:4px 13px; border-radius:999px;
+    font-size:0.64rem; font-weight:700; letter-spacing:0.01em;
+    padding:3px 11px; border-radius:999px;
+  }
+  .mandala-section .people-grid .person-title{ font-size:0.72rem; padding:4px 13px; }
+
+  @media (max-width:760px){
+    .mandala-toolbar{ flex-direction:column; align-items:stretch; }
   }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
@@ -386,110 +495,30 @@
     </div>
   </section>
 
-  <section class="people-section">
+  <section class="mandala-section" id="team">
     <div class="wrap">
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">T</span>
-          <span class="person-name">Thant Thiri Oo <span class="pref">(Tina)</span></span>
-          <span class="person-title">Co-President</span>
+      <div class="mandala-toolbar">
+        <div class="dept-jump" id="deptJump"></div>
+        <button type="button" class="view-toggle-btn" id="toggleListView">List view</button>
+      </div>
+
+      <div class="mandala-viewport" id="mandalaViewport" role="group" aria-label="Interactive team wheel — scroll or pinch to zoom, drag to pan, tap a department to jump in">
+        <div class="mandala-canvas" id="mandalaCanvas">
+          <div class="mandala-ring r2"></div>
+          <div class="mandala-ring r1"></div>
+          <button type="button" class="mandala-hub" id="mandalaHub" title="Reset view">MCC<small>est. UofT</small></button>
+          <div id="spokeLayer"></div>
+          <div id="clusterLayer"></div>
         </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">M</span>
-          <span class="person-name">Kaung Min Phyo <span class="pref">(Martin)</span></span>
-          <span class="person-title">Co-President</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">LL</span>
-          <span class="person-name">Eaint Htoo Pyae Aung <span class="pref">(Lu Lu)</span></span>
-          <span class="person-title">Secretary</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">YY</span>
-          <span class="person-name">Yu Ya Saung Tan Sin</span>
-          <span class="person-title">Treasurer</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">M</span>
-          <span class="person-name">Min Thu Ta <span class="pref">(Min)</span></span>
-          <span class="person-title">Treasurer</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">N</span>
-          <span class="person-name">Hsu Myat Noe Chan <span class="pref">(Noelle)</span></span>
-          <span class="person-title">Graphic Designer</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">H</span>
-          <span class="person-name">Thant Thu Raeil Tun <span class="pref">(Hauk)</span></span>
-          <span class="person-title">Graphic Designer</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">B</span>
-          <span class="person-name">King Ben Sen <span class="pref">(Ben)</span></span>
-          <span class="person-title">Social Media Manager</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">KK</span>
-          <span class="person-name">Khin Kyi Thar Swe</span>
-          <span class="person-title">Social Media Manager</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">AP</span>
-          <span class="person-name">Aung Phone Myat</span>
-          <span class="person-title">Freelance Photographer</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">M</span>
-          <span class="person-name">Naing Lin Khant <span class="pref">(Moarz)</span></span>
-          <span class="person-title">Website Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">S</span>
-          <span class="person-name">Song Hnin Set <span class="pref">(Scarlett)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">S</span>
-          <span class="person-name">Su April Aung <span class="pref">(Su)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">H</span>
-          <span class="person-name">Ei Than Sin Oo <span class="pref">(Hazel)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">G</span>
-          <span class="person-name">Eaint Chan Myae <span class="pref">(Grace)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">SK</span>
-          <span class="person-name">Su Thiri Khit <span class="pref">(Su Khit)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">H</span>
-          <span class="person-name">Satt Paing Htoo <span class="pref">(Hugo)</span></span>
-          <span class="person-title">Events Coordinator</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">C</span>
-          <span class="person-name">Eaint Myint Mo Kyaw <span class="pref">(Catherine)</span></span>
-          <span class="person-title">External Relations</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">KS</span>
-          <span class="person-name">Khaing Su Wai</span>
-          <span class="person-title">Associate</span>
-        </div>
-        <div class="person-card">
-          <span class="person-photo" aria-hidden="true">A</span>
-          <span class="person-name">Alvin Oakga</span>
-          <span class="person-title">Associate</span>
+        <div class="zoom-controls">
+          <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
+          <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
+          <button type="button" id="zoomReset" aria-label="Reset view">&#10227;</button>
         </div>
       </div>
+      <p class="zoom-hint">Scroll or pinch to zoom &middot; drag to pan &middot; tap a department or the crest to jump in</p>
+
+      <div class="people-grid" id="listFallback" hidden></div>
     </div>
   </section>
 
@@ -566,6 +595,286 @@
 </script>
 
 <script src="js/site.js"></script>
+
+<script>
+(function(){
+  var GROUPS = [
+    { key:"leadership", label:"Leadership",         color:"#C08A2E" },
+    { key:"finance",     label:"Finance",            color:"#4B7A3C" },
+    { key:"media",       label:"Media",              color:"#AE3628" },
+    { key:"website",     label:"Website",            color:"#2B4C7E" },
+    { key:"events",      label:"Events",             color:"#B5651D" },
+    { key:"external",    label:"External Relations", color:"#6B4C8A" },
+    { key:"associates",  label:"Associates",         color:"#5F5A48" }
+  ];
+  var GCOLOR = {};
+  GROUPS.forEach(function(g){ GCOLOR[g.key] = g.color; });
+
+  var PEOPLE = [
+    {i:"T",  name:"Thant Thiri Oo",       pref:"Tina",      title:"Co-President",           group:"leadership"},
+    {i:"M",  name:"Kaung Min Phyo",       pref:"Martin",    title:"Co-President",           group:"leadership"},
+    {i:"LL", name:"Eaint Htoo Pyae Aung", pref:"Lu Lu",     title:"Secretary",               group:"leadership"},
+    {i:"YY", name:"Yu Ya Saung Tan Sin",  pref:null,        title:"Treasurer",               group:"finance"},
+    {i:"M",  name:"Min Thu Ta",           pref:"Min",       title:"Treasurer",               group:"finance"},
+    {i:"N",  name:"Hsu Myat Noe Chan",    pref:"Noelle",    title:"Graphic Designer",        group:"media"},
+    {i:"H",  name:"Thant Thu Raeil Tun",  pref:"Hauk",      title:"Graphic Designer",        group:"media"},
+    {i:"B",  name:"King Ben Sen",         pref:"Ben",       title:"Social Media Manager",    group:"media"},
+    {i:"KK", name:"Khin Kyi Thar Swe",    pref:null,        title:"Social Media Manager",    group:"media"},
+    {i:"AP", name:"Aung Phone Myat",      pref:null,        title:"Freelance Photographer",  group:"media"},
+    {i:"M",  name:"Naing Lin Khant",      pref:"Moarz",     title:"Website Coordinator",     group:"website"},
+    {i:"S",  name:"Song Hnin Set",        pref:"Scarlett",  title:"Events Coordinator",      group:"events"},
+    {i:"S",  name:"Su April Aung",        pref:"Su",        title:"Events Coordinator",      group:"events"},
+    {i:"H",  name:"Ei Than Sin Oo",       pref:"Hazel",     title:"Events Coordinator",      group:"events"},
+    {i:"G",  name:"Eaint Chan Myae",      pref:"Grace",     title:"Events Coordinator",      group:"events"},
+    {i:"SK", name:"Su Thiri Khit",        pref:"Su Khit",   title:"Events Coordinator",      group:"events"},
+    {i:"H",  name:"Satt Paing Htoo",      pref:"Hugo",      title:"Events Coordinator",      group:"events"},
+    {i:"C",  name:"Eaint Myint Mo Kyaw",  pref:"Catherine", title:"External Relations",      group:"external"},
+    {i:"KS", name:"Khaing Su Wai",        pref:null,        title:"Associate",               group:"associates"},
+    {i:"A",  name:"Alvin Oakga",          pref:null,        title:"Associate",               group:"associates"}
+  ];
+
+  function personCardHTML(p){
+    var nameHTML = p.pref ? (p.name + ' <span class="pref">(' + p.pref + ')</span>') : p.name;
+    return '<div class="person-card">' +
+      '<span class="person-photo" aria-hidden="true">' + p.i + '</span>' +
+      '<span class="person-name">' + nameHTML + '</span>' +
+      '<span class="person-title">' + p.title + '</span>' +
+      '</div>';
+  }
+
+  var viewport = document.getElementById("mandalaViewport");
+  var canvas = document.getElementById("mandalaCanvas");
+  if (!viewport || !canvas) return;
+
+  var CANVAS = 1360, CENTER = 680, R = 480;
+
+  // ---------- build spokes + clusters ----------
+  var spokeLayer = document.getElementById("spokeLayer");
+  var clusterLayer = document.getElementById("clusterLayer");
+  var deptJump = document.getElementById("deptJump");
+  var clusterCenters = {};
+  var clusterEls = [];
+
+  GROUPS.forEach(function(g, idx){
+    var angleDeg = -90 + idx * (360 / GROUPS.length);
+    var angleRad = angleDeg * Math.PI / 180;
+    var x = CENTER + R * Math.cos(angleRad);
+    var y = CENTER + R * Math.sin(angleRad);
+    clusterCenters[g.key] = { x: x, y: y };
+
+    var len = R - 76;
+    var line = document.createElement("div");
+    line.className = "spoke-line";
+    line.style.width = len + "px";
+    line.style.transform = "rotate(" + angleDeg + "deg) translateX(76px)";
+    spokeLayer.appendChild(line);
+
+    var members = PEOPLE.filter(function(p){ return p.group === g.key; });
+    var cluster = document.createElement("div");
+    cluster.className = "cluster";
+    cluster.style.left = x + "px";
+    cluster.style.top = y + "px";
+    cluster.innerHTML =
+      '<button type="button" class="cluster-label" data-g="' + g.key + '" style="border-color:' + g.color + '">' +
+        '<span class="dot" style="background:' + g.color + '"></span>' + g.label +
+      '</button>' +
+      '<div class="cluster-grid">' + members.map(personCardHTML).join("") + '</div>';
+    clusterLayer.appendChild(cluster);
+    clusterEls.push(cluster);
+
+    var chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "dept-chip";
+    chip.dataset.g = g.key;
+    chip.style.setProperty("--chip-c", g.color);
+    chip.innerHTML = '<span class="dot" style="background:' + g.color + '"></span>' + g.label;
+    deptJump.appendChild(chip);
+  });
+
+  // ---------- pan / zoom state ----------
+  var MIN_SCALE = 0.22, MAX_SCALE = 2.4;
+  var scale = 0.4, tx = 0, ty = 0;
+  var vw = 0, vh = 0;
+
+  function measure(){
+    var r = viewport.getBoundingClientRect();
+    vw = r.width; vh = r.height;
+  }
+
+  function fitInitial(){
+    measure();
+    var fit = Math.min(vw / (CANVAS * 1.08), vh / (CANVAS * 1.08));
+    scale = Math.max(MIN_SCALE, Math.min(0.55, fit));
+    tx = vw / 2 - CENTER * scale;
+    ty = vh / 2 - CENTER * scale;
+  }
+
+  function clampPan(){
+    var margin = 120;
+    var minTx = margin - CANVAS * scale, maxTx = vw - margin;
+    var minTy = margin - CANVAS * scale, maxTy = vh - margin;
+    if (maxTx < minTx) { var mx = (maxTx + minTx) / 2; minTx = maxTx = mx; }
+    if (maxTy < minTy) { var my = (maxTy + minTy) / 2; minTy = maxTy = my; }
+    tx = Math.max(minTx, Math.min(maxTx, tx));
+    ty = Math.max(minTy, Math.min(maxTy, ty));
+  }
+
+  function render(){
+    canvas.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
+  }
+
+  function zoomAt(px, py, newScale){
+    newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+    var cxp = (px - tx) / scale, cyp = (py - ty) / scale;
+    scale = newScale;
+    tx = px - cxp * scale;
+    ty = py - cyp * scale;
+    clampPan();
+    render();
+  }
+
+  function animatedTo(targetScale, targetCx, targetCy){
+    canvas.classList.add("animating");
+    scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
+    tx = vw / 2 - targetCx * scale;
+    ty = vh / 2 - targetCy * scale;
+    clampPan();
+    render();
+    window.setTimeout(function(){ canvas.classList.remove("animating"); }, 700);
+  }
+
+  function jumpTo(key){
+    deptJump.querySelectorAll(".dept-chip").forEach(function(c){
+      c.classList.toggle("active", c.dataset.g === key);
+    });
+    var c = clusterCenters[key];
+    if (!c) return;
+    animatedTo(1.15, c.x, c.y);
+  }
+
+  function resetView(){
+    deptJump.querySelectorAll(".dept-chip").forEach(function(c){ c.classList.remove("active"); });
+    fitInitial();
+    canvas.classList.add("animating");
+    render();
+    window.setTimeout(function(){ canvas.classList.remove("animating"); }, 700);
+  }
+
+  // ---------- wire up interactions ----------
+  fitInitial();
+  render();
+  requestAnimationFrame(function(){
+    canvas.classList.add("ready");
+    clusterEls.forEach(function(el, idx){
+      window.setTimeout(function(){ el.classList.add("in"); }, 90 + idx * 90);
+    });
+  });
+
+  viewport.addEventListener("wheel", function(e){
+    e.preventDefault();
+    var r = viewport.getBoundingClientRect();
+    var px = e.clientX - r.left, py = e.clientY - r.top;
+    var delta = e.deltaY < 0 ? 1.12 : 1/1.12;
+    zoomAt(px, py, scale * delta);
+  }, { passive:false });
+
+  var dragging = false, dragStartX = 0, dragStartY = 0, startTx = 0, startTy = 0, moved = false;
+  viewport.addEventListener("pointerdown", function(e){
+    if (e.pointerType === "touch") return; // touch handled separately for pinch support
+    dragging = true; moved = false;
+    dragStartX = e.clientX; dragStartY = e.clientY;
+    startTx = tx; startTy = ty;
+    viewport.classList.add("dragging");
+    viewport.setPointerCapture && viewport.setPointerCapture(e.pointerId);
+  });
+  viewport.addEventListener("pointermove", function(e){
+    if (!dragging) return;
+    var dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
+    tx = startTx + dx; ty = startTy + dy;
+    clampPan(); render();
+  });
+  function endDrag(){ dragging = false; viewport.classList.remove("dragging"); }
+  viewport.addEventListener("pointerup", endDrag);
+  viewport.addEventListener("pointerleave", endDrag);
+  viewport.addEventListener("pointercancel", endDrag);
+
+  // touch: 1-finger drag, 2-finger pinch
+  var touchMode = null, touchStartDist = 0, touchStartScale = 1, touchStartMid = {x:0,y:0};
+  viewport.addEventListener("touchstart", function(e){
+    if (e.touches.length === 1){
+      touchMode = "drag";
+      dragStartX = e.touches[0].clientX; dragStartY = e.touches[0].clientY;
+      startTx = tx; startTy = ty;
+    } else if (e.touches.length === 2){
+      touchMode = "pinch";
+      var r = viewport.getBoundingClientRect();
+      var t0 = e.touches[0], t1 = e.touches[1];
+      touchStartDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      touchStartScale = scale;
+      touchStartMid = { x:(t0.clientX + t1.clientX)/2 - r.left, y:(t0.clientY + t1.clientY)/2 - r.top };
+    }
+  }, { passive:true });
+  viewport.addEventListener("touchmove", function(e){
+    if (touchMode === "drag" && e.touches.length === 1){
+      e.preventDefault();
+      var dx = e.touches[0].clientX - dragStartX, dy = e.touches[0].clientY - dragStartY;
+      tx = startTx + dx; ty = startTy + dy;
+      clampPan(); render();
+    } else if (touchMode === "pinch" && e.touches.length === 2){
+      e.preventDefault();
+      var t0 = e.touches[0], t1 = e.touches[1];
+      var dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      var newScale = touchStartScale * (dist / touchStartDist);
+      zoomAt(touchStartMid.x, touchStartMid.y, newScale);
+    }
+  }, { passive:false });
+  viewport.addEventListener("touchend", function(){ touchMode = null; });
+
+  viewport.addEventListener("click", function(e){
+    if (moved) { moved = false; return; }
+    var labelBtn = e.target.closest ? e.target.closest(".cluster-label") : null;
+    if (labelBtn) { jumpTo(labelBtn.dataset.g); return; }
+  });
+
+  document.getElementById("mandalaHub").addEventListener("click", resetView);
+  document.getElementById("zoomIn").addEventListener("click", function(){ zoomAt(vw/2, vh/2, scale * 1.3); });
+  document.getElementById("zoomOut").addEventListener("click", function(){ zoomAt(vw/2, vh/2, scale / 1.3); });
+  document.getElementById("zoomReset").addEventListener("click", resetView);
+  deptJump.addEventListener("click", function(e){
+    var chip = e.target.closest ? e.target.closest(".dept-chip") : null;
+    if (chip) jumpTo(chip.dataset.g);
+  });
+
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(function(){ measure(); clampPan(); render(); }, 150);
+  });
+
+  // ---------- list view toggle ----------
+  var listEl = document.getElementById("listFallback");
+  var toggleBtn = document.getElementById("toggleListView");
+  var hint = document.querySelector(".zoom-hint");
+  var toolbarJump = deptJump;
+  var listBuilt = false;
+  var showingList = false;
+  toggleBtn.addEventListener("click", function(){
+    showingList = !showingList;
+    if (showingList && !listBuilt){
+      listEl.innerHTML = PEOPLE.map(personCardHTML).join("");
+      listBuilt = true;
+    }
+    listEl.hidden = !showingList;
+    viewport.hidden = showingList;
+    hint.hidden = showingList;
+    toolbarJump.hidden = showingList;
+    toggleBtn.textContent = showingList ? "Wheel view" : "List view";
+    if (!showingList){ measure(); clampPan(); render(); }
+  });
+})();
+</script>
+
 
 </body>
 </html>
