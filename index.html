@@ -220,7 +220,7 @@
   }
 
   /* ---------- HERO ---------- */
-  .hero{ position:relative; overflow:clip; padding-block: clamp(40px,7vw,72px); }
+  .hero{ position:relative; overflow:clip; padding-block: clamp(40px,7vw,72px) clamp(12px,2.5vw,28px); }
   /* Soft animated ShaderGradient behind the hero (js/hero-gradient.js, lazy-loaded
      after the page is interactive). The CSS gradient below is the always-on
      fallback — what you see before it loads, with reduced-motion, or without WebGL. */
@@ -246,7 +246,8 @@
   /* Hero greeting: "မင်္ဂလာပါ" above the heading. js/site.js splits it into its four syllables and
      writes them in left to right — each outline traces, then fills with ink — on every visit,
      and again whenever you scroll back up to it. */
-  .greet{ display:block; height:clamp(58px, 7.6vw, 104px); width:auto; max-width:100%; overflow:visible; color:var(--red-ink); margin:6px 0 2px -2px; }
+  .greet{ display:block; height:clamp(48px, 6vw, 84px); width:auto; max-width:100%; overflow:visible; color:var(--red-ink); margin:16px 0 0 -2px; }
+  .hero .greet ~ h1{ margin-top:4px; }
   .greet text{ font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px; fill:currentColor; }
   .greet-pending .greet{ visibility:hidden; }
   .greet .greet-pen text{ fill:none; stroke:var(--red-ink); stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
@@ -320,7 +321,7 @@
   }
 
   /* ---------- EVENT ---------- */
-  .event{ padding-block: clamp(40px,6vw,76px); }
+  .event{ padding-block: clamp(24px,3.5vw,44px) clamp(40px,6vw,76px); }
   .event-head{ max-width:60ch; margin-bottom:40px; }
   .event-head h2{ font-size:clamp(2rem,4vw,2.9rem); margin-top:10px; }
   .event-head p{ color:var(--ink-soft); margin-top:14px; font-size:1.02rem; }
@@ -389,9 +390,9 @@
   }
 
   /* ---------- NEXT EVENT: rolling countdown + gentle 3D tilt (js/site.js) ---------- */
-  .countdown-num .reel{ display:inline-block; height:1.05em; overflow:hidden; vertical-align:top; }
+  .countdown-num .reel{ display:inline-block; height:1.2em; overflow:hidden; vertical-align:top; margin-block:-0.1em; }
   .countdown-num .reel-s{ display:block; transition:transform .65s cubic-bezier(.22,1,.36,1); }
-  .countdown-num .reel-s span{ display:block; height:1.05em; line-height:1.05em; }
+  .countdown-num .reel-s span{ display:block; height:1.2em; line-height:1.2em; text-align:center; }
   #event .event-card.tilt{ transform-style:preserve-3d; will-change:transform; transition:box-shadow .5s ease; }
   #event .event-card.tilt.hovering{ box-shadow:0 30px 60px rgba(28,36,64,0.16); }
   #event .event-card.tilt .event-visual img{ will-change:transform; }
@@ -707,6 +708,7 @@
     <div class="hero-gradient" id="hero-gradient" data-enabled="false" aria-hidden="true"></div>
     <div class="wrap hero-grid">
       <div class="hero-copy">
+        <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
         <svg class="greet" id="js-greet" viewBox="0 -96 560 132" role="img" aria-label="မင်္ဂလာပါ (Mingalabar)"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
         <script>
           // Hide the greeting until js/site.js writes it in (it un-hides itself after 3s if anything goes wrong).
@@ -716,7 +718,6 @@
             setTimeout(function(){ h.classList.remove('greet-pending'); }, 3000);
           }catch(e){}})();
         </script>
-        <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
         <h1 data-i18n="hero_h1">Mingalabar</h1>
         <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.</p>
         <div class="cta-row">
