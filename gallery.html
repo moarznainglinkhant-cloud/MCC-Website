@@ -217,6 +217,7 @@
   .hive-section{ padding-block: 8px clamp(48px,7vw,80px); }
   .hive-stage{ position:relative; margin-inline:auto; opacity:0; transition: opacity .6s ease; }
   .hive-stage.ready{ opacity:1; }
+  .hive-stage.fill{ overflow:hidden; }
   .hive-stage.pan{
     width:100%; height:min(72vh, 640px); height:min(72svh, 640px);
     overflow:hidden; touch-action:none; cursor:grab;
@@ -367,7 +368,7 @@
   }
   .btn-footer.exec{ border-color:var(--gold); color:var(--gold); }
   .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
-  /* The nav has 6 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
+  /* The nav has 7 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
   nav.links{ gap:clamp(12px,1.7vw,30px); }
   @media (max-width:1120px){
     nav.links{ display:none; }
@@ -406,6 +407,7 @@
       <a href="index.html" data-i18n="label_welcome">Welcome</a>
       <a href="events.html#past-events" data-i18n="label_all_events">Events</a>
       <a href="about.html" data-i18n="label_about">About</a>
+      <a href="gallery.html" class="current" data-i18n="label_gallery">Gallery</a>
       <a href="newsletter.html" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
       <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
       <div class="lang-toggle" role="group" aria-label="Language">
@@ -420,6 +422,7 @@
     <a href="index.html" data-i18n="label_welcome">Welcome</a>
     <a href="events.html#past-events" data-i18n="label_all_events">Events</a>
     <a href="about.html" data-i18n="label_about">About</a>
+    <a href="gallery.html" class="current" data-i18n="label_gallery">Gallery</a>
     <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
     <div class="lang-toggle" role="group" aria-label="Language">
       <span class="lang-toggle-slider" aria-hidden="true"></span>
@@ -528,18 +531,24 @@
     { thumb:"images/gallery/thumbs/welcome-bottom.webp",   full:"images/welcome_bottom.jpg",   w:1000, h:563, event:null, alt:"Members playing on a field on campus" },
     { thumb:"images/gallery/thumbs/welcome-vertical.webp", full:"images/welcome_vertical.jpg", w:890,  h:733, event:null, alt:"A row of small painted dolls on a sunny windowsill" }
   ];
-  // Placeholder spots so the honeycomb has its full shape until real photos arrive. Set to 0 once it's full.
-  var PLACEHOLDERS = 27;
+  // Until there are enough photos, the empty spots in the honeycomb show soft placeholders.
+  // Set FILL_EMPTY to false once the gallery has plenty of real photos.
+  var FILL_EMPTY = true;
+  var MIN_SPOTS = 30;          // phones: the honeycomb has at least this many spots
   var PH_TINTS = ["#E9D8B4","#D9B37A","#E2B9A8","#B9C9A6","#A9B7CC","#C8B6D2","#E6CDA9","#D7A9A3","#C9D3B8","#B8C4D6"];
 
   var stage = document.getElementById("hiveStage");
+  var lbOpen = false;
   var hint = document.getElementById("hiveHint");
   if (!stage) return;
 
   var CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>';
-  var items = PHOTOS.slice();
-  for (var n = 0; n < PLACEHOLDERS; n++) items.push({ ph: PH_TINTS[n % PH_TINTS.length] });
-  var N = items.length;
+  var items = [], N = 0;
+  function makeItems(count){
+    items = PHOTOS.slice();
+    for (var n = 0; FILL_EMPTY && items.length < count; n++) items.push({ ph: PH_TINTS[n % PH_TINTS.length] });
+    N = items.length;
+  }
   var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
   var reduceMotion = !!(mq && mq.matches);
   var finePointer = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
@@ -558,10 +567,16 @@
     }
     return out;
   }
-  var axial = hexSpiral(N);
-
   // ---------- build ----------
-  var bubbles = items.map(function(it, i){
+  var cap = document.createElement("div");
+  cap.className = "hive-cap";
+  cap.setAttribute("aria-hidden", "true");
+  stage.appendChild(cap);
+  var bubbles = [], hot = -1;
+  function buildBubbles(){
+    bubbles.forEach(function(b){ b.el.remove(); });
+    hot = -1;
+    bubbles = items.map(function(it, i){
     var b = document.createElement("button");
     b.type = "button";
     b.className = "bubble" + (it.ph ? " ph" : "");
@@ -574,50 +589,80 @@
       b.innerHTML = '<span class="bubble-face"><img src="' + esc(it.thumb) + '" alt="" loading="' + (i < 7 ? "eager" : "lazy") + '" decoding="async" draggable="false"></span>';
     }
     b.dataset.i = i;
-    stage.appendChild(b);
+    stage.insertBefore(b, cap);
     return { el:b, bx:0, by:0, x:0, y:0, s:1, tx:0, ty:0, ts:1 };
-  });
-  var cap = document.createElement("div");
-  cap.className = "hive-cap";
-  cap.setAttribute("aria-hidden", "true");
-  stage.appendChild(cap);
+    });
+  }
 
   // ---------- layout ----------
   var M = { mode:"hover", D:118, P:134, w:0, h:0, ox:0, oy:0, minX:0, maxX:0, minY:0, maxY:0 };
   // Lens settings for the desktop hover: how much the photo under the cursor grows, and how wide the effect is.
   var LENS_A = 0.9, LENS_S = 1.05;
 
+  // Hex lattice that covers a W x H area with whole bubbles, rows offset by half a step.
+  function lattice(P, W, H){
+    var D = P * 0.88, inset = D / 2 + 10, rowH = P * 0.8660254, pts = [];
+    var rows = Math.max(1, Math.floor((H - 2 * inset) / rowH) + 1);
+    var nE = Math.max(1, Math.floor((W - 2 * inset) / P) + 1);
+    var y0 = (H - (rows - 1) * rowH) / 2, x0 = (W - (nE - 1) * P) / 2;
+    for (var j = 0; j < rows; j++){
+      var odd = j % 2 === 1, n = odd ? nE - 1 : nE;
+      for (var c = 0; c < n; c++) pts.push({ x: x0 + c * P + (odd ? P / 2 : 0), y: y0 + j * rowH });
+    }
+    return pts;
+  }
+  var lastSig = "";
   function layout(){
+    if (lbOpen) return;
     var W = stage.parentNode.clientWidth;
     M.mode = (W >= 760 && finePointer) ? "hover" : "pan";
     stage.classList.toggle("pan", M.mode === "pan");
+    stage.classList.toggle("fill", M.mode === "hover");
     if (hint) hint.hidden = M.mode !== "pan";
-    M.D = M.mode === "hover" ? 118 : 92;
-    M.P = M.D + (M.mode === "hover" ? 16 : 12);
+    var want = FILL_EMPTY ? Math.max(PHOTOS.length, MIN_SPOTS) : PHOTOS.length;
+    var pos = [];
+
+    if (M.mode === "hover"){
+      // Fill the whole screen below the nav: the largest bubbles that still give every photo a spot.
+      var nav = document.querySelector("header.nav");
+      var H = Math.max(520, window.innerHeight - (nav ? nav.offsetHeight : 70));
+      var P = 0, pts = null;
+      for (var tryP = 230; tryP >= 104; tryP -= 2){
+        var t = lattice(tryP, W, H);
+        if (t.length >= want){ P = tryP; pts = t; break; }
+      }
+      if (!pts){ P = 104; do { H += P * 0.8660254; pts = lattice(P, W, H); } while (pts.length < want); }   // more photos than one screen: grow taller
+      M.D = Math.round(P * 0.88);
+      M.P = P;
+      M.w = W; M.h = H;
+      M.ox = W / 2; M.oy = H / 2;
+      stage.style.width = "100%";
+      stage.style.height = H + "px";
+      // Photos fill from the middle outward.
+      pts.sort(function(a, b){ return Math.hypot(a.x - W / 2, a.y - H / 2) - Math.hypot(b.x - W / 2, b.y - H / 2); });
+      makeItems(FILL_EMPTY ? pts.length : want);
+      pos = pts.slice(0, N).map(function(pt){ return { x: pt.x - W / 2, y: pt.y - H / 2 }; });
+    } else {
+      M.D = 92;
+      M.P = M.D + 12;
+      stage.style.width = "";
+      stage.style.height = "";
+      M.w = stage.clientWidth; M.h = stage.clientHeight;
+      M.ox = M.w / 2; M.oy = M.h / 2;
+      makeItems(want);
+      pos = hexSpiral(N).map(function(a){ return { x: M.P * (a.q + a.r / 2), y: M.P * 0.8660254 * a.r }; });
+    }
+
+    var sig = M.mode + ":" + N;
+    if (sig !== lastSig){ buildBubbles(); lastSig = sig; }
     var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
     bubbles.forEach(function(b, i){
-      b.bx = M.P * (axial[i].q + axial[i].r / 2);
-      b.by = M.P * 0.8660254 * axial[i].r;
+      b.bx = pos[i].x; b.by = pos[i].y;
       minX = Math.min(minX, b.bx); maxX = Math.max(maxX, b.bx);
       minY = Math.min(minY, b.by); maxY = Math.max(maxY, b.by);
       b.el.style.width = b.el.style.height = M.D + "px";
     });
     M.minX = minX; M.maxX = maxX; M.minY = minY; M.maxY = maxY;
-    if (M.mode === "hover"){
-      // Room around the edges for the lens to push photos outward.
-      var pad = M.D * 0.5 + 56;
-      M.w = (maxX - minX) + M.D + pad * 2;
-      M.h = (maxY - minY) + M.D + pad * 2;
-      stage.style.width = Math.min(M.w, W) + "px";
-      stage.style.height = M.h + "px";
-      M.ox = Math.min(M.w, W) / 2 - (minX + maxX) / 2;
-      M.oy = pad + M.D / 2 - minY;
-    } else {
-      stage.style.width = "";
-      stage.style.height = "";
-      M.w = stage.clientWidth; M.h = stage.clientHeight;
-      M.ox = M.w / 2; M.oy = M.h / 2;
-    }
   }
 
   // ---------- desktop: magnifying lens that follows the cursor ----------
@@ -662,7 +707,7 @@
     return -1;
   }
 
-  var hot = -1, raf = null;
+  var raf = null;
   function frame(){
     raf = null;
     var still = true;
@@ -818,7 +863,7 @@
     '<button type="button" class="lb-btn lb-close" aria-label="Close">' + CROSS + '</button>';
   document.body.appendChild(lb);
   var media = lb.querySelector(".lb-media"), countEl = lb.querySelector(".lb-count"), capEl = lb.querySelector(".lb-cap");
-  var lbOpen = false, lbIdx = -1, lbBusy = false, lastFocus = null;
+  var lbIdx = -1, lbBusy = false, lastFocus = null;
 
   function pad2(n){ return ("0" + n).slice(-2); }
   function targetRect(it){
@@ -928,15 +973,15 @@
   window.addEventListener("resize", function(){ if (lbOpen && !lbBusy){ media.classList.remove("anim"); setBox(targetRect(items[lbIdx]), "18px"); } });
 
   // ---------- start ----------
+  function snap(){ computeTargets(); bubbles.forEach(function(b){ b.x = b.tx; b.y = b.ty; b.s = b.ts; }); }
   layout();
-  computeTargets();
-  bubbles.forEach(function(b){ b.x = b.tx; b.y = b.ty; b.s = b.ts; });
+  snap();
   frame();
   stage.classList.add("ready");
   var resizeTimer = null;
   window.addEventListener("resize", function(){
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(function(){ layout(); kick(); }, 120);
+    resizeTimer = window.setTimeout(function(){ var before = lastSig; layout(); if (lastSig !== before) snap(); kick(); }, 120);
   });
 })();
 </script>
