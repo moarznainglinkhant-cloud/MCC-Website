@@ -612,6 +612,7 @@ function calendarLinks(ev) {
   const ymd = iso => iso.replace(/-/g, "");
   const dayAfter = iso => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + 1); return d.toISOString().slice(0, 10).replace(/-/g, ""); };
 
+  const valid = d => d instanceof Date && !isNaN(d.getTime());
   const startT = parseEventStartHHMMSS(ev);
   let start = null, end = null;
   if (startT) {
@@ -619,9 +620,10 @@ function calendarLinks(ev) {
     const endT = parseEventEndHHMMSS(ev);
     if (endT) {
       end = torontoWallToUTC(`${ev.date}T${endT}`);
-      if (end <= start) end = new Date(end.getTime() + 86400000);   // runs past midnight
+      if (valid(end) && valid(start) && end <= start) end = new Date(end.getTime() + 86400000);   // runs past midnight
     }
-    if (!end) end = new Date(start.getTime() + 2 * 3600000);        // no end time given: assume 2 hours
+    if (valid(start) && !valid(end)) end = new Date(start.getTime() + 2 * 3600000);   // no end time given: assume 2 hours
+    if (!valid(start)) { start = null; end = null; }                                    // unreadable time: all-day entry
   }
   const details = [ev.description, ev.link ? "Details: " + ev.link : "", "Myanmar Culture Club \u00b7 uoftmcc.ca"].filter(Boolean).join("\n\n");
 
@@ -656,8 +658,10 @@ function calendarLinks(ev) {
 }
 
 function calendarRow(ev, mmClass) {
-  if (!ev || !ev.date) return "";
-  const cal = calendarLinks(ev);
+  if (!ev || !/^\d{4}-\d{2}-\d{2}$/.test(String(ev.date || "").trim())) return "";
+  let cal;
+  try { cal = calendarLinks({ ...ev, date: String(ev.date).trim() }); }
+  catch (err) { console.warn("Calendar links skipped:", err); return ""; }
   return `
     <div class="cal-row">
       <span class="cal-label ${mmClass}">${calendarIcon()}${t("add_to_calendar")}</span>
@@ -1091,10 +1095,10 @@ function renderSiteData(eventRows, heroRows) {
   _cachedPast = pastForGallery;
   _dataLoaded = true;
 
-  renderFeaturedEvent(next);
-  renderComingUp(rest);
-  renderPastGallery(pastForGallery);
-  renderHeroPhotos(heroRows);
+  // Each section draws on its own, so a problem in one never leaves the others blank.
+  [() => renderFeaturedEvent(next), () => renderComingUp(rest),
+   () => renderPastGallery(pastForGallery), () => renderHeroPhotos(heroRows)]
+    .forEach(draw => { try { draw(); } catch (err) { console.error("Section failed to draw:", err); } });
 
   ["js-event-visual", "js-events-grid", "js-past-gallery", "js-hero-photos"]
     .forEach(id => fadeInImages(document.getElementById(id)));
