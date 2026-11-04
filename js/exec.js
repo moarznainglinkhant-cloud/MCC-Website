@@ -1628,9 +1628,17 @@
         if (u.error || !u.data || !u.data.user) { return sb.auth.signOut().then(goLogin); }
         var user = u.data.user;
 
-        return sb.from("profiles").select("display_name, role").eq("id", user.id).maybeSingle()
+        return sb.from("profiles").select("display_name, role, is_exec").eq("id", user.id).maybeSingle()
           .then(function (p) {
             var prof = p.data;
+            // Members have accounts too now; only execs get past this point.
+            // (The database enforces this as well; this just shows a friendly message.)
+            if (!prof || prof.is_exec !== true) {
+              var boot = $("boot");
+              boot.classList.add("failed");
+              $("boot-text").innerHTML = "This area is for MCC execs only.<br><a href=\"index.html\">Back to the website</a>";
+              return;
+            }
             var name = (prof && prof.display_name) || (user.email || "").split("@")[0] || "friend";
             var role = (prof && prof.role) || "exec";
             me = { id: user.id, name: name, role: role, email: user.email || "" };
