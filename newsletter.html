@@ -354,7 +354,7 @@
   }
   .btn-footer.exec{ border-color:var(--gold); color:var(--gold); }
   .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
-  /* The nav has 5 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
+  /* The nav has 6 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
   nav.links{ gap:clamp(12px,1.7vw,30px); }
   @media (max-width:1120px){
     nav.links{ display:none; }
@@ -419,6 +419,7 @@
     <nav class="links">
       <a href="index.html" data-i18n="label_welcome">Welcome</a>
       <a href="#past-events" data-i18n="label_all_events">Events</a>
+      <a href="about.html" data-i18n="label_about">About</a>
       <a href="newsletter.html" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
       <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
       <div class="lang-toggle" role="group" aria-label="Language">
@@ -432,6 +433,7 @@
   <div id="mobile-panel" hidden>
     <a href="index.html" data-i18n="label_welcome">Welcome</a>
     <a href="#past-events" data-i18n="label_all_events">Events</a>
+    <a href="about.html" data-i18n="label_about">About</a>
     <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
     <div class="lang-toggle" role="group" aria-label="Language">
       <span class="lang-toggle-slider" aria-hidden="true"></span>
