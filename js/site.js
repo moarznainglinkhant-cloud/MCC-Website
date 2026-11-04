@@ -115,6 +115,9 @@ const I18N = {
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
     about_close_h: "There's always a seat for you at our table.",
+    gallery_eyebrow: "Gallery",
+    gallery_h1: "Moments from our events",
+    gallery_hint: "Drag to explore · tap a photo to open it",
   },
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
@@ -169,6 +172,9 @@ const I18N = {
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
     about_close_h: "ကျွန်ုပ်တို့စားပွဲတွင် သင့်အတွက် နေရာတစ်နေရာ ရှိပါသည်။",
+    gallery_eyebrow: "ဓာတ်ပုံပြခန်း",
+    gallery_h1: "ကျွန်ုပ်တို့၏ အခမ်းအနားများမှ အမှတ်တရများ",
+    gallery_hint: "ရွှေ့၍ ကြည့်ရှုပါ · ဓာတ်ပုံကို နှိပ်၍ ဖွင့်ပါ",
   },
 };
 

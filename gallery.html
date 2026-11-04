@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Myanmar Culture Club (University of Toronto) — site designed & built by Naing Lin Khant (Moarz). -->
+<title>Gallery — Myanmar Culture Club</title>
+<meta name="author" content="Naing Lin Khant (Moarz)">
+<meta name="description" content="Photos from Myanmar Culture Club events at the University of Toronto.">
+<link rel="canonical" href="https://uoftmcc.ca/gallery.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
+<link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
+
+<!-- Social share preview (iMessage, Instagram, Discord, Twitter/X, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Myanmar Culture Club">
+<meta property="og:title" content="Gallery — Myanmar Culture Club">
+<meta property="og:description" content="Photos from Myanmar Culture Club events at the University of Toronto.">
+<meta property="og:url" content="https://uoftmcc.ca/gallery.html">
+<meta property="og:image" content="https://uoftmcc.ca/images/og-banner.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Myanmar Culture Club — University of Toronto">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gallery — Myanmar Culture Club">
+<meta name="twitter:description" content="Photos from Myanmar Culture Club events at the University of Toronto.">
+<meta name="twitter:image" content="https://uoftmcc.ca/images/og-banner.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Gallery — Myanmar Culture Club",
+  "about": "Photos from UofT Myanmar Culture Club events",
+  "creator": {
+    "@type": "Person",
+    "name": "Naing Lin Khant",
+    "alternateName": "Moarz"
+  }
+}
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Yinmar&display=swap');
+
+  :root{
+    --bg:#F6F1E4;
+    --bg-raised:#FDFAF2;
+    --bg-sunk:#EEE6D3;
+    --ink:#1C2440;
+    --ink-soft:#5F5A48;
+    --red:#AE3628;
+    --red-ink:#8C2A1F;
+    --gold:#C08A2E;
+    --green:#4B7A3C;
+    --navy:#1C2440;
+    --navy-deep:#12162A;
+    --line: rgba(28,36,64,0.16);
+    --card-shadow: 0 1px 0 rgba(28,36,64,0.06);
+    --footer-bg:#1C2440;
+    --footer-ink:#F6F1E4;
+    --footer-ink-soft: rgba(246,241,228,0.68);
+    color-scheme: light;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans', system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:0.001ms !important; }
+    .reveal{ opacity:1 !important; transform:none !important; }
+  }
+
+  /* Soft cross-fade when navigating between pages, in browsers that support it — a plain instant navigation elsewhere. */
+  @view-transition{ navigation:auto; }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  .reveal{ opacity:0; transform:translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal.is-visible{ opacity:1; transform:translateY(0); }
+  @media (scripting: none){ .reveal{ opacity:1 !important; transform:none !important; } }
+  html{ scroll-behavior:smooth; }
+
+  h1,h2,h3{ font-family:'Fraunces', Georgia, serif; margin:0; color:var(--ink); text-wrap:balance; }
+  p{ margin:0; }
+  a{ color:inherit; }
+  .myanmar{ font-family:'Noto Sans Myanmar','Work Sans', sans-serif; }
+
+  .wrap{ max-width:1240px; margin-inline:auto; padding-inline: clamp(18px, 4vw, 56px); }
+
+  .eyebrow{
+    font-family:'Work Sans', sans-serif;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--red-ink);
+  }
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index:50;
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--line);
+    transform: translateZ(0);
+    will-change: backdrop-filter;
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block:14px;
+    gap:16px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; }
+  .brand img{
+    width:40px; height:40px; border-radius:50%; display:block;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--line);
+  }
+  .brand-name{
+    font-family:'Fraunces', serif; font-weight:600; font-size:0.98rem;
+    letter-spacing:0.01em; line-height:1.15;
+  }
+  .brand-name small{
+    display:block; font-family:'Work Sans',sans-serif; font-weight:600;
+    font-size:0.62rem; letter-spacing:0.14em; color:var(--ink-soft); text-transform:uppercase;
+  }
+  nav.links{ display:flex; align-items:center; gap:clamp(18px,3vw,34px); }
+  nav.links a{
+    font-size:0.82rem; font-weight:600; letter-spacing:0.03em;
+    text-decoration:none; color:var(--ink); position:relative; padding-block:4px;
+  }
+  nav.links a::after{
+    content:''; position:absolute; left:0; right:0; bottom:-2px; height:2px;
+    background:var(--red); transform:scaleX(0); transform-origin:left;
+    transition:transform .25s ease;
+  }
+  nav.links a:hover::after{ transform:scaleX(1); }
+  nav.links a.current::after{ transform:scaleX(1); background:var(--gold); }
+  .nav-cta{
+    background:var(--navy); color:var(--footer-ink) !important;
+    padding:9px 18px; border-radius:999px; font-size:0.78rem !important;
+  }
+  .nav-cta::after{ display:none; }
+  .lang-toggle{
+    position:relative;
+    display:flex; align-items:center;
+    border:1px solid var(--line); border-radius:999px; padding:3px;
+  }
+  .lang-toggle-slider{
+    position:absolute; top:3px; left:3px; bottom:3px;
+    width:calc(50% - 3px);
+    background:var(--navy); border-radius:999px;
+    transition:transform .28s cubic-bezier(.65,0,.35,1);
+    z-index:0;
+  }
+  .lang-toggle[data-active="mm"] .lang-toggle-slider{ transform:translateX(100%); }
+  .lang-toggle button{
+    position:relative; z-index:1;
+    border:none; background:none; cursor:pointer;
+    font-family:'Work Sans', 'Noto Sans Myanmar', sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.04em;
+    color:var(--ink-soft); padding:5px 11px; border-radius:999px;
+    flex:1 1 0; text-align:center;
+    transition: color .18s ease;
+  }
+  .lang-toggle button.active{ color:var(--footer-ink); }
+  .lang-toggle button:hover:not(.active){ color:var(--ink); }
+  #mobile-panel .lang-toggle{ align-self:flex-start; margin-top:4px; }
+  @media (prefers-reduced-motion: reduce){
+    .lang-toggle-slider{ transition:none; }
+  }
+  .menu-btn{
+    display:none; background:none; border:1px solid var(--line); border-radius:8px;
+    width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{
+    content:''; display:block; width:18px; height:2px; background:var(--ink); position:relative;
+  }
+  .menu-btn span::before{ position:absolute; top:-6px; }
+  .menu-btn span::after{ position:absolute; top:6px; }
+  #mobile-panel{
+    border-top:1px solid var(--line);
+    padding:16px clamp(18px,4vw,56px) 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  #mobile-panel[hidden]{ display:none; }
+  #mobile-panel a{ text-decoration:none; color:var(--ink); font-weight:600; font-size:0.95rem; }
+
+  @media (max-width:760px){
+    nav.links{ display:none; }
+    .menu-btn{ display:flex; }
+  }
+
+  /* ---------- GALLERY HERO ---------- */
+  @keyframes gal-rise{ from{ opacity:0; transform:translateY(26px); filter:blur(6px); } to{ opacity:1; transform:none; filter:none; } }
+  @keyframes gal-watermark{ from{ opacity:0; } to{ opacity:0.045; } }
+  .gallery-hero{ position:relative; overflow:clip; padding-block: clamp(48px,8vw,88px) clamp(12px,3vw,24px); }
+  .gallery-hero .watermark{
+    position:absolute; left:50%; top:0; transform:translate(-50%,-18%); z-index:0;
+    font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-weight:400;
+    font-size:clamp(4rem, 20vw, 13rem); color:var(--ink); opacity:0.045;
+    white-space:nowrap; pointer-events:none;
+    animation: gal-watermark 1.6s .1s both ease-out;
+  }
+  .gallery-hero .wrap{ position:relative; z-index:1; }
+  .gallery-hero .eyebrow{ display:inline-block; animation: gal-rise .8s .05s both cubic-bezier(.2,.8,.2,1); }
+  .gallery-hero h1{ font-size:clamp(2.1rem,5vw,3.2rem); margin-block:10px 0; animation: gal-rise 1s .16s both cubic-bezier(.2,.8,.2,1); }
+
+  /* ---------- HONEYCOMB (Apple Watch style) ---------- */
+  .hive-section{ padding-block: 8px clamp(48px,7vw,80px); }
+  .hive-stage{ position:relative; margin-inline:auto; opacity:0; transition: opacity .6s ease; }
+  .hive-stage.ready{ opacity:1; }
+  .hive-stage.pan{
+    width:100%; height:min(72vh, 640px); height:min(72svh, 640px);
+    overflow:hidden; touch-action:none; cursor:grab;
+    -webkit-mask-image: radial-gradient(ellipse 74% 68% at 50% 50%, #000 58%, transparent 100%);
+            mask-image: radial-gradient(ellipse 74% 68% at 50% 50%, #000 58%, transparent 100%);
+  }
+  .hive-stage.pan.dragging{ cursor:grabbing; }
+  .bubble{
+    position:absolute; left:0; top:0; padding:0; border:0; margin:0;
+    border-radius:50%; background:none; cursor:pointer;
+    will-change:transform; -webkit-tap-highlight-color:transparent;
+  }
+  .bubble-face{
+    display:block; width:100%; height:100%; border-radius:50%; overflow:hidden;
+    background:var(--bg-sunk);
+    box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px rgba(192,138,46,0.45), 0 10px 24px rgba(28,36,64,0.14);
+    transition: box-shadow .25s ease;
+  }
+  .bubble-face img{ display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-drag:none; }
+  .bubble.ph .bubble-face{
+    display:flex; align-items:center; justify-content:center; color:rgba(28,36,64,0.26);
+    background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0) 55%), var(--ph);
+  }
+  .bubble.ph svg{ width:30%; height:30%; }
+  .bubble.hot .bubble-face{ box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--gold), 0 20px 40px rgba(28,36,64,0.24); }
+  .bubble:focus-visible{ outline:none; }
+  .bubble:focus-visible .bubble-face{ box-shadow: 0 0 0 3px var(--bg), 0 0 0 6px var(--gold), 0 20px 40px rgba(28,36,64,0.24); }
+  .hive-cap{
+    position:absolute; left:0; top:0; z-index:900; pointer-events:none;
+    padding:7px 14px; border-radius:999px; white-space:nowrap;
+    background:var(--navy); color:var(--footer-ink); font-size:0.76rem; font-weight:700;
+    opacity:0; transition: opacity .2s ease;
+  }
+  .hive-cap.on{ opacity:1; }
+  .hive-hint{ text-align:center; font-size:0.76rem; color:var(--ink-soft); margin-top:14px; padding-inline:16px; }
+  .hive-hint[hidden]{ display:none; }
+
+  /* ---------- LIGHTBOX ---------- */
+  .lb{ position:fixed; inset:0; z-index:100; }
+  .lb[hidden]{ display:none; }
+  .lb-backdrop{
+    position:absolute; inset:0; background:rgba(18,22,42,0.84);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    opacity:0; transition: opacity .4s ease;
+  }
+  .lb.open .lb-backdrop{ opacity:1; }
+  .lb-media{
+    position:fixed; left:0; top:0; overflow:hidden; border-radius:50%;
+    background:var(--bg-sunk); box-shadow: 0 30px 80px rgba(0,0,0,0.45);
+  }
+  .lb-media.anim{ transition: left .55s cubic-bezier(.2,.85,.25,1), top .55s cubic-bezier(.2,.85,.25,1), width .55s cubic-bezier(.2,.85,.25,1), height .55s cubic-bezier(.2,.85,.25,1), border-radius .55s cubic-bezier(.2,.85,.25,1); }
+  .lb-media img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition: opacity .3s ease; }
+  .lb-media img.full{ opacity:0; }
+  .lb-media img.full.loaded{ opacity:1; }
+  .lb-media.ph{ background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55), rgba(255,255,255,0) 55%), var(--ph); }
+  .lb-media.fade img{ opacity:0 !important; }
+  .lb-btn{
+    position:fixed; z-index:2; width:46px; height:46px; border-radius:50%; border:none; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(246,241,228,0.14); color:#F6F1E4;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    opacity:0; transition: opacity .3s ease .15s, background .2s ease;
+  }
+  .lb-btn svg{ width:18px; height:18px; }
+  .lb.open .lb-btn{ opacity:1; }
+  .lb-btn:hover{ background:rgba(246,241,228,0.28); }
+  .lb-close{ top:18px; right:18px; }
+  .lb-prev{ left:18px; top:50%; margin-top:-23px; }
+  .lb-next{ right:18px; top:50%; margin-top:-23px; }
+  .lb-count{
+    position:fixed; top:32px; left:50%; transform:translateX(-50%); z-index:2;
+    color:rgba(246,241,228,0.72); font-size:0.72rem; font-weight:700; letter-spacing:0.18em;
+    opacity:0; transition: opacity .3s ease .15s;
+  }
+  .lb-cap{
+    position:fixed; left:50%; bottom:max(24px, env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:2;
+    color:#F6F1E4; font-weight:600; font-size:0.92rem; text-align:center; max-width:90vw;
+    opacity:0; transition: opacity .3s ease .2s;
+  }
+  .lb.open .lb-count, .lb.open .lb-cap{ opacity:1; }
+  .lb-cap:empty{ display:none; }
+  @media (max-width:760px){ .lb-prev, .lb-next{ display:none; } }
+
+  /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
+  footer.contact{
+    background:var(--footer-bg); color:var(--footer-ink);
+    position:relative; overflow:clip;
+  }
+  footer.contact .wrap{ padding-block: clamp(56px,8vw,96px) clamp(28px,4vw,40px); position:relative; z-index:2; }
+  .contact-top{
+    display:grid; grid-template-columns: 1.1fr 1fr; gap:clamp(30px,6vw,80px);
+    padding-bottom:clamp(36px,6vw,56px); border-bottom:1px solid rgba(246,241,228,0.16);
+  }
+  @media (max-width:760px){ .contact-top{ grid-template-columns: 1fr; } }
+  .contact-intro h2{ color:var(--footer-ink); font-size:clamp(2.1rem,4.4vw,3.2rem); margin-bottom:16px; }
+  .contact-intro p{ color:var(--footer-ink-soft); max-width:42ch; font-size:1rem; }
+  .contact-intro .cta-row{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
+  .btn-footer{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--footer-ink); color:var(--footer-bg);
+    padding:13px 24px; border-radius:999px;
+    font-size:0.78rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    text-decoration:none; border:1px solid var(--footer-ink);
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  .btn-footer:hover{ transform:translateY(-2px); opacity:0.85; }
+  .btn-footer.ghost{
+    background:transparent; color:var(--footer-ink); border:1px solid rgba(246,241,228,0.4);
+  }
+  .btn-footer.ghost:hover{ background:rgba(246,241,228,0.1); opacity:1; }
+  .contact-links{ display:flex; flex-direction:column; gap:4px; }
+  .contact-links a, .contact-links button{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    text-decoration:none; color:var(--footer-ink);
+    padding:16px 0; margin:0;
+    font-family:'Fraunces', serif; font-size:clamp(1.15rem,2.4vw,1.5rem); font-weight:500;
+    transition: opacity .18s ease, gap .18s ease;
+    background:none; border:none; width:100%; text-align:left; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+  }
+  .contact-links a:hover, .contact-links button:hover{ opacity:0.72; gap:22px; }
+  .contact-links .link-lead{ display:flex; align-items:center; gap:16px; }
+  .contact-links .ig-icon{ width:24px; height:24px; flex:none; }
+  .contact-links .k{ font-family:'Work Sans',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:0.14em; color:var(--footer-ink-soft); text-transform:uppercase; }
+  .contact-links .arrow{ display:flex; align-items:center; flex:none; }
+  .contact-links .arrow svg{ width:20px; height:20px; flex:none; }
+  .contact-links button.is-copied .arrow{ color:var(--gold); }
+  .contact-bottom{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;
+    padding-top:24px; font-size:0.8rem; color:var(--footer-ink-soft);
+  }
+  .contact-bottom .mark{ display:flex; align-items:center; gap:10px; }
+  .contact-bottom img{ width:26px; height:26px; border-radius:50%; }
+  .analytics-note{ margin-top:14px; font-size:0.74rem; color:var(--footer-ink-soft); opacity:0.85; }
+  /* Exec login: outlined gold pill in the nav, a gold-edged button in the footer */
+  nav.links a.nav-exec{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:8px 16px; border-radius:999px; border:1.5px solid var(--gold);
+    color:var(--ink); font-size:0.78rem; font-weight:700; letter-spacing:0.03em;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+  }
+  nav.links a.nav-exec::after{ display:none; }
+  nav.links a.nav-exec:hover{ background:var(--navy); border-color:var(--navy); color:var(--footer-ink); }
+  nav.links a.nav-exec svg, .btn-footer.exec svg, #mobile-panel a.nav-exec-m svg{ width:14px; height:14px; flex:none; }
+  #mobile-panel a.nav-exec-m{
+    display:inline-flex; align-items:center; align-self:flex-start; gap:8px;
+    padding:10px 18px; border-radius:999px; border:1.5px solid var(--gold);
+  }
+  .btn-footer.exec{ border-color:var(--gold); color:var(--gold); }
+  .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
+  /* The nav has 6 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
+  nav.links{ gap:clamp(12px,1.7vw,30px); }
+  @media (max-width:1120px){
+    nav.links{ display:none; }
+    .menu-btn{ display:flex; }
+  }
+
+</style>
+<!-- Privacy-friendly, cookie-free visitor counter (GoatCounter) -->
+<script data-goatcounter="https://moarz.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<!-- Google Analytics (GA4). Skipped on localhost so test visits don't pollute the stats. -->
+<script>
+(function(){
+  var h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '') return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-RZ1DC1SBQ2';
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', 'G-RZ1DC1SBQ2');
+})();
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-row">
+    <a href="index.html" class="brand">
+      <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
+      <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
+    </a>
+    <nav class="links">
+      <a href="index.html" data-i18n="label_welcome">Welcome</a>
+      <a href="events.html#past-events" data-i18n="label_all_events">Events</a>
+      <a href="about.html" data-i18n="label_about">About</a>
+      <a href="newsletter.html" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
+      <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <span class="lang-toggle-slider" aria-hidden="true"></span>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="mm">မမ</button>
+      </div>
+    </nav>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-panel"><span></span></button>
+  </div>
+  <div id="mobile-panel" hidden>
+    <a href="index.html" data-i18n="label_welcome">Welcome</a>
+    <a href="events.html#past-events" data-i18n="label_all_events">Events</a>
+    <a href="about.html" data-i18n="label_about">About</a>
+    <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <span class="lang-toggle-slider" aria-hidden="true"></span>
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="mm">မမ</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="gallery-hero">
+    <span class="watermark myanmar" aria-hidden="true">ဓာတ်ပုံ</span>
+    <div class="wrap">
+      <span class="eyebrow" data-i18n="gallery_eyebrow">Gallery</span>
+      <h1 data-i18n="gallery_h1">Moments from our events</h1>
+    </div>
+  </section>
+
+  <section class="hive-section" aria-label="Event photos">
+    <div class="hive-stage" id="hiveStage"></div>
+    <p class="hive-hint" id="hiveHint" data-i18n="gallery_hint" hidden>Drag to explore · tap a photo to open it</p>
+  </section>
+
+  <footer class="contact" id="connect">
+    <div class="wrap">
+      <div class="contact-top">
+        <div class="contact-intro">
+          <span class="eyebrow" style="color:var(--gold)" data-i18n="label_connect">Connect</span>
+          <h2 data-i18n="footer_h2">Let's stay in touch.</h2>
+          <div class="cta-row">
+            <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
+            <a class="btn-footer ghost celebrate" href="newsletter.html" data-i18n="label_join_newsletter_footer">Join the Newsletter</a>
+            <a class="btn-footer exec" href="login.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec login</a>
+          </div>
+        </div>
+        <div class="contact-links">
+          <a href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
+              <span><span class="k">Instagram</span><br>@mcc_uoft</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+          <button type="button" class="js-email-copy" data-email="uoft.myanmar@gmail.com">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7 L12 13 L20 7"/></svg>
+              <span><span class="k js-email-label" data-i18n="contact_email_label">Email</span><br>uoft.myanmar@gmail.com</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </button>
+          <a href="https://linktr.ee/mcc.uoft" target="_blank" rel="noopener">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span><span class="k" data-i18n="contact_linktree_label">Everything else</span><br>linktr.ee/mcc.uoft</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+          <a class="celebrate" href="fun-fact.html">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor" stroke="none"/></svg>
+              <span><span class="k" data-i18n="contact_lucky_label">Feeling lucky?</span><br><span data-i18n="contact_lucky_value">Get a random fun fact</span></span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+        </div>
+      </div>
+      <div class="contact-bottom">
+        <div class="mark">
+          <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
+          <span>Myanmar Culture Club, 21 Sussex Ave, Toronto, ON M5S 1J6</span>
+        </div>
+        <span>&copy; 2026 MCC &middot; Website designed &amp; built by Naing Lin Khant (Moarz)</span>
+      </div>
+      <p class="analytics-note" data-i18n="footer_analytics">This site uses Google Analytics to understand visitor traffic.</p>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function(){
+  try{
+    var btn = document.getElementById('menuBtn');
+    var panel = document.getElementById('mobile-panel');
+    btn.addEventListener('click', function(){
+      var isHidden = panel.hidden;
+      panel.hidden = !isHidden;
+      btn.setAttribute('aria-expanded', String(isHidden));
+    });
+    panel.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ panel.hidden = true; btn.setAttribute('aria-expanded','false'); });
+    });
+  }catch(e){}
+})();
+</script>
+
+<script src="js/site.js"></script>
+
+<script>
+(function(){
+  // ---------- photos ----------
+  // Each photo: thumb (small square, ~440px .webp, used in the grid), full (large, opened on tap),
+  // w/h (size of the full image), event (optional caption) and alt (describe what's in the photo).
+  // Order matters: the first photos sit in the centre of the honeycomb.
+  var PHOTOS = [
+    { thumb:"images/gallery/thumbs/welcome-top.webp",      full:"images/welcome_top.jpg",      w:1440, h:960, event:null, alt:"Members gathered on a lawn on campus" },
+    { thumb:"images/gallery/thumbs/welcome-bottom.webp",   full:"images/welcome_bottom.jpg",   w:1000, h:563, event:null, alt:"Members playing on a field on campus" },
+    { thumb:"images/gallery/thumbs/welcome-vertical.webp", full:"images/welcome_vertical.jpg", w:890,  h:733, event:null, alt:"A row of small painted dolls on a sunny windowsill" }
+  ];
+  // Placeholder spots so the honeycomb has its full shape until real photos arrive. Set to 0 once it's full.
+  var PLACEHOLDERS = 27;
+  var PH_TINTS = ["#E9D8B4","#D9B37A","#E2B9A8","#B9C9A6","#A9B7CC","#C8B6D2","#E6CDA9","#D7A9A3","#C9D3B8","#B8C4D6"];
+
+  var stage = document.getElementById("hiveStage");
+  var hint = document.getElementById("hiveHint");
+  if (!stage) return;
+
+  var CAMERA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.6"/></svg>';
+  var items = PHOTOS.slice();
+  for (var n = 0; n < PLACEHOLDERS; n++) items.push({ ph: PH_TINTS[n % PH_TINTS.length] });
+  var N = items.length;
+  var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
+  var reduceMotion = !!(mq && mq.matches);
+  var finePointer = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+
+  // Hex spiral: the first item in the middle, then ring after ring around it (like the Watch home screen).
+  function hexSpiral(count){
+    var out = [{ q:0, r:0 }], dirs = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+    for (var k = 1; out.length < count; k++){
+      var q = -k, r = k;
+      for (var side = 0; side < 6 && out.length < count; side++){
+        for (var st = 0; st < k && out.length < count; st++){ out.push({ q:q, r:r }); q += dirs[side][0]; r += dirs[side][1]; }
+      }
+    }
+    return out;
+  }
+  var axial = hexSpiral(N);
+
+  // ---------- build ----------
+  var bubbles = items.map(function(it, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "bubble" + (it.ph ? " ph" : "");
+    if (it.ph){
+      b.style.setProperty("--ph", it.ph);
+      b.setAttribute("aria-label", "Photo coming soon");
+      b.innerHTML = '<span class="bubble-face">' + CAMERA + '</span>';
+    } else {
+      b.setAttribute("aria-label", it.alt + (it.event ? " — " + it.event : ""));
+      b.innerHTML = '<span class="bubble-face"><img src="' + esc(it.thumb) + '" alt="" loading="' + (i < 7 ? "eager" : "lazy") + '" decoding="async" draggable="false"></span>';
+    }
+    b.dataset.i = i;
+    stage.appendChild(b);
+    return { el:b, bx:0, by:0, x:0, y:0, s:1, tx:0, ty:0, ts:1 };
+  });
+  var cap = document.createElement("div");
+  cap.className = "hive-cap";
+  cap.setAttribute("aria-hidden", "true");
+  stage.appendChild(cap);
+
+  // ---------- layout ----------
+  var M = { mode:"hover", D:118, P:134, w:0, h:0, ox:0, oy:0, minX:0, maxX:0, minY:0, maxY:0 };
+  // Lens settings for the desktop hover: how much the photo under the cursor grows, and how wide the effect is.
+  var LENS_A = 0.9, LENS_S = 1.05;
+
+  function layout(){
+    var W = stage.parentNode.clientWidth;
+    M.mode = (W >= 760 && finePointer) ? "hover" : "pan";
+    stage.classList.toggle("pan", M.mode === "pan");
+    if (hint) hint.hidden = M.mode !== "pan";
+    M.D = M.mode === "hover" ? 118 : 92;
+    M.P = M.D + (M.mode === "hover" ? 16 : 12);
+    var minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    bubbles.forEach(function(b, i){
+      b.bx = M.P * (axial[i].q + axial[i].r / 2);
+      b.by = M.P * 0.8660254 * axial[i].r;
+      minX = Math.min(minX, b.bx); maxX = Math.max(maxX, b.bx);
+      minY = Math.min(minY, b.by); maxY = Math.max(maxY, b.by);
+      b.el.style.width = b.el.style.height = M.D + "px";
+    });
+    M.minX = minX; M.maxX = maxX; M.minY = minY; M.maxY = maxY;
+    if (M.mode === "hover"){
+      // Room around the edges for the lens to push photos outward.
+      var pad = M.D * 0.5 + 56;
+      M.w = (maxX - minX) + M.D + pad * 2;
+      M.h = (maxY - minY) + M.D + pad * 2;
+      stage.style.width = Math.min(M.w, W) + "px";
+      stage.style.height = M.h + "px";
+      M.ox = Math.min(M.w, W) / 2 - (minX + maxX) / 2;
+      M.oy = pad + M.D / 2 - minY;
+    } else {
+      stage.style.width = "";
+      stage.style.height = "";
+      M.w = stage.clientWidth; M.h = stage.clientHeight;
+      M.ox = M.w / 2; M.oy = M.h / 2;
+    }
+  }
+
+  // ---------- desktop: magnifying lens that follows the cursor ----------
+  function erf(x){
+    var s = x < 0 ? -1 : 1; x = Math.abs(x);
+    var t = 1 / (1 + 0.3275911 * x);
+    var y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+    return s * y;
+  }
+  var pointer = { x:0, y:0, tx:0, ty:0, act:0, tact:0, inside:false };
+
+  // ---------- phone: drag around, full size in the middle, smaller toward the rim ----------
+  var pan = { x:0, y:0, vx:0, vy:0, dragging:false, sx:0, sy:0, px:0, py:0, lt:0, moved:0, id:null };
+
+  function computeTargets(){
+    if (M.mode === "hover"){
+      var A = LENS_A * pointer.act, S = M.D * LENS_S;
+      var cx = pointer.x, cy = pointer.y, best = -1, bestD = Infinity, rExt = 0;
+      function lens(r){ return r + A * S * 1.2533141 * erf(r / (S * 1.4142136)); }
+      bubbles.forEach(function(b){ rExt = Math.max(rExt, Math.hypot(b.bx - cx, b.by - cy)); });
+      // The whole honeycomb shrinks a touch so the farthest photo stays put while the one under the cursor grows.
+      var kG = rExt > 0 ? rExt / lens(rExt) : 1;
+      bubbles.forEach(function(b, i){
+        var vx = b.bx - cx, vy = b.by - cy, r = Math.hypot(vx, vy);
+        // A smooth lens spreads neighbours apart, so photos make room instead of overlapping.
+        var k = (r > 0.001 ? lens(r) / r : 1) * kG;
+        b.tx = cx + vx * k; b.ty = cy + vy * k;
+        b.ts = (1 + A * Math.exp(-(r * r) / (2 * S * S))) * kG;
+        if (r < bestD){ bestD = r; best = i; }
+      });
+      return pointer.act > 0.5 && bestD < M.P * 0.6 ? best : -1;
+    }
+    var half = Math.min(M.w, M.h) / 2, r0 = half * 0.48, Lr = half * 0.56;
+    bubbles.forEach(function(b){
+      var vx = b.bx + pan.x, vy = b.by + pan.y, r = Math.hypot(vx, vy), g, sc;
+      if (r <= r0){ g = r; sc = 1; }
+      else { var u = (r - r0) / Lr; g = r0 + Lr * Math.atan(u); sc = 1 / (1 + u * u); }
+      var k = r > 0.001 ? g / r : 1;
+      b.tx = vx * k; b.ty = vy * k;
+      b.ts = Math.max(0.14, sc);
+    });
+    return -1;
+  }
+
+  var hot = -1, raf = null;
+  function frame(){
+    raf = null;
+    var still = true;
+    if (M.mode === "hover"){
+      var ease = reduceMotion ? 1 : 0.22;
+      pointer.x += (pointer.tx - pointer.x) * ease;
+      pointer.y += (pointer.ty - pointer.y) * ease;
+      pointer.act += (pointer.tact - pointer.act) * (reduceMotion ? 1 : 0.16);
+      if (Math.abs(pointer.tact - pointer.act) > 0.002 || Math.abs(pointer.tx - pointer.x) > 0.3 || Math.abs(pointer.ty - pointer.y) > 0.3) still = false;
+    } else if (!pan.dragging && (Math.abs(pan.vx) > 0.02 || Math.abs(pan.vy) > 0.02 || outOfBounds())){
+      // Momentum after a flick, then a soft spring back if you went past the edge.
+      pan.x += pan.vx; pan.y += pan.vy;
+      pan.vx *= 0.94; pan.vy *= 0.94;
+      var bx = clamp(pan.x, -M.maxX, -M.minX), by = clamp(pan.y, -M.maxY, -M.minY);
+      if (bx !== pan.x){ pan.x += (bx - pan.x) * 0.16; pan.vx *= 0.6; }
+      if (by !== pan.y){ pan.y += (by - pan.y) * 0.16; pan.vy *= 0.6; }
+      still = false;
+    }
+    var newHot = computeTargets();
+    var lerp = M.mode === "hover" && !reduceMotion ? 0.24 : 1;
+    bubbles.forEach(function(b){
+      b.x += (b.tx - b.x) * lerp; b.y += (b.ty - b.y) * lerp; b.s += (b.ts - b.s) * lerp;
+      if (Math.abs(b.tx - b.x) > 0.2 || Math.abs(b.ty - b.y) > 0.2 || Math.abs(b.ts - b.s) > 0.002) still = false;
+      b.el.style.transform = "translate3d(" + (b.x + M.ox - M.D / 2).toFixed(2) + "px," + (b.y + M.oy - M.D / 2).toFixed(2) + "px,0) scale(" + b.s.toFixed(4) + ")";
+      b.el.style.zIndex = Math.round(b.s * 100);
+      if (M.mode === "pan"){
+        var o = clamp((b.s - 0.14) / 0.3, 0, 1);
+        b.el.style.opacity = o.toFixed(3);
+        b.el.style.visibility = o < 0.02 ? "hidden" : "";
+      }
+    });
+    setHot(newHot);
+    if (!still) raf = window.requestAnimationFrame(frame);
+  }
+  function kick(){ if (!raf) raf = window.requestAnimationFrame(frame); }
+  function outOfBounds(){
+    return pan.x < -M.maxX - 0.5 || pan.x > -M.minX + 0.5 || pan.y < -M.maxY - 0.5 || pan.y > -M.minY + 0.5;
+  }
+
+  function setHot(i){
+    if (i === hot) { if (hot >= 0) placeCap(); return; }
+    if (hot >= 0) bubbles[hot].el.classList.remove("hot");
+    hot = i;
+    if (hot >= 0){
+      bubbles[hot].el.classList.add("hot");
+      var it = items[hot];
+      cap.textContent = it.event || "";
+      cap.classList.toggle("on", !!it.event);
+      placeCap();
+    } else cap.classList.remove("on");
+  }
+  function placeCap(){
+    var b = bubbles[hot];
+    cap.style.transform = "translate(" + (b.x + M.ox).toFixed(1) + "px," + (b.y + M.oy + M.D * b.s / 2 + 12).toFixed(1) + "px) translateX(-50%)";
+  }
+
+  // ---------- input ----------
+  stage.addEventListener("pointermove", function(ev){
+    if (M.mode === "hover"){
+      var r = stage.getBoundingClientRect();
+      pointer.tx = ev.clientX - r.left - M.ox;
+      pointer.ty = ev.clientY - r.top - M.oy;
+      if (!pointer.inside){ pointer.inside = true; pointer.x = pointer.tx; pointer.y = pointer.ty; }
+      pointer.tact = 1;
+      kick();
+      return;
+    }
+    if (!pan.dragging || ev.pointerId !== pan.id) return;
+    var now = performance.now(), dx = ev.clientX - pan.px, dy = ev.clientY - pan.py, dt = Math.max(8, now - pan.lt);
+    var rx = (pan.x + dx < -M.maxX || pan.x + dx > -M.minX) ? 0.4 : 1;    // resist past the edges
+    var ry = (pan.y + dy < -M.maxY || pan.y + dy > -M.minY) ? 0.4 : 1;
+    pan.x += dx * rx; pan.y += dy * ry;
+    pan.vx = pan.vx * 0.5 + (dx * rx) / dt * 16 * 0.5;
+    pan.vy = pan.vy * 0.5 + (dy * ry) / dt * 16 * 0.5;
+    pan.moved += Math.abs(dx) + Math.abs(dy);
+    pan.px = ev.clientX; pan.py = ev.clientY; pan.lt = now;
+    kick();
+  });
+  stage.addEventListener("pointerleave", function(){
+    if (M.mode !== "hover") return;
+    pointer.inside = false;
+    if (!stage.contains(document.activeElement)) pointer.tact = 0;
+    kick();
+  });
+  stage.addEventListener("pointerdown", function(ev){
+    if (M.mode !== "pan") return;
+    pan.dragging = true; pan.id = ev.pointerId; pan.moved = 0;
+    pan.px = ev.clientX; pan.py = ev.clientY; pan.lt = performance.now();
+    pan.vx = pan.vy = 0;
+    stage.classList.add("dragging");
+    try { stage.setPointerCapture(ev.pointerId); } catch (err) {}
+  });
+  function endPan(ev){
+    if (!pan.dragging || (ev && ev.pointerId !== pan.id)) return;
+    pan.dragging = false;
+    stage.classList.remove("dragging");
+    if (performance.now() - pan.lt > 90){ pan.vx = 0; pan.vy = 0; }   // held still before letting go: no flick
+    kick();
+  }
+  stage.addEventListener("pointerup", function(ev){
+    var wasTap = pan.dragging && pan.moved < 8;
+    endPan(ev);
+    if (M.mode === "pan" && wasTap){
+      var hit = document.elementFromPoint(ev.clientX, ev.clientY);
+      var b = hit && hit.closest ? hit.closest(".bubble") : null;
+      if (b) openLightbox(+b.dataset.i);
+    }
+  });
+  stage.addEventListener("pointercancel", endPan);
+  stage.addEventListener("click", function(ev){
+    if (M.mode !== "hover") return;
+    var b = ev.target.closest ? ev.target.closest(".bubble") : null;
+    if (b) openLightbox(+b.dataset.i);
+  });
+  stage.addEventListener("keydown", function(ev){
+    if (M.mode === "pan" && (ev.key === "Enter" || ev.key === " ")){
+      var b = ev.target.closest ? ev.target.closest(".bubble") : null;
+      if (b){ ev.preventDefault(); openLightbox(+b.dataset.i); }
+    }
+  });
+  // Keyboard focus moves the lens (desktop) or centres the photo (phone).
+  stage.addEventListener("focusin", function(ev){
+    var b = ev.target.closest ? ev.target.closest(".bubble") : null;
+    if (!b) return;
+    var bb = bubbles[+b.dataset.i];
+    if (M.mode === "hover"){ pointer.tx = bb.bx; pointer.ty = bb.by; pointer.tact = 1; if (!pointer.inside){ pointer.x = bb.bx; pointer.y = bb.by; } }
+    else { pan.x = -bb.bx; pan.y = -bb.by; pan.vx = pan.vy = 0; }
+    kick();
+  });
+  stage.addEventListener("focusout", function(){
+    window.setTimeout(function(){
+      if (M.mode === "hover" && !stage.contains(document.activeElement) && !pointer.inside){ pointer.tact = 0; kick(); }
+    }, 0);
+  });
+
+  // ---------- lightbox ----------
+  var ARROW_L = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>';
+  var ARROW_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>';
+  var CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  var lb = document.createElement("div");
+  lb.className = "lb";
+  lb.hidden = true;
+  lb.setAttribute("role", "dialog");
+  lb.setAttribute("aria-modal", "true");
+  lb.setAttribute("aria-label", "Photo viewer");
+  lb.innerHTML =
+    '<div class="lb-backdrop"></div>' +
+    '<div class="lb-media"></div>' +
+    '<span class="lb-count"></span>' +
+    '<p class="lb-cap"></p>' +
+    '<button type="button" class="lb-btn lb-prev" aria-label="Previous photo">' + ARROW_L + '</button>' +
+    '<button type="button" class="lb-btn lb-next" aria-label="Next photo">' + ARROW_R + '</button>' +
+    '<button type="button" class="lb-btn lb-close" aria-label="Close">' + CROSS + '</button>';
+  document.body.appendChild(lb);
+  var media = lb.querySelector(".lb-media"), countEl = lb.querySelector(".lb-count"), capEl = lb.querySelector(".lb-cap");
+  var lbOpen = false, lbIdx = -1, lbBusy = false, lastFocus = null;
+
+  function pad2(n){ return ("0" + n).slice(-2); }
+  function targetRect(it){
+    var ar = it.ph ? 4 / 3 : it.w / it.h;
+    var maxW = Math.min(window.innerWidth * 0.9, 1100), maxH = window.innerHeight * (window.innerWidth < 760 ? 0.66 : 0.76);
+    var w = maxW, h = w / ar;
+    if (h > maxH){ h = maxH; w = h * ar; }
+    return { left:(window.innerWidth - w) / 2, top:(window.innerHeight - h) / 2 - 8, width:w, height:h };
+  }
+  function setBox(r, radius){
+    media.style.left = r.left + "px"; media.style.top = r.top + "px";
+    media.style.width = r.width + "px"; media.style.height = r.height + "px";
+    media.style.borderRadius = radius;
+  }
+  function fillMedia(i){
+    var it = items[i];
+    media.classList.toggle("ph", !!it.ph);
+    if (it.ph){
+      media.style.setProperty("--ph", it.ph);
+      media.innerHTML = "";
+    } else {
+      media.style.removeProperty("--ph");
+      media.innerHTML = '<img class="thumb" src="' + esc(it.thumb) + '" alt="">' +
+        '<img class="full" src="' + esc(it.full) + '" alt="' + esc(it.alt) + '">';
+      var full = media.querySelector(".full");
+      if (full.complete) full.classList.add("loaded");
+      else full.addEventListener("load", function(){ full.classList.add("loaded"); });
+    }
+    countEl.textContent = pad2(i + 1) + " / " + pad2(N);
+    capEl.textContent = it.event || "";
+  }
+  function bubbleRect(i){ return bubbles[i].el.querySelector(".bubble-face").getBoundingClientRect(); }
+
+  function openLightbox(i){
+    if (lbOpen || lbBusy) return;
+    lbOpen = true; lbIdx = i; lastFocus = document.activeElement;
+    fillMedia(i);
+    lb.hidden = false;
+    var from = bubbleRect(i);
+    media.classList.remove("anim");
+    setBox(from, "50%");
+    bubbles[i].el.style.visibility = "hidden";
+    void media.offsetWidth;
+    if (!reduceMotion) media.classList.add("anim");
+    lb.classList.add("open");
+    setBox(targetRect(items[i]), "18px");
+    lbBusy = true;
+    window.setTimeout(function(){ lbBusy = false; lb.querySelector(".lb-close").focus({ preventScroll:true }); }, reduceMotion ? 0 : 560);
+  }
+  function closeLightbox(){
+    if (!lbOpen || lbBusy) return;
+    lbBusy = true;
+    var b = bubbles[lbIdx];
+    lb.classList.remove("open");
+    setBox(bubbleRect(lbIdx), "50%");
+    window.setTimeout(function(){
+      lb.hidden = true;
+      media.classList.remove("anim");
+      b.el.style.visibility = "";
+      lbOpen = false; lbBusy = false;
+      if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll:true });
+    }, reduceMotion ? 0 : 560);
+  }
+  function step(dir){
+    if (!lbOpen || lbBusy) return;
+    lbBusy = true;
+    var next = (lbIdx + dir + N) % N;
+    media.classList.add("fade");
+    window.setTimeout(function(){
+      bubbles[lbIdx].el.style.visibility = "";
+      lbIdx = next;
+      bubbles[lbIdx].el.style.visibility = "hidden";
+      fillMedia(lbIdx);
+      setBox(targetRect(items[lbIdx]), "18px");
+      void media.offsetWidth;
+      media.classList.remove("fade");
+      lbBusy = false;
+    }, reduceMotion ? 0 : 160);
+  }
+  lb.querySelector(".lb-backdrop").addEventListener("click", closeLightbox);
+  lb.querySelector(".lb-close").addEventListener("click", closeLightbox);
+  lb.querySelector(".lb-prev").addEventListener("click", function(){ step(-1); });
+  lb.querySelector(".lb-next").addEventListener("click", function(){ step(1); });
+  document.addEventListener("keydown", function(ev){
+    if (!lbOpen) return;
+    if (ev.key === "Escape"){ ev.preventDefault(); closeLightbox(); }
+    else if (ev.key === "ArrowLeft"){ ev.preventDefault(); step(-1); }
+    else if (ev.key === "ArrowRight"){ ev.preventDefault(); step(1); }
+    else if (ev.key === "Tab"){
+      var f = Array.prototype.slice.call(lb.querySelectorAll("button")).filter(function(el){ return el.offsetParent !== null; });
+      var first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first){ ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last){ ev.preventDefault(); first.focus(); }
+    }
+  });
+  // Swipe left/right on phones, and keep the page still while a photo is open.
+  var sx = null, sy = null;
+  lb.addEventListener("touchstart", function(ev){ sx = ev.touches[0].clientX; sy = ev.touches[0].clientY; }, { passive:true });
+  lb.addEventListener("touchmove", function(ev){ ev.preventDefault(); }, { passive:false });
+  lb.addEventListener("touchend", function(ev){
+    if (sx === null) return;
+    var dx = ev.changedTouches[0].clientX - sx, dy = ev.changedTouches[0].clientY - sy;
+    sx = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) step(dx < 0 ? 1 : -1);
+  });
+  lb.addEventListener("wheel", function(ev){ ev.preventDefault(); }, { passive:false });
+  window.addEventListener("resize", function(){ if (lbOpen && !lbBusy){ media.classList.remove("anim"); setBox(targetRect(items[lbIdx]), "18px"); } });
+
+  // ---------- start ----------
+  layout();
+  computeTargets();
+  bubbles.forEach(function(b){ b.x = b.tx; b.y = b.ty; b.s = b.ts; });
+  frame();
+  stage.classList.add("ready");
+  var resizeTimer = null;
+  window.addEventListener("resize", function(){
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(function(){ layout(); kick(); }, 120);
+  });
+})();
+</script>
+
+</body>
+</html>
