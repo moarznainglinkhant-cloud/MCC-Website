@@ -374,6 +374,14 @@
     .wrap{ max-width:1560px; }
   }
 
+  /* Next event card: the poster column stops growing, so the card doesn't get taller as the window gets wider. */
+  @media (min-width:821px){
+    .event-card{ grid-template-columns: minmax(0, min(460px, 46%)) minmax(0, 1fr); }
+  }
+  @media (min-width:1600px){
+    .event-card{ grid-template-columns: minmax(0, min(500px, 42%)) minmax(0, 1fr); }
+  }
+
   /* Next event: add-to-calendar buttons and a map link on the location. */
   .cal-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 22px; }
   .cal-label{ display:inline-flex; align-items:center; gap:8px; font-size:0.82rem; font-weight:600; color:var(--ink-soft); margin-right:2px; }
