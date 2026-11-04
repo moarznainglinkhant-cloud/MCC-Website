@@ -891,7 +891,7 @@
 
 <script>
 (function(){
-  var GROUPS = [
+  var ALL_GROUPS = [
     { key:"leadership", label:"Leadership",         color:"#C08A2E" },
     { key:"finance",     label:"Finance",            color:"#4B7A3C" },
     { key:"media",       label:"Media",              color:"#AE3628" },
@@ -901,34 +901,121 @@
     { key:"associates",  label:"Associates",         color:"#5F5A48" }
   ];
 
-  // Optional fields per person (leave out or set to null until we have them):
-  //   line:      short note under the title, e.g. "2nd year · Computer Science"
-  //   linkedin:  full LinkedIn URL
-  //   instagram: Instagram handle without the @
-  //   fact:      one fun fact or favourite thing
-  var PEOPLE = [
-    {i:"T",  name:"Thant Thiri Oo",       pref:"Tina",      title:"Co-President",           group:"leadership"},
-    {i:"M",  name:"Kaung Min Phyo",       pref:"Martin",    title:"Co-President",           group:"leadership"},
-    {i:"LL", name:"Eaint Htoo Pyae Aung", pref:"Lu Lu",     title:"Secretary",               group:"leadership"},
-    {i:"YY", name:"Yu Ya Saung Tan Sin",  pref:null,        title:"Treasurer",               group:"finance"},
-    {i:"M",  name:"Min Thu Ta",           pref:"Min",       title:"Treasurer",               group:"finance"},
-    {i:"N",  name:"Hsu Myat Noe Chan",    pref:"Noelle",    title:"Graphic Designer",        group:"media"},
-    {i:"H",  name:"Thant Thu Raeil Tun",  pref:"Hauk",      title:"Graphic Designer",        group:"media"},
-    {i:"B",  name:"King Ben Sen",         pref:"Ben",       title:"Social Media Manager",    group:"media"},
-    {i:"KK", name:"Khin Kyi Thar Swe",    pref:null,        title:"Social Media Manager",    group:"media"},
-    {i:"AP", name:"Aung Phone Myat",      pref:null,        title:"Freelance Photographer",  group:"media"},
-    {i:"M",  name:"Naing Lin Khant",      pref:"Moarz",     title:"Website Coordinator",     group:"website",
-       line:"2nd year · Computer Science"},
-    {i:"S",  name:"Song Hnin Set",        pref:"Scarlett",  title:"Events Coordinator",      group:"events"},
-    {i:"S",  name:"Su April Aung",        pref:"Su",        title:"Events Coordinator",      group:"events"},
-    {i:"H",  name:"Ei Than Sin Oo",       pref:"Hazel",     title:"Events Coordinator",      group:"events"},
-    {i:"G",  name:"Eaint Chan Myae",      pref:"Grace",     title:"Events Coordinator",      group:"events"},
-    {i:"SK", name:"Su Thiri Khit",        pref:"Su Khit",   title:"Events Coordinator",      group:"events"},
-    {i:"H",  name:"Satt Paing Htoo",      pref:"Hugo",      title:"Events Coordinator",      group:"events"},
-    {i:"C",  name:"Eaint Myint Mo Kyaw",  pref:"Catherine", title:"External Relations",      group:"external"},
-    {i:"KS", name:"Khaing Su Wai",        pref:null,        title:"Associate",               group:"associates"},
-    {i:"A",  name:"Alvin Oakga",          pref:null,        title:"Associate",               group:"associates"}
-  ];
+  // ---------- team roster (Google Sheet "Team" tab) ----------
+  // Columns: name, preferred_name, title, department, year, program, linkedin, instagram, fun_fact.
+  // Only name, title and department are needed; leave any other cell blank and that detail simply doesn't show.
+  // department must be one of the group names above (Leadership, Finance, Media, Website, Events,
+  // External Relations, Associates). The sheet's own order is the order people appear in.
+  // Until TEAM_CSV_URL in js/site.js points at the published tab, this built-in copy is used.
+  var FALLBACK_TEAM_CSV = "name,preferred_name,title,department,year,program,linkedin,instagram,fun_fact\nThant Thiri Oo,Tina,Co-President,Leadership,,,,,\nKaung Min Phyo,Martin,Co-President,Leadership,,,,,\nEaint Htoo Pyae Aung,Lu Lu,Secretary,Leadership,,,,,\nYu Ya Saung Tan Sin,,Treasurer,Finance,,,,,\nMin Thu Ta,Min,Treasurer,Finance,,,,,\nHsu Myat Noe Chan,Noelle,Graphic Designer,Media,,,,,\nThant Thu Raeil Tun,Hauk,Graphic Designer,Media,,,,,\nKing Ben Sen,Ben,Social Media Manager,Media,,,,,\nKhin Kyi Thar Swe,,Social Media Manager,Media,,,,,\nAung Phone Myat,,Freelance Photographer,Media,,,,,\nNaing Lin Khant,Moarz,Website Coordinator,Website,2nd year,Computer Science,,,\nSong Hnin Set,Scarlett,Events Coordinator,Events,,,,,\nSu April Aung,Su,Events Coordinator,Events,,,,,\nEi Than Sin Oo,Hazel,Events Coordinator,Events,,,,,\nEaint Chan Myae,Grace,Events Coordinator,Events,,,,,\nSu Thiri Khit,Su Khit,Events Coordinator,Events,,,,,\nSatt Paing Htoo,Hugo,Events Coordinator,Events,,,,,\nEaint Myint Mo Kyaw,Catherine,External Relations,External Relations,,,,,\nKhaing Su Wai,,Associate,Associates,,,,,\nAlvin Oakga,,Associate,Associates,,,,,\n";
+  var TEAM_URL = typeof TEAM_CSV_URL === "string" ? TEAM_CSV_URL : "";
+
+  function cell(row, names){
+    for (var k = 0; k < names.length; k++){ var v = row[names[k]]; if (v && String(v).trim()) return String(v).trim(); }
+    return "";
+  }
+  function deptKey(v){
+    var low = (v || "").toLowerCase().replace(/\s+/g, " ").trim();
+    for (var k = 0; k < ALL_GROUPS.length; k++){
+      var g = ALL_GROUPS[k];
+      if (low === g.key || low === g.label.toLowerCase() || (low && g.label.toLowerCase().indexOf(low) === 0)) return g.key;
+    }
+    if (low) console.warn('About page: unknown department "' + v + '", showing them under Associates.');
+    return "associates";
+  }
+  function yearText(v){
+    v = (v || "").trim();
+    var m = v.match(/^(\d)(st|nd|rd|th)?$/i);
+    if (!m) return v;
+    var n = +m[1], suf = n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th";
+    return n + suf + " year";
+  }
+  // Accepts a full link, "linkedin.com/in/name", or just "name".
+  function linkedinUrl(v){
+    v = (v || "").trim();
+    if (!v || /^(n\/?a|none|-)$/i.test(v)) return null;
+    if (!/^https?:\/\//i.test(v)){
+      if (/linkedin\.com/i.test(v)) v = "https://" + v.replace(/^\/+/, "");
+      else {
+        var slug = v.replace(/^@/, "").replace(/^\/+|\/+$/g, "");
+        if (!/^[A-Za-z0-9_-]{3,100}$/.test(slug)) return null;      // not a link or a profile name: leave it off
+        v = "https://www.linkedin.com/in/" + slug;
+      }
+    }
+    try {
+      var u = new URL(v);
+      if (!/(^|\.)linkedin\.com$/i.test(u.hostname)) return null;
+      u.protocol = "https:";
+      return u.href;
+    } catch (err) { return null; }
+  }
+  // Accepts "@handle", "handle", or an instagram.com link.
+  function instagramHandle(v){
+    v = (v || "").trim();
+    var m = v.match(/instagram\.com\/([^\/?#\s]+)/i);
+    if (m) v = m[1];
+    v = v.replace(/^@/, "");
+    return /^[A-Za-z0-9._]{1,30}$/.test(v) ? v : null;
+  }
+  function initialsOf(s){
+    var w = s.split(/\s+/).filter(Boolean);
+    return w.slice(0, 2).map(function(x){ return x.charAt(0).toUpperCase(); }).join("");
+  }
+  function rowsToPeople(rows){
+    var list = [];
+    rows.forEach(function(raw){
+      var row = {};
+      Object.keys(raw).forEach(function(k){ row[k.toLowerCase().trim().replace(/[\s-]+/g, "_")] = raw[k]; });
+      var name = cell(row, ["name", "full_name"]);
+      if (!name) return;
+      var pref = cell(row, ["preferred_name", "preferred", "pref", "goes_by"]) || null;
+      if (pref && pref.toLowerCase() === name.toLowerCase()) pref = null;
+      var line = [yearText(cell(row, ["year", "student_year"])), cell(row, ["program", "major"])].filter(Boolean).join(" \u00b7 ");
+      list.push({
+        i: initialsOf(pref || name),
+        name: name, pref: pref,
+        title: cell(row, ["title", "role", "position"]) || "Member",
+        group: deptKey(cell(row, ["department", "group", "team"])),
+        line: line || null,
+        linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"])),
+        instagram: instagramHandle(cell(row, ["instagram", "instagram_handle"])),
+        fact: cell(row, ["fun_fact", "fact", "funfact"]) || null
+      });
+    });
+    return list;
+  }
+  function peopleFrom(text){ return text ? rowsToPeople(typeof safeParse === "function" ? safeParse(text) : []) : []; }
+
+  var stickyEl = document.getElementById("wheelSticky");
+  var started = false;
+  function go(text){
+    if (started) return;
+    var people = peopleFrom(text);
+    if (!people.length) people = peopleFrom(FALLBACK_TEAM_CSV);
+    started = true;
+    if (stickyEl) stickyEl.removeAttribute("data-pending");
+    var groups = ALL_GROUPS.filter(function(g){ return people.some(function(p){ return p.group === g.key; }); });
+    startWheel(groups, people);
+  }
+
+  // Returning visitors: show their last copy at once, refresh it in the background for next time.
+  // First visit: wait briefly for the Sheet, falling back to the built-in copy.
+  var cachedTeam = typeof readCachedCSV === "function" && TEAM_URL ? readCachedCSV(TEAM_URL) : null;
+  var canFetch = typeof fetchCSVText === "function" && TEAM_URL && TEAM_URL.indexOf("PASTE_") === -1;
+  if (cachedTeam && peopleFrom(cachedTeam).length){
+    go(cachedTeam);
+    if (canFetch) fetchCSVText(TEAM_URL);
+  } else if (canFetch){
+    if (stickyEl) stickyEl.setAttribute("data-pending", "");
+    var timer = window.setTimeout(function(){ go(null); }, 2500);
+    fetchCSVText(TEAM_URL).then(function(text){ window.clearTimeout(timer); go(text); }, function(){ window.clearTimeout(timer); go(null); });
+  } else {
+    go(null);
+  }
+
+  function startWheel(GROUPS, PEOPLE){
+  var wheelCountEl = document.getElementById("wheelCount");
+  if (wheelCountEl && wheelCountEl.nextSibling) wheelCountEl.nextSibling.textContent = " / " + ("0" + GROUPS.length).slice(-2);
 
   var $ = function(id){ return document.getElementById(id); };
   var section = $("team"), sticky = $("wheelSticky"), wheel = $("wheel");
@@ -1675,6 +1762,7 @@
     window.clearTimeout(resizeTimer);
     resizeTimer = window.setTimeout(function(){ layout(); apply(cur); onScroll(); }, 120);
   });
+  }
 })();
 </script>
 

@@ -109,6 +109,24 @@ photos into the `images/` folder using those exact filenames and they'll
 show up with no other changes needed, or point the `photo` column at
 different filenames/URLs entirely.
 
+**Team tab columns** (the About page roster):
+
+Make a third tab called **Team** and import `data/team.csv` into it the same way. Every exec is one row, in the order they should appear.
+
+| Column | Needed? | What goes here | Example |
+|---|---|---|---|
+| `name` | yes | full name | `Naing Lin Khant` |
+| `preferred_name` | optional | what they go by, shown in brackets | `Moarz` |
+| `title` | yes | their role | `Website Coordinator` |
+| `department` | yes | one of: Leadership, Finance, Media, Website, Events, External Relations, Associates | `Website` |
+| `year` | optional | student year: `2` or `2nd year` both work | `2` |
+| `program` | optional | program or major, shown after the year | `Computer Science` |
+| `linkedin` | optional | full link, `linkedin.com/in/name`, or just the profile name | `linkedin.com/in/moarz` |
+| `instagram` | optional | `@handle`, `handle`, or an instagram.com link | `@moarz` |
+| `fun_fact` | optional | one short fun fact | |
+
+Leave any optional cell blank and that detail simply doesn't appear (no empty buttons or gaps). A department with nobody in it is left off the wheel. When someone leaves, delete their row.
+
 ### 2. Publish each tab to the web
 
 With the sheet open:
@@ -118,7 +136,7 @@ With the sheet open:
    "Entire document")
 3. In the second dropdown, choose **Comma-separated values (.csv)**
 4. Click **Publish**, confirm, and copy the link it gives you
-5. Repeat for the **Hero** tab
+5. Repeat for the **Hero** and **Team** tabs
 
 You'll end up with two links, both looking something like:
 `https://docs.google.com/spreadsheets/d/e/2PACX.../pub?gid=0&single=true&output=csv`
@@ -132,7 +150,7 @@ const EVENTS_CSV_URL = "data/events.csv"; // <-- replace with your published Goo
 const HERO_CSV_URL   = "data/hero.csv";   // <-- replace with your published Google Sheet CSV link
 ```
 
-Paste your two links in (keep the quotes), save the file, and re-upload
+Paste your links in (keep the quotes). The Team tab's link goes in `TEAM_CSV_URL`, just below the other two, save the file, and re-upload
 it wherever the site is hosted. That's the only code change you'll ever
 need to make — every event you add or edit after this point happens
 entirely in the Sheet.
@@ -172,6 +190,7 @@ No cost for any of this — GitHub Pages is free for a site like this one.
 |---|---|
 | Add, edit, or remove an event | Google Sheet only |
 | Change which photo shows on the homepage | Google Sheet ("Hero" tab) only |
+| Add, edit, or remove an exec on the About page | Google Sheet ("Team" tab) only |
 | Which event is "Next Event" | Automatic — nothing to touch |
 | Club contact info, social links, address | `index.html` / `events.html` (edit the footer HTML directly) |
 | Visual design, colors, fonts | `index.html` / `events.html` `<style>` block |
