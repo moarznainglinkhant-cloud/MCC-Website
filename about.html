@@ -210,53 +210,42 @@
   .about-hero h1{ font-size:clamp(2.1rem,5vw,3.2rem); margin-block:10px 16px; }
   .about-hero p{ color:var(--ink-soft); font-size:1.05rem; max-width:62ch; }
 
-  /* ---------- PEOPLE GROUPS ---------- */
-  .people-group{ padding-block: clamp(20px,3vw,32px); }
-  .people-group .wrap{ border-top:1px solid var(--line); padding-top:clamp(28px,4vw,40px); }
-  .people-group:first-of-type .wrap{ border-top:none; }
-  .group-title{
-    font-size:clamp(1.3rem,2.4vw,1.7rem);
-    margin-bottom:22px;
-    display:flex; align-items:baseline; gap:10px;
-  }
-  .group-title .group-count{
-    font-family:'Work Sans',sans-serif; font-weight:700; font-size:0.74rem;
-    color:var(--ink-soft); letter-spacing:0.04em;
-  }
+  /* ---------- PEOPLE GRID ---------- */
+  .people-section{ padding-block: clamp(8px,2vw,16px) clamp(40px,6vw,64px); }
   .people-grid{
-    display:grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap:14px;
+    display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap:20px;
   }
   .person-card{
-    display:flex; align-items:center; gap:14px;
-    background:var(--bg-raised); border:1px solid var(--line);
-    padding:16px 18px; box-shadow: var(--card-shadow);
-    transition: transform .18s ease, box-shadow .18s ease;
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    gap:10px;
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:16px;
+    padding:26px 18px 22px;
+    box-shadow: var(--card-shadow);
+    transition: transform .2s ease, box-shadow .2s ease;
   }
-  .person-card:hover{ transform:translateY(-2px); box-shadow: 0 6px 18px rgba(28,36,64,0.08); }
-  .person-avatar{
-    flex:none; width:44px; height:44px; border-radius:50%;
-    background:var(--navy); color:var(--footer-ink);
+  .person-card:hover{ transform:translateY(-3px); box-shadow: 0 10px 24px rgba(28,36,64,0.1); }
+  .person-photo{
+    width:92px; height:92px; border-radius:50%;
+    background:var(--bg-sunk); color:var(--ink-soft);
     display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-weight:600; font-size:1rem;
-    box-shadow: 0 0 0 2px var(--bg-raised), 0 0 0 3px var(--line);
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem;
+    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
+    transition: background .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease;
   }
-  .person-info{ min-width:0; }
-  .person-name{ display:block; font-weight:600; font-size:0.95rem; line-height:1.3; }
+  .person-card:hover .person-photo{
+    background:var(--navy); color:var(--footer-ink);
+    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 7px var(--gold);
+    transform:scale(1.05);
+  }
+  .person-name{ font-weight:600; font-size:0.98rem; line-height:1.3; }
   .person-name .pref{ color:var(--ink-soft); font-weight:500; }
-  .person-title{ display:block; font-size:0.78rem; color:var(--gold); font-weight:600; margin-top:2px; }
-
-  /* The standalone "Website" group gets one spotlighted card instead of a grid. */
-  .person-card.spotlight{
-    max-width:420px; padding:22px 24px; border-color:var(--gold);
-    box-shadow: 0 0 0 1px var(--gold) inset;
+  .person-title{
+    display:inline-block;
+    background:var(--bg-sunk); color:var(--red-ink);
+    font-size:0.72rem; font-weight:700; letter-spacing:0.01em;
+    padding:4px 13px; border-radius:999px;
   }
-  .person-card.spotlight .person-avatar{
-    width:54px; height:54px; font-size:1.15rem;
-    background:var(--gold); color:var(--navy-deep);
-  }
-  .person-card.spotlight .person-name{ font-size:1.05rem; }
-  .spotlight-note{ margin-top:10px; font-size:0.82rem; color:var(--ink-soft); max-width:46ch; }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
   footer.contact{
@@ -397,140 +386,108 @@
     </div>
   </section>
 
-  <section class="people-group">
+  <section class="people-section">
     <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_leadership">Leadership</span><span class="group-count">(3)</span></h2>
       <div class="people-grid">
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">T</span>
-          <span class="person-info"><span class="person-name">Thant Thiri Oo <span class="pref">(Tina)</span></span><span class="person-title">Co-President</span></span>
+          <span class="person-photo" aria-hidden="true">T</span>
+          <span class="person-name">Thant Thiri Oo <span class="pref">(Tina)</span></span>
+          <span class="person-title">Co-President</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">M</span>
-          <span class="person-info"><span class="person-name">Kaung Min Phyo <span class="pref">(Martin)</span></span><span class="person-title">Co-President</span></span>
+          <span class="person-photo" aria-hidden="true">M</span>
+          <span class="person-name">Kaung Min Phyo <span class="pref">(Martin)</span></span>
+          <span class="person-title">Co-President</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">LL</span>
-          <span class="person-info"><span class="person-name">Eaint Htoo Pyae Aung <span class="pref">(Lu Lu)</span></span><span class="person-title">Secretary</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_finance">Finance</span><span class="group-count">(2)</span></h2>
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">YY</span>
-          <span class="person-info"><span class="person-name">Yu Ya Saung Tan Sin</span><span class="person-title">Treasurer</span></span>
+          <span class="person-photo" aria-hidden="true">LL</span>
+          <span class="person-name">Eaint Htoo Pyae Aung <span class="pref">(Lu Lu)</span></span>
+          <span class="person-title">Secretary</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">M</span>
-          <span class="person-info"><span class="person-name">Min Thu Ta <span class="pref">(Min)</span></span><span class="person-title">Treasurer</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_media">Media</span><span class="group-count">(5)</span></h2>
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">N</span>
-          <span class="person-info"><span class="person-name">Hsu Myat Noe Chan <span class="pref">(Noelle)</span></span><span class="person-title">Graphic Designer</span></span>
+          <span class="person-photo" aria-hidden="true">YY</span>
+          <span class="person-name">Yu Ya Saung Tan Sin</span>
+          <span class="person-title">Treasurer</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">H</span>
-          <span class="person-info"><span class="person-name">Thant Thu Raeil Tun <span class="pref">(Hauk)</span></span><span class="person-title">Graphic Designer</span></span>
+          <span class="person-photo" aria-hidden="true">M</span>
+          <span class="person-name">Min Thu Ta <span class="pref">(Min)</span></span>
+          <span class="person-title">Treasurer</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">B</span>
-          <span class="person-info"><span class="person-name">King Ben Sen <span class="pref">(Ben)</span></span><span class="person-title">Social Media Manager</span></span>
+          <span class="person-photo" aria-hidden="true">N</span>
+          <span class="person-name">Hsu Myat Noe Chan <span class="pref">(Noelle)</span></span>
+          <span class="person-title">Graphic Designer</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">KK</span>
-          <span class="person-info"><span class="person-name">Khin Kyi Thar Swe</span><span class="person-title">Social Media Manager</span></span>
+          <span class="person-photo" aria-hidden="true">H</span>
+          <span class="person-name">Thant Thu Raeil Tun <span class="pref">(Hauk)</span></span>
+          <span class="person-title">Graphic Designer</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">AP</span>
-          <span class="person-info"><span class="person-name">Aung Phone Myat</span><span class="person-title">Freelance Photographer</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_website">Website</span></h2>
-      <div class="people-grid">
-        <div class="person-card spotlight">
-          <span class="person-avatar" aria-hidden="true">M</span>
-          <span class="person-info">
-            <span class="person-name">Naing Lin Khant <span class="pref">(Moarz)</span></span>
-            <span class="person-title">Website Coordinator</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_events">Events</span><span class="group-count">(6)</span></h2>
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">S</span>
-          <span class="person-info"><span class="person-name">Song Hnin Set <span class="pref">(Scarlett)</span></span><span class="person-title">Events Coordinator</span></span>
+          <span class="person-photo" aria-hidden="true">B</span>
+          <span class="person-name">King Ben Sen <span class="pref">(Ben)</span></span>
+          <span class="person-title">Social Media Manager</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">S</span>
-          <span class="person-info"><span class="person-name">Su April Aung <span class="pref">(Su)</span></span><span class="person-title">Events Coordinator</span></span>
+          <span class="person-photo" aria-hidden="true">KK</span>
+          <span class="person-name">Khin Kyi Thar Swe</span>
+          <span class="person-title">Social Media Manager</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">H</span>
-          <span class="person-info"><span class="person-name">Ei Than Sin Oo <span class="pref">(Hazel)</span></span><span class="person-title">Events Coordinator</span></span>
+          <span class="person-photo" aria-hidden="true">AP</span>
+          <span class="person-name">Aung Phone Myat</span>
+          <span class="person-title">Freelance Photographer</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">G</span>
-          <span class="person-info"><span class="person-name">Eaint Chan Myae <span class="pref">(Grace)</span></span><span class="person-title">Events Coordinator</span></span>
+          <span class="person-photo" aria-hidden="true">M</span>
+          <span class="person-name">Naing Lin Khant <span class="pref">(Moarz)</span></span>
+          <span class="person-title">Website Coordinator</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">SK</span>
-          <span class="person-info"><span class="person-name">Su Thiri Khit <span class="pref">(Su Khit)</span></span><span class="person-title">Events Coordinator</span></span>
+          <span class="person-photo" aria-hidden="true">S</span>
+          <span class="person-name">Song Hnin Set <span class="pref">(Scarlett)</span></span>
+          <span class="person-title">Events Coordinator</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">H</span>
-          <span class="person-info"><span class="person-name">Satt Paing Htoo <span class="pref">(Hugo)</span></span><span class="person-title">Events Coordinator</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_external">External Relations</span><span class="group-count">(1)</span></h2>
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">C</span>
-          <span class="person-info"><span class="person-name">Eaint Myint Mo Kyaw <span class="pref">(Catherine)</span></span><span class="person-title">External Relations</span></span>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="people-group">
-    <div class="wrap">
-      <h2 class="group-title"><span data-i18n="group_associates">Associates</span><span class="group-count">(2)</span></h2>
-      <div class="people-grid">
-        <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">KS</span>
-          <span class="person-info"><span class="person-name">Khaing Su Wai</span><span class="person-title">Associate</span></span>
+          <span class="person-photo" aria-hidden="true">S</span>
+          <span class="person-name">Su April Aung <span class="pref">(Su)</span></span>
+          <span class="person-title">Events Coordinator</span>
         </div>
         <div class="person-card">
-          <span class="person-avatar" aria-hidden="true">A</span>
-          <span class="person-info"><span class="person-name">Alvin Oakga</span><span class="person-title">Associate</span></span>
+          <span class="person-photo" aria-hidden="true">H</span>
+          <span class="person-name">Ei Than Sin Oo <span class="pref">(Hazel)</span></span>
+          <span class="person-title">Events Coordinator</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">G</span>
+          <span class="person-name">Eaint Chan Myae <span class="pref">(Grace)</span></span>
+          <span class="person-title">Events Coordinator</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">SK</span>
+          <span class="person-name">Su Thiri Khit <span class="pref">(Su Khit)</span></span>
+          <span class="person-title">Events Coordinator</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">H</span>
+          <span class="person-name">Satt Paing Htoo <span class="pref">(Hugo)</span></span>
+          <span class="person-title">Events Coordinator</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">C</span>
+          <span class="person-name">Eaint Myint Mo Kyaw <span class="pref">(Catherine)</span></span>
+          <span class="person-title">External Relations</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">KS</span>
+          <span class="person-name">Khaing Su Wai</span>
+          <span class="person-title">Associate</span>
+        </div>
+        <div class="person-card">
+          <span class="person-photo" aria-hidden="true">A</span>
+          <span class="person-name">Alvin Oakga</span>
+          <span class="person-title">Associate</span>
         </div>
       </div>
     </div>

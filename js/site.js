@@ -115,13 +115,6 @@ const I18N = {
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
     about_lede: "Every event, newsletter, and get-together you've seen from the Myanmar Culture Club comes from this group of students volunteering their time. Here's who they are.",
-    group_leadership: "Leadership",
-    group_finance: "Finance",
-    group_media: "Media",
-    group_website: "Website",
-    group_events: "Events",
-    group_external: "External Relations",
-    group_associates: "Associates",
   },
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
@@ -176,13 +169,6 @@ const I18N = {
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
     about_lede: "Myanmar Culture Club မှ အခမ်းအနားတိုင်း၊ သတင်းလွှာတိုင်းနှင့် စုဝေးမှုတိုင်းသည် မိမိတို့အချိန်ကို အလှူအတန်းပေးကြသော ကျောင်းသားအုပ်စုမှဖြစ်ပါသည်။ သူတို့ကို ဤနေရာတွင် မိတ်ဆက်ပေးပါမည်။",
-    group_leadership: "ခေါင်းဆောင်များ",
-    group_finance: "ဘဏ္ဍာရေး",
-    group_media: "မီဒီယာ",
-    group_website: "ဝဘ်ဆိုက်",
-    group_events: "အခမ်းအနားများ",
-    group_external: "ပြင်ပဆက်ဆံရေး",
-    group_associates: "အသင်းဝင်ကူညီသူများ",
   },
 };
 
