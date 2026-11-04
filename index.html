@@ -249,15 +249,7 @@
   .greet{ display:block; height:clamp(58px, 7.6vw, 104px); width:auto; max-width:100%; overflow:visible; color:var(--red-ink); margin:6px 0 2px -2px; }
   .greet text{ font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px; fill:currentColor; }
   .greet-pending .greet{ visibility:hidden; }
-  .greet.writing text{
-    fill-opacity:0; stroke:currentColor; stroke-width:1.5; stroke-linejoin:round;
-    stroke-dasharray:1200; stroke-dashoffset:1200;
-    animation:
-      greet-draw 1.15s calc(var(--i, 0) * 0.5s) cubic-bezier(.45,0,.25,1) forwards,
-      greet-ink .7s calc(var(--i, 0) * 0.5s + 0.85s) ease forwards;
-  }
-  @keyframes greet-draw{ to{ stroke-dashoffset:0; } }
-  @keyframes greet-ink{ to{ fill-opacity:1; stroke-width:0; } }
+  .greet .greet-pen text{ fill:none; stroke:var(--red-ink); stroke-width:1.8; stroke-linejoin:round; stroke-linecap:round; }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;

@@ -1679,11 +1679,16 @@ let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
 // ---------- Homepage: "မင်္ဂလာပါ" greeting, written in ----------
-// Once the Yinmar font is ready, the greeting is split into its four syllables (မ · င်္ဂ · လာ · ပါ)
-// so they can be written one after another, left to right: each outline traces, then fills with
-// ink. It starts half a second after the page appears (so your eyes have landed), plays on every
-// visit, and plays again whenever you scroll away and come back up to it.
+// Once the Yinmar font is ready, the word is set up as two layers:
+//   • a pen layer — each syllable's outline (မ · င်္ဂ · လာ · ပါ), traced in one flowing,
+//     overlapping motion from left to right;
+//   • an ink layer — the solid letters, revealed through a soft-edged sweep that follows just
+//     behind the pen, so the colour flows in rather than popping on. Each outline fades as the
+//     ink reaches it.
+// Starts half a second after the page appears, plays on every visit, and again whenever you
+// scroll away and come back up to it. Reduced motion: just the finished word.
 const GREET_SYLLABLES = ["မ", "င်္ဂ", "လာ", "ပါ"];
+const GREET = { svg: null, raf: null };
 
 function initGreeting() {
   const svg = document.getElementById("js-greet");
@@ -1691,52 +1696,99 @@ function initGreeting() {
   const html = document.documentElement;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const reveal = () => html.classList.remove("greet-pending");
+  const NS = "http://www.w3.org/2000/svg";
+
+  const fitBox = () => {
+    const bb = svg.getBBox();
+    if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
+    return bb;
+  };
 
   const build = () => {
     const whole = svg.querySelector("text");
-    try {
-      if (!reduce && whole && whole.textContent === GREET_SYLLABLES.join("")) {
-        // Lay the syllables out exactly where the browser put them in the whole word.
-        let x = 0;
-        const parts = GREET_SYLLABLES.map((syl, i) => {
-          const tEl = document.createElementNS("http://www.w3.org/2000/svg", "text");
-          tEl.setAttribute("y", "0");
-          tEl.setAttribute("lang", "my");
-          tEl.style.setProperty("--i", String(i));
-          tEl.textContent = syl;
-          return tEl;
-        });
-        const start = [0];
-        GREET_SYLLABLES.reduce((acc, syl, i) => {
-          const len = whole.getSubStringLength(acc, syl.length);
-          start[i + 1] = start[i] + len;
-          return acc + syl.length;
-        }, 0);
-        parts.forEach((tEl, i) => { tEl.setAttribute("x", start[i].toFixed(2)); });
-        whole.replaceWith(...parts);
-        x = start[GREET_SYLLABLES.length];
-      }
-      const bb = svg.getBBox();
-      if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
-    } catch (e) { /* keep the whole word as it is */ }
+    if (reduce || !whole || whole.textContent !== GREET_SYLLABLES.join("")) { try { fitBox(); } catch (e) {} return false; }
+    // where each syllable starts, exactly as the browser laid out the whole word
+    const xs = [0];
+    GREET_SYLLABLES.reduce((acc, syl, i) => { xs[i + 1] = xs[i] + whole.getSubStringLength(acc, syl.length); return acc + syl.length; }, 0);
+    const bbAll = whole.getBBox();
+    const make = cls => {
+      const g = document.createElementNS(NS, "g");
+      g.setAttribute("class", cls);
+      GREET_SYLLABLES.forEach((syl, i) => {
+        const t = document.createElementNS(NS, "text");
+        t.setAttribute("x", xs[i].toFixed(2)); t.setAttribute("y", "0"); t.setAttribute("lang", "my");
+        t.textContent = syl;
+        g.appendChild(t);
+      });
+      return g;
+    };
+    const F = 70;                                   // softness of the ink's leading edge (font units)
+    const defs = document.createElementNS(NS, "defs");
+    defs.innerHTML =
+      `<linearGradient id="greet-feather" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${F}" y2="0">` +
+      `<stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
+      `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${bbAll.x - F - 10}" y="${bbAll.y - 10}" width="${bbAll.width + 2 * F + 20}" height="${bbAll.height + 20}">` +
+      `<rect x="${bbAll.x - F - 10}" y="${bbAll.y - 10}" width="${bbAll.width + 2 * F + 20}" height="${bbAll.height + 20}" fill="url(#greet-feather)"/></mask>`;
+    const ink = make("greet-ink");
+    ink.setAttribute("mask", "url(#greet-mask)");
+    const pen = make("greet-pen");
+    whole.replaceWith(defs, ink, pen);
+    const pens = Array.from(pen.children);
+    const sylls = pens.map(t => {
+      const b = t.getBBox();
+      const len = Math.ceil(3 * (b.width + b.height)); // a little more than the outline, so it always closes
+      t.style.strokeDasharray = `${len} ${len}`;
+      return { el: t, len, x0: b.x, w: b.width };
+    });
+    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), sylls, F, x0: bbAll.x, w: bbAll.width });
+    fitBox();
+    paint(-1);
+    return true;
   };
 
+  const ease = x => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+  const easeOut = x => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
+
+  // t in seconds since the write started (negative = not started)
+  function paint(t) {
+    const G = GREET;
+    G.sylls.forEach((s, i) => {
+      const p = ease((t - i * 0.34) / 1.4);         // syllables overlap, so it reads as one motion
+      s.el.style.strokeDashoffset = (s.len * (1 - p)).toFixed(1);
+      s.el.style.opacity = p > 0 ? "1" : "0";
+    });
+    const q = ease((t - 0.85) / 1.8);               // ink sweeps in just behind the pen
+    const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
+    G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
+    G.grad.setAttribute("x2", inkX.toFixed(1));
+    G.sylls.forEach(s => {                            // each outline fades once the ink has covered it
+      const covered = Math.max(0, Math.min(1, (inkX - G.F - (s.x0 + s.w * 0.4)) / (s.w * 0.6 + 1)));
+      if (t >= 0) s.el.style.opacity = String(Math.min(Number(s.el.style.opacity), 1 - covered));
+    });
+  }
+
   const write = () => {
-    svg.classList.remove("writing");
-    void svg.getBoundingClientRect();              // restart the animation
-    svg.classList.add("writing");
     reveal();
+    if (!GREET.sylls) return;
+    cancelAnimationFrame(GREET.raf);
+    const t0 = performance.now();
+    const frame = now => {
+      const t = (now - t0) / 1000;
+      paint(t);
+      GREET.raf = t < 3.4 ? requestAnimationFrame(frame) : null;
+    };
+    GREET.raf = requestAnimationFrame(frame);
   };
 
   const start = () => {
-    build();
-    if (reduce) { reveal(); return; }
+    let ok = false;
+    try { ok = build(); } catch (e) { ok = false; }
+    if (!ok) { reveal(); return; }
     setTimeout(write, 500);
-    // Write it again whenever it comes back into view after being scrolled away.
-    let away = false;
+    let away = false;                               // write it again when it comes back into view
     new IntersectionObserver(entries => {
       const e = entries[0];
-      if (!e.isIntersecting) away = true;
+      if (!e.isIntersecting) { away = true; paint(-1); }
       else if (away) { away = false; write(); }
     }, { threshold: 0 }).observe(svg);
   };
@@ -1745,7 +1797,7 @@ function initGreeting() {
     let done = false;
     const once = () => { if (!done) { done = true; start(); } };
     document.fonts.load('100px "Yinmar"', GREET_SYLLABLES.join("")).then(once, once);
-    setTimeout(once, 1200);                         // don't hold it back for a slow font
+    setTimeout(once, 1200);
   } else start();
 }
 
