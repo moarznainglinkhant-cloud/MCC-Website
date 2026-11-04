@@ -121,6 +121,22 @@ const I18N = {
     snake_count: "{n} events since {y}",
     snake_count_done: "{n} events and counting",
     snake_skip: "Skip",
+    bento_eyebrow: "Explore MCC",
+    bento_h2: "Everything MCC, at a glance",
+    bento_events_kicker: "Events",
+    bento_events_big: "{n} events since {y}",
+    bento_events_link: "See them all",
+    bento_about_kicker: "The people",
+    bento_about_title: "Meet the team behind MCC",
+    bento_about_sub: "{n} people across {d} teams",
+    bento_gallery_kicker: "Gallery",
+    bento_gallery_title: "Moments from our events",
+    bento_news_kicker: "Newsletter",
+    bento_news_fallback: "Every issue, in one place",
+    bento_news_link: "Read",
+    bento_fact_kicker: "Did you know?",
+    bento_fact_btn: "Another one",
+    bento_ig_sub: "Follow along between events",
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
@@ -189,6 +205,22 @@ const I18N = {
     snake_count: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
     snake_count_done: "အခမ်းအနား {n} ခု — ဆက်လက်ရှိနေဆဲ",
     snake_skip: "ကျော်ရန်",
+    bento_eyebrow: "MCC ကို လေ့လာပါ",
+    bento_h2: "MCC အကြောင်း အားလုံး တစ်ချက်တည်းဖြင့်",
+    bento_events_kicker: "အခမ်းအနားများ",
+    bento_events_big: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
+    bento_events_link: "အားလုံးကြည့်ရန်",
+    bento_about_kicker: "အဖွဲ့ဝင်များ",
+    bento_about_title: "MCC နောက်ကွယ်ရှိ အဖွဲ့နှင့် တွေ့ဆုံပါ",
+    bento_about_sub: "အဖွဲ့ {d} ဖွဲ့တွင် လူ {n} ဦး",
+    bento_gallery_kicker: "ဓာတ်ပုံပြခန်း",
+    bento_gallery_title: "ကျွန်ုပ်တို့ ပွဲများမှ အမှတ်တရများ",
+    bento_news_kicker: "သတင်းလွှာ",
+    bento_news_fallback: "စာစောင်အားလုံး တစ်နေရာတည်းတွင်",
+    bento_news_link: "ဖတ်ရန်",
+    bento_fact_kicker: "သင်သိပါသလား?",
+    bento_fact_btn: "နောက်တစ်ခု",
+    bento_ig_sub: "ပွဲများကြားတွင်လည်း လိုက်ကြည့်ပါ",
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
@@ -502,6 +534,44 @@ function torontoWallToUTC(wallStr) {
   return new Date(guess.getTime() + (targetWallMs - guessWallMs));
 }
 
+// Rolling digits for the homepage countdown: each digit is a little reel that rolls down to the
+// next number (like a flip clock / odometer) instead of just swapping.
+// The reel runs 9→0 twice, so going from 0 back up to 9 (or 0→5 on the tens of seconds) keeps
+// rolling the same way, then quietly snaps back to the first copy.
+function setReels(el, str) {
+  let reels = el.querySelectorAll(".reel-s");
+  if (reels.length !== str.length) {
+    const strip = "9876543210".repeat(2).split("").map(d => `<span>${d}</span>`).join("");
+    el.innerHTML = str.split("").map(() => `<span class="reel"><span class="reel-s">${strip}</span></span>`).join("");
+    el.setAttribute("aria-label", str);
+    reels = el.querySelectorAll(".reel-s");
+    reels.forEach((r, i) => { r.style.transition = "none"; r.dataset.d = str[i]; r.style.transform = `translateY(-${(9 - Number(str[i])) * 5}%)`; });
+    void el.offsetWidth;
+    reels.forEach(r => { r.style.transition = ""; });
+    return;
+  }
+  el.setAttribute("aria-label", str);
+  reels.forEach((r, i) => {
+    const d = Number(str[i]), prev = Number(r.dataset.d);
+    if (d === prev) return;
+    r.dataset.d = String(d);
+    const idx = 9 - d;
+    if (d > prev) {
+      // wrapped around (e.g. 0 → 9): roll on into the second copy, then snap back
+      r.style.transform = `translateY(-${(idx + 10) * 5}%)`;
+      clearTimeout(r._snap);
+      r._snap = setTimeout(() => {
+        r.style.transition = "none";
+        r.style.transform = `translateY(-${idx * 5}%)`;
+        void r.offsetWidth;
+        r.style.transition = "";
+      }, 700);
+    } else {
+      r.style.transform = `translateY(-${idx * 5}%)`;
+    }
+  });
+}
+
 let _countdownTimer = null;
 
 function initCountdown(ev) {
@@ -543,12 +613,10 @@ function initCountdown(ev) {
     };
     Object.keys(vals).forEach(k => {
       const str = String(vals[k]).padStart(2, "0");
-      if (nums[k].textContent === str) return;
-      nums[k].textContent = str;
-      if (reduceMotion) return;
-      nums[k].classList.remove("tick");
-      void nums[k].offsetWidth; // restart the pulse animation
-      nums[k].classList.add("tick");
+      if (nums[k].dataset.v === str) return;
+      nums[k].dataset.v = str;
+      if (reduceMotion) { nums[k].textContent = str; return; }
+      setReels(nums[k], str);
     });
   }
 
@@ -1610,7 +1678,192 @@ function safeUrl(str) {
 let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
+// ---------- Homepage: the Next Event card tilts gently toward the cursor ----------
+// Mouse only (not touch), off for reduced motion. The card turns a few degrees and the poster
+// inside drifts the other way, which gives a sense of depth without any shine effects.
+function initEventTilt() {
+  const card = document.querySelector("#event .event-card");
+  if (!card || !window.matchMedia) return;
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  const st = { tx: 0, ty: 0, x: 0, y: 0, raf: null, last: 0, on: false };
+  function frame(now) {
+    st.raf = null;
+    const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 0.016;
+    st.last = now;
+    const k = 1 - Math.exp(-7 * dt);
+    st.x += (st.tx - st.x) * k;
+    st.y += (st.ty - st.y) * k;
+    const settled = Math.abs(st.tx - st.x) < 0.001 && Math.abs(st.ty - st.y) < 0.001;
+    if (settled) { st.x = st.tx; st.y = st.ty; }
+    card.style.transform = (st.x || st.y) ? `perspective(1400px) rotateX(${(-st.y * 4).toFixed(3)}deg) rotateY(${(st.x * 5).toFixed(3)}deg)` : "";
+    const img = card.querySelector(".event-visual img");
+    if (img) img.style.transform = (st.x || st.y) ? `translate3d(${(-st.x * 14).toFixed(2)}px, ${(-st.y * 14).toFixed(2)}px, 0) scale(1.06)` : "";
+    if (!settled) st.raf = requestAnimationFrame(frame); else st.last = 0;
+  }
+  const kick = () => { if (!st.raf) st.raf = requestAnimationFrame(frame); };
+  card.addEventListener("pointerenter", e => {
+    if (e.pointerType !== "mouse") return;
+    // Let the fade-in finish first, then take over the transform.
+    card.style.transition = "box-shadow .5s ease";
+    card.classList.add("tilt", "hovering");
+  });
+  card.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
+    const r = card.getBoundingClientRect();
+    st.tx = (e.clientX - r.left) / r.width - 0.5;
+    st.ty = (e.clientY - r.top) / r.height - 0.5;
+    kick();
+  });
+  card.addEventListener("pointerleave", () => { st.tx = 0; st.ty = 0; card.classList.remove("hovering"); kick(); });
+}
+
+// ---------- Homepage: "Explore MCC" bento grid ----------
+// Each tile is a small live preview of another page. Filled from the same data the rest of the
+// site uses: past events (Sheet), the team (Team tab, or data/team.csv), the latest published
+// newsletter (Supabase, public read), and the fun facts list above.
+const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "", count: 0 };
+const BENTO_COLORS = ["#AE3628", "#C08A2E", "#4B7A3C", "#1C2440", "#8C2A1F"];
+
+function renderBento(past) {
+  const root = document.getElementById("js-bento");
+  if (!root) return;
+  const withPhoto = past.filter(ev => ev.photo);
+  const years = past.map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
+  BENTO.count = past.length;
+  BENTO.since = years[0] || "";
+  renderBentoText();
+
+  // Events tile: columns of posters drifting past (alternating directions).
+  const box = document.getElementById("js-bento-posters");
+  if (box && withPhoto.length && !box.childElementCount) {
+    const cols = 3;
+    for (let c = 0; c < cols; c++) {
+      const list = withPhoto.filter((_, i) => i % cols === c);
+      const imgs = list.concat(list).map(ev => `<img src="${safeUrl(ev.photo)}" alt="" loading="lazy" decoding="async">`).join("");
+      box.insertAdjacentHTML("beforeend", `<div class="t-col">${imgs}</div>`);
+    }
+    initBentoPosters(box);
+  }
+  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); loadBentoNews(); initBentoFact(); renderBentoHexes(); }
+}
+
+function renderBentoText() {
+  const ev = document.getElementById("js-bento-events");
+  if (ev && BENTO.count) {
+    ev.innerHTML = escapeHtml(t("bento_events_big")).replace("{n}", `<b>${BENTO.count}</b>`).replace("{y}", escapeHtml(BENTO.since));
+  }
+  const sub = document.getElementById("js-bento-team-sub");
+  if (sub && BENTO.team) {
+    sub.textContent = t("bento_about_sub").replace("{n}", BENTO.team.people).replace("{d}", BENTO.team.depts);
+  }
+}
+
+// Poster columns drift slowly on their own; scrolling the page speeds them up for a moment,
+// so the tile reacts to you (and eases back to a crawl when you stop).
+function initBentoPosters(box) {
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) return;
+  const cols = Array.from(box.querySelectorAll(".t-col"));
+  const st = { off: cols.map((_, i) => i * 90), boost: 0, lastY: window.scrollY, last: 0, raf: null, visible: false };
+  const base = [16, 22, 18];                       // px per second, per column
+  function frame(now) {
+    st.raf = null;
+    if (!st.visible) { st.last = 0; return; }
+    const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 0;
+    st.last = now;
+    st.boost *= Math.exp(-2.2 * dt);
+    cols.forEach((col, i) => {
+      const half = col.scrollHeight / 2;
+      if (!half) return;
+      st.off[i] = (st.off[i] + base[i % base.length] * (1 + st.boost) * dt) % half;
+      const y = i % 2 ? -half + st.off[i] : -st.off[i];
+      col.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`;
+    });
+    st.raf = requestAnimationFrame(frame);
+  }
+  window.addEventListener("scroll", () => {
+    const y = window.scrollY, d = Math.abs(y - st.lastY);
+    st.lastY = y;
+    st.boost = Math.min(12, st.boost + d * 0.04);
+  }, { passive: true });
+  new IntersectionObserver(entries => {
+    st.visible = entries[0].isIntersecting;
+    if (st.visible && !st.raf) st.raf = requestAnimationFrame(frame);
+  }).observe(box);
+}
+
+async function loadBentoTeam() {
+  const faces = document.getElementById("js-bento-faces");
+  if (!faces) return;
+  let text = typeof TEAM_CSV_URL === "string" ? readCachedCSV(TEAM_CSV_URL) : null;
+  if (!text && typeof TEAM_CSV_URL === "string") text = await fetchCSVText(TEAM_CSV_URL);
+  if (!text) { try { const r = await fetch("data/team.csv"); if (r.ok) text = await r.text(); } catch (e) { /* ignore */ } }
+  const rows = text ? safeParse(text).filter(r => (r.name || "").trim()) : [];
+  if (!rows.length) return;
+  const depts = new Set(rows.map(r => (r.department || "").trim().toLowerCase()).filter(Boolean));
+  BENTO.team = { people: rows.length, depts: depts.size || 1 };
+  const initials = r => {
+    const nm = ((r.preferred_name || "").trim() || r.name.trim()).split(/\s+/);
+    return (nm[0][0] + (nm.length > 1 ? nm[nm.length - 1][0] : "")).toUpperCase();
+  };
+  const show = rows.slice(0, 9);
+  faces.innerHTML = show.map((r, i) => `<span class="t-face" style="background:${BENTO_COLORS[i % BENTO_COLORS.length]}">${escapeHtml(initials(r))}</span>`).join("")
+    + (rows.length > show.length ? `<span class="t-face" style="background:var(--bg-sunk);color:var(--ink)">+${rows.length - show.length}</span>` : "");
+  renderBentoText();
+}
+
+async function loadBentoNews() {
+  const el = document.getElementById("js-bento-news");
+  const cfg = window.MCC_EXEC_CONFIG;
+  if (!el || !cfg || !cfg.url || !cfg.key) return;
+  try {
+    const res = await fetch(`${cfg.url}/rest/v1/newsletters?select=name,updated_at&status=eq.published&order=updated_at.desc&limit=1`,
+      { headers: { apikey: cfg.key } });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows || !rows[0] || !rows[0].name) return;
+    el.removeAttribute("data-i18n");
+    el.textContent = rows[0].name;
+  } catch (e) { /* keep the fallback text */ }
+}
+
+function initBentoFact() {
+  const text = document.getElementById("js-bento-fact");
+  const emoji = document.getElementById("js-bento-fact-emoji");
+  const btn = document.getElementById("js-bento-fact-btn");
+  if (!text || typeof MYANMAR_FUN_FACTS === "undefined" || !MYANMAR_FUN_FACTS.length) return;
+  const show = (animate) => {
+    let i = Math.floor(Math.random() * MYANMAR_FUN_FACTS.length);
+    if (MYANMAR_FUN_FACTS.length > 1 && i === BENTO.factIndex) i = (i + 1) % MYANMAR_FUN_FACTS.length;
+    BENTO.factIndex = i;
+    const f = MYANMAR_FUN_FACTS[i];
+    const put = () => { text.textContent = f.text; if (emoji) emoji.textContent = f.emoji || ""; text.classList.remove("out"); };
+    if (!animate) return put();
+    text.classList.add("out");
+    setTimeout(put, 280);
+  };
+  show(false);
+  if (btn) btn.addEventListener("click", () => show(true));
+}
+
+function renderBentoHexes() {
+  const box = document.getElementById("js-bento-hexes");
+  if (!box) return;
+  const photos = ["images/welcome_vertical.jpg", "images/welcome_top.jpg", "images/welcome_bottom.jpg"];
+  // a small honeycomb: 7 cells, photos in three of them
+  const cells = [[52, 0], [100, 0], [28, 40], [76, 40], [124, 40], [52, 80], [100, 80]];
+  const fill = { 1: 0, 3: 1, 5: 2 };
+  const tints = ["rgba(174,54,40,0.22)", "rgba(192,138,46,0.3)", "rgba(75,122,60,0.25)", "rgba(28,36,64,0.16)"];
+  box.innerHTML = cells.map(([x, y], i) => {
+    const inner = i in fill ? `<img src="${photos[fill[i]]}" alt="" loading="lazy">` : "";
+    const bg = i in fill ? "" : `background:${tints[i % tints.length]};`;
+    return `<span class="t-hex" style="left:${x - 24}px;top:${y}px;${bg}">${inner}</span>`;
+  }).join("");
+}
+
 function rerenderDynamicText() {
+  try { renderBentoText(); } catch (err) { /* homepage only */ }
   // If the toggle is clicked before the CSVs finish loading, do nothing —
   // initSiteData's own render (moments later) will already pick up
   // whichever language is currently selected.
@@ -1652,7 +1905,7 @@ function renderSiteData(eventRows, heroRows) {
 
   // Each section draws on its own, so a problem in one never leaves the others blank.
   [() => renderFeaturedEvent(next), () => renderComingUp(rest),
-   () => renderPastGallery(pastForGallery), () => renderHeroPhotos(heroRows)]
+   () => renderPastGallery(pastForGallery), () => renderHeroPhotos(heroRows), () => renderBento(past)]
     .forEach(draw => { try { draw(); } catch (err) { console.error("Section failed to draw:", err); } });
 
   ["js-event-visual", "js-events-grid", "js-past-gallery", "js-hero-photos"]
@@ -2042,4 +2295,5 @@ document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
 document.addEventListener("DOMContentLoaded", initFunFact);
+document.addEventListener("DOMContentLoaded", initEventTilt);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);

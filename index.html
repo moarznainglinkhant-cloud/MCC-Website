@@ -376,6 +376,103 @@
     .event-visual{ min-height:0; aspect-ratio: 4 / 3; }
   }
 
+  /* ---------- NEXT EVENT: rolling countdown + gentle 3D tilt (js/site.js) ---------- */
+  .countdown-num .reel{ display:inline-block; height:1.05em; overflow:hidden; vertical-align:top; }
+  .countdown-num .reel-s{ display:block; transition:transform .65s cubic-bezier(.22,1,.36,1); }
+  .countdown-num .reel-s span{ display:block; height:1.05em; line-height:1.05em; }
+  #event .event-card.tilt{ transform-style:preserve-3d; will-change:transform; transition:box-shadow .5s ease; }
+  #event .event-card.tilt.hovering{ box-shadow:0 30px 60px rgba(28,36,64,0.16); }
+  #event .event-card.tilt .event-visual img{ will-change:transform; }
+
+  /* ---------- EXPLORE: bento grid of live previews (js/site.js renderBento) ---------- */
+  .bento-sec{ padding-block: clamp(24px,4vw,48px) clamp(56px,8vw,96px); }
+  .bento{ display:grid; gap:16px; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:220px; }
+  .tile{
+    position:relative; overflow:hidden; border-radius:24px; padding:24px;
+    background:var(--bg-raised); border:1px solid var(--line); color:var(--ink); text-decoration:none;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    transition:transform .6s cubic-bezier(.22,1,.36,1), box-shadow .6s cubic-bezier(.22,1,.36,1), opacity .6s ease;
+  }
+  a.tile:hover{ transform:translateY(-4px); box-shadow:0 24px 48px rgba(28,36,64,0.12); }
+  .reveal-on .tile.reveal.is-visible:hover{ transform:translateY(-4px); }
+  .t-kicker{ font-size:0.68rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--red); }
+  .t-title{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.25rem,2vw,1.6rem); line-height:1.15; margin-top:6px; }
+  .t-sub{ font-size:0.88rem; color:var(--ink-soft); margin-top:6px; }
+  .t-link{ display:inline-flex; align-items:center; gap:6px; margin-top:12px; font-size:0.82rem; font-weight:700; }
+  .t-link svg{ width:14px; height:14px; transition:transform .4s cubic-bezier(.22,1,.36,1); }
+  a.tile:hover .t-link svg{ transform:translateX(4px); }
+
+  .t-events{ grid-column:1 / 3; grid-row:span 2; background:var(--navy); border-color:transparent; color:var(--footer-ink); }
+  .t-events .t-kicker{ color:var(--gold); }
+  .t-events .t-sub{ color:var(--footer-ink-soft); }
+  .t-posters{ position:absolute; inset:-12% -8%; display:flex; gap:14px; transform:rotate(-8deg); pointer-events:none; }
+  .t-col{ flex:1; display:flex; flex-direction:column; gap:14px; will-change:transform; }
+  .t-col img{ width:100%; aspect-ratio:4/5; object-fit:cover; border-radius:12px; display:block; }
+  .t-events::after{ content:""; position:absolute; inset:0; background:linear-gradient(to top, var(--navy) 18%, rgba(28,36,64,0.55) 48%, rgba(28,36,64,0.05) 80%); pointer-events:none; }
+  .t-events > .t-body{ position:relative; z-index:1; }
+  .t-big{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(2rem,3.6vw,3rem); line-height:1.05; margin-top:8px; }
+  .t-big b{ color:var(--gold); font-weight:600; }
+
+  .t-about{ grid-column:3 / 5; }
+  .t-faces{ position:absolute; top:22px; left:24px; right:24px; display:flex; flex-wrap:wrap; gap:8px; }
+  .t-face{
+    width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
+    font-size:0.78rem; font-weight:700; color:#fff; letter-spacing:0.02em;
+    transition:transform .6s cubic-bezier(.22,1,.36,1);
+  }
+  .t-about:hover .t-face{ transform:translateY(-3px); }
+  .t-about:hover .t-face:nth-child(2n){ transform:translateY(2px); }
+
+  .t-gallery{ background:var(--bg-sunk); }
+  .t-hexes{ position:absolute; top:16px; right:12px; width:150px; height:132px; scale:0.72; transform-origin:top right; transition:transform .8s cubic-bezier(.22,1,.36,1); }
+  .t-gallery:hover .t-hexes{ transform:scale(1.06) rotate(-3deg); }
+  .t-hex{ position:absolute; width:46px; height:52px; clip-path:polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background:var(--line); }
+  .t-hex img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+  .t-news .t-sheets{ position:absolute; top:22px; right:22px; width:62px; height:76px; }
+  .t-sheets i{ position:absolute; inset:0; border-radius:8px; background:var(--bg); border:1px solid var(--line); transition:transform .7s cubic-bezier(.22,1,.36,1); }
+  .t-sheets i:nth-child(1){ transform:rotate(-8deg) translate(-6px,4px); }
+  .t-sheets i:nth-child(2){ transform:rotate(4deg) translate(3px,1px); }
+  .t-sheets i:nth-child(3){ background:#fff; }
+  .t-sheets i:nth-child(3)::before{ content:""; position:absolute; left:10px; right:10px; top:14px; height:28px; background:repeating-linear-gradient(to bottom, var(--line) 0 2px, transparent 2px 8px); }
+  .t-news:hover .t-sheets i:nth-child(1){ transform:rotate(-14deg) translate(-12px,6px); }
+  .t-news:hover .t-sheets i:nth-child(2){ transform:rotate(9deg) translate(8px,2px); }
+
+  .t-fact{ grid-column:1 / 4; justify-content:center; }
+  .t-fact-row{ display:flex; align-items:center; gap:20px; }
+  .t-fact-emoji{ font-size:2.6rem; line-height:1; flex:none; }
+  .t-fact-text{ font-family:'Fraunces', serif; font-size:clamp(1.05rem,1.6vw,1.3rem); line-height:1.35; transition:opacity .45s ease, transform .45s ease; }
+  .t-fact-text.out{ opacity:0; transform:translateY(6px); }
+  .t-fact-btn{
+    flex:none; margin-left:auto; padding:10px 16px; border-radius:999px; border:1px solid var(--line);
+    background:transparent; color:var(--ink); font:inherit; font-size:0.8rem; font-weight:700; cursor:pointer;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .t-fact-btn:hover{ background:var(--bg-sunk); border-color:var(--ink-soft); }
+
+  .t-ig{ background:var(--red); border-color:transparent; color:#fff; }
+  .t-ig .t-kicker{ color:rgba(255,255,255,0.75); }
+  .t-ig svg.big{ position:absolute; top:22px; right:22px; width:44px; height:44px; opacity:0.9; transition:transform .7s cubic-bezier(.22,1,.36,1); }
+  .t-ig:hover svg.big{ transform:rotate(-10deg) scale(1.08); }
+
+  @media (max-width:980px){
+    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .t-events{ grid-column:1 / 3; grid-row:span 2; }
+    .t-about{ grid-column:1 / 3; }
+    .t-fact{ grid-column:1 / 3; }
+    .t-ig{ grid-column:1 / 3; }
+  }
+  @media (max-width:560px){
+    .bento{ grid-template-columns:1fr; grid-auto-rows:auto; }
+    .tile{ min-height:190px; }
+    .t-events, .t-about, .t-fact, .t-ig{ grid-column:auto; }
+    .t-events{ grid-row:auto; min-height:380px; }
+    .t-fact-row{ flex-wrap:wrap; }
+    .t-about{ justify-content:flex-start; }
+    .t-faces{ position:static; margin-bottom:18px; }
+    .t-fact-btn{ margin-left:0; }
+  }
+
   /* ---------- FOOTER / CONTACT ---------- */
   footer.contact{
     background:var(--footer-bg); color:var(--footer-ink);
@@ -664,6 +761,56 @@
     </div>
   </section>
 
+  <section class="bento-sec" id="explore">
+    <div class="wrap">
+      <div class="event-head">
+        <span class="eyebrow" data-i18n="bento_eyebrow">Explore MCC</span>
+        <h2 data-i18n="bento_h2">Everything MCC, at a glance</h2>
+      </div>
+      <div class="bento" id="js-bento">
+        <a class="tile t-events reveal" href="events.html#past-events">
+          <div class="t-posters" id="js-bento-posters" aria-hidden="true"></div>
+          <div class="t-body">
+            <span class="t-kicker" data-i18n="bento_events_kicker">Events</span>
+            <div class="t-big" id="js-bento-events">Every gathering, in one place.</div>
+            <span class="t-link"><span data-i18n="bento_events_link">See them all</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+          </div>
+        </a>
+        <a class="tile t-about reveal" href="about.html">
+          <div class="t-faces" id="js-bento-faces" aria-hidden="true"></div>
+          <span class="t-kicker" data-i18n="bento_about_kicker">The people</span>
+          <div class="t-title" data-i18n="bento_about_title">Meet the team behind MCC</div>
+          <span class="t-sub" id="js-bento-team-sub"></span>
+        </a>
+        <a class="tile t-gallery reveal" href="gallery.html">
+          <div class="t-hexes" id="js-bento-hexes" aria-hidden="true"></div>
+          <span class="t-kicker" data-i18n="bento_gallery_kicker">Gallery</span>
+          <div class="t-title" data-i18n="bento_gallery_title">Moments from our events</div>
+        </a>
+        <a class="tile t-news reveal" href="newsletter.html">
+          <div class="t-sheets" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="t-kicker" data-i18n="bento_news_kicker">Newsletter</span>
+          <div class="t-title" id="js-bento-news" data-i18n="bento_news_fallback">Every issue, in one place</div>
+          <span class="t-link"><span data-i18n="bento_news_link">Read</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <div class="tile t-fact reveal">
+          <span class="t-kicker" data-i18n="bento_fact_kicker">Did you know?</span>
+          <div class="t-fact-row" style="margin-top:10px">
+            <span class="t-fact-emoji" id="js-bento-fact-emoji" aria-hidden="true">🍜</span>
+            <p class="t-fact-text" id="js-bento-fact" aria-live="polite"></p>
+            <button type="button" class="t-fact-btn" id="js-bento-fact-btn" data-i18n="bento_fact_btn">Another one</button>
+          </div>
+        </div>
+        <a class="tile t-ig reveal" href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">
+          <svg class="big" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.4" cy="6.6" r="1" fill="currentColor"/></svg>
+          <span class="t-kicker">Instagram</span>
+          <div class="t-title">@mcc_uoft</div>
+          <span class="t-sub" style="color:rgba(255,255,255,0.8)" data-i18n="bento_ig_sub">Follow along between events</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
   <footer class="contact" id="connect">
     <div class="wrap">
       <div class="contact-top">
@@ -736,6 +883,7 @@
 })();
 </script>
 
+<script src="js/exec-config.js"></script>
 <script src="js/site.js"></script>
 
 <script>
