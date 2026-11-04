@@ -119,6 +119,9 @@ const I18N = {
     gallery_eyebrow: "Gallery",
     gallery_h1: "Moments from our events",
     gallery_hint: "Drag to explore · tap a photo to open it",
+    newsletter_eyebrow: "MCC Newsletter",
+    newsletter_h1: "What's new with MCC.",
+    newsletter_lede: "Club updates, upcoming events, and stories from the community, published every couple of weeks.",
   },
   mm: {
     label_welcome: "ကြိုဆိုပါသည်",
@@ -126,7 +129,7 @@ const I18N = {
     label_all_events: "အခမ်းအနားများ",
     label_about: "အကြောင်း",
     label_gallery: "ဓာတ်ပုံပြခန်း",
-    label_newsletter: "သတငးလွာ",
+    label_newsletter: "သတင်းလွှာ",
     label_connect: "ဆက်သွယ်ရန်",
     label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
     label_join_club: "အသင်းဝင်ရန်",
@@ -177,6 +180,9 @@ const I18N = {
     gallery_eyebrow: "ဓာတ်ပုံပြခန်း",
     gallery_h1: "ကျွန်ုပ်တို့၏ အခမ်းအနားများမှ အမှတ်တရများ",
     gallery_hint: "ရွှေ့၍ ကြည့်ရှုပါ · ဓာတ်ပုံကို နှိပ်၍ ဖွင့်ပါ",
+    newsletter_eyebrow: "MCC သတင်းလွှာ",
+    newsletter_h1: "MCC ၏ နောက်ဆုံးရ သတင်းများ။",
+    newsletter_lede: "အသင်းသတင်းများ၊ လာမည့်အခမ်းအနားများနှင့် အသိုင်းအဝိုင်းမှ ဇာတ်လမ်းများ — နှစ်ပတ်တစ်ကြိမ်ခန့် ထုတ်ဝေပါသည်။",
   },
 };
 
@@ -979,9 +985,34 @@ function renderSiteData(eventRows, heroRows) {
   renderPastGallery(pastForGallery);
   renderHeroPhotos(heroRows);
 
+  ["js-event-visual", "js-events-grid", "js-past-gallery", "js-hero-photos"]
+    .forEach(id => fadeInImages(document.getElementById(id)));
+
   // Runs after the dynamic sections above are in the DOM, so it picks up
   // their ".reveal" cards too, not just the ones already in the HTML.
   initScrollReveal();
+}
+
+// Photos that are already on hand show at once; ones still downloading fade in.
+function fadeInImages(root) {
+  if (!root) return;
+  root.querySelectorAll("img").forEach(img => {
+    if (img.complete && img.naturalWidth) return;
+    img.classList.add("fade-img");
+    const done = () => img.classList.add("is-loaded");
+    img.addEventListener("load", done, { once: true });
+    img.addEventListener("error", done, { once: true });
+  });
+}
+
+// The sticky nav gets a soft shadow once the page has scrolled under it.
+function initNavShadow() {
+  const nav = document.querySelector("header.nav");
+  if (!nav) return;
+  let ticking = false;
+  const update = () => { nav.classList.toggle("scrolled", window.scrollY > 8); ticking = false; };
+  window.addEventListener("scroll", () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
+  update();
 }
 
 async function initSiteData() {
@@ -1320,6 +1351,7 @@ function initSnowEasterEgg() {
 document.addEventListener("DOMContentLoaded", applyTranslations);
 document.addEventListener("DOMContentLoaded", initLangToggle);
 document.addEventListener("DOMContentLoaded", initSiteData);
+document.addEventListener("DOMContentLoaded", initNavShadow);
 
 // Independent of the CSV-driven render above — these buttons are already in
 // the static HTML, so there's no reason to wait on data loading for this.

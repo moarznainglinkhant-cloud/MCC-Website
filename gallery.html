@@ -379,6 +379,48 @@
     .menu-btn{ display:flex; }
   }
 
+
+  /* ---------- POLISH (shared across pages) ---------- */
+  ::selection{ background:rgba(192,138,46,0.28); color:var(--ink); }
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+
+  /* The sticky nav picks up a soft shadow once the page scrolls under it. */
+  header.nav{ transition: box-shadow .3s ease; }
+  header.nav.scrolled{ box-shadow: 0 8px 28px rgba(28,36,64,0.07); }
+
+  /* Buttons give a little press when tapped. */
+  .btn:active, .btn-footer:active, .nav-cta:active, nav.links a.nav-exec:active, .wheel-btn:active, .lang-toggle button:active{
+    transform:translateY(0) scale(.97); transition-duration:.08s;
+  }
+
+  /* The menu button turns into an X while the menu is open, and the menu slides in. */
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), top .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease;
+  }
+  .menu-btn[aria-expanded="true"] span{ background:transparent; }
+  .menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); }
+  .menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); }
+  @keyframes menu-in{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  #mobile-panel:not([hidden]){ animation: menu-in .28s cubic-bezier(.2,.8,.2,1) both; }
+  #mobile-panel:not([hidden]) > *{ animation: menu-in .34s cubic-bezier(.2,.8,.2,1) both; }
+  #mobile-panel:not([hidden]) > :nth-child(2){ animation-delay:.03s; }
+  #mobile-panel:not([hidden]) > :nth-child(3){ animation-delay:.06s; }
+  #mobile-panel:not([hidden]) > :nth-child(4){ animation-delay:.09s; }
+  #mobile-panel:not([hidden]) > :nth-child(5){ animation-delay:.12s; }
+  #mobile-panel:not([hidden]) > :nth-child(6){ animation-delay:.15s; }
+
+  /* Softer, consistent corners on cards and photos (matching the About and Gallery pages). */
+  .event-card{ border-radius:20px; overflow:hidden; }
+  .event-body{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
+  .past-card{ border-radius:16px; transition: transform .2s ease, box-shadow .25s ease; }
+  .past-card:hover{ box-shadow: 0 16px 32px rgba(28,36,64,0.12); }
+  .past-card .photo{ overflow:hidden; }
+  .panel{ border-radius:16px; }
+
+  /* Photos that are still downloading fade in instead of popping. */
+  img.fade-img{ opacity:0; transition: opacity .45s ease, transform .5s ease; }
+  img.fade-img.is-loaded{ opacity:1; }
+
 </style>
 <!-- Privacy-friendly, cookie-free visitor counter (GoatCounter) -->
 <script data-goatcounter="https://moarz.goatcounter.com/count"
