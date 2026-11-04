@@ -745,6 +745,8 @@ function teardownSnake() {
   if (SNAKE.ro) SNAKE.ro.disconnect();
   const svg = g.querySelector(".snake-svg");
   if (svg) svg.remove();
+  if (SNAKE.pin) { SNAKE.pin.replaceWith(g); SNAKE.pin = null; }
+  g.style.transform = "";
   g.classList.remove("snake");
   g.querySelectorAll(".past-card").forEach(c => {
     c.style.gridColumn = ""; c.style.gridRow = ""; c.style.removeProperty("--fill");
@@ -788,6 +790,14 @@ function buildSnake() {
   g.prepend(svg);
   const q = sel => svg.querySelector(sel);
 
+  const pin = document.createElement("div");
+  pin.className = "snake-pin";
+  const stage = document.createElement("div");
+  stage.className = "snake-stage";
+  g.replaceWith(pin);
+  pin.appendChild(stage);
+  stage.appendChild(g);
+
   // Live counter: "11 events since 2022".
   const years = (_cachedPast || []).map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
   const counter = document.createElement("div");
@@ -796,7 +806,7 @@ function buildSnake() {
   document.body.appendChild(counter);
 
   Object.assign(SNAKE, {
-    g, cards, svg, counter, since: years[0] || "", litCount: -1,
+    g, cards, svg, counter, pin, stage, since: years[0] || "", litCount: -1,
     guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
     cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
   });
@@ -807,6 +817,7 @@ function buildSnake() {
   if (!SNAKE.listening) {
     SNAKE.listening = true;
     window.addEventListener("scroll", snakeKick, { passive: true });
+    window.addEventListener("resize", () => { if (SNAKE.g) { snakeLayout(); snakeKick(); } });
   }
   snakeKick();
 }
@@ -859,16 +870,23 @@ function snakeLayout() {
   SNAKE.half = cards.map(c => (c.offsetWidth / 2) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
   SNAKE.line.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
-  // Keep what's already drawn after a resize: hold the line where it was, as a share of the whole.
-  if (SNAKE.prevTotal && SNAKE.cur !== null) { SNAKE.cur = SNAKE.cur * SNAKE.total / SNAKE.prevTotal; SNAKE.max = SNAKE.max * SNAKE.total / SNAKE.prevTotal; }
-  SNAKE.prevTotal = SNAKE.total;
+
+  // Pin: tall enough that scrolling through it draws the whole line.
+  const nav = document.querySelector("header.nav");
+  SNAKE.top = nav ? nav.offsetHeight : 0;
+  SNAKE.pin.style.setProperty("--snake-top", SNAKE.top + "px");
+  SNAKE.stageH = window.innerHeight - SNAKE.top;
+  SNAKE.padTop = 28;
+  SNAKE.maxShift = Math.max(0, g.offsetHeight + SNAKE.padTop * 2 + 20 - SNAKE.stageH);
+  SNAKE.pin.style.height = (SNAKE.stageH + SNAKE.total / SNAKE_RATIO) + "px";
+  SNAKE.cur = null;
 }
 
-// How the line moves: it eases toward where your scroll says it should be, but never faster
-// than SNAKE_MAX_SPEED, so a quick flick of the wheel doesn't send it racing ahead.
-// Timed by the clock (not per frame), so it's equally smooth on 60Hz and 120Hz screens.
-const SNAKE_EASE = 2.4;          // how eagerly it closes the gap (per second)
-const SNAKE_MAX_SPEED = 520;     // px of line per second, at most
+// 1px of scrolling draws SNAKE_RATIO px of line. Lower = slower.
+const SNAKE_RATIO = 1.5;
+// A touch of easing so it glides, but tight enough that it stays glued to your scroll.
+const SNAKE_EASE = 14;
+
 
 function snakeCounter(n) {
   const c = SNAKE.counter;
@@ -895,25 +913,13 @@ function snakeFinale() {
 }
 
 function snakeTarget() {
-  const r = SNAKE.g.getBoundingClientRect();
-  const y = window.innerHeight * 0.62 - r.top;     // where the "pen" is, in grid coordinates
-  const ks = SNAKE.keys;
-  // Hit the bottom of the page? Finish the line, so the last poster can always light up.
-  if (r.top < window.innerHeight && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4) return SNAKE.total;
-  if (!ks.length || y <= ks[0].y) return 0;
-  if (y >= ks[ks.length - 1].y) return SNAKE.total;
-  for (let i = 1; i < ks.length; i++) {
-    if (y <= ks[i].y) {
-      const a = ks[i - 1], b = ks[i];
-      return a.L + (b.L - a.L) * ((y - a.y) / Math.max(1, b.y - a.y));
-    }
-  }
-  return SNAKE.total;
+  const r = SNAKE.pin.getBoundingClientRect();
+  return Math.max(0, Math.min(SNAKE.total, (SNAKE.top - r.top) * SNAKE_RATIO));
 }
 
 function snakeKick() {
   if (SNAKE.g && SNAKE.counter) {
-    const r = SNAKE.g.getBoundingClientRect();
+    const r = SNAKE.pin.getBoundingClientRect();
     SNAKE.counter.classList.toggle("show", r.top < window.innerHeight * 0.7 && r.bottom > window.innerHeight * 0.3);
   }
   if (!SNAKE.g || SNAKE.raf) return;
@@ -923,17 +929,11 @@ function snakeKick() {
 function snakeFrame(now) {
   SNAKE.raf = null;
   if (!SNAKE.g) return;
-  const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 0;
+  const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 1;
   SNAKE.last = now;
-  SNAKE.max = Math.max(SNAKE.max, snakeTarget());  // once drawn, it stays drawn
-  const target = SNAKE.max;
-  if (SNAKE.cur === null) SNAKE.cur = 0;
-  const gap = target - SNAKE.cur;
-  let step = gap * (1 - Math.exp(-SNAKE_EASE * dt));
-  // If it has fallen far behind (someone jumped down the page), let it catch up faster.
-  const vmax = SNAKE_MAX_SPEED + Math.max(0, Math.abs(gap) - 700) * 1.5;
-  step = Math.max(-vmax * dt, Math.min(vmax * dt, step));
-  SNAKE.cur += step;
+  const target = snakeTarget();
+  if (SNAKE.cur === null) SNAKE.cur = target;
+  SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-SNAKE_EASE * dt));
   if (Math.abs(target - SNAKE.cur) < 0.3) SNAKE.cur = target;
   const L = SNAKE.cur;
 
@@ -943,9 +943,14 @@ function snakeFrame(now) {
   SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
   SNAKE.head.style.opacity = L > 0.5 && L < SNAKE.total - 0.5 ? "" : "0";
 
+  // The view follows the pen: the grid only moves while the line is heading down to the next row.
+  const shift = Math.max(0, Math.min(SNAKE.maxShift, pt.y + SNAKE.padTop - SNAKE.stageH * 0.45));
+  SNAKE.g.style.transform = `translate3d(0, ${(-shift).toFixed(1)}px, 0)`;
+
   let lit = 0;
   SNAKE.cards.forEach((c, i) => {
     // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
+    // Colour only ever grows, so posters stay lit if you scroll back up.
     const h = SNAKE.half[i];
     const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
     const prev = Number(c.dataset.fill || 0);
