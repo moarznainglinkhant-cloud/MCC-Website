@@ -120,6 +120,7 @@ const I18N = {
     tl_end_cta: "See what's next",
     snake_count: "{n} events since {y}",
     snake_count_done: "{n} events and counting",
+    snake_skip: "Skip",
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
@@ -187,6 +188,7 @@ const I18N = {
     tl_end_cta: "လာမည့်ပွဲကို ကြည့်ရန်",
     snake_count: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
     snake_count_done: "အခမ်းအနား {n} ခု — ဆက်လက်ရှိနေဆဲ",
+    snake_skip: "ကျော်ရန်",
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
@@ -753,7 +755,8 @@ function teardownSnake() {
     c.classList.remove("lit", "ripple", "done");
     const color = c.querySelector(".snake-color"); if (color) color.remove();
   });
-  if (SNAKE.counter) { SNAKE.counter.remove(); SNAKE.counter = null; }
+  if (SNAKE.dock) { SNAKE.dock.remove(); SNAKE.dock = null; SNAKE.counter = null; }
+  g.querySelectorAll(".past-card").forEach(c => { c.style.scale = ""; c.style.opacity = ""; c.style.translate = ""; });
   SNAKE.g = null;
 }
 
@@ -794,19 +797,47 @@ function buildSnake() {
   pin.className = "snake-pin";
   const stage = document.createElement("div");
   stage.className = "snake-stage";
+  const view = document.createElement("div");
+  view.className = "snake-view";
   g.replaceWith(pin);
   pin.appendChild(stage);
-  stage.appendChild(g);
+  stage.appendChild(view);
+  view.appendChild(g);
 
-  // Live counter: "11 events since 2022".
-  const years = (_cachedPast || []).map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
+  const cardYears = cards.map((c, i) => ((_cachedPast || [])[i] || {}).date ? _cachedPast[i].date.slice(0, 4) : "");
+  const years = cardYears.filter(y => /^\d{4}$/.test(y)).sort();
+
+  // Chapter year (rolls over as the line moves into older events).
+  const yearEl = document.createElement("div");
+  yearEl.className = "snake-year";
+  yearEl.setAttribute("aria-hidden", "true");
+  yearEl.innerHTML = tlOdometer(cardYears[0] || years[years.length - 1] || "2026");
+  stage.appendChild(yearEl);
+
+  // Zoom-out finale title: "22 events and counting".
+  const fin = document.createElement("div");
+  fin.className = "snake-finale";
+  fin.setAttribute("aria-hidden", "true");
+  fin.innerHTML = escapeHtml(t("snake_count_done")).replace("{n}", `<b>${cards.length}</b>`);
+  stage.appendChild(fin);
+
+  // Dock: live counter ("11 events since 2022") + Skip.
+  const dock = document.createElement("div");
+  dock.className = "snake-dock";
   const counter = document.createElement("div");
   counter.className = "snake-count";
   counter.setAttribute("aria-hidden", "true");
-  document.body.appendChild(counter);
+  const skip = document.createElement("button");
+  skip.type = "button";
+  skip.className = "snake-skip";
+  skip.textContent = t("snake_skip") + " \u2193";
+  skip.addEventListener("click", snakeSkip);
+  dock.append(counter, skip);
+  document.body.appendChild(dock);
 
   Object.assign(SNAKE, {
-    g, cards, svg, counter, pin, stage, since: years[0] || "", litCount: -1,
+    g, cards, svg, counter, dock, pin, stage, yearEl, fin, cardYears, year: null, z: 0,
+    since: years[0] || "", litCount: -1,
     guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
     cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
   });
@@ -878,14 +909,44 @@ function snakeLayout() {
   SNAKE.stageH = window.innerHeight - SNAKE.top;
   SNAKE.padTop = 28;
   SNAKE.maxShift = Math.max(0, g.offsetHeight + SNAKE.padTop * 2 + 20 - SNAKE.stageH);
-  SNAKE.pin.style.height = (SNAKE.stageH + SNAKE.total / SNAKE_RATIO) + "px";
+  SNAKE.rowY = ys;
+  SNAKE.pitch = pitch;
+  SNAKE.rowOf = cards.map((c, i) => Math.floor(i / cols));
+  // Scroll budget: drawing the line, then the zoom-out finale.
+  SNAKE.drawS = SNAKE.total / SNAKE_RATIO;
+  SNAKE.zoomS = SNAKE.stageH * 1.6;
+  // Finale: every poster flies into one wide wall that fits the screen under the title.
+  // Pick the column count that makes the posters as big as possible.
+  const n = cards.length, cw0 = cards[0].offsetWidth, ch0 = cards[0].offsetHeight;
+  const stageW = SNAKE.stage.clientWidth, topRoom = 104, bottomRoom = 60, mg = 14;
+  const availW = stageW - 2 * Math.max(24, (stageW - g.offsetWidth) / 2), availH = SNAKE.stageH - topRoom - bottomRoom;
+  let best = { cw: 0, cols: n };
+  for (let c = 3; c <= n; c++) {
+    const rws = Math.ceil(n / c);
+    const cw = Math.min((availW - (c - 1) * mg) / c, ((availH - (rws - 1) * mg) / rws) * (cw0 / ch0));
+    if (cw > best.cw) best = { cw, cols: c };
+  }
+  const mc = best.cols, cwF = best.cw, chF = cwF * (ch0 / cw0), mr = Math.ceil(n / mc);
+  const wallW = mc * cwF + (mc - 1) * mg, wallH = mr * chF + (mr - 1) * mg;
+  const x0 = (stageW - wallW) / 2, y0 = topRoom + (availH - wallH) / 2;
+  const viewPadX = (stageW - g.offsetWidth) / 2;
+  SNAKE.wall = cards.map((c, i) => ({
+    ox: viewPadX + c.offsetLeft, oy: SNAKE.padTop + c.offsetTop, w: c.offsetWidth, h: c.offsetHeight,
+    tx: x0 + (i % mc) * (cwF + mg) + (Math.floor(i / mc) === mr - 1 ? ((mc * mr - n) * (cwF + mg)) / 2 : 0),
+    ty: y0 + Math.floor(i / mc) * (chF + mg), s: cwF / c.offsetWidth
+  }));
+  SNAKE.pin.style.height = (SNAKE.stageH + SNAKE.drawS + SNAKE.zoomS) + "px";
   SNAKE.cur = null;
+  SNAKE.cam = null;
 }
 
 // 1px of scrolling draws SNAKE_RATIO px of line. Lower = slower.
 const SNAKE_RATIO = 1.5;
-// A touch of easing so it glides, but tight enough that it stays glued to your scroll.
-const SNAKE_EASE = 14;
+// Easing: the line follows your scroll with a short, soft lag (smooths out mouse-wheel steps),
+// and the camera follows the line with a slightly longer one, so the grid never starts or stops
+// moving abruptly when the line turns a corner.
+const SNAKE_EASE = 8;
+const SNAKE_CAM_EASE = 4.5;
 
 
 function snakeCounter(n) {
@@ -912,15 +973,24 @@ function snakeFinale() {
   snakeCounter(n);
 }
 
+// Where the scroll is inside the pinned section, in px (0 … drawing … zoom-out finale).
 function snakeTarget() {
   const r = SNAKE.pin.getBoundingClientRect();
-  return Math.max(0, Math.min(SNAKE.total, (SNAKE.top - r.top) * SNAKE_RATIO));
+  return Math.max(0, Math.min(SNAKE.drawS + SNAKE.zoomS, SNAKE.top - r.top));
 }
 
+function snakeSkip() {
+  if (!SNAKE.pin) return;
+  const pinTop = SNAKE.pin.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top: pinTop - SNAKE.top + SNAKE.pin.offsetHeight - SNAKE.stageH + 2, behavior: "smooth" });
+}
+
+const easeInOut = x => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
 function snakeKick() {
-  if (SNAKE.g && SNAKE.counter) {
+  if (SNAKE.g && SNAKE.dock) {
     const r = SNAKE.pin.getBoundingClientRect();
-    SNAKE.counter.classList.toggle("show", r.top < window.innerHeight * 0.7 && r.bottom > window.innerHeight * 0.3);
+    SNAKE.dock.classList.toggle("show", r.top < window.innerHeight * 0.7 && r.bottom > window.innerHeight * 0.5 && SNAKE.z < 0.35);
   }
   if (!SNAKE.g || SNAKE.raf) return;
   SNAKE.raf = requestAnimationFrame(snakeFrame);
@@ -934,8 +1004,13 @@ function snakeFrame(now) {
   const target = snakeTarget();
   if (SNAKE.cur === null) SNAKE.cur = target;
   SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-SNAKE_EASE * dt));
-  if (Math.abs(target - SNAKE.cur) < 0.3) SNAKE.cur = target;
-  const L = SNAKE.cur;
+  if (Math.abs(target - SNAKE.cur) < 0.2) SNAKE.cur = target;
+  const sc = SNAKE.cur;
+  const L = Math.min(SNAKE.total, sc * SNAKE_RATIO);
+  const z = Math.max(0, Math.min(1, (sc - SNAKE.drawS) / (SNAKE.zoomS * 0.75)));
+  const e = easeInOut(z);
+  if ((z >= 0.35) !== (SNAKE.z >= 0.35)) { SNAKE.z = z; snakeKick(); }
+  SNAKE.z = z;
 
   SNAKE.line.style.strokeDashoffset = String(SNAKE.total - L);
   const pt = SNAKE.line.getPointAtLength(Math.max(0, Math.min(SNAKE.total, L)));
@@ -943,24 +1018,50 @@ function snakeFrame(now) {
   SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
   SNAKE.head.style.opacity = L > 0.5 && L < SNAKE.total - 0.5 ? "" : "0";
 
-  // The view follows the pen: the grid only moves while the line is heading down to the next row.
-  const shift = Math.max(0, Math.min(SNAKE.maxShift, pt.y + SNAKE.padTop - SNAKE.stageH * 0.45));
-  SNAKE.g.style.transform = `translate3d(0, ${(-shift).toFixed(1)}px, 0)`;
+  // Camera: follows the pen (the grid only moves while the line heads down a row), then in the
+  // finale pulls back until the whole grid fits on screen.
+  const camTarget = Math.max(0, Math.min(SNAKE.maxShift, pt.y + SNAKE.padTop - SNAKE.stageH * 0.5));
+  if (SNAKE.cam == null) SNAKE.cam = camTarget;
+  SNAKE.cam += (camTarget - SNAKE.cam) * (1 - Math.exp(-SNAKE_CAM_EASE * dt));
+  if (Math.abs(camTarget - SNAKE.cam) < 0.2) SNAKE.cam = camTarget;
+  SNAKE.g.style.transform = `translate3d(0, ${(-SNAKE.cam).toFixed(2)}px, 0)`;
+  SNAKE.yearEl.style.opacity = String(1 - e);
+  SNAKE.svg.style.opacity = String(1 - Math.min(1, z * 2.5));
+  SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", (70 * (1 - e)).toFixed(1) + "px");
+  SNAKE.fin.style.opacity = String(Math.max(0, Math.min(1, (z - 0.55) / 0.35)));
 
-  let lit = 0;
+  let lit = 0, current = 0;
   SNAKE.cards.forEach((c, i) => {
     // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
     // Colour only ever grows, so posters stay lit if you scroll back up.
     const h = SNAKE.half[i];
+    if (L >= SNAKE.thr[i] - h) current = i;
     const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
     const prev = Number(c.dataset.fill || 0);
     if (f > prev) { c.dataset.fill = f.toFixed(4); c.style.setProperty("--fill", f.toFixed(4)); }
     if (f > 0.01 && !c.classList.contains("lit")) c.classList.add("lit");
     if (Math.max(f, prev) >= 0.999) lit++;
+    // Focus: the row the pen is on stays crisp; rows above and below recede a little.
+    const rd = Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - pt.y) / SNAKE.pitch);
+    // Finale: fly into the wall, slightly staggered so they cascade in.
+    const w = SNAKE.wall[i];
+    const ei = easeInOut(Math.max(0, Math.min(1, (z - (i / SNAKE.cards.length) * 0.3) / 0.7)));
+    const sF = 1 - rd * 0.035, sc2 = sF + (w.s - sF) * ei;
+    const dx = (w.tx - w.ox - (w.w - w.w * w.s) / 2) * ei;
+    const dy = (w.ty - (w.oy - SNAKE.cam) - (w.h - w.h * w.s) / 2) * ei;
+    c.style.translate = ei > 0 ? `${dx.toFixed(2)}px ${dy.toFixed(2)}px` : "";
+    c.style.scale = sc2.toFixed(4);
+    c.style.opacity = (1 - rd * 0.3 * (1 - ei)).toFixed(3);
   });
+  const year = SNAKE.cardYears[current];
+  if (year && year !== SNAKE.year) {
+    SNAKE.year = year;
+    const digits = year.split("");
+    SNAKE.yearEl.querySelectorAll(".odo-s").forEach((strip, i) => { strip.style.transform = `translateY(-${Number(digits[i] || 0) * 10}%)`; });
+  }
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
-  if (SNAKE.cur !== target) snakeKick(); else SNAKE.last = 0;
+  if (SNAKE.cur !== target || SNAKE.cam !== camTarget) snakeKick(); else SNAKE.last = 0;
 }
 
 // ---------- "Since 2022" timeline (events page) ----------

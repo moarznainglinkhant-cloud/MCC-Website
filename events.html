@@ -306,11 +306,28 @@
   .snake-stage{
     position:sticky; top:var(--snake-top, 64px);
     height:calc(100vh - var(--snake-top, 64px)); height:calc(100svh - var(--snake-top, 64px));
-    overflow:hidden; padding-block:28px;
-    margin-inline:calc(-1 * clamp(18px, 4vw, 56px)); padding-inline:clamp(18px, 4vw, 56px);
-    -webkit-mask-image:linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 48px), transparent 100%);
-            mask-image:linear-gradient(to bottom, transparent 0, #000 28px, #000 calc(100% - 48px), transparent 100%);
+    overflow:hidden; margin-inline:calc(-1 * clamp(18px, 4vw, 56px));
   }
+  .snake-view{
+    height:100%; padding-block:28px; padding-inline:clamp(18px, 4vw, 56px);
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 70px), #000 calc(var(--snake-fade, 70px) + 80px), #000 calc(100% - 48px), transparent 100%);
+            mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 70px), #000 calc(var(--snake-fade, 70px) + 80px), #000 calc(100% - 48px), transparent 100%);
+  }
+  .snake-svg{ transition:none; }
+  .snake .past-card.reveal{ transition:transform 1.4s cubic-bezier(.22,1,.36,1), box-shadow 1.4s cubic-bezier(.22,1,.36,1); }
+  /* chapter year, top-right of the pinned view */
+  .snake-year{
+    position:absolute; top:6px; right:clamp(18px, 4vw, 56px); z-index:3; pointer-events:none;
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(3.4rem, 6.5vw, 5.6rem); line-height:1;
+    color:var(--red); letter-spacing:-0.02em; font-variant-numeric:tabular-nums;
+  }
+  /* zoom-out finale title */
+  .snake-finale{
+    position:absolute; left:0; right:0; top:22px; z-index:3; pointer-events:none; text-align:center;
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.8rem, 3.4vw, 2.8rem); line-height:1.1; color:var(--ink);
+    opacity:0;
+  }
+  .snake-finale b{ color:var(--red); font-weight:600; }
   .snake-svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:0; }
   .snake-guide{ fill:none; stroke:var(--line); stroke-width:1.5; stroke-dasharray:1 9; stroke-linecap:round; opacity:0.6; }
   .snake-line{ fill:none; stroke:var(--red); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
@@ -349,15 +366,27 @@
   }
 
   /* live counter */
-  .snake-count{
+  .snake-dock{
     position:fixed; right:clamp(16px,3vw,32px); bottom:clamp(16px,3vw,32px); z-index:40;
-    display:flex; align-items:baseline; gap:8px; padding:12px 20px; border-radius:999px;
-    background:var(--navy); color:#F6F1E4; box-shadow:0 14px 36px rgba(18,22,42,0.24);
-    font-size:0.86rem; font-weight:600; letter-spacing:0.01em;
+    display:flex; align-items:center; gap:10px;
     opacity:0; transform:translateY(12px); pointer-events:none;
     transition:opacity .7s ease, transform .9s cubic-bezier(.22,1,.36,1);
   }
-  .snake-count.show{ opacity:1; transform:none; }
+  .snake-dock.show{ opacity:1; transform:none; }
+  .snake-dock.show .snake-skip{ pointer-events:auto; }
+  .snake-count{
+    display:flex; align-items:baseline; gap:8px; padding:12px 20px; border-radius:999px;
+    background:var(--navy); color:#F6F1E4; box-shadow:0 14px 36px rgba(18,22,42,0.24);
+    font-size:0.86rem; font-weight:600; letter-spacing:0.01em;
+  }
+  .snake-skip{
+    padding:12px 16px; border-radius:999px; border:1px solid var(--line); cursor:pointer;
+    background:color-mix(in srgb, var(--bg-raised) 88%, transparent); color:var(--ink);
+    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+    font:inherit; font-size:0.8rem; font-weight:700; letter-spacing:0.02em;
+    transition:background .2s ease, border-color .2s ease;
+  }
+  .snake-skip:hover{ background:var(--bg-raised); border-color:var(--ink-soft); }
   .snake-count b{ font-family:'Fraunces', serif; font-size:1.5rem; font-weight:600; color:var(--gold); font-variant-numeric:tabular-nums; display:inline-block; min-width:1.2em; text-align:right; }
 
   /* ---------- "Since 2022" timeline: past events as a pinned, sideways story (built by js/site.js) ---------- */
