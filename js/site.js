@@ -703,7 +703,6 @@ function renderComingUp(rest) {
 function renderPastGallery(past) {
   const gallery = document.getElementById("js-past-gallery");
   if (!gallery) return;
-  try { buildPastTimeline(past); } catch (err) { console.error("Timeline failed, showing the grid instead:", err); }
   gallery.innerHTML = past.map(ev => `
     <div class="past-card reveal">
       <div class="photo"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}${ev.location ? ", " + escapeHtml(ev.location) : ""}" loading="lazy"></div>
@@ -713,6 +712,152 @@ function renderPastGallery(past) {
       </div>
     </div>
   `).join("");
+  // Phones get the sideways timeline; wider screens keep the grid with the connecting line.
+  try { buildPastTimeline(past); } catch (err) { console.error("Timeline failed, showing the grid instead:", err); }
+  try { buildSnake(); } catch (err) { console.error("Connecting line failed, showing the plain grid:", err); }
+  if (!PAST_MQ_WIRED && window.matchMedia) {
+    PAST_MQ_WIRED = true;
+    window.matchMedia(PAST_PHONE_MQ).addEventListener("change", () => { if (_dataLoaded) renderPastGallery(_cachedPast); });
+  }
+}
+
+const PAST_PHONE_MQ = "(max-width: 820px)";
+let PAST_MQ_WIRED = false;
+
+// ---------- Desktop "connecting line" through the past-events grid ----------
+// The grid stays (lots of posters at once is the point). As you scroll, a red line snakes
+// through it: left to right along the first row, down the side, right to left along the next,
+// and so on. Posters start dimmed and light up for good once the line has passed them.
+// Rows alternate direction so the line meets the events in order (newest first).
+const SNAKE = { g: null, listening: false };
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function teardownSnake() {
+  const g = SNAKE.g;
+  if (!g) return;
+  if (SNAKE.ro) SNAKE.ro.disconnect();
+  const svg = g.querySelector(".snake-svg");
+  if (svg) svg.remove();
+  g.classList.remove("snake");
+  g.querySelectorAll(".past-card").forEach(c => { c.style.gridColumn = ""; c.style.gridRow = ""; c.classList.remove("lit"); });
+  SNAKE.g = null;
+}
+
+function buildSnake() {
+  teardownSnake();
+  const g = document.getElementById("js-past-gallery");
+  if (!g) return;
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const phone = window.matchMedia && window.matchMedia(PAST_PHONE_MQ).matches;
+  const cards = Array.from(g.querySelectorAll(".past-card"));
+  if (reduce || phone || cards.length < 4) return;
+
+  g.classList.add("snake");
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", "snake-svg");
+  svg.setAttribute("aria-hidden", "true");
+  const guide = document.createElementNS(SVG_NS, "path"); guide.setAttribute("class", "snake-guide");
+  const line = document.createElementNS(SVG_NS, "path"); line.setAttribute("class", "snake-line");
+  const head = document.createElementNS(SVG_NS, "circle"); head.setAttribute("class", "snake-head"); head.setAttribute("r", "6");
+  svg.append(guide, line, head);
+  g.prepend(svg);
+
+  Object.assign(SNAKE, { g, cards, guide, line, head, cur: null, max: 0, total: 0, thr: [], keys: [], raf: null });
+  snakeLayout();
+  SNAKE.ro = new ResizeObserver(() => { if (SNAKE.g) { snakeLayout(); snakeKick(); } });
+  SNAKE.ro.observe(g);
+  if (!SNAKE.listening) {
+    SNAKE.listening = true;
+    window.addEventListener("scroll", snakeKick, { passive: true });
+  }
+  snakeKick();
+}
+
+function snakeLayout() {
+  const { g, cards } = SNAKE;
+  cards.forEach(c => { c.style.gridColumn = ""; c.style.gridRow = ""; });
+  const top0 = cards[0].offsetTop;
+  let cols = cards.filter(c => c.offsetTop === top0).length;
+  if (cols < 2) cols = 2;
+  // Snake the placement: even rows left→right, odd rows right→left.
+  cards.forEach((c, i) => {
+    const r = Math.floor(i / cols), k = i % cols;
+    c.style.gridRow = String(r + 1);
+    c.style.gridColumn = String((r % 2 ? cols - 1 - k : k) + 1);
+  });
+
+  const rows = [];
+  cards.forEach((c, i) => { const r = Math.floor(i / cols); (rows[r] = rows[r] || []).push(c); });
+  const ys = rows.map(row => { const c = row[0], ph = c.querySelector(".photo"); return c.offsetTop + (ph ? ph.offsetHeight : c.offsetHeight) / 2; });
+  const W = g.clientWidth, G = 26, R = 22;
+  const xL = -G, xR = W + G;
+  const cx = c => c.offsetLeft + c.offsetWidth / 2;
+  const pitch = ys.length > 1 ? ys[1] - ys[0] : 400;
+  const span = pitch * 0.32;
+
+  let d = `M ${xL} ${ys[0]}`, L = 0;
+  const thr = new Map(), keys = [];
+  rows.forEach((row, r) => {
+    const y = ys[r], ltr = r % 2 === 0, last = r === rows.length - 1;
+    const hs = r === 0 ? xL : (ltr ? xL + R : xR - R);
+    const he = last ? cx(row[row.length - 1]) : (ltr ? xR - R : xL + R);
+    row.forEach(c => thr.set(c, L + Math.abs(cx(c) - hs)));
+    keys.push({ y: y - span, L });
+    d += ` H ${he}`;
+    L += Math.abs(he - hs);
+    keys.push({ y: y + span, L });
+    if (!last) {
+      const yn = ys[r + 1], sweep = ltr ? 1 : 0, xs = ltr ? xR : xL;
+      d += ` A ${R} ${R} 0 0 ${sweep} ${xs} ${y + R} V ${yn - R} A ${R} ${R} 0 0 ${sweep} ${ltr ? xR - R : xL + R} ${yn}`;
+      L += Math.PI * R + Math.max(0, yn - y - 2 * R);
+    }
+  });
+  SNAKE.guide.setAttribute("d", d);
+  SNAKE.line.setAttribute("d", d);
+  SNAKE.total = SNAKE.line.getTotalLength();
+  const k = L ? SNAKE.total / L : 1;               // keep our bookkeeping in step with the browser's
+  SNAKE.thr = cards.map(c => thr.get(c) * k);
+  SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
+  SNAKE.line.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
+  SNAKE.cur = null;
+}
+
+function snakeTarget() {
+  const r = SNAKE.g.getBoundingClientRect();
+  const y = window.innerHeight * 0.62 - r.top;     // where the "pen" is, in grid coordinates
+  const ks = SNAKE.keys;
+  if (!ks.length || y <= ks[0].y) return 0;
+  if (y >= ks[ks.length - 1].y) return SNAKE.total;
+  for (let i = 1; i < ks.length; i++) {
+    if (y <= ks[i].y) {
+      const a = ks[i - 1], b = ks[i];
+      return a.L + (b.L - a.L) * ((y - a.y) / Math.max(1, b.y - a.y));
+    }
+  }
+  return SNAKE.total;
+}
+
+function snakeKick() {
+  if (!SNAKE.g || SNAKE.raf) return;
+  SNAKE.raf = requestAnimationFrame(snakeFrame);
+}
+
+function snakeFrame() {
+  SNAKE.raf = null;
+  if (!SNAKE.g) return;
+  SNAKE.max = Math.max(SNAKE.max, snakeTarget());  // once drawn, it stays drawn
+  const target = SNAKE.max;
+  if (SNAKE.cur === null) SNAKE.cur = Math.min(target, 0);
+  SNAKE.cur += (target - SNAKE.cur) * 0.12;
+  if (Math.abs(target - SNAKE.cur) < 0.5) SNAKE.cur = target;
+  const L = SNAKE.cur;
+  SNAKE.line.style.strokeDashoffset = String(SNAKE.total - L);
+  const pt = SNAKE.line.getPointAtLength(Math.max(0, Math.min(SNAKE.total, L)));
+  SNAKE.head.setAttribute("cx", pt.x.toFixed(1));
+  SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
+  SNAKE.head.style.opacity = L <= 0.5 || L >= SNAKE.total - 0.5 ? "0" : "1";
+  SNAKE.cards.forEach((c, i) => { if (L >= SNAKE.thr[i] - 4) c.classList.add("lit"); });
+  if (SNAKE.cur !== target) snakeKick();
 }
 
 // ---------- "Since 2022" timeline (events page) ----------
@@ -744,7 +889,8 @@ function buildPastTimeline(past) {
     .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
   if (old) { if (head && wrap) wrap.prepend(head); old.remove(); TL.el = null; section.classList.remove("tl-on"); }
-  if (reduce || events.length < 3 || !head || !wrap) return;
+  const phone = window.matchMedia && window.matchMedia(PAST_PHONE_MQ).matches;
+  if (reduce || !phone || events.length < 3 || !head || !wrap) return;
 
   const cards = events.map((ev, i) => `
       <article class="tl-card" data-year="${ev.date.slice(0, 4)}">

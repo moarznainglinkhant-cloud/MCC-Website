@@ -297,6 +297,20 @@
   .past-card .info .date{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
   @media (max-width:420px){ .past-gallery{ grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); } }
 
+  /* ---------- Desktop "connecting line": a line snakes through the grid as you scroll; posters light up once it passes (js/site.js) ---------- */
+  .past-gallery.snake{ position:relative; column-gap:44px; row-gap:40px; }
+  .snake-svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:0; }
+  .snake-guide{ fill:none; stroke:var(--line); stroke-width:2; stroke-dasharray:2 7; stroke-linecap:round; }
+  .snake-line{ fill:none; stroke:var(--red); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; }
+  .snake-head{ fill:var(--red); filter:drop-shadow(0 0 6px rgba(174,54,40,0.7)); transition:opacity .4s ease; }
+  .snake .past-card{ position:relative; z-index:1; }
+  .snake .past-card::after{ content:""; position:absolute; inset:0; background:rgba(18,22,42,0.42); pointer-events:none; transition:opacity .8s ease; }
+  .snake .past-card .photo img{ filter:grayscale(0.85) brightness(0.8); transition:filter .8s ease, transform .5s ease; }
+  .snake .past-card.lit::after{ opacity:0; }
+  .snake .past-card.lit .photo img{ filter:none; }
+  .snake .past-card.lit{ animation:snake-pop .7s cubic-bezier(.2,.9,.3,1.3); }
+  @keyframes snake-pop{ 40%{ transform:scale(1.025); } }
+
   /* ---------- "Since 2022" timeline: past events as a pinned, sideways story (built by js/site.js) ---------- */
   #past-events.tl-on{ padding-bottom:clamp(24px,4vw,40px); }
   #past-events.tl-on > .wrap{ display:none; }
