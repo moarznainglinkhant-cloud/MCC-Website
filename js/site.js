@@ -23,7 +23,7 @@
 const EVENTS_CSV_URL   = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1409409640&single=true&output=csv";
 const HERO_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1259347518&single=true&output=csv";
 // About page roster: publish the "Team" tab as CSV and paste its link here (see README-SETUP.md).
-const TEAM_CSV_URL     = "PASTE_TEAM_TAB_CSV_LINK_HERE";
+const TEAM_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v71ESuKwpeYifkgqyfUDE_Gt0rc1E5y4rrefr0jKC-HnSF7qEAmu0baxHehAxwrgCkGVUPGH--/pub?gid=1969873983&single=true&output=csv";
 
 /* ============================================================
    "I'M FEELING LUCKY" FUN FACTS (fun-fact.html)
