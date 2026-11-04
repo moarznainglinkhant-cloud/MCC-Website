@@ -210,110 +210,83 @@
   .about-hero h1{ font-size:clamp(2.1rem,5vw,3.2rem); margin-block:10px 16px; }
   .about-hero p{ color:var(--ink-soft); font-size:1.05rem; max-width:62ch; }
 
-  /* ---------- PEOPLE / MANDALA WHEEL ---------- */
-  .mandala-section{ padding-block: clamp(8px,2vw,16px) clamp(40px,6vw,64px); }
-  .mandala-toolbar{
-    display:flex; align-items:center; justify-content:space-between; gap:14px;
-    flex-wrap:wrap; margin-bottom:16px;
+  /* ---------- TEAM WHEEL (scroll-driven) ---------- */
+  .wheel-section{ position:relative; }
+  .wheel-sticky{
+    position:sticky; top:0;
+    height:100vh; height:100svh;
+    overflow:hidden;
   }
-  .dept-jump{ display:flex; flex-wrap:wrap; gap:8px; }
-  .dept-chip{
-    appearance:none; display:inline-flex; align-items:center; gap:7px;
-    border:1px solid var(--line); background:var(--bg-raised); border-radius:999px;
-    padding:8px 15px; font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.76rem;
-    color:var(--ink); cursor:pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  .wheel{ position:absolute; left:0; top:0; width:0; height:0; will-change:transform; }
+  .wheel-ring{
+    position:absolute; left:0; top:0; border-radius:50%;
+    transform:translate(-50%,-50%); pointer-events:none;
   }
-  .dept-chip:hover{ transform:translateY(-1px); }
-  .dept-chip .dot{ width:8px; height:8px; border-radius:50%; flex:none; }
-  .dept-chip.active{ background:var(--navy); color:#F6F1E4; border-color:var(--navy); }
-  .view-toggle-btn{
-    appearance:none; border:1.5px solid var(--gold); background:transparent; color:var(--ink);
-    font-family:'Work Sans',sans-serif; font-weight:700; font-size:0.74rem; letter-spacing:0.03em;
-    padding:8px 16px; border-radius:999px; cursor:pointer;
-    transition: background .18s ease, color .18s ease;
+  .wheel-ring.outer{ border:1px dashed var(--line); }
+  .wheel-ring.inner{ border:1px solid var(--line); }
+  .wheel-dot{
+    position:absolute; left:0; top:0; width:12px; height:12px; border-radius:50%;
+    box-shadow:0 0 0 3px var(--bg);
   }
-  .view-toggle-btn:hover{ background:var(--gold); color:var(--navy-deep); }
-
-  .mandala-viewport{
-    position:relative; width:100%; height:min(74vh, 640px); min-height:430px;
-    border:1px solid var(--line); border-radius:20px; overflow:hidden;
-    background: radial-gradient(circle at 50% 50%, var(--bg-raised) 0%, var(--bg-sunk) 75%);
-    cursor:grab; touch-action:none;
-  }
-  .mandala-viewport.dragging{ cursor:grabbing; }
-  .mandala-canvas{
-    position:absolute; left:0; top:0; width:1360px; height:1360px;
-    transform-origin:0 0;
-    opacity:0; transition:opacity .6s ease;
-  }
-  .mandala-canvas.ready{ opacity:1; }
-  .mandala-canvas.animating{ transition: transform .65s cubic-bezier(.3,.9,.3,1), opacity .6s ease; }
-
-  .mandala-ring{
-    position:absolute; left:680px; top:680px;
+  .wheel-hub{
+    position:absolute; width:200px; height:200px; border-radius:50%; z-index:3;
     transform:translate(-50%,-50%);
-    border:1px dashed var(--line); border-radius:50%; pointer-events:none;
+    background:var(--navy); color:var(--footer-ink);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif; font-weight:700; font-size:1.6rem; line-height:1.1;
+    box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--gold);
   }
-  .mandala-ring.r1{ width:760px; height:760px; animation: mandala-spin-cw 150s linear infinite; }
-  .mandala-ring.r2{ width:940px; height:940px; border-style:dotted; opacity:0.6; animation: mandala-spin-ccw 230s linear infinite; }
-  @keyframes mandala-spin-cw{ from{ transform:translate(-50%,-50%) rotate(0deg); } to{ transform:translate(-50%,-50%) rotate(360deg); } }
-  @keyframes mandala-spin-ccw{ from{ transform:translate(-50%,-50%) rotate(360deg); } to{ transform:translate(-50%,-50%) rotate(0deg); } }
-
-  .mandala-hub{
-    position:absolute; left:680px; top:680px;
-    transform:translate(-50%,-50%);
-    width:122px; height:122px; border-radius:50%; z-index:6;
-    background:var(--navy); color:#F6F1E4; border:none; cursor:pointer;
-    display:flex; align-items:center; justify-content:center; flex-direction:column;
-    font-family:'Fraunces', serif; font-weight:700; font-size:1.3rem;
-    box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold), 0 14px 30px rgba(28,36,64,0.25);
-    animation: mandala-pulse 3.4s ease-in-out infinite;
+  .wheel-hub small{
+    font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.6rem;
+    letter-spacing:0.14em; text-transform:uppercase; opacity:0.7; margin-top:4px;
   }
-  .mandala-hub small{ display:block; font-family:'Work Sans',sans-serif; font-weight:600; font-size:0.58rem; letter-spacing:0.1em; opacity:0.75; margin-top:2px; }
-  @keyframes mandala-pulse{
-    0%,100%{ box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold), 0 14px 30px rgba(28,36,64,0.25); }
-    50%{ box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 10px var(--gold), 0 18px 38px rgba(28,36,64,0.3); }
-  }
-
-  .spoke-line{ position:absolute; left:680px; top:680px; height:1px; background:var(--line); transform-origin:0 0; z-index:1; }
-
   .cluster{
-    position:absolute; width:220px; z-index:4;
-    display:flex; flex-direction:column; align-items:center; gap:10px;
-    transform:translate(-50%,-50%) scale(.6);
-    opacity:0;
-    transition: opacity .5s ease, transform .5s cubic-bezier(.3,1.4,.4,1);
+    position:absolute; left:0; top:0; z-index:2;
+    display:grid; gap:12px;
+    will-change:transform, opacity;
   }
-  .cluster.in{ opacity:1; transform:translate(-50%,-50%) scale(1); }
-  .cluster-label{
-    appearance:none; cursor:pointer; display:flex; align-items:center; gap:7px;
-    font-family:'Work Sans',sans-serif; font-weight:700; font-size:0.74rem;
-    letter-spacing:0.03em; padding:6px 14px; border-radius:999px;
-    background:var(--bg-raised); border:1.5px solid var(--line); color:var(--ink);
-    transition: transform .15s ease, border-color .15s ease;
-  }
-  .cluster-label:hover{ transform:translateY(-2px) scale(1.04); }
-  .cluster-label .dot{ width:8px; height:8px; border-radius:50%; }
-  .cluster-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:9px; width:100%; }
+  .cluster .person-card{ width:150px; }
 
-  .zoom-controls{
-    position:absolute; right:14px; bottom:14px; z-index:8;
-    display:flex; flex-direction:column; gap:6px;
+  .wheel-title{
+    position:absolute; z-index:4; max-width:300px;
+    transform:translateY(-50%);
+    transition: opacity .22s ease, transform .22s ease;
   }
-  .zoom-controls button{
-    width:36px; height:36px; border-radius:10px; border:1px solid var(--line);
-    background:var(--bg-raised); color:var(--ink); font-size:1.15rem; font-weight:700;
-    cursor:pointer; display:flex; align-items:center; justify-content:center;
-    box-shadow: var(--card-shadow);
-    transition: background .15s ease, transform .15s ease;
+  .wheel-title.out{ opacity:0; transform:translateY(calc(-50% - 10px)); }
+  .wheel-count{
+    font-family:'Work Sans',sans-serif; font-size:0.72rem; font-weight:700;
+    letter-spacing:0.16em; color:var(--ink-soft);
   }
-  .zoom-controls button:hover{ background:var(--bg-sunk); transform:translateY(-1px); }
-  .zoom-hint{ margin-top:10px; font-size:0.76rem; color:var(--ink-soft); text-align:center; }
+  .wheel-name{ font-size:clamp(2rem,4vw,3.2rem); line-height:1.05; margin:10px 0 16px; }
+  .wheel-bar{ display:block; width:44px; height:4px; border-radius:2px; margin-bottom:12px; }
+  .wheel-meta{ color:var(--ink-soft); font-size:0.95rem; }
 
-  .people-grid{
-    display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-    gap:20px;
+  .wheel-index{
+    position:absolute; right:clamp(18px,3vw,40px); top:50%; z-index:4;
+    transform:translateY(-50%);
+    display:flex; flex-direction:column; align-items:flex-end; gap:10px;
   }
+  .wheel-index button{
+    appearance:none; background:none; border:none; cursor:pointer; padding:2px 0;
+    display:flex; align-items:center; gap:9px;
+    font-family:'Work Sans',sans-serif; font-size:0.76rem; font-weight:600; color:var(--ink-soft);
+    opacity:0.5; transition: opacity .2s ease, color .2s ease;
+  }
+  .wheel-index button .dot{ width:8px; height:8px; border-radius:50%; transition: transform .2s ease; }
+  .wheel-index button:hover{ opacity:1; }
+  .wheel-index button.active{ opacity:1; color:var(--ink); }
+  .wheel-index button.active .dot{ transform:scale(1.5); }
+  @media (max-width:1199px){ .wheel-index{ display:none; } }
+
+  /* Phones and small tablets: title on top, wheel turns up from the bottom. */
+  .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; font-size:1.3rem; }
+  .wheel-sticky.is-mobile .wheel-title{ max-width:none; text-align:center; transform:none; }
+  .wheel-sticky.is-mobile .wheel-title.out{ transform:translateY(-10px); }
+  .wheel-sticky.is-mobile .wheel-bar{ margin-inline:auto; }
+  .wheel-sticky.is-mobile .wheel-name{ margin:6px 0 10px; }
+  .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:14px 10px 12px; gap:8px; }
+  .wheel-sticky.is-mobile .cluster .person-photo{ width:52px; height:52px; font-size:0.85rem; }
+
   .person-card{
     display:flex; flex-direction:column; align-items:center; text-align:center;
     gap:10px;
@@ -322,7 +295,6 @@
     box-shadow: var(--card-shadow);
     transition: transform .2s ease, box-shadow .2s ease;
   }
-  .mandala-section .people-grid .person-card{ padding:26px 18px 22px; }
   .person-card:hover{ transform:translateY(-3px); box-shadow: 0 10px 24px rgba(28,36,64,0.1); }
   .person-photo{
     width:66px; height:66px; border-radius:50%;
@@ -332,28 +304,18 @@
     box-shadow: 0 0 0 3px var(--bg-raised), 0 0 0 5px var(--gold);
     transition: background .22s ease, color .22s ease, box-shadow .22s ease, transform .22s ease;
   }
-  .mandala-section .people-grid .person-photo{
-    width:92px; height:92px; font-size:1.3rem;
-    box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold);
-  }
   .person-card:hover .person-photo{
     background:var(--navy); color:var(--footer-ink);
     box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 7px var(--gold);
     transform:scale(1.05);
   }
   .person-name{ font-weight:600; font-size:0.84rem; line-height:1.3; }
-  .mandala-section .people-grid .person-name{ font-size:0.98rem; }
   .person-name .pref{ color:var(--ink-soft); font-weight:500; }
   .person-title{
     display:inline-block;
     background:var(--bg-sunk); color:var(--red-ink);
     font-size:0.64rem; font-weight:700; letter-spacing:0.01em;
     padding:3px 11px; border-radius:999px;
-  }
-  .mandala-section .people-grid .person-title{ font-size:0.72rem; padding:4px 13px; }
-
-  @media (max-width:760px){
-    .mandala-toolbar{ flex-direction:column; align-items:stretch; }
   }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
@@ -491,34 +453,20 @@
     <div class="wrap">
       <span class="eyebrow" data-i18n="about_eyebrow">The People</span>
       <h1 data-i18n="about_h1">The team behind MCC</h1>
-      <p data-i18n="about_lede">Every event, newsletter, and get-together you've seen from the Myanmar Culture Club comes from this group of students volunteering their time. Here's who they are.</p>
     </div>
   </section>
 
-  <section class="mandala-section" id="team">
-    <div class="wrap">
-      <div class="mandala-toolbar">
-        <div class="dept-jump" id="deptJump"></div>
-        <button type="button" class="view-toggle-btn" id="toggleListView">List view</button>
+  <section class="wheel-section" id="team" aria-label="Our team, by department">
+    <div class="wheel-sticky" id="wheelSticky">
+      <div class="wheel" id="wheel"></div>
+      <div class="wheel-hub" aria-hidden="true">MCC<small>UofT</small></div>
+      <div class="wheel-title" id="wheelTitle">
+        <span class="wheel-count" id="wheelCount">01 / 07</span>
+        <h2 class="wheel-name" id="wheelName">Leadership</h2>
+        <span class="wheel-bar" id="wheelBar"></span>
+        <p class="wheel-meta" id="wheelMeta">3 people</p>
       </div>
-
-      <div class="mandala-viewport" id="mandalaViewport" role="group" aria-label="Interactive team wheel — scroll or pinch to zoom, drag to pan, tap a department to jump in">
-        <div class="mandala-canvas" id="mandalaCanvas">
-          <div class="mandala-ring r2"></div>
-          <div class="mandala-ring r1"></div>
-          <button type="button" class="mandala-hub" id="mandalaHub" title="Reset view">MCC<small>est. UofT</small></button>
-          <div id="spokeLayer"></div>
-          <div id="clusterLayer"></div>
-        </div>
-        <div class="zoom-controls">
-          <button type="button" id="zoomIn" aria-label="Zoom in">+</button>
-          <button type="button" id="zoomOut" aria-label="Zoom out">&minus;</button>
-          <button type="button" id="zoomReset" aria-label="Reset view">&#10227;</button>
-        </div>
-      </div>
-      <p class="zoom-hint">Scroll or pinch to zoom &middot; drag to pan &middot; tap a department or the crest to jump in</p>
-
-      <div class="people-grid" id="listFallback" hidden></div>
+      <nav class="wheel-index" id="wheelIndex" aria-label="Jump to a department"></nav>
     </div>
   </section>
 
@@ -607,8 +555,6 @@
     { key:"external",    label:"External Relations", color:"#6B4C8A" },
     { key:"associates",  label:"Associates",         color:"#5F5A48" }
   ];
-  var GCOLOR = {};
-  GROUPS.forEach(function(g){ GCOLOR[g.key] = g.color; });
 
   var PEOPLE = [
     {i:"T",  name:"Thant Thiri Oo",       pref:"Tina",      title:"Co-President",           group:"leadership"},
@@ -633,244 +579,204 @@
     {i:"A",  name:"Alvin Oakga",          pref:null,        title:"Associate",               group:"associates"}
   ];
 
-  function personCardHTML(p){
-    var nameHTML = p.pref ? (p.name + ' <span class="pref">(' + p.pref + ')</span>') : p.name;
+  var section = document.getElementById("team");
+  var sticky  = document.getElementById("wheelSticky");
+  var wheel   = document.getElementById("wheel");
+  var hub     = sticky ? sticky.querySelector(".wheel-hub") : null;
+  var titleEl = document.getElementById("wheelTitle");
+  var indexEl = document.getElementById("wheelIndex");
+  if (!section || !sticky || !wheel || !hub || !titleEl) return;
+
+  var N = GROUPS.length;
+  var STEP_DEG = 360 / N;
+  var STEP_VH = 75;          // scroll distance per department
+  var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  section.style.height = ((N - 1) * STEP_VH + 100) + "vh";
+
+  function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function cardHTML(p){
+    var nm = p.pref ? esc(p.name) + ' <span class="pref">(' + esc(p.pref) + ')</span>' : esc(p.name);
     return '<div class="person-card">' +
-      '<span class="person-photo" aria-hidden="true">' + p.i + '</span>' +
-      '<span class="person-name">' + nameHTML + '</span>' +
-      '<span class="person-title">' + p.title + '</span>' +
-      '</div>';
+      '<span class="person-photo" aria-hidden="true">' + esc(p.i) + '</span>' +
+      '<span class="person-name">' + nm + '</span>' +
+      '<span class="person-title">' + esc(p.title) + '</span>' +
+    '</div>';
   }
 
-  var viewport = document.getElementById("mandalaViewport");
-  var canvas = document.getElementById("mandalaCanvas");
-  if (!viewport || !canvas) return;
+  // ---------- build the wheel ----------
+  var outerRing = document.createElement("div"); outerRing.className = "wheel-ring outer";
+  var innerRing = document.createElement("div"); innerRing.className = "wheel-ring inner";
+  wheel.appendChild(outerRing); wheel.appendChild(innerRing);
 
-  var CANVAS = 1360, CENTER = 680, R = 480;
+  var members = GROUPS.map(function(g){ return PEOPLE.filter(function(p){ return p.group === g.key; }); });
+  var dots = [], clusters = [], indexBtns = [];
+  GROUPS.forEach(function(g, k){
+    var dot = document.createElement("span");
+    dot.className = "wheel-dot";
+    dot.style.background = g.color;
+    wheel.appendChild(dot); dots.push(dot);
 
-  // ---------- build spokes + clusters ----------
-  var spokeLayer = document.getElementById("spokeLayer");
-  var clusterLayer = document.getElementById("clusterLayer");
-  var deptJump = document.getElementById("deptJump");
-  var clusterCenters = {};
-  var clusterEls = [];
+    var c = document.createElement("div");
+    c.className = "cluster";
+    c.innerHTML = members[k].map(cardHTML).join("");
+    wheel.appendChild(c); clusters.push(c);
 
-  GROUPS.forEach(function(g, idx){
-    var angleDeg = -90 + idx * (360 / GROUPS.length);
-    var angleRad = angleDeg * Math.PI / 180;
-    var x = CENTER + R * Math.cos(angleRad);
-    var y = CENTER + R * Math.sin(angleRad);
-    clusterCenters[g.key] = { x: x, y: y };
-
-    var len = R - 76;
-    var line = document.createElement("div");
-    line.className = "spoke-line";
-    line.style.width = len + "px";
-    line.style.transform = "rotate(" + angleDeg + "deg) translateX(76px)";
-    spokeLayer.appendChild(line);
-
-    var members = PEOPLE.filter(function(p){ return p.group === g.key; });
-    var cluster = document.createElement("div");
-    cluster.className = "cluster";
-    cluster.style.left = x + "px";
-    cluster.style.top = y + "px";
-    cluster.innerHTML =
-      '<button type="button" class="cluster-label" data-g="' + g.key + '" style="border-color:' + g.color + '">' +
-        '<span class="dot" style="background:' + g.color + '"></span>' + g.label +
-      '</button>' +
-      '<div class="cluster-grid">' + members.map(personCardHTML).join("") + '</div>';
-    clusterLayer.appendChild(cluster);
-    clusterEls.push(cluster);
-
-    var chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "dept-chip";
-    chip.dataset.g = g.key;
-    chip.style.setProperty("--chip-c", g.color);
-    chip.innerHTML = '<span class="dot" style="background:' + g.color + '"></span>' + g.label;
-    deptJump.appendChild(chip);
-  });
-
-  // ---------- pan / zoom state ----------
-  var MIN_SCALE = 0.22, MAX_SCALE = 2.4;
-  var scale = 0.4, tx = 0, ty = 0;
-  var vw = 0, vh = 0;
-
-  function measure(){
-    var r = viewport.getBoundingClientRect();
-    vw = r.width; vh = r.height;
-  }
-
-  function fitInitial(){
-    measure();
-    var fit = Math.min(vw / (CANVAS * 1.08), vh / (CANVAS * 1.08));
-    scale = Math.max(MIN_SCALE, Math.min(0.55, fit));
-    tx = vw / 2 - CENTER * scale;
-    ty = vh / 2 - CENTER * scale;
-  }
-
-  function clampPan(){
-    var margin = 120;
-    var minTx = margin - CANVAS * scale, maxTx = vw - margin;
-    var minTy = margin - CANVAS * scale, maxTy = vh - margin;
-    if (maxTx < minTx) { var mx = (maxTx + minTx) / 2; minTx = maxTx = mx; }
-    if (maxTy < minTy) { var my = (maxTy + minTy) / 2; minTy = maxTy = my; }
-    tx = Math.max(minTx, Math.min(maxTx, tx));
-    ty = Math.max(minTy, Math.min(maxTy, ty));
-  }
-
-  function render(){
-    canvas.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + scale + ")";
-  }
-
-  function zoomAt(px, py, newScale){
-    newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
-    var cxp = (px - tx) / scale, cyp = (py - ty) / scale;
-    scale = newScale;
-    tx = px - cxp * scale;
-    ty = py - cyp * scale;
-    clampPan();
-    render();
-  }
-
-  function animatedTo(targetScale, targetCx, targetCy){
-    canvas.classList.add("animating");
-    scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, targetScale));
-    tx = vw / 2 - targetCx * scale;
-    ty = vh / 2 - targetCy * scale;
-    clampPan();
-    render();
-    window.setTimeout(function(){ canvas.classList.remove("animating"); }, 700);
-  }
-
-  function jumpTo(key){
-    deptJump.querySelectorAll(".dept-chip").forEach(function(c){
-      c.classList.toggle("active", c.dataset.g === key);
-    });
-    var c = clusterCenters[key];
-    if (!c) return;
-    animatedTo(1.15, c.x, c.y);
-  }
-
-  function resetView(){
-    deptJump.querySelectorAll(".dept-chip").forEach(function(c){ c.classList.remove("active"); });
-    fitInitial();
-    canvas.classList.add("animating");
-    render();
-    window.setTimeout(function(){ canvas.classList.remove("animating"); }, 700);
-  }
-
-  // ---------- wire up interactions ----------
-  fitInitial();
-  render();
-  requestAnimationFrame(function(){
-    canvas.classList.add("ready");
-    clusterEls.forEach(function(el, idx){
-      window.setTimeout(function(){ el.classList.add("in"); }, 90 + idx * 90);
-    });
-  });
-
-  viewport.addEventListener("wheel", function(e){
-    e.preventDefault();
-    var r = viewport.getBoundingClientRect();
-    var px = e.clientX - r.left, py = e.clientY - r.top;
-    var delta = e.deltaY < 0 ? 1.12 : 1/1.12;
-    zoomAt(px, py, scale * delta);
-  }, { passive:false });
-
-  var dragging = false, dragStartX = 0, dragStartY = 0, startTx = 0, startTy = 0, moved = false;
-  viewport.addEventListener("pointerdown", function(e){
-    if (e.pointerType === "touch") return; // touch handled separately for pinch support
-    dragging = true; moved = false;
-    dragStartX = e.clientX; dragStartY = e.clientY;
-    startTx = tx; startTy = ty;
-    viewport.classList.add("dragging");
-    viewport.setPointerCapture && viewport.setPointerCapture(e.pointerId);
-  });
-  viewport.addEventListener("pointermove", function(e){
-    if (!dragging) return;
-    var dx = e.clientX - dragStartX, dy = e.clientY - dragStartY;
-    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true;
-    tx = startTx + dx; ty = startTy + dy;
-    clampPan(); render();
-  });
-  function endDrag(){ dragging = false; viewport.classList.remove("dragging"); }
-  viewport.addEventListener("pointerup", endDrag);
-  viewport.addEventListener("pointerleave", endDrag);
-  viewport.addEventListener("pointercancel", endDrag);
-
-  // touch: 1-finger drag, 2-finger pinch
-  var touchMode = null, touchStartDist = 0, touchStartScale = 1, touchStartMid = {x:0,y:0};
-  viewport.addEventListener("touchstart", function(e){
-    if (e.touches.length === 1){
-      touchMode = "drag";
-      dragStartX = e.touches[0].clientX; dragStartY = e.touches[0].clientY;
-      startTx = tx; startTy = ty;
-    } else if (e.touches.length === 2){
-      touchMode = "pinch";
-      var r = viewport.getBoundingClientRect();
-      var t0 = e.touches[0], t1 = e.touches[1];
-      touchStartDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
-      touchStartScale = scale;
-      touchStartMid = { x:(t0.clientX + t1.clientX)/2 - r.left, y:(t0.clientY + t1.clientY)/2 - r.top };
+    if (indexEl){
+      var b = document.createElement("button");
+      b.type = "button";
+      b.innerHTML = esc(g.label) + '<span class="dot" style="background:' + g.color + '"></span>';
+      b.addEventListener("click", function(){ scrollToGroup(k); });
+      indexEl.appendChild(b); indexBtns.push(b);
     }
-  }, { passive:true });
-  viewport.addEventListener("touchmove", function(e){
-    if (touchMode === "drag" && e.touches.length === 1){
-      e.preventDefault();
-      var dx = e.touches[0].clientX - dragStartX, dy = e.touches[0].clientY - dragStartY;
-      tx = startTx + dx; ty = startTy + dy;
-      clampPan(); render();
-    } else if (touchMode === "pinch" && e.touches.length === 2){
-      e.preventDefault();
-      var t0 = e.touches[0], t1 = e.touches[1];
-      var dist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
-      var newScale = touchStartScale * (dist / touchStartDist);
-      zoomAt(touchStartMid.x, touchStartMid.y, newScale);
+  });
+
+  // ---------- layout (recomputed on resize) ----------
+  var L = { mobile:false, cx:0, cy:0, R:0, rInner:0, F:0, pos:[] };
+
+  function layout(){
+    var W = sticky.clientWidth, H = sticky.clientHeight;
+    var nav = document.querySelector("header.nav");
+    var NAV = nav ? nav.offsetHeight : 70;
+    L.mobile = W < 900;
+    sticky.classList.toggle("is-mobile", L.mobile);
+
+    var cols = L.mobile ? 2 : (W >= 1200 ? 3 : 2);
+    clusters.forEach(function(c, k){
+      var n = Math.min(cols, members[k].length);
+      if (L.mobile){
+        c.style.width = Math.min(W - 32, 340) + "px";
+        c.style.gridTemplateColumns = "repeat(" + n + ", minmax(0,1fr))";
+      } else {
+        c.style.width = "";
+        c.style.gridTemplateColumns = "repeat(" + n + ", 150px)";
+      }
+    });
+    var maxW = 0, maxH = 0;
+    clusters.forEach(function(c){ maxW = Math.max(maxW, c.offsetWidth); maxH = Math.max(maxH, c.offsetHeight); });
+
+    if (!L.mobile){
+      // Hub sits on the left edge; the department in focus faces right.
+      L.F = 0;
+      L.cx = 80;
+      L.cy = NAV + (H - NAV) / 2;
+      L.rInner = 150;
+      var titleLeft = L.cx + L.rInner + 40;
+      var titleRight = titleLeft + 300;
+      var rightPad = W >= 1200 ? 190 : 32;
+      var minX = titleRight + 40 + maxW / 2;
+      var maxX = W - rightPad - maxW / 2;
+      var focalX = maxX > minX ? minX + (maxX - minX) * 0.35 : minX;
+      L.R = focalX - L.cx;
+      titleEl.style.left = titleLeft + "px";
+      titleEl.style.right = "";
+      titleEl.style.top = L.cy + "px";
+    } else {
+      // Hub peeks up from the bottom; the department in focus faces up.
+      L.F = -90;
+      L.cx = W / 2;
+      L.cy = H - 24;
+      L.rInner = 112;
+      var titleTop = NAV + 18;
+      titleEl.style.left = "16px";
+      titleEl.style.right = "16px";
+      titleEl.style.top = titleTop + "px";
+      var focalY = titleTop + titleEl.offsetHeight + 20 + maxH / 2;
+      L.R = Math.max(180, L.cy - focalY);
     }
-  }, { passive:false });
-  viewport.addEventListener("touchend", function(){ touchMode = null; });
 
-  viewport.addEventListener("click", function(e){
-    if (moved) { moved = false; return; }
-    var labelBtn = e.target.closest ? e.target.closest(".cluster-label") : null;
-    if (labelBtn) { jumpTo(labelBtn.dataset.g); return; }
-  });
+    hub.style.left = L.cx + "px";
+    hub.style.top = L.cy + "px";
+    wheel.style.left = L.cx + "px";
+    wheel.style.top = L.cy + "px";
+    outerRing.style.width = outerRing.style.height = (L.R * 2) + "px";
+    innerRing.style.width = innerRing.style.height = (L.rInner * 2) + "px";
 
-  document.getElementById("mandalaHub").addEventListener("click", resetView);
-  document.getElementById("zoomIn").addEventListener("click", function(){ zoomAt(vw/2, vh/2, scale * 1.3); });
-  document.getElementById("zoomOut").addEventListener("click", function(){ zoomAt(vw/2, vh/2, scale / 1.3); });
-  document.getElementById("zoomReset").addEventListener("click", resetView);
-  deptJump.addEventListener("click", function(e){
-    var chip = e.target.closest ? e.target.closest(".dept-chip") : null;
-    if (chip) jumpTo(chip.dataset.g);
-  });
+    L.pos = GROUPS.map(function(g, k){
+      var a = (L.F + k * STEP_DEG) * Math.PI / 180;
+      return {
+        x: L.R * Math.cos(a), y: L.R * Math.sin(a),
+        dx: L.rInner * Math.cos(a), dy: L.rInner * Math.sin(a)
+      };
+    });
+    dots.forEach(function(d, k){
+      d.style.transform = "translate(" + L.pos[k].dx + "px," + L.pos[k].dy + "px) translate(-50%,-50%)";
+    });
+  }
 
+  // ---------- scroll -> progress ----------
+  function scrollSpan(){ return Math.max(1, section.offsetHeight - window.innerHeight); }
+  function targetProgress(){
+    var rect = section.getBoundingClientRect();
+    var t = Math.min(1, Math.max(0, -rect.top / scrollSpan()));
+    var raw = t * (N - 1);
+    var k = Math.min(N - 2, Math.floor(raw));
+    var f = raw - k;
+    return k + f * f * (3 - 2 * f);   // ease in/out, so the wheel rests on each department
+  }
+  function scrollToGroup(k){
+    var top = window.scrollY + section.getBoundingClientRect().top + scrollSpan() * (k / (N - 1));
+    window.scrollTo({ top: top, behavior: reduceMotion ? "auto" : "smooth" });
+  }
+
+  // ---------- render ----------
+  var active = -1, swapTimer = null;
+  function setActive(k){
+    if (k === active) return;
+    var first = active === -1;
+    active = k;
+    indexBtns.forEach(function(b, j){ b.classList.toggle("active", j === k); });
+    var g = GROUPS[k], n = members[k].length;
+    function fill(){
+      document.getElementById("wheelCount").textContent = ("0" + (k + 1)).slice(-2) + " / " + ("0" + N).slice(-2);
+      document.getElementById("wheelName").textContent = g.label;
+      document.getElementById("wheelBar").style.background = g.color;
+      document.getElementById("wheelMeta").textContent = n + (n === 1 ? " person" : " people");
+    }
+    if (first || reduceMotion){ fill(); return; }
+    window.clearTimeout(swapTimer);
+    titleEl.classList.add("out");
+    swapTimer = window.setTimeout(function(){ fill(); titleEl.classList.remove("out"); }, 200);
+  }
+
+  function apply(p){
+    var r = -p * STEP_DEG;
+    wheel.style.transform = "rotate(" + r + "deg)";
+    clusters.forEach(function(c, k){
+      var d = Math.abs(k - p);
+      var op = Math.max(0, 1 - d * 0.8);
+      var sc = 1 - Math.min(d, 1.5) * 0.16;
+      var blur = Math.min(d, 1) * 3;
+      c.style.opacity = op.toFixed(3);
+      c.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
+      c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(3) + ")";
+      c.style.pointerEvents = d < 0.4 ? "auto" : "none";
+      c.style.visibility = op < 0.01 ? "hidden" : "visible";
+    });
+    setActive(Math.round(p));
+  }
+
+  var current = 0, target = 0, raf = null;
+  function tick(){
+    current += (target - current) * 0.14;
+    if (Math.abs(target - current) < 0.0005) current = target;
+    apply(current);
+    raf = current !== target ? window.requestAnimationFrame(tick) : null;
+  }
+  function onScroll(){
+    target = targetProgress();
+    if (reduceMotion){ current = target; apply(current); return; }
+    if (!raf) raf = window.requestAnimationFrame(tick);
+  }
+
+  layout();
+  current = target = targetProgress();
+  apply(current);
+  window.addEventListener("scroll", onScroll, { passive:true });
   var resizeTimer = null;
   window.addEventListener("resize", function(){
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(function(){ measure(); clampPan(); render(); }, 150);
-  });
-
-  // ---------- list view toggle ----------
-  var listEl = document.getElementById("listFallback");
-  var toggleBtn = document.getElementById("toggleListView");
-  var hint = document.querySelector(".zoom-hint");
-  var toolbarJump = deptJump;
-  var listBuilt = false;
-  var showingList = false;
-  toggleBtn.addEventListener("click", function(){
-    showingList = !showingList;
-    if (showingList && !listBuilt){
-      listEl.innerHTML = PEOPLE.map(personCardHTML).join("");
-      listBuilt = true;
-    }
-    listEl.hidden = !showingList;
-    viewport.hidden = showingList;
-    hint.hidden = showingList;
-    toolbarJump.hidden = showingList;
-    toggleBtn.textContent = showingList ? "Wheel view" : "List view";
-    if (!showingList){ measure(); clampPan(); render(); }
+    resizeTimer = window.setTimeout(function(){ layout(); apply(current); onScroll(); }, 120);
   });
 })();
 </script>
