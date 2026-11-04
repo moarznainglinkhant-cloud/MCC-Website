@@ -641,6 +641,7 @@ function initScrollReveal() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduceMotion || !("IntersectionObserver" in window)) {
       targets.forEach(el => el.classList.add("is-visible"));
+      document.documentElement.classList.add("reveal-on");
       return;
     }
 
@@ -651,6 +652,17 @@ function initScrollReveal() {
         el.style.transitionDelay = `${Math.min(i, 7) * 70}ms`;
       });
     });
+
+    // Already on screen as the page opens (within its first moments): show it as-is, no slide.
+    if (performance.now() < 2000) {
+      targets.forEach(el => {
+        if (el.classList.contains("is-visible") || el.closest("[data-pending]")) return;
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight && r.bottom > 0) el.classList.add("is-visible");
+      });
+    }
+    // From here on, cards below the fold are hidden until they're scrolled into view.
+    document.documentElement.classList.add("reveal-on");
 
     const observer = new IntersectionObserver(entries => {
       entries.forEach(entry => {
@@ -963,7 +975,15 @@ function pageUsesSiteData() {
     .some(id => document.getElementById(id));
 }
 
+function pendingEventAreas() {
+  const card = document.getElementById("js-event-body");
+  return [card && card.closest(".event-card"), document.getElementById("js-countdown"),
+          document.getElementById("js-events-grid"), document.getElementById("js-past-gallery")]
+    .filter(Boolean);
+}
+
 function renderSiteData(eventRows, heroRows) {
+  pendingEventAreas().forEach(el => el.removeAttribute("data-pending"));
   const { upcoming, past } = splitEvents(eventRows);
   let next = upcoming[0] || null;
   const rest = upcoming.slice(1);
@@ -1019,6 +1039,9 @@ async function initSiteData() {
   // Pages with no events or homepage photos don't need the Sheets at all.
   if (!pageUsesSiteData()) { initScrollReveal(); return; }
 
+  // Safety net: never leave the event areas hidden if something below goes wrong.
+  setTimeout(() => pendingEventAreas().forEach(el => el.removeAttribute("data-pending")), 6000);
+
   // Show this browser's last copy straight away (no waiting on Google)...
   const cachedEvents = readCachedCSV(EVENTS_CSV_URL);
   const cachedHero = readCachedCSV(HERO_CSV_URL);
@@ -1026,6 +1049,11 @@ async function initSiteData() {
   if (cachedEvents && cachedHero) {
     renderSiteData(safeParse(cachedEvents), safeParse(cachedHero));
     shown = cachedEvents + "\u0000" + cachedHero;
+  } else {
+    // First visit: hold the space for the events (rather than showing the placeholder ones
+    // built into the page and swapping them) until the Sheet arrives.
+    pendingEventAreas().forEach(el => el.setAttribute("data-pending", ""));
+    initScrollReveal();
   }
 
   // ...then refresh from the Sheets, and only re-draw if something changed.
@@ -1346,11 +1374,16 @@ function initSnowEasterEgg() {
   window.addEventListener("hashchange", () => { if (location.hash === "#snow") open(); });
 }
 
-// Applies saved-language text to the static HTML before anything else runs,
-// so there's no flash of English before it switches.
-document.addEventListener("DOMContentLoaded", applyTranslations);
+// site.js is loaded at the end of <body>, so the page's HTML is already in place here.
+// Translations and event data are drawn right away, before the browser's first paint,
+// so there's no flash of English or of the placeholder events before they switch.
+function runNow(fn) {
+  if (document.body) fn();
+  else document.addEventListener("DOMContentLoaded", fn);
+}
+runNow(applyTranslations);
+runNow(initSiteData);
 document.addEventListener("DOMContentLoaded", initLangToggle);
-document.addEventListener("DOMContentLoaded", initSiteData);
 document.addEventListener("DOMContentLoaded", initNavShadow);
 
 // Independent of the CSV-driven render above — these buttons are already in
