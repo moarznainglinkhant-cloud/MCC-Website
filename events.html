@@ -297,6 +297,56 @@
   .past-card .info .date{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
   @media (max-width:420px){ .past-gallery{ grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); } }
 
+  /* ---------- "Since 2022" timeline: past events as a pinned, sideways story (built by js/site.js) ---------- */
+  #past-events.tl-on{ padding-bottom:clamp(24px,4vw,40px); }
+  #past-events.tl-on > .wrap{ display:none; }
+  .tl{ position:relative; }
+  .tl-stage{
+    position:sticky; top:var(--tl-top, 64px);
+    height:calc(100vh - var(--tl-top, 64px)); height:calc(100svh - var(--tl-top, 64px));
+    display:flex; flex-direction:column; justify-content:center; gap:clamp(10px,2.2vh,24px);
+    overflow:hidden;
+  }
+  .tl-head{ width:100%; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+  .tl-head .section-head{ margin-bottom:0; }
+  .tl-year{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(2.8rem,8vw,6.2rem); line-height:1; color:var(--red); letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .odo{ display:inline-flex; }
+  .odo-d{ display:block; height:1.08em; overflow:hidden; }
+  .odo-s{ display:block; transition:transform .75s cubic-bezier(.2,.85,.2,1); }
+  .odo-s span{ display:block; height:1.08em; line-height:1.08em; }
+
+  .tl-track{ display:flex; gap:var(--tl-gap, 28px); width:max-content; will-change:transform; padding-block:8px 4px; }
+  .tl-card{
+    --w: max(170px, min(300px, 64vw, calc((100svh - 340px) * 0.8)));
+    width:var(--w); flex:none; transform-origin:50% 45%; will-change:transform, opacity;
+  }
+  .tl-poster{ aspect-ratio:4/5; border-radius:18px; overflow:hidden; background:var(--bg-sunk); box-shadow:0 18px 40px rgba(28,36,64,0.16); }
+  .tl-poster img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tl-info{ padding:12px 2px 0; min-height:3.6em; opacity:0; transform:translateY(6px); transition:opacity .35s ease, transform .35s ease; }
+  .tl-card.is-active .tl-info{ opacity:1; transform:none; }
+  .tl-title{ font-family:'Fraunces', serif; font-size:1.02rem; font-weight:600; line-height:1.25; }
+  .tl-date{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
+
+  .tl-end .tl-poster{ background:var(--navy); color:#F6F1E4; box-shadow:none; display:flex; flex-direction:column; justify-content:flex-end; gap:10px; padding:clamp(18px,2vw,26px); }
+  .tl-end .eyebrow{ color:var(--gold); }
+  .tl-end-title{ font-family:'Fraunces', serif; font-size:clamp(1.25rem,2.2vw,1.6rem); font-weight:600; line-height:1.2; }
+  .tl-end a{ align-self:flex-start; margin-top:6px; padding:10px 18px; border-radius:999px; background:var(--gold); color:var(--navy-deep); font-weight:700; font-size:0.85rem; text-decoration:none; }
+
+  .tl-foot{ width:100%; display:flex; align-items:center; gap:18px; }
+  .tl-rail{ position:relative; flex:1; height:2px; background:var(--line); margin:4px 10px 26px; }
+  .tl-fill{ position:absolute; left:0; top:0; bottom:0; width:0; background:var(--red); }
+  .tl-tick{
+    position:absolute; top:50%; transform:translate(-50%,-50%);
+    background:none; border:0; padding:8px; cursor:pointer; color:var(--ink-soft); font:inherit;
+  }
+  .tl-tick::before{ content:""; display:block; width:9px; height:9px; border-radius:50%; background:var(--bg); border:2px solid var(--line); margin:auto; transition:background .3s, border-color .3s, transform .3s; }
+  .tl-tick span{ position:absolute; top:100%; left:50%; transform:translate(-50%,-4px); font-size:0.7rem; font-weight:700; letter-spacing:0.04em; transition:color .3s; }
+  .tl-tick.on::before{ background:var(--red); border-color:var(--red); }
+  .tl-tick.now::before{ transform:scale(1.35); }
+  .tl-tick.now span{ color:var(--red); }
+  .tl-count{ font-size:0.8rem; font-weight:700; color:var(--ink-soft); font-variant-numeric:tabular-nums; min-width:4.6em; text-align:right; margin-bottom:22px; }
+  @media (max-width:600px){ .tl-head{ flex-direction:column; align-items:flex-start; gap:4px; } .tl-count{ display:none; } }
+
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
   footer.contact{
     background:var(--footer-bg); color:var(--footer-ink);

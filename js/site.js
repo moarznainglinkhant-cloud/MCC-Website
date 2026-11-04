@@ -115,6 +115,9 @@ const I18N = {
     coming_up_h2: "More on the calendar",
     past_events_eyebrow: "Past Events",
     past_events_h2: "What we've hosted",
+    tl_end_kicker: "To be continued",
+    tl_end_title: "Come be part of the next one.",
+    tl_end_cta: "See what's next",
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
@@ -177,6 +180,9 @@ const I18N = {
     coming_up_h2: "ပြက္ခဒိန်ပေါ်ရှိ နောက်ထပ်များ",
     past_events_eyebrow: "ယခင်အခမ်းအနားများ",
     past_events_h2: "ကျွန်ုပ်တို့ ကျင်းပခဲ့သည်များ",
+    tl_end_kicker: "ဆက်လက်ရန်",
+    tl_end_title: "နောက်ပွဲတွင် ပါဝင်ဆင်နွှဲလိုက်ပါ။",
+    tl_end_cta: "လာမည့်ပွဲကို ကြည့်ရန်",
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
@@ -697,6 +703,7 @@ function renderComingUp(rest) {
 function renderPastGallery(past) {
   const gallery = document.getElementById("js-past-gallery");
   if (!gallery) return;
+  try { buildPastTimeline(past); } catch (err) { console.error("Timeline failed, showing the grid instead:", err); }
   gallery.innerHTML = past.map(ev => `
     <div class="past-card reveal">
       <div class="photo"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}${ev.location ? ", " + escapeHtml(ev.location) : ""}" loading="lazy"></div>
@@ -706,6 +713,202 @@ function renderPastGallery(past) {
       </div>
     </div>
   `).join("");
+}
+
+// ---------- "Since 2022" timeline (events page) ----------
+// Past events as a pinned, sideways-scrolling story, oldest first. Scrolling down slides the
+// posters sideways; the one in the middle comes into focus, the big year rolls over like an
+// odometer, and the rail underneath has a marker per year you can click to jump.
+// The plain grid stays as the fallback (reduced motion, very few events, or any error here).
+const TL = { el: null, listening: false };
+const TL_SETTLE_MS = 160;   // pause in scrolling before it settles on the nearest poster
+
+function tlOdometer(year) {
+  const strip = '<span class="odo-s">' + "0123456789".split("").map(d => `<span>${d}</span>`).join("") + "</span>";
+  return '<span class="odo">' + String(year).split("").map(() => `<span class="odo-d">${strip}</span>`).join("") + "</span>";
+}
+function tlSetYear(year) {
+  if (!TL.el) return;
+  const digits = String(year).split("");
+  TL.el.querySelectorAll(".odo-s").forEach((s, i) => { s.style.transform = `translateY(-${Number(digits[i] || 0) * 10}%)`; });
+}
+
+function buildPastTimeline(past) {
+  const section = document.getElementById("past-events");
+  if (!section) return;
+  const head = section.querySelector(".section-head");
+  const wrap = section.querySelector(":scope > .wrap");
+  const old = document.getElementById("js-past-timeline");
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const events = past.filter(ev => /^\d{4}-\d{2}-\d{2}$/.test(ev.date || ""))
+    .sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
+
+  if (old) { if (head && wrap) wrap.prepend(head); old.remove(); TL.el = null; section.classList.remove("tl-on"); }
+  if (reduce || events.length < 3 || !head || !wrap) return;
+
+  const cards = events.map((ev, i) => `
+      <article class="tl-card" data-year="${ev.date.slice(0, 4)}">
+        <div class="tl-poster"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}" loading="${i < 4 ? "eager" : "lazy"}" decoding="async"></div>
+        <div class="tl-info">
+          <div class="tl-title">${escapeHtml(ev.name)}</div>
+          <div class="tl-date">${formatDate(ev.date)}${ev.location ? " &middot; " + escapeHtml(ev.location) : ""}</div>
+        </div>
+      </article>`).join("");
+  const nowYear = new Date().getFullYear();
+  const end = `
+      <article class="tl-card tl-end" data-year="${nowYear}">
+        <div class="tl-poster">
+          <span class="eyebrow">${escapeHtml(t("tl_end_kicker"))}</span>
+          <div class="tl-end-title">${escapeHtml(t("tl_end_title"))}</div>
+          <a href="#next-event">${escapeHtml(t("tl_end_cta"))}</a>
+        </div>
+      </article>`;
+
+  const total = events.length + 1;                     // posters + the closing card
+  const firstOfYear = {};
+  events.forEach((ev, i) => { const y = ev.date.slice(0, 4); if (!(y in firstOfYear)) firstOfYear[y] = i; });
+  const ticks = Object.keys(firstOfYear).map(y =>
+    `<button type="button" class="tl-tick" data-i="${firstOfYear[y]}" data-year="${y}" style="left:${(firstOfYear[y] / (total - 1)) * 100}%"><span>${y}</span></button>`).join("");
+
+  const el = document.createElement("div");
+  el.className = "tl";
+  el.id = "js-past-timeline";
+  el.innerHTML = `
+    <div class="tl-stage">
+      <div class="wrap tl-head"><div class="tl-year" aria-hidden="true">${tlOdometer(events[0].date.slice(0, 4))}</div></div>
+      <div class="tl-viewport"><div class="tl-track">${cards}${end}</div></div>
+      <div class="wrap tl-foot"><div class="tl-rail"><div class="tl-fill"></div>${ticks}</div><div class="tl-count"></div></div>
+    </div>`;
+  el.querySelector(".tl-head").prepend(head);
+  section.appendChild(el);
+  section.classList.add("tl-on");
+
+  TL.el = el;
+  TL.section = section;
+  TL.track = el.querySelector(".tl-track");
+  TL.cards = Array.from(TL.track.children);
+  TL.n = events.length;
+  TL.cur = null;
+  TL.active = -1;
+  TL.year = null;
+  TL.fill = el.querySelector(".tl-fill");
+  TL.count = el.querySelector(".tl-count");
+  TL.ticks = Array.from(el.querySelectorAll(".tl-tick"));
+  TL.ticks.forEach(b => b.addEventListener("click", () => tlJump(Number(b.dataset.i))));
+  TL.cards[TL.cards.length - 1].querySelector("a").addEventListener("click", e => {
+    const target = document.getElementById("next-event");
+    if (!target) return;
+    e.preventDefault();
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+
+  tlMeasure();
+  tlSetYear(events[0].date.slice(0, 4));
+  if (!TL.listening) {
+    TL.listening = true;
+    window.addEventListener("scroll", tlOnScroll, { passive: true });
+    window.addEventListener("resize", () => { if (TL.el) { tlMeasure(); tlKick(); } });
+    window.addEventListener("touchstart", () => { TL.touching = true; }, { passive: true });
+    window.addEventListener("touchend", () => { TL.touching = false; tlOnScroll(); }, { passive: true });
+  }
+  tlKick();
+}
+
+function tlMeasure() {
+  const nav = document.querySelector("header.nav");
+  const top = nav ? nav.offsetHeight : 0;
+  TL.section.style.setProperty("--tl-top", top + "px");
+  TL.top = top;
+  const vw = TL.el.clientWidth;
+  const w = TL.cards[0].offsetWidth;
+  const gap = Math.round(Math.max(18, Math.min(44, vw * 0.035)));
+  TL.track.style.setProperty("--tl-gap", gap + "px");
+  const pad = Math.max(0, (vw - w) / 2);
+  TL.track.style.paddingLeft = pad + "px";
+  TL.track.style.paddingRight = pad + "px";
+  TL.step = w + gap;
+  TL.dist = TL.step * (TL.cards.length - 1);          // sideways travel = downward scroll, 1:1
+  const stageH = window.innerHeight - top;
+  TL.el.style.height = (stageH + TL.dist) + "px";
+
+  // On narrow screens, years that sit too close together keep their dot but drop the label
+  // (always keeping the most recent year's label).
+  const railW = TL.el.querySelector(".tl-rail").clientWidth;
+  let lastX = Infinity;
+  for (let i = TL.ticks.length - 1; i >= 0; i--) {
+    const x = (Number(TL.ticks[i].dataset.i) / (TL.cards.length - 1)) * railW;
+    const tight = lastX - x < 40;
+    TL.ticks[i].querySelector("span").style.visibility = tight ? "hidden" : "";
+    if (!tight) lastX = x;
+  }
+}
+
+function tlTarget() {
+  const r = TL.el.getBoundingClientRect();
+  return Math.max(0, Math.min(TL.dist, TL.top - r.top));
+}
+
+function tlKick() {
+  if (TL.raf || !TL.el) return;
+  TL.raf = requestAnimationFrame(tlFrame);
+}
+
+function tlFrame() {
+  TL.raf = null;
+  if (!TL.el) return;
+  const target = tlTarget();
+  if (TL.cur === null) TL.cur = target;
+  TL.cur += (target - TL.cur) * 0.16;                 // eased, so it glides rather than jerks
+  if (Math.abs(target - TL.cur) < 0.4) TL.cur = target;
+  const x = TL.cur;
+  TL.track.style.transform = `translate3d(${-x}px,0,0)`;
+
+  const pos = x / TL.step;
+  TL.cards.forEach((c, i) => {
+    const d = i - pos, ad = Math.abs(d);
+    const scale = 1 - Math.min(ad, 2) * 0.09;
+    const rot = Math.max(-16, Math.min(16, -d * 11));
+    c.style.transform = `perspective(1400px) rotateY(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
+    c.style.opacity = (1 - Math.min(ad, 1.6) * 0.34).toFixed(3);
+  });
+
+  const active = Math.max(0, Math.min(TL.cards.length - 1, Math.round(pos)));
+  if (active !== TL.active) {
+    if (TL.cards[TL.active]) TL.cards[TL.active].classList.remove("is-active");
+    TL.cards[active].classList.add("is-active");
+    TL.active = active;
+    const year = TL.cards[active].dataset.year;
+    if (year !== TL.year) {
+      TL.year = year;
+      tlSetYear(year);
+      TL.ticks.forEach(b => b.classList.toggle("now", b.dataset.year === year));
+    }
+    TL.count.textContent = active < TL.n ? `${String(active + 1).padStart(2, "0")} / ${String(TL.n).padStart(2, "0")}` : "";
+  }
+  const frac = TL.dist ? x / TL.dist : 0;
+  TL.fill.style.width = (frac * 100) + "%";
+  TL.ticks.forEach(b => b.classList.toggle("on", Number(b.dataset.i) <= pos + 0.01));
+
+  if (TL.cur !== target) tlKick();
+}
+
+function tlOnScroll() {
+  if (!TL.el) return;
+  tlKick();
+  clearTimeout(TL.settle);
+  TL.settle = setTimeout(() => {
+    if (!TL.el || TL.touching) return;
+    const target = tlTarget();
+    if (target <= 1 || target >= TL.dist - 1) return;  // not pinned: leave the page alone
+    const delta = Math.round(target / TL.step) * TL.step - target;
+    if (Math.abs(delta) > 2) window.scrollTo({ top: window.scrollY + delta, behavior: "smooth" });
+  }, TL_SETTLE_MS);
+}
+
+function tlJump(i) {
+  if (!TL.el) return;
+  const elTop = TL.el.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top: elTop - TL.top + i * TL.step, behavior: "smooth" });
 }
 
 function renderHeroPhotos(heroRows) {
