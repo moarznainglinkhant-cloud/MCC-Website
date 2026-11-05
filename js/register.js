@@ -51,7 +51,7 @@
     if (/rate limit|too many/i.test(msg)) return "Lots of people are registering right now. Please try again in a minute.";
     if (/email not confirmed/i.test(msg)) return "Please confirm your email first (check your inbox), then sign in.";
     if (/please enter|unknown event/i.test(msg)) return msg;
-    if (/failed to fetch|network/i.test(msg)) return "Couldn't reach the server. Check your connection and try again.";
+    if (/failed to fetch|network|load failed/i.test(msg)) return "Couldn't reach the server. Check your connection and try again.";
     return "Something went wrong. Please try again." + (msg ? " (" + msg + ")" : "");
   }
 
@@ -99,9 +99,19 @@
       ".reg-spin{display:block;width:26px;height:26px;margin:30px auto;border-radius:50%;border:3px solid var(--line,rgba(28,36,64,.16));border-top-color:var(--navy,#1C2440);animation:reg-spin .8s linear infinite}",
       "@keyframes reg-spin{to{transform:rotate(360deg)}}",
       /* ticket */
-      ".tk{position:relative;display:grid;grid-template-columns:1fr 132px;border-radius:20px;background:var(--navy,#1C2440);color:var(--footer-ink,#F6F1E4);",
-      "overflow:hidden;margin:6px 0 16px;opacity:0;transform:translateY(26px) rotate(-1.5deg);animation:tk-in .9s .1s cubic-bezier(.22,1,.36,1) forwards}",
+      /* The ticket is a small 3D object: it tilts toward the cursor/finger, light and a gold foil glint slide
+         across it, it has a paper edge, and it springs back flat (so the QR scans) when let go. */
+      ".tk-stage{--stub:132px;position:relative;perspective:1000px;margin:6px 0 16px;touch-action:pan-y;-webkit-user-select:none;user-select:none;",
+      "opacity:0;transform:translateY(26px) rotate(-1.5deg);animation:tk-in .9s .1s cubic-bezier(.22,1,.36,1) forwards}",
       "@keyframes tk-in{to{opacity:1;transform:none}}",
+      ".tk-obj{position:relative;transform-style:preserve-3d;-webkit-transform-style:preserve-3d}",
+      ".tk-edge{position:absolute;inset:0;border-radius:20px;background:linear-gradient(90deg,#141a31 calc(100% - var(--stub)),#d8ceb4 0);-webkit-mask:radial-gradient(circle 10px at calc(100% - var(--stub)) 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at calc(100% - var(--stub)) 100%,#0000 97%,#000) bottom/100% 50% no-repeat;mask:radial-gradient(circle 10px at calc(100% - var(--stub)) 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at calc(100% - var(--stub)) 100%,#0000 97%,#000) bottom/100% 50% no-repeat}",
+      ".tk-shadow{position:absolute;left:7%;right:7%;bottom:-6px;height:28px;border-radius:50%;background:rgba(18,22,42,.34);filter:blur(14px);pointer-events:none}",
+      ".tk-glare,.tk-foil{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0}",
+      ".tk-glare{mix-blend-mode:soft-light}",
+      ".tk-foil{mix-blend-mode:color-dodge;background:linear-gradient(115deg,transparent 30%,rgba(255,214,140,.55) 45%,rgba(255,255,255,.4) 50%,rgba(192,138,46,.45) 55%,transparent 70%);background-size:250% 250%}",
+      ".tk{position:relative;display:grid;grid-template-columns:1fr var(--stub);border-radius:20px;background:var(--navy,#1C2440);color:var(--footer-ink,#F6F1E4);",
+      "overflow:hidden;transform:translateZ(1.6px);-webkit-mask:radial-gradient(circle 10px at calc(100% - var(--stub)) 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at calc(100% - var(--stub)) 100%,#0000 97%,#000) bottom/100% 50% no-repeat;mask:radial-gradient(circle 10px at calc(100% - var(--stub)) 0,#0000 97%,#000) top/100% 51% no-repeat,radial-gradient(circle 10px at calc(100% - var(--stub)) 100%,#0000 97%,#000) bottom/100% 50% no-repeat}",
       ".tk-main{padding:20px 18px 18px 22px;min-width:0}",
       ".tk-brand{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold,#C08A2E)}",
       ".tk-event{font-family:'Fraunces',Georgia,serif;font-size:1.25rem;font-weight:600;line-height:1.15;margin:6px 0 14px}",
@@ -110,8 +120,6 @@
       ".tk-v{font-size:.84rem;font-weight:600;margin-top:2px;overflow-wrap:anywhere}",
       ".tk-stub{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 12px;background:var(--bg-raised,#FDFAF2);color:var(--ink,#1C2440)}",
       ".tk-stub::before{content:'';position:absolute;left:0;top:10px;bottom:10px;border-left:2px dashed rgba(28,36,64,.25)}",
-      ".tk::before,.tk::after{content:'';position:absolute;right:122px;width:20px;height:20px;border-radius:50%;background:var(--bg,#F6F1E4);z-index:2}",
-      ".tk::before{top:-10px}.tk::after{bottom:-10px}",
       ".tk-qr{width:96px;height:96px}.tk-qr svg{width:100%;height:100%;display:block}",
       ".tk-code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;font-weight:700;letter-spacing:.12em}",
       ".tk-status{display:flex;align-items:center;gap:10px;font-size:.92rem;font-weight:600;margin-bottom:4px}",
@@ -122,8 +130,8 @@
       ".reg-join h4{font-family:'Fraunces',Georgia,serif;font-size:1.15rem;font-weight:600;margin:0 0 14px}",
       ".reg-join p{font-size:.86rem;color:var(--ink-soft,#5F5A48);margin:0 0 14px}",
       ".reg-join .reg-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}",
-      "@media (max-width:420px){.tk{grid-template-columns:1fr 112px}.tk::before,.tk::after{right:102px}.tk-qr{width:84px;height:84px}}",
-      "@media (prefers-reduced-motion: reduce){.reg-overlay,.reg-sheet,.tk{transition:none!important;animation:none!important;opacity:1!important;transform:none!important}}"
+      "@media (max-width:420px){.tk-stage{--stub:112px}.tk-qr{width:84px;height:84px}}",
+      "@media (prefers-reduced-motion: reduce){.reg-overlay,.reg-sheet,.tk-stage{transition:none!important;animation:none!important;opacity:1!important;transform:none!important}}"
     ].join("");
     var st = document.createElement("style");
     st.id = "reg-style";
@@ -204,11 +212,18 @@
         .then(function (m) { return m.data ? m.data : { notMember: true, email: session.user.email }; });
     });
   }
+  // Rejects if p hasn't settled in ms, so a stuck network call shows an error instead of spinning forever.
+  function withTimeout(p, ms) {
+    return new Promise(function (resolve, reject) {
+      var timer = setTimeout(function () { reject(new Error("Network timeout")); }, ms);
+      p.then(function (v) { clearTimeout(timer); resolve(v); }, function (e) { clearTimeout(timer); reject(e); });
+    });
+  }
   function register(ev, guest) {
-    return client().rpc("register_for_event", {
+    return withTimeout(client().rpc("register_for_event", {
       p_event_id: ev.id, p_event_name: ev.name || "", p_event_date: /^\d{4}-\d{2}-\d{2}$/.test(ev.date || "") ? ev.date : null,
       p_guest_name: guest ? guest.name : null, p_guest_email: guest ? guest.email : null
-    }).then(function (r) {
+    }), 20000).then(function (r) {
       if (r.error) throw r.error;
       var row = Array.isArray(r.data) ? r.data[0] : r.data;
       if (!row || !row.ticket_code) throw new Error("No ticket came back");
@@ -388,6 +403,56 @@
     } catch (e) { return ""; }
   }
 
+  // The ticket's paper edge: a few thin layers stacked between front and back.
+  function edges() {
+    var h = "";
+    for (var i = 0; i < 6; i++) h += '<div class="tk-edge" style="transform:translateZ(' + (-1.4 + i * 0.5).toFixed(1) + 'px)"></div>';
+    return h;
+  }
+  // Hold it to the light: tilts toward the cursor (or finger while pressed), lifts a little, light and foil
+  // follow, and it springs back flat when let go. Sideways finger drags tilt it; up/down drags still scroll.
+  function holdable(stage) {
+    if (!stage) return;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var obj = $(".tk-obj", stage), tk = $(".tk", stage), glare = $(".tk-glare", stage), foil = $(".tk-foil", stage), sh = $(".tk-shadow", stage);
+    var rx = { x: 0, v: 0 }, ry = { x: 0, v: 0 }, lift = { x: 0, v: 0 }, tx = 0, ty = 0, tl = 0, active = false, t0 = performance.now();
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    function spring(s, target, k, d) { s.v += (target - s.x) * k; s.v *= d; s.x += s.v; }
+    function aim(e) {
+      var r = tk.getBoundingClientRect();
+      ty = clamp((e.clientX - r.left) / r.width - 0.5, -0.6, 0.6) * 26;
+      tx = clamp(0.5 - (e.clientY - r.top) / r.height, -0.6, 0.6) * 26;
+      tl = 1; active = true;
+    }
+    function rest() { tx = 0; ty = 0; tl = 0; active = false; }
+    stage.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse" || e.buttons) aim(e); });
+    stage.addEventListener("pointerdown", aim);
+    stage.addEventListener("pointerleave", rest);
+    stage.addEventListener("pointercancel", rest);
+    stage.addEventListener("pointerup", function (e) { if (e.pointerType !== "mouse") rest(); });
+    (function frame(t) {
+      if (!stage.isConnected) return; // window closed
+      // A slow breath for the first few seconds so it reads as an object, then it settles dead flat
+      // (crisp text, square QR for the door scanner).
+      var amp = active ? 0 : Math.max(0, Math.min(1, 1 - (t - t0 - 3500) / 2500));
+      spring(rx, tx + Math.cos((t - t0) / 1900) * 1.2 * amp, 0.06, 0.82);
+      spring(ry, ty + Math.sin((t - t0) / 1400) * 2.2 * amp, 0.06, 0.82);
+      spring(lift, tl, 0.08, 0.8);
+      var still = !active && !amp && Math.abs(rx.x) + Math.abs(ry.x) + Math.abs(lift.x) + Math.abs(rx.v) + Math.abs(ry.v) < 0.02;
+      if (still) { obj.style.transform = ""; glare.style.opacity = "0"; foil.style.opacity = "0"; sh.style.transform = ""; sh.style.opacity = "";
+        t0 = -1e9; requestAnimationFrame(frame); return; }
+      obj.style.transform = "translateZ(" + (lift.x * 18).toFixed(2) + "px) rotateX(" + rx.x.toFixed(2) + "deg) rotateY(" + ry.x.toFixed(2) + "deg)";
+      sh.style.transform = "translate(" + (-ry.x * 1.2).toFixed(1) + "px," + (rx.x * 0.6 + lift.x * 8).toFixed(1) + "px) scale(" + (1 - lift.x * 0.06).toFixed(3) + ")";
+      sh.style.opacity = (0.85 - lift.x * 0.3).toFixed(2);
+      var mag = Math.min(1, Math.hypot(rx.x, ry.x) / 14);
+      glare.style.background = "radial-gradient(circle at " + (50 - ry.x * 3.2).toFixed(1) + "% " + (30 + rx.x * 3.2).toFixed(1) + "%, rgba(255,255,255,.75), rgba(255,255,255,0) 55%)";
+      glare.style.opacity = (0.15 + mag * 0.75).toFixed(3);
+      foil.style.opacity = (mag * 0.55).toFixed(3);
+      foil.style.backgroundPosition = (50 + ry.x * 4).toFixed(1) + "% " + (50 + rx.x * 4).toFixed(1) + "%";
+      requestAnimationFrame(frame);
+    })(t0);
+  }
+
   function viewTicket(ev, t, opts) {
     opts = opts || {};
     var code = String(t.ticket_code || "");
@@ -408,6 +473,7 @@
     show(header(ev, "Your ticket") +
       '<div class="tk-status"><i>✓</i><span>' + esc(status) + '</span></div>' +
       (opts.note ? '<p class="reg-small" style="text-align:left;margin:0 0 6px">' + esc(opts.note) + '</p>' : "") +
+      '<div class="tk-stage"><div class="tk-shadow"></div><div class="tk-obj">' + edges() +
       '<div class="tk" aria-label="Ticket for ' + esc(ev.name) + '">' +
         '<div class="tk-main">' +
           '<div class="tk-brand">Myanmar Culture Club · UofT</div>' +
@@ -421,10 +487,12 @@
         '</div>' +
         (window.MCC_REG_DEMO ? '<span class="tk-demo">DEMO</span>' : '') +
         '<div class="tk-stub"><div class="tk-qr" aria-label="Check-in QR code">' + qrSvg(code) + '</div><div class="tk-code">' + esc(short) + '</div></div>' +
-      '</div>' +
+        '<div class="tk-foil"></div><div class="tk-glare"></div>' +
+      '</div></div></div>' +
       cal +
       (window.MCC_REG_DEMO ? '' : '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>') +
       join);
+    holdable($(".tk-stage", body));
     var done = $("[data-done]", body);
     if (done) done.addEventListener("click", close);
     var nj = $("[data-nojoin]", body);
@@ -471,7 +539,7 @@
     current = ev;
     openShell();
     loading(ev);
-    getMember().then(function (me) {
+    withTimeout(getMember(), 6000).then(function (me) {
       if (!overlay || current !== ev) return;
       if (me && !me.notMember) {
         // Already registered? Go straight to the ticket.
