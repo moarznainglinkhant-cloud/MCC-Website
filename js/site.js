@@ -121,6 +121,7 @@ const I18N = {
     snake_count: "{n} events since {y}",
     snake_count_done: "{n} events and counting",
     snake_skip: "Skip",
+    reg_soon: "Website registration for this event isn't open yet — we're still setting it up. Check back soon!",
     bento_eyebrow: "Explore MCC",
     bento_h2: "Everything MCC, at a glance",
     bento_events_kicker: "Events",
@@ -205,6 +206,7 @@ const I18N = {
     snake_count: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
     snake_count_done: "အခမ်းအနား {n} ခု — ဆက်လက်ရှိနေဆဲ",
     snake_skip: "ကျော်ရန်",
+    reg_soon: "ဤပွဲအတွက် ဝက်ဘ်ဆိုက်မှ စာရင်းသွင်းခြင်းကို မဖွင့်ရသေးပါ — ပြင်ဆင်နေဆဲဖြစ်ပါသည်။ မကြာမီ ပြန်လာကြည့်ပါ။",
     bento_eyebrow: "MCC ကို လေ့လာပါ",
     bento_h2: "MCC အကြောင်း အားလုံး တစ်ချက်တည်းဖြင့်",
     bento_events_kicker: "အခမ်းအနားများ",
@@ -669,6 +671,10 @@ function renderFeaturedEvent(ev) {
 //                                  which records it in Supabase and gives a ticket with a QR code;
 //   blank                       → no button.
 const REG_EVENTS = {};
+// While website registration is still being set up, the button shows but explains it isn't open yet.
+// Switch this to true when it's ready. Execs can still try the real thing by adding ?regtest=1 to the URL.
+const SITE_REGISTRATION_OPEN = false;
+const REG_TESTING = /[?&]regtest=1\b/.test(location.search);
 function isSiteRegistration(ev) { return /^\s*(site|website)\s*$/i.test(ev && ev.link || ""); }
 // The database wants a simple id (lowercase letters, numbers, dashes). If the sheet's id isn't
 // like that (spaces, capitals, blank), one is made from the id — or the name and date — instead.
@@ -682,6 +688,10 @@ function registerButton(ev, cls, label) {
     const id = registrationId(ev);
     if (!id) return "";
     REG_EVENTS[id] = { ...ev, id };
+    if (!SITE_REGISTRATION_OPEN && !REG_TESTING) {
+      return `<button type="button" class="${cls} reg-soon" aria-disabled="true" aria-describedby="reg-soon-${escapeHtml(id)}">${label}</button>
+        <p class="reg-soon-note" id="reg-soon-${escapeHtml(id)}">${t("reg_soon")}</p>`;
+    }
     return `<button type="button" class="${cls} js-register" data-reg="${escapeHtml(id)}">${label}</button>`;
   }
   return `<a class="${cls}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${label}</a>`;
