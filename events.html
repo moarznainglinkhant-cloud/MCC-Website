@@ -275,6 +275,11 @@
     .event-visual{ min-height:0; aspect-ratio: 4 / 3; }
   }
 
+  /* Next Event card: gentle 3D tilt on hover, same as the homepage (js/site.js initEventTilt) */
+  #next-event .event-card.tilt{ transform-style:preserve-3d; will-change:transform; transition:box-shadow .5s ease; }
+  #next-event .event-card.tilt.hovering{ box-shadow:0 30px 60px rgba(28,36,64,0.16); }
+  #next-event .event-card.tilt .event-visual img{ will-change:transform; }
+
   /* ---------- UPCOMING GRID ---------- */
   .events-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:22px; }
   .event-mini{

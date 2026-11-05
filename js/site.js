@@ -2069,14 +2069,16 @@ function initGreeting() {
   }, { threshold: 0 }).observe(svg);
 }
 
-// ---------- Homepage: the Next Event card tilts gently toward the cursor ----------
+// ---------- Next Event card (homepage + events page) tilts gently toward the cursor ----------
 // Mouse only (not touch), off for reduced motion. The card turns a few degrees and the poster
 // inside drifts the other way, which gives a sense of depth without any shine effects.
 function initEventTilt() {
-  const card = document.querySelector("#event .event-card");
-  if (!card || !window.matchMedia) return;
+  if (!window.matchMedia) return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+  document.querySelectorAll("#event .event-card, #next-event .event-card").forEach(tiltCard);
+}
+function tiltCard(card) {
   const st = { tx: 0, ty: 0, x: 0, y: 0, raf: null, last: 0, on: false };
   function frame(now) {
     st.raf = null;
