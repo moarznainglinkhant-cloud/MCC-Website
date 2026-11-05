@@ -44,7 +44,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&display=swap">
-<link rel="preload" href="fonts/Yinmar-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
 <style>
 
@@ -248,10 +247,12 @@
      and again whenever you scroll back up to it. */
   .hero h1.greet-h1{ line-height:1; }
   .greet{ display:block; height:clamp(3.8rem, 8.2vw, 6.7rem); width:auto; max-width:100%; overflow:visible; color:var(--ink); margin-left:-3px; }
-  .greet text{ font-family:'Yinmar', 'Noto Sans Myanmar', serif; font-size:100px; fill:currentColor; }
+  /* The word is stored as ready-made outlines (shaped from the Yinmar font ahead of time), so it looks
+     identical in every browser — Safari places split-up Burmese text differently from Chrome. */
+  .greet path{ fill:currentColor; }
   .greet-pending .greet{ visibility:hidden; }
-  .greet .greet-pen text{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
-  .greet .greet-cover text{ fill:var(--bg); }
+  .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
+  .greet .greet-cover path{ fill:var(--bg); }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;
@@ -712,7 +713,7 @@
       <div class="hero-copy">
         <span class="eyebrow" data-i18n="label_welcome">Welcome</span>
         <h1 class="greet-h1" aria-label="Mingalabar (မင်္ဂလာပါ)">
-          <svg class="greet" id="js-greet" viewBox="0 -96 560 132" aria-hidden="true"><text x="0" y="0" lang="my">မင်္ဂလာပါ</text></svg>
+          <svg class="greet" id="js-greet" viewBox="-4 -93 388 130" aria-hidden="true"><g class="greet-src"><path data-i="0" d="M24 -15.6V-11.5Q24 -5 30 -5H38Q44 -5 44 -11.5V-15.6Q39.9 -18 34 -18Q28.1 -18 24 -15.6ZM44 -20.6V-40.5Q44 -47 38 -47V-52H48Q64 -52 64 -40.5V-11.5Q64 0 48 0H20Q4 0 4 -11.5V-40.5Q4 -52 20 -52H30V-47Q24 -47 24 -40.5V-20.6Q28.1 -23 34 -23Q39.9 -23 44 -20.6Z"/><path data-i="1" d="M92 -40.5V-11.5Q92 -5 98 -5V0H88Q72 0 72 -11.5V-40.5Q72 -52 88 -52H116Q132 -52 132 -40.5V-11.5Q132 0 116 0H106V-5Q112 -5 112 -11.5V-40.5Q112 -47 106 -47H98Q92 -47 92 -40.5Z M96.3 -69V-62.7Q96.3 -59 100.3 -59H103.7Q107.7 -59 107.7 -62.7H122Q122 -54 111.3 -54H92.7Q82 -54 82 -62.7V-67.1L90 -71.5L82 -75.9V-80.3Q82 -89 92.7 -89H111.3Q122 -89 122 -80.3H107.7Q107.7 -84 103.7 -84H100.3Q96.3 -84 96.3 -80.3V-74H112V-69Z"/><path data-i="2" d="M200 -11.5Q200 -5 206 -5H214Q220 -5 220 -11.5V-40.5Q220 -47 214 -47V-52H224Q240 -52 240 -40.5V-11.5Q240 0 224 0H196Q180 0 180 -11.5V-40.5Q180 -47 174 -47H166Q160 -47 160 -40.5V-11.5Q160 -5 166 -5V0H156Q140 0 140 -11.5V-40.5Q140 -52 156 -52H184Q200 -52 200 -40.5Z M240 -40.5H235Q235 -52 246 -52H264Q280 -52 280 -40.5V-11.5Q280 0 264 0H254V-5Q260 -5 260 -11.5V-40.5Q260 -47 254 -47H246Q240 -47 240 -40.5Z"/><path data-i="3" d="M314 -5H322Q328 -5 328 -11.5V-40.5Q328 -47 322 -47V-52H332Q348 -52 348 -40.5V-11.5Q348 0 332 0H304Q288 0 288 -11.5V-40.5Q288 -52 304 -52H314V-47Q308 -47 308 -40.5V-11.5Q308 -5 314 -5Z M347 -77Q334 -77 332 -63.5H329Q329 -85 351 -85Q376 -85 376 -61.5V0H356V-61.5Q356 -77 347 -77Z"/></g></svg>
           <script>
             // Hide the greeting until js/site.js writes it in (it un-hides itself after 3s if anything goes wrong).
             (function(){try{

@@ -1679,15 +1679,15 @@ let _cachedNext = null, _cachedRest = [], _cachedPast = [];
 let _dataLoaded = false;
 
 // ---------- Homepage: "မင်္ဂလာပါ" greeting, written in ----------
-// Once the Yinmar font is ready, the word is set up as two layers:
-//   • a pen layer — each syllable's outline (မ · င်္ဂ · လာ · ပါ), traced in one flowing,
-//     overlapping motion from left to right;
-//   • an ink layer — the solid letters, revealed through a soft-edged sweep that follows just
-//     behind the pen, so the colour flows in rather than popping on. Each outline fades as the
-//     ink reaches it.
-// Starts half a second after the page appears, plays on every visit, and again whenever you
-// scroll away and come back up to it. Reduced motion: just the finished word.
-const GREET_SYLLABLES = ["မ", "င်္ဂ", "လာ", "ပါ"];
+// The word lives in index.html as ready-made outlines, one per syllable (မ · င်္ဂ · လာ · ပါ),
+// shaped from the Yinmar font ahead of time so it's identical in every browser. Here it becomes:
+//   • a pen layer — each syllable's outline traced in one flowing, overlapping motion, left to right;
+//   • a cover — the word in the page colour, hiding the inner half of every outline, so where
+//     letters overlap (the ာ in လာ) only the clean outer edge of the word is drawn;
+//   • an ink layer — the solid word, revealed through a soft edge that follows behind the pen and
+//     spreads unevenly, like ink soaking into paper, before settling crisp.
+// Starts half a second after the page appears, plays on every visit, again whenever you scroll
+// back up to it, and when you hover over (or tap) it. Reduced motion: just the finished word.
 const GREET = { svg: null, raf: null };
 
 function initGreeting() {
@@ -1697,86 +1697,55 @@ function initGreeting() {
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const reveal = () => html.classList.remove("greet-pending");
   const NS = "http://www.w3.org/2000/svg";
-
-  const fitBox = () => {
-    const bb = svg.getBBox();
-    if (bb.width) svg.setAttribute("viewBox", `${(bb.x - 4).toFixed(1)} ${(bb.y - 4).toFixed(1)} ${(bb.width + 8).toFixed(1)} ${(bb.height + 8).toFixed(1)}`);
-    return bb;
-  };
+  const src = svg.querySelector(".greet-src");
 
   const build = () => {
-    const whole = svg.querySelector("text");
-    if (reduce || !whole || whole.textContent !== GREET_SYLLABLES.join("")) { try { fitBox(); } catch (e) {} return false; }
-    // where each syllable starts, exactly as the browser laid out the whole word
-    const xs = [0];
-    GREET_SYLLABLES.reduce((acc, syl, i) => { xs[i + 1] = xs[i] + whole.getSubStringLength(acc, syl.length); return acc + syl.length; }, 0);
-    const bbAll = whole.getBBox();
-    const make = cls => {
-      const g = document.createElementNS(NS, "g");
-      g.setAttribute("class", cls);
-      GREET_SYLLABLES.forEach((syl, i) => {
-        const t = document.createElementNS(NS, "text");
-        t.setAttribute("x", xs[i].toFixed(2)); t.setAttribute("y", "0"); t.setAttribute("lang", "my");
-        t.textContent = syl;
-        g.appendChild(t);
-      });
-      return g;
-    };
-    const F = 70;                                   // softness of the ink's leading edge (font units)
+    if (reduce || !src) return false;
+    const bb = src.getBBox();
+    const layer = cls => { const g = src.cloneNode(true); g.setAttribute("class", cls); return g; };
+    const F = 70;                                   // softness of the ink's leading edge (units)
+    const M = { x: bb.x - F - 40, y: bb.y - 40, w: bb.width + 2 * F + 80, h: bb.height + 80 };
     const defs = document.createElementNS(NS, "defs");
     defs.innerHTML =
       `<linearGradient id="greet-feather" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${F}" y2="0">` +
       `<stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
-      // "Soak": the ink's leading edge is pushed around by a little noise, so it spreads unevenly
-      // like ink into paper instead of a perfectly straight wipe. It calms to nothing as it finishes.
-      `<filter id="greet-soak" filterUnits="userSpaceOnUse" x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}">` +
+      `<filter id="greet-soak" filterUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
       `<feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7" result="n"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>` +
-      `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}">` +
-      `<rect x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>`;
-    const ink = make("greet-ink");
+      `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
+      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>`;
+    const pen = layer("greet-pen");
+    const cover = layer("greet-cover");
+    const ink = layer("greet-ink");
     ink.setAttribute("mask", "url(#greet-mask)");
-    const pen = make("greet-pen");
-    // The letters overlap where they join (e.g. the ာ in လာ), so their separate outlines cross inside
-    // the word. A copy of the word filled with the page colour sits over the pen and hides the inner
-    // half of every outline — only the clean outer edge of the whole word shows. The ink goes on top.
-    const cover = make("greet-cover");
-    whole.replaceWith(defs, pen, cover, ink);
-    const pens = Array.from(pen.children);
-    const sylls = pens.map(t => {
-      const b = t.getBBox();
-      const len = Math.ceil(3 * (b.width + b.height)); // a little more than the outline, so it always closes
-      t.style.strokeDasharray = `${len} ${len}`;
-      return { el: t, len, x0: b.x, w: b.width };
+    src.replaceWith(defs, pen, cover, ink);
+    const sylls = Array.from(pen.children).map(el => {
+      const len = Math.ceil(el.getTotalLength()) + 2;
+      el.style.strokeDasharray = `${len} ${len}`;
+      const b = el.getBBox();
+      return { el, len, x0: b.x, w: b.width };
     });
     Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), soak: defs.querySelector("feDisplacementMap"),
-      noise: defs.querySelector("feTurbulence"), sylls, F, x0: bbAll.x, w: bbAll.width });
-    fitBox();
+      noise: defs.querySelector("feTurbulence"), sylls, F, x0: bb.x, w: bb.width });
     paint(-1);
     return true;
   };
 
   const ease = x => (x <= 0 ? 0 : x >= 1 ? 1 : x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-  const easeOut = x => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - Math.pow(1 - x, 3));
 
   // t in seconds since the write started (negative = not started)
   function paint(t) {
     const G = GREET;
-    G.sylls.forEach((s, i) => {
-      const p = ease((t - i * 0.34) / 1.4);         // syllables overlap, so it reads as one motion
-      s.el.style.strokeDashoffset = (s.len * (1 - p)).toFixed(1);
-      s.el.style.opacity = p > 0 ? "1" : "0";
-    });
     const q = ease((t - 0.85) / 1.8);               // ink sweeps in just behind the pen
     const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
     G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
     G.grad.setAttribute("x2", inkX.toFixed(1));
-    // the wobble is strongest while the ink is moving and fades out as it settles
-    const wob = t < 0 ? 0 : 46 * Math.sin(Math.PI * Math.min(1, Math.max(0, q))) ;
-    G.soak.setAttribute("scale", wob.toFixed(1));
-    G.sylls.forEach(s => {                            // each outline fades once the ink has covered it
+    G.soak.setAttribute("scale", (t < 0 ? 0 : 46 * Math.sin(Math.PI * q)).toFixed(1)); // wobbles while moving, calm at rest
+    G.sylls.forEach((s, i) => {
+      const p = ease((t - i * 0.34) / 1.4);         // syllables overlap, so it reads as one motion
+      s.el.style.strokeDashoffset = (s.len * (1 - p)).toFixed(1);
       const covered = Math.max(0, Math.min(1, (inkX - G.F - (s.x0 + s.w * 0.4)) / (s.w * 0.6 + 1)));
-      if (t >= 0) s.el.style.opacity = String(Math.min(Number(s.el.style.opacity), 1 - covered));
+      s.el.style.opacity = p > 0 ? String(1 - covered) : "0";  // each outline fades once inked over
     });
   }
 
@@ -1794,30 +1763,21 @@ function initGreeting() {
     GREET.raf = requestAnimationFrame(frame);
   };
 
-  const start = () => {
-    let ok = false;
-    try { ok = build(); } catch (e) { ok = false; }
-    if (!ok) { reveal(); return; }
-    setTimeout(write, 500);
-    // Hover (or tap) to have it written again — once the current write has finished.
-    const again = () => { if (!GREET.raf) write(); };
-    svg.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") again(); });
-    svg.addEventListener("click", again);
-    svg.style.cursor = "pointer";
-    let away = false;                               // write it again when it comes back into view
-    new IntersectionObserver(entries => {
-      const e = entries[0];
-      if (!e.isIntersecting) { away = true; paint(-1); }
-      else if (away) { away = false; write(); }
-    }, { threshold: 0 }).observe(svg);
-  };
-
-  if (document.fonts && document.fonts.load) {
-    let done = false;
-    const once = () => { if (!done) { done = true; start(); } };
-    document.fonts.load('100px "Yinmar"', GREET_SYLLABLES.join("")).then(once, once);
-    setTimeout(once, 1200);
-  } else start();
+  let ok = false;
+  try { ok = build(); } catch (e) { ok = false; }
+  if (!ok) { reveal(); return; }
+  setTimeout(write, 500);
+  // Hover (or tap) to have it written again — once the current write has finished.
+  const again = () => { if (!GREET.raf) write(); };
+  svg.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") again(); });
+  svg.addEventListener("click", again);
+  svg.style.cursor = "pointer";
+  let away = false;                                 // write it again when it comes back into view
+  new IntersectionObserver(entries => {
+    const e = entries[0];
+    if (!e.isIntersecting) { away = true; paint(-1); }
+    else if (away) { away = false; write(); }
+  }, { threshold: 0 }).observe(svg);
 }
 
 // ---------- Homepage: the Next Event card tilts gently toward the cursor ----------
