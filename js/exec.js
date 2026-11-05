@@ -246,7 +246,7 @@
         by.appendChild(el("small", null, when(s.created_at)));
         foot.appendChild(by);
         if (me && s.author_id === me.id) {
-          var del = el("button", "link-btn", "Delete");
+          var del = el("button", "link-btn danger", "Delete");
           del.type = "button";
           del.addEventListener("click", function () {
             del.disabled = true;
@@ -556,7 +556,7 @@
         acts.appendChild(take);
       }
       if (me && t.created_by === me.id) {
-        var del = el("button", "link-btn", "Delete");
+        var del = el("button", "link-btn danger", "Delete");
         del.type = "button";
         del.addEventListener("click", function () {
           del.disabled = true;
@@ -1254,7 +1254,7 @@
       openLink.rel = "noopener";
       acts.appendChild(openLink);
 
-      var del = el("button", "link-btn", "Delete");
+      var del = el("button", "link-btn danger", "Delete");
       del.type = "button";
       del.addEventListener("click", function () {
         del.disabled = true;
@@ -1367,6 +1367,9 @@
           });
         });
         c.appendChild(box); tr.appendChild(c);
+        ["Name", "Type", "Email", "Student #", "Year \u00b7 Program", "Ticket", "Registered", "Checked in"].forEach(function (lab, i) {
+          if (tr.children[i]) tr.children[i].setAttribute("data-label", lab);
+        });
         body.appendChild(tr);
       });
     }

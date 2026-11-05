@@ -670,13 +670,20 @@ function renderFeaturedEvent(ev) {
 //   blank                       → no button.
 const REG_EVENTS = {};
 function isSiteRegistration(ev) { return /^\s*(site|website)\s*$/i.test(ev && ev.link || ""); }
+// The database wants a simple id (lowercase letters, numbers, dashes). If the sheet's id isn't
+// like that (spaces, capitals, blank), one is made from the id — or the name and date — instead.
+function registrationId(ev) {
+  const slug = v => String(v || "").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+  return slug(ev.id) || slug(`${ev.name || "event"}-${ev.date || ""}`);
+}
 function registerButton(ev, cls, label) {
   if (!ev || !ev.link) return "";
-  if (isSiteRegistration(ev) && /^[a-z0-9-]{1,80}$/.test(ev.id || "")) {
-    REG_EVENTS[ev.id] = ev;
-    return `<button type="button" class="${cls} js-register" data-reg="${escapeHtml(ev.id)}">${label}</button>`;
+  if (isSiteRegistration(ev)) {
+    const id = registrationId(ev);
+    if (!id) return "";
+    REG_EVENTS[id] = { ...ev, id };
+    return `<button type="button" class="${cls} js-register" data-reg="${escapeHtml(id)}">${label}</button>`;
   }
-  if (isSiteRegistration(ev)) return "";            // "site" but no usable id: nothing to register against
   return `<a class="${cls}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${label}</a>`;
 }
 
@@ -1805,7 +1812,7 @@ function initGreeting() {
     const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
     G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
     G.grad.setAttribute("x2", inkX.toFixed(1));
-    const wetX = inkX + 52;                          // the amber edge runs this far ahead of the navy
+    const wetX = inkX + 52 * Math.min(1, q / 0.12);  // the amber edge runs ahead of the navy — only once the ink is moving
     G.wetGrad.setAttribute("x1", (wetX - G.F).toFixed(1));
     G.wetGrad.setAttribute("x2", wetX.toFixed(1));
     G.soak.setAttribute("scale", (t < 0 ? 0 : 46 * Math.sin(Math.PI * q)).toFixed(1)); // wobbles while moving, calm at rest

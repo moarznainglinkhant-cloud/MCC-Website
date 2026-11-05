@@ -33,6 +33,8 @@
     });
   }
   function $(sel, root) { return (root || document).querySelector(sel); }
+  // a field's value by name (form.name would give the form's own name, not the "name" field)
+  function fv(form, name) { var el = form && form.querySelector('[name="' + name + '"]'); return el ? el.value : ""; }
   var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   function niceDate(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
@@ -114,7 +116,7 @@
       ".tk-cal{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 14px;font-size:.82rem;color:var(--ink-soft,#5F5A48)}",
       ".tk-cal a{padding:8px 14px;border-radius:999px;border:1px solid var(--line,rgba(28,36,64,.16));color:var(--ink,#1C2440);text-decoration:none;font-weight:700;font-size:.78rem}",
       ".reg-join{margin-top:6px;padding:18px;border-radius:18px;background:var(--bg-raised,#FDFAF2);border:1px solid var(--line,rgba(28,36,64,.16))}",
-      ".reg-join h4{font-family:'Fraunces',Georgia,serif;font-size:1.15rem;font-weight:600;margin:0 0 4px}",
+      ".reg-join h4{font-family:'Fraunces',Georgia,serif;font-size:1.15rem;font-weight:600;margin:0 0 14px}",
       ".reg-join p{font-size:.86rem;color:var(--ink-soft,#5F5A48);margin:0 0 14px}",
       ".reg-join .reg-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}",
       "@media (max-width:420px){.tk{grid-template-columns:1fr 112px}.tk::before,.tk::after{right:102px}.tk-qr{width:84px;height:84px}}",
@@ -213,7 +215,7 @@
       '</div><div class="reg-hint" style="font-size:.84rem">' + esc(me.email || "") + '</div></div></div>' +
       '<div class="reg-msg"></div>' +
       '<button type="button" class="reg-btn" data-go>Register</button>' +
-      '<p class="reg-small">Not you? <button type="button" class="reg-link" data-out>Sign out</button></p>');
+      '<p class="reg-small"><button type="button" class="reg-link" data-out>Not you? Sign out</button></p>');
     $("[data-go]", body).addEventListener("click", function () {
       var b = this; busy(b, true, "Registering…"); setMsg("");
       register(ev, null).then(function (t) { viewTicket(ev, t, { member: true }); })
@@ -232,7 +234,7 @@
         '<label class="reg-field">Email<input name="email" type="email" autocomplete="email" required maxlength="254"></label>' +
         '<div class="reg-msg"></div>' +
         '<button class="reg-btn" type="submit">Register as a guest</button>' +
-        '<p class="reg-small">No account needed. Members get one-tap registration — <button type="button" class="reg-link" data-signup>create an account</button>.</p>' +
+        '<p class="reg-small"><button type="button" class="reg-link" data-signup>Create an account</button></p>' +
       '</form>';
     var member =
       '<form class="reg-form" data-form="member" novalidate>' +
@@ -240,7 +242,7 @@
         '<label class="reg-field">Password<input name="password" type="password" autocomplete="current-password" required></label>' +
         '<div class="reg-msg"></div>' +
         '<button class="reg-btn" type="submit">Sign in &amp; register</button>' +
-        '<p class="reg-small"><button type="button" class="reg-link" data-forgot>Forgot password?</button> · New here? <button type="button" class="reg-link" data-signup>Create an account</button></p>' +
+        '<p class="reg-small"><button type="button" class="reg-link" data-forgot>Forgot password?</button> · <button type="button" class="reg-link" data-signup>Create an account</button></p>' +
       '</form>';
     show(header(ev) +
       '<div class="reg-tabs" role="tablist">' +
@@ -254,12 +256,12 @@
     body.querySelectorAll("[data-signup]").forEach(function (b) {
       b.addEventListener("click", function () {
         var f = $("form", body);
-        viewSignup(ev, { name: f.name ? f.name.value : "", email: f.email ? f.email.value : "" }, true);
+        viewSignup(ev, { name: fv(f, "name"), email: fv(f, "email") }, true);
       });
     });
     var forgot = $("[data-forgot]", body);
     if (forgot) forgot.addEventListener("click", function () {
-      var email = $("form", body).email.value.trim();
+      var email = fv($("form", body), "email").trim();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setMsg("Type your email above first, then tap Forgot password."); return; }
       client().auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname.replace(/[^/]*$/, "") + "index.html" })
         .then(function (r) {
@@ -274,14 +276,14 @@
       var btn = $("button[type=submit]", form);
       setMsg("");
       if (tab === "guest") {
-        var g = { name: form.name.value.trim(), email: form.email.value.trim() };
+        var g = { name: fv(form, "name").trim(), email: fv(form, "email").trim() };
         if (!g.name) return setMsg("Please enter your name.");
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(g.email)) return setMsg("Please enter a valid email.");
         busy(btn, true, "Registering…");
         register(ev, g).then(function (t) { viewTicket(ev, t, { guest: g }); })
           .catch(function (err) { busy(btn, false); setMsg(friendlyError(err)); });
       } else {
-        var email = form.email.value.trim(), password = form.password.value;
+        var email = fv(form, "email").trim(), password = fv(form, "password");
         if (!email || !password) return setMsg("Enter your email and password.");
         busy(btn, true, "Signing in…");
         client().auth.signInWithPassword({ email: email, password: password })
@@ -311,8 +313,8 @@
       '<form class="reg-form" novalidate>' +
         '<label class="reg-field">Full name<input name="name" autocomplete="name" required maxlength="120" value="' + esc(prefill.name || "") + '"></label>' +
         '<label class="reg-field">Email<input name="email" type="email" autocomplete="email" required value="' + esc(prefill.email || "") + '"></label>' +
-        '<label class="reg-field">Password <span class="reg-hint">at least 8 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="8"></label>' +
-        '<label class="reg-field">UofT student number <span class="reg-hint">9 or 10 digits</span><input name="student" inputmode="numeric" autocomplete="off" required pattern="[0-9]{9,10}"></label>' +
+        '<label class="reg-field">Password<input name="password" type="password" autocomplete="new-password" required minlength="8" placeholder="8+ characters"></label>' +
+        '<label class="reg-field">UofT student number<input name="student" inputmode="numeric" autocomplete="off" required pattern="[0-9]{9,10}"></label>' +
         '<div class="reg-row">' +
           '<label class="reg-field">Year<select name="year" required><option value="">Choose…</option>' +
             years.map(function (y) { return "<option>" + esc(y) + "</option>"; }).join("") + '</select></label>' +
@@ -320,7 +322,6 @@
         '</div>' +
         '<div class="reg-msg"></div>' +
         '<button class="reg-btn" type="submit">' + (withEvent ? "Create account &amp; register" : "Create my account") + '</button>' +
-        '<p class="reg-small">Your details are only seen by MCC execs and are never shared.</p>' +
         (withEvent ? '<p class="reg-small"><button type="button" class="reg-link" data-back>Back</button></p>' : "") +
       '</form>');
     var back = $("[data-back]", body);
@@ -330,8 +331,8 @@
       e.preventDefault();
       var btn = $("button[type=submit]", form);
       var d = {
-        name: form.name.value.trim(), email: form.email.value.trim(), password: form.password.value,
-        student: form.student.value.replace(/\D/g, ""), year: form.year.value, program: form.program.value.trim()
+        name: fv(form, "name").trim(), email: fv(form, "email").trim(), password: fv(form, "password"),
+        student: fv(form, "student").replace(/\D/g, ""), year: fv(form, "year"), program: fv(form, "program").trim()
       };
       setMsg("");
       if (!d.name) return setMsg("Please enter your name.");
@@ -354,8 +355,7 @@
             throw r.error;
           }
           var confirmed = !!(r.data && r.data.session);
-          var note = confirmed ? "Welcome to MCC! Next time, registering is one tap."
-                               : "Welcome to MCC! Check your inbox to confirm your email, then you can sign in.";
+          var note = confirmed ? "Welcome to MCC!" : "Welcome to MCC! Confirm your email to sign in.";
           if (ticket) return viewTicket(ev, ticket, { member: confirmed, note: note });
           viewWelcome(ev, note);
         });
@@ -366,7 +366,6 @@
   function viewWelcome(ev, note) {
     show(header(ev, "You're a member") +
       '<div class="tk-status"><i>✓</i><span>' + esc(note) + '</span></div>' +
-      '<p class="reg-small" style="text-align:left">Your ticket for this event is now saved in your account — tap Register on the event any time to see it again.</p>' +
       '<button type="button" class="reg-btn" data-done style="margin-top:14px">Done</button>');
     $("[data-done]", body).addEventListener("click", close);
   }
@@ -392,9 +391,9 @@
               '<a href="' + esc(c.ics) + '" download="' + esc(c.file) + '">Apple / Outlook</a></div>';
       }
     } catch (e) { cal = ""; }
-    var status = t.already ? "You're already registered — here's your ticket." : "You're in! See you there.";
+    var status = t.already ? "You're already registered." : "You're in!";
     var join = opts.guest
-      ? '<div class="reg-join"><h4>Become an MCC member?</h4><p>Members register for events in one tap, and this ticket moves into your account.</p>' +
+      ? '<div class="reg-join"><h4>Become an MCC member?</h4>' +
         '<div class="reg-actions"><button type="button" class="reg-btn" data-join>Join MCC</button><button type="button" class="reg-btn ghost" data-nojoin>No thanks</button></div></div>'
       : '<button type="button" class="reg-btn ghost" data-done>Done</button>';
     show(header(ev, "Your ticket") +
@@ -414,8 +413,7 @@
         '<div class="tk-stub"><div class="tk-qr" aria-label="Check-in QR code">' + qrSvg(code) + '</div><div class="tk-code">' + esc(short) + '</div></div>' +
       '</div>' +
       cal +
-      '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door — a screenshot works.' +
-        (opts.member ? " It's also saved in your account: tap Register on this event any time to see it again." : "") + '</p>' +
+      '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>' +
       join);
     var done = $("[data-done]", body);
     if (done) done.addEventListener("click", close);
@@ -439,7 +437,7 @@
     client(true);
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var btn = $("button[type=submit]", form), pw = form.password.value;
+      var btn = $("button[type=submit]", form), pw = fv(form, "password");
       if (pw.length < 8) return setMsg("Please choose a password of at least 8 characters.");
       busy(btn, true, "Saving…");
       client().auth.getSession().then(function (r) {
