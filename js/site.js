@@ -2040,10 +2040,11 @@ function initBentoFact() {
 function renderBentoHexes() {
   const box = document.getElementById("js-bento-hexes");
   if (!box) return;
-  const photos = ["images/welcome_vertical.jpg", "images/welcome_top.jpg", "images/welcome_bottom.jpg"];
-  // a small honeycomb: 7 cells, photos in three of them
+  // the same photos that sit at the centre of the Gallery honeycomb
+  const photos = ["p6-01", "p6-03", "p6-04", "p6-05", "p6-07", "p6-09", "p6-10"].map(n => `images/gallery/thumbs/mcc-mini-${n}.webp`);
+  // a small honeycomb: 7 cells, all filled (first photo in the middle cell, the rest around it)
   const cells = [[52, 0], [100, 0], [28, 40], [76, 40], [124, 40], [52, 80], [100, 80]];
-  const fill = { 1: 0, 3: 1, 5: 2 };
+  const fill = { 3: 0, 0: 1, 1: 2, 4: 3, 6: 4, 5: 5, 2: 6 };
   const tints = ["rgba(174,54,40,0.22)", "rgba(192,138,46,0.3)", "rgba(75,122,60,0.25)", "rgba(28,36,64,0.16)"];
   box.innerHTML = cells.map(([x, y], i) => {
     const inner = i in fill ? `<img src="${photos[fill[i]]}" alt="" loading="lazy">` : "";
