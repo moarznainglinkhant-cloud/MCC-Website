@@ -236,7 +236,7 @@
   .shape-layer{ position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:5; }
   .sdot{ position:absolute; left:0; top:0; border-radius:50%; overflow:hidden; will-change:transform; background:var(--bg-sunk); box-shadow:0 0 0 1px var(--bg), 0 0 0 1.5px rgba(192,138,46,.4); }
   .sdot img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .sdot::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--c); opacity:0; transition:opacity .6s ease .5s; }
+  .sdot::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--c); opacity:0; transition:opacity .7s ease 0s; }
   .shape-layer.on .sdot::after{ opacity:var(--ta,.6); }
   .shape-layer:not(.on) .sdot::after{ transition-delay:0s; }
   .hive-stage.shaping .bubble{ opacity:0 !important; pointer-events:none !important; }
@@ -1245,33 +1245,49 @@
     else shapeLabel.textContent = on ? "Back to photos" : "Form the logo";
     shapeBtn.setAttribute("aria-pressed", on ? "true" : "false");
   }
+  function wrapA(a){ while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; }
+  function easeIO(t){ return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
   function shapePlan(){
     var d = Math.min(M.h * 0.92, M.w - 24, 720, Math.max(300, window.innerHeight - 130)), dd = d * 0.0514 * 0.96;
     var srcs = bubbles.map(function(b){ var im = b.el.querySelector("img"); return im ? im.getAttribute("src") : null; });
     var good = []; srcs.forEach(function(x, i){ if (x) good.push(i); });
-    var dots = LOGO_DOTS.map(function(q){ return { cx: M.ox + q[0] / 1000 * d, cy: M.oy + q[1] / 1000 * d, c: LOGO_PAL[q[2]], k: q[2], bi: -1, from: null }; });
+    var dots = LOGO_DOTS.map(function(q){
+      var x = q[0] / 1000 * d, y = q[1] / 1000 * d;
+      return { cx: M.ox + x, cy: M.oy + y, c: LOGO_PAL[q[2]], k: q[2], bi: -1, pf: { r: Math.sqrt(x * x + y * y), a: Math.atan2(y, x) }, p0: null };
+    });
     var pairs = [];
     good.forEach(function(i){ var b = bubbles[i]; dots.forEach(function(o, j){ var dx = o.cx - (b.x + M.ox), dy = o.cy - (b.y + M.oy); pairs.push([dx * dx + dy * dy, i, j]); }); });
     pairs.sort(function(a, b){ return a[0] - b[0]; });
     var usedB = {}, usedD = {};
     pairs.forEach(function(p){
       if (usedB[p[1]] || usedD[p[2]]) return; usedB[p[1]] = usedD[p[2]] = 1;
-      var b = bubbles[p[1]]; dots[p[2]].bi = p[1];
-      dots[p[2]].from = { x: b.x + M.ox, y: b.y + M.oy, s: b.s * M.D / dd, o: 1 };
+      var b = bubbles[p[1]], o = dots[p[2]]; o.bi = p[1];
+      o.p0 = { r: Math.sqrt(b.x * b.x + b.y * b.y), a: Math.atan2(b.y, b.x), s: b.s * M.D / dd, o: 1 };
+      o.dA = wrapA(o.pf.a - o.p0.a);
     });
-    var k = 0;
+    var far = Math.max(M.w, M.h) * 0.62 + d * 0.3, k = 0;
     dots.forEach(function(o, j){
       var pi = o.bi >= 0 ? o.bi : good[(j * 17 + 5 + k++) % good.length];
       o.src = srcs[pi];
-      if (!o.from){   // extra circles bloom out of the nearest real photo
-        var best = null, bd = 1e12;
-        good.forEach(function(i){ var b = bubbles[i], dx = o.cx - (b.x + M.ox), dy = o.cy - (b.y + M.oy), q = dx * dx + dy * dy; if (q < bd){ bd = q; best = b; } });
-        o.from = { x: best.x + M.ox, y: best.y + M.oy, s: 0.02, o: 0 };
+      if (!o.p0){   // no copying: the rest of the circles sweep in from far outside, spiralling into place
+        o.p0 = { r: o.pf.r + far, a: o.pf.a + 2.5, s: 0.7, o: 0 };
+        o.dA = -2.5;
       }
+      o.an = (o.pf.a + Math.PI) / (2 * Math.PI);   // 0..1 around the logo: drives the pinwheel stagger
     });
     return { d: d, dd: dd, dots: dots };
   }
   function tf(x, y, s, dd){ return "translate3d(" + (x - dd / 2).toFixed(1) + "px," + (y - dd / 2).toFixed(1) + "px,0) scale(" + s.toFixed(3) + ")"; }
+  function dotKeys(o, dd, rev){
+    var n = 20, ks = [];
+    for (var i = 0; i <= n; i++){
+      var t = i / n, u = rev ? 1 - t : t, e = easeIO(u);
+      var r = o.p0.r + (o.pf.r - o.p0.r) * e, a = o.p0.a + o.dA * e, sc = o.p0.s + (1 - o.p0.s) * e;
+      var op = o.p0.o + (1 - o.p0.o) * Math.min(1, u * 3.5);
+      ks.push({ transform: tf(M.ox + Math.cos(a) * r, M.oy + Math.sin(a) * r, sc, dd), opacity: op, offset: t });
+    }
+    return ks;
+  }
   function shapeClean(){
     if (SHAPE.layer && SHAPE.layer.parentNode) SHAPE.layer.parentNode.removeChild(SHAPE.layer);
     SHAPE.layer = null; SHAPE.on = false; SHAPE.busy = false;
@@ -1282,7 +1298,7 @@
   function shapeOn(){
     if (SHAPE.on || SHAPE.busy || !bubbles.length || lbOpen) return;
     SHAPE.busy = true; if (shapeBtn) shapeBtn.disabled = true;
-    var plan = shapePlan(), dd = plan.dd, maxD = 1;
+    var plan = shapePlan(), dd = plan.dd;
     var layer = document.createElement("div"); layer.className = "shape-layer"; layer.setAttribute("aria-hidden", "true");
     var els = plan.dots.map(function(o){
       var e = document.createElement("span"); e.className = "sdot";
@@ -1290,7 +1306,7 @@
       e.style.setProperty("--ta", o.k === 2 ? ".3" : o.k === 0 ? ".66" : ".55");
       e.style.transform = tf(o.cx, o.cy, 1, dd);
       e.innerHTML = '<img src="' + esc(o.src) + '" alt="" decoding="async" draggable="false">';
-      layer.appendChild(e); o.r = Math.sqrt((o.cx - M.ox) * (o.cx - M.ox) + (o.cy - M.oy) * (o.cy - M.oy)); if (o.r > maxD) maxD = o.r;
+      layer.appendChild(e);
       return e;
     });
     stage.appendChild(layer); SHAPE.layer = layer; SHAPE.on = true; stage.classList.add("shaping");
@@ -1307,19 +1323,13 @@
       window.scrollTo({ top: Math.max(0, window.pageYOffset + cy - (84 + (window.innerHeight - 84) / 2)), behavior: reduceMotion ? "auto" : "smooth" });
     }
     if (reduceMotion || !els[0].animate){ layer.classList.add("on"); SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; return; }
-    var done = 0, total = els.length, perp = function(o){ var a = Math.atan2(o.cy - o.from.y, o.cx - o.from.x) + Math.PI / 2; return [Math.cos(a), Math.sin(a)]; };
+    var done = 0, total = els.length;
     els.forEach(function(e, j){
-      var o = plan.dots[j], mx = (o.from.x + o.cx) / 2, my = (o.from.y + o.cy) / 2, dist = Math.sqrt(Math.pow(o.cx - o.from.x, 2) + Math.pow(o.cy - o.from.y, 2));
-      var pp = perp(o), sw = (j % 2 ? 1 : -1) * dist * 0.18;
-      var delay = (o.r / maxD) * 420 + Math.random() * 120;
-      var a = e.animate([
-        { transform: tf(o.from.x, o.from.y, o.from.s, dd), opacity: o.from.o, offset: 0 },
-        { transform: tf(mx + pp[0] * sw, my + pp[1] * sw, Math.max(o.from.s, 1) * 0.9, dd), opacity: 1, offset: 0.55 },
-        { transform: tf(o.cx, o.cy, 1, dd), opacity: 1, offset: 1 }
-      ], { duration: 900, delay: delay, easing: "cubic-bezier(.3,.7,.2,1)", fill: "backwards" });
-      a.onfinish = function(){ if (++done === total && SHAPE.layer === layer) SHAPE.busy = false, shapeBtn && (shapeBtn.disabled = false); };
+      var o = plan.dots[j];
+      var a = e.animate(dotKeys(o, dd, false), { duration: 1500, delay: o.an * 420 + Math.random() * 90, easing: "linear", fill: "backwards" });
+      a.onfinish = function(){ if (++done === total && SHAPE.layer === layer){ SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; } };
     });
-    window.requestAnimationFrame(function(){ layer.classList.add("on"); });
+    window.setTimeout(function(){ if (SHAPE.layer === layer) layer.classList.add("on"); }, 1100);   // colours ink in as the circles arrive
   }
   function shapeOff(){
     if (!SHAPE.on || SHAPE.busy) return;
@@ -1328,19 +1338,13 @@
     var els = Array.prototype.slice.call(layer.children);
     if (reduceMotion || !els[0] || !els[0].animate){ shapeClean(); return; }
     layer.classList.remove("on");
-    var plan = shapePlan(), dd = plan.dd, maxD = 1; plan.dots.forEach(function(o){ o.r = Math.sqrt(Math.pow(o.cx - M.ox, 2) + Math.pow(o.cy - M.oy, 2)); if (o.r > maxD) maxD = o.r; });
-    stage.classList.remove("shaping");   // real photos are underneath; they fade in as the dots land
-    var bs = bubbles; bs.forEach(function(b){ b.el.style.transition = "opacity .5s ease .55s"; });
+    var plan = shapePlan(), dd = plan.dd;
+    stage.classList.remove("shaping");   // real photos sit underneath and fade in as the circles leave
+    var bs = bubbles; bs.forEach(function(b){ b.el.style.transition = "opacity .5s ease .9s"; });
     var done = 0, total = els.length;
     els.forEach(function(e, j){
-      var o = plan.dots[j], mx = (o.from.x + o.cx) / 2, my = (o.from.y + o.cy) / 2, dist = Math.sqrt(Math.pow(o.cx - o.from.x, 2) + Math.pow(o.cy - o.from.y, 2));
-      var a2 = Math.atan2(o.from.y - o.cy, o.from.x - o.cx) + Math.PI / 2, sw = (j % 2 ? -1 : 1) * dist * 0.18;
-      var delay = (1 - o.r / maxD) * 380 + Math.random() * 100;
-      var a = e.animate([
-        { transform: tf(o.cx, o.cy, 1, dd), opacity: 1, offset: 0 },
-        { transform: tf(mx + Math.cos(a2) * sw, my + Math.sin(a2) * sw, Math.max(o.from.s, 1) * 0.9, dd), opacity: 1, offset: 0.45 },
-        { transform: tf(o.from.x, o.from.y, o.from.s, dd), opacity: o.from.o, offset: 1 }
-      ], { duration: 800, delay: delay, easing: "cubic-bezier(.5,0,.3,1)", fill: "both" });
+      var o = plan.dots[j];
+      var a = e.animate(dotKeys(o, dd, true), { duration: 1300, delay: (1 - o.an) * 320 + Math.random() * 80, easing: "linear", fill: "both" });
       a.onfinish = function(){ if (++done === total){ bs.forEach(function(b){ b.el.style.transition = ""; }); shapeClean(); } };
     });
     kick();
