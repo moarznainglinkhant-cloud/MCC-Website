@@ -978,25 +978,6 @@ function buildSnake() {
   hint.innerHTML = `<span class="snake-hint-mouse"><i></i></span>${escapeHtml(t("snake_hint"))}`;
   stage.appendChild(hint);
 
-  // Posters open up close (click, or Enter/Space).
-  cards.forEach(c => {
-    const title = (c.querySelector(".info .title") || {}).textContent || "";
-    c.setAttribute("tabindex", "0");
-    c.setAttribute("role", "button");
-    c.setAttribute("aria-label", t("snake_open") + ": " + title);
-  });
-  if (!g.__snakeWired) {
-    g.__snakeWired = true;
-    g.addEventListener("click", e => {
-      const c = e.target.closest(".past-card");
-      if (c && SNAKE.g === g) openPoster(c);
-    });
-    g.addEventListener("keydown", e => {
-      const c = e.target.closest && e.target.closest(".past-card");
-      if (c && SNAKE.g === g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPoster(c, true); }
-    });
-  }
-
   // Dock: Show all + Skip.
   const dock = document.createElement("div");
   dock.className = "snake-dock";
@@ -1292,10 +1273,14 @@ function snakeTarget() {
   return Math.max(0, Math.min(snakeLead() + SNAKE.zoomS, SNAKE.top - r.top));
 }
 
-// Switch to free mode while sitting on the wall: shorten the pin and move the scroll position by the
-// same amount, so nothing on screen moves.
+// As soon as the line has been drawn all the way once, switch to free mode: the long line-drawing
+// stretch is swapped for the grid's own height (1:1 scrolling), and the scroll position is moved by
+// the same amount so nothing on screen jumps. From then on, scrolling back up is just scrolling.
 function snakeGoFree() {
-  const delta = SNAKE.maxShift - SNAKE.drawS;
+  const target = snakeTarget(), cur = SNAKE.cur == null ? target : SNAKE.cur;
+  // where the eased position lands in the new mapping: the same camera, or the same point in the zoom
+  const cur2 = cur > SNAKE.drawS ? SNAKE.maxShift + (cur - SNAKE.drawS) : Math.min(SNAKE.cam || 0, SNAKE.maxShift);
+  const delta = cur2 + (target - cur) - target;
   const y0 = window.scrollY;
   SNAKE.free = true;
   SNAKE.hintDone = true;
@@ -1305,17 +1290,22 @@ function snakeGoFree() {
   SNAKE.pin.style.height = (SNAKE.stageH + snakeLead() + SNAKE.zoomS) + "px";
   window.scrollTo({ top: y0 + delta, behavior: "instant" });
   de.style.overflowAnchor = oa;
-  SNAKE.cur = null;
+  SNAKE.cur = cur2;
+  // Skip / Show all were mid-way: carry on to the same place in the new layout
+  const nav = SNAKE.nav; SNAKE.nav = null;
+  if (nav === "skip") snakeSkip(); else if (nav === "all") snakeShowAll();
 }
 
 function snakeShowAll() {
   if (!SNAKE.pin) return;
+  SNAKE.nav = SNAKE.free ? null : "all";
   const pinTop = SNAKE.pin.getBoundingClientRect().top + window.scrollY;
   window.scrollTo({ top: pinTop - SNAKE.top + snakeLead() + SNAKE.zoomS * 0.85, behavior: "smooth" });
 }
 
 function snakeSkip() {
   if (!SNAKE.pin) return;
+  SNAKE.nav = SNAKE.free ? null : "skip";
   const pinTop = SNAKE.pin.getBoundingClientRect().top + window.scrollY;
   window.scrollTo({ top: pinTop - SNAKE.top + SNAKE.pin.offsetHeight - SNAKE.stageH + 2, behavior: "smooth" });
 }
@@ -1338,8 +1328,9 @@ function snakeFrame(now) {
   SNAKE.last = now;
   const target = snakeTarget();
   const free = !!SNAKE.free;
-  if (SNAKE.cur === null || free) SNAKE.cur = target;          // free mode: the grid follows the page 1:1
-  SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-SNAKE_EASE * dt));
+  if (SNAKE.cur === null) SNAKE.cur = target;
+  // free mode: the grid follows the page 1:1 with only a whisper of easing
+  SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-(free ? 16 : SNAKE_EASE) * dt));
   if (Math.abs(target - SNAKE.cur) < 0.1) SNAKE.cur = target;
   const moving = SNAKE.cur !== target;
   if (moving !== SNAKE.moving) { SNAKE.moving = moving; SNAKE.g.classList.toggle("snake-moving", moving); }
@@ -1415,71 +1406,8 @@ function snakeFrame(now) {
   }
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
-  if (!free && SNAKE.finaleDone && z >= 1) { snakeGoFree(); snakeKick(); return; }
+  if (!free && SNAKE.finaleDone && L >= SNAKE.total - 0.5) { snakeGoFree(); snakeKick(); return; }
   if (SNAKE.cur !== target) snakeKick(); else SNAKE.last = 0;
-}
-
-// ---------- Poster up close (desktop past-events grid and finale wall) ----------
-// The poster grows out of its card to the middle of the screen; Esc, the close button or a click
-// outside sends it back. The page underneath doesn't scroll while it's open.
-function openPoster(card, viaKey) {
-  if (document.querySelector(".pv")) return;
-  const src = card.querySelector(".photo img:not(.snake-color)");
-  if (!src) return;
-  const title = (card.querySelector(".info .title") || {}).textContent || "";
-  const date = (card.querySelector(".info .date") || {}).textContent || "";
-  const returnFocus = document.activeElement;
-  const ov = document.createElement("div");
-  ov.className = "pv";
-  ov.setAttribute("role", "dialog");
-  ov.setAttribute("aria-modal", "true");
-  ov.setAttribute("aria-label", title);
-  ov.innerHTML = `
-    <div class="pv-back"></div>
-    <figure class="pv-fig">
-      <img class="pv-img" src="${safeUrl(src.currentSrc || src.src)}" alt="${escapeHtml(src.alt || title)}">
-      <figcaption><b>${escapeHtml(title)}</b><span>${escapeHtml(date)}</span></figcaption>
-    </figure>
-    <button type="button" class="pv-close" aria-label="${escapeHtml(t("snake_close"))}">&times;</button>`;
-  document.body.appendChild(ov);
-  const img = ov.querySelector(".pv-img"), back = ov.querySelector(".pv-back"), cap = ov.querySelector("figcaption"), btn = ov.querySelector(".pv-close");
-  const EASE = "cubic-bezier(.2,.8,.2,1)";
-  const fromCard = () => {
-    const a = (card.querySelector(".photo") || card).getBoundingClientRect(), b = img.getBoundingClientRect();
-    if (!a.width || !b.width) return null;
-    return `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${a.width / b.width}, ${a.height / b.height})`;
-  };
-  const grow = () => {
-    const from = fromCard();
-    back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: "ease-out", fill: "both" });
-    cap.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 360, delay: 200, easing: EASE, fill: "both" });
-    btn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 200, fill: "both" });
-    if (from) img.animate([{ transform: from, borderRadius: "10px" }, { transform: "none", borderRadius: "14px" }], { duration: 460, easing: EASE });
-  };
-  if (img.complete && img.naturalWidth) grow(); else { img.style.opacity = "0"; img.addEventListener("load", () => { img.style.opacity = ""; grow(); }, { once: true }); }
-  let closing = false;
-  function close() {
-    if (closing) return;
-    closing = true;
-    document.removeEventListener("keydown", onKey, true);
-    const to = fromCard();
-    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: "ease-in", fill: "both" });
-    cap.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "both" });
-    btn.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "both" });
-    const anim = to ? img.animate([{ transform: "none" }, { transform: to, borderRadius: "10px" }], { duration: 380, easing: EASE, fill: "both" })
-                    : img.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "both" });
-    anim.onfinish = () => { ov.remove(); if (viaKey && returnFocus && returnFocus.focus) returnFocus.focus({ preventScroll: true }); };
-  }
-  function onKey(e) {
-    if (e.key === "Escape") { e.preventDefault(); close(); }
-    else if (e.key === "Tab") { e.preventDefault(); btn.focus(); }
-    else if ([" ", "PageDown", "PageUp", "ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) && e.target !== btn) e.preventDefault();
-  }
-  document.addEventListener("keydown", onKey, true);
-  ov.addEventListener("click", e => { if (e.target !== img) close(); });
-  ov.addEventListener("wheel", e => e.preventDefault(), { passive: false });
-  ov.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
-  btn.focus({ preventScroll: true });
 }
 
 // ---------- "Since 2022" timeline (events page) ----------

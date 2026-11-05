@@ -376,12 +376,9 @@
   /* While the grid is gliding, posters sliding under the cursor don't each start a hover lift/shadow
      (that repainting is what made the motion stutter). Hover comes back the moment it settles. */
   .snake.snake-moving .past-card{ pointer-events:none; }
-  .snake .past-card{ cursor:zoom-in; }
-  .snake .past-card:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; }
-  /* Finale wall: hovering a poster enlarges it slightly; clicking opens it. */
+  /* Finale wall: hovering a poster enlarges it slightly. */
   .snake-wall .snake .past-card.reveal.lit{ transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
-  .snake-wall .snake .past-card.reveal.lit:hover,
-  .snake-wall .snake .past-card.reveal.lit:focus-visible{ transform:scale(1.05); z-index:5; box-shadow:0 20px 40px rgba(28,36,64,0.18); }
+  .snake-wall .snake .past-card.reveal.lit:hover{ transform:scale(1.05); z-index:5; box-shadow:0 20px 40px rgba(28,36,64,0.18); }
   .snake-cap{
     margin-top:10px; font-family:'Work Sans', system-ui, sans-serif; font-size:0.92rem; font-weight:500;
     color:var(--ink-soft); letter-spacing:0.01em; min-height:1.4em;
@@ -400,20 +397,6 @@
   .snake-hint-mouse i{ position:absolute; left:50%; top:5px; width:3px; height:5px; margin-left:-1.5px; border-radius:2px; background:var(--red); animation:snake-hint-wheel 1.6s ease-in-out infinite; }
   @keyframes snake-hint-wheel{ 0%{ opacity:0; transform:translateY(-2px); } 30%{ opacity:1; } 70%{ opacity:1; transform:translateY(6px); } 100%{ opacity:0; transform:translateY(8px); } }
 
-  /* Poster up close */
-  .pv{ position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:24px; }
-  .pv-back{ position:absolute; inset:0; background:rgba(18,22,42,0.74); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
-  .pv-fig{ position:relative; margin:0; display:flex; flex-direction:column; align-items:center; gap:14px; max-width:min(620px, 88vw); }
-  .pv-img{ display:block; max-width:100%; max-height:calc(100vh - 150px); max-height:calc(100svh - 150px); width:auto; height:auto; border-radius:14px; box-shadow:0 30px 80px rgba(0,0,0,0.4); cursor:default; transform-origin:center; }
-  .pv figcaption{ text-align:center; color:#F6F1E4; display:flex; flex-direction:column; gap:4px; }
-  .pv figcaption b{ font-family:'Fraunces', serif; font-size:1.25rem; font-weight:600; }
-  .pv figcaption span{ font-size:0.74rem; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; opacity:0.75; }
-  .pv-close{
-    position:absolute; top:18px; right:18px; width:44px; height:44px; border-radius:50%; border:1px solid rgba(246,241,228,0.3);
-    background:rgba(246,241,228,0.08); color:#F6F1E4; font-size:1.6rem; line-height:1; cursor:pointer;
-  }
-  .pv-close:hover{ background:rgba(246,241,228,0.18); }
-  .pv-close:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
   .snake .past-card{ will-change:transform; }
   .snake-svg{ will-change:transform; }
   .snake .past-card.lit .info{ opacity:var(--dim, 1); }
