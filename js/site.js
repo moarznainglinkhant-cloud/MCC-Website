@@ -1061,7 +1061,6 @@ function snakeLayout() {
   const xL = -G, xR = W + G;
   const cx = c => c.offsetLeft + c.offsetWidth / 2;
   const pitch = ys.length > 1 ? ys[1] - ys[0] : 400;
-  const span = pitch * 0.3;     // camera drifts this far either side of a row's centre while the line crosses it
 
   let d = `M ${xL} ${ys[0]}`, L = 0;
   const thr = new Map(), keys = [];
@@ -1071,10 +1070,13 @@ function snakeLayout() {
     const lc = row[row.length - 1];             // last row: run to the far edge of the final poster
     const he = last ? cx(lc) + (ltr ? 1 : -1) * lc.offsetWidth / 2 : (ltr ? xR - R : xL + R);
     row.forEach(c => thr.set(c, L + Math.abs(cx(c) - hs)));
-    keys.push({ y: y - span, L });
+    // Camera keyframes: hold this row while the line crosses it, then glide to the next row
+    // through the turn (starting a little before the corner, settling just after it).
+    const len = Math.abs(he - hs);
+    keys.push({ y, L: L + (r === 0 ? 0 : Math.min(70, len * 0.1)) });
     d += ` H ${he}`;
-    L += Math.abs(he - hs);
-    keys.push({ y: y + span, L });
+    L += len;
+    keys.push({ y, L: L - (last ? 0 : Math.min(140, len * 0.15)) });
     if (!last) {
       const yn = ys[r + 1], sweep = ltr ? 1 : 0, xs = ltr ? xR : xL;
       d += ` A ${R} ${R} 0 0 ${sweep} ${xs} ${y + R} V ${yn - R} A ${R} ${R} 0 0 ${sweep} ${ltr ? xR - R : xL + R} ${yn}`;
@@ -1135,8 +1137,8 @@ const SNAKE_RATIO = 1.5;
 // steps). The camera is worked out from the line, not eased separately, so the two move together.
 const SNAKE_EASE = 6;
 
-// Camera position for a given length of line: glides continuously through the rows
-// (keyframes from snakeLayout), so the grid never starts or stops with a jolt.
+// Camera position for a given length of line: holds each row while the line crosses it, and
+// glides (eased in and out) to the next row through the turn (keyframes from snakeLayout).
 function snakeCamFor(L) {
   const k = SNAKE.keys;
   let y;
@@ -1148,7 +1150,8 @@ function snakeCamFor(L) {
     while (i < k.length - 1 && k[i].L < L) i++;
     const a = k[i - 1], b = k[i];
     const f = b.L > a.L ? (L - a.L) / (b.L - a.L) : 1;
-    y = a.y + (b.y - a.y) * f;
+    const ef = f * f * f * (f * (f * 6 - 15) + 10);      // smootherstep: eases in and out of each glide
+    y = a.y + (b.y - a.y) * ef;
   }
   return Math.max(0, Math.min(SNAKE.maxShift, y + SNAKE.padTop - SNAKE.stageH * 0.5));
 }
@@ -1358,8 +1361,15 @@ function snakeFrame(now) {
   SNAKE.g.style.transform = `translate3d(0, ${(-SNAKE.cam).toFixed(2)}px, 0)`;
   SNAKE.yearEl.style.opacity = String(1 - e);
   SNAKE.svg.style.opacity = String(1 - Math.min(1, z * 2.5));
-  const fade = (70 * (1 - e)).toFixed(1) + "px";
-  if (fade !== SNAKE.fade) { SNAKE.fade = fade; SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", fade); }
+  // Top fade only appears once the grid has moved up under the nav, so the first row starts crisp.
+  const fk = Math.min(1, SNAKE.cam / 120) * (1 - e);
+  const fade = (70 * fk).toFixed(1);
+  if (fade !== SNAKE.fade) {
+    SNAKE.fade = fade;
+    const v = SNAKE.stage.querySelector(".snake-view");
+    v.style.setProperty("--snake-fade", fade + "px");
+    v.style.setProperty("--snake-ramp", (80 * fk).toFixed(1) + "px");
+  }
   const wall = e >= 0.999 && !moving;
   if (wall !== SNAKE.wallOn) {
     SNAKE.wallOn = wall;

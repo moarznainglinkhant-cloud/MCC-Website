@@ -319,8 +319,8 @@
   }
   .snake-view{
     height:100%; padding-block:28px; padding-inline:clamp(18px, 4vw, 56px);
-    -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 70px), #000 calc(var(--snake-fade, 70px) + 80px), #000 calc(100% - 48px), transparent 100%);
-            mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 70px), #000 calc(var(--snake-fade, 70px) + 80px), #000 calc(100% - 48px), transparent 100%);
+    -webkit-mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 0px), #000 calc(var(--snake-fade, 0px) + var(--snake-ramp, 0px)), #000 calc(100% - 48px), transparent 100%);
+            mask-image:linear-gradient(to bottom, transparent 0, transparent var(--snake-fade, 0px), #000 calc(var(--snake-fade, 0px) + var(--snake-ramp, 0px)), #000 calc(100% - 48px), transparent 100%);
   }
   .snake-svg{ transition:none; }
   .snake .past-card.reveal{ transition:transform 1.4s cubic-bezier(.22,1,.36,1), box-shadow 1.4s cubic-bezier(.22,1,.36,1); }
