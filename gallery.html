@@ -236,9 +236,8 @@
   .shape-layer{ position:absolute; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:5; }
   .sdot{ position:absolute; left:0; top:0; border-radius:50%; overflow:hidden; will-change:transform; background:var(--bg-sunk); box-shadow:0 0 0 1px var(--bg), 0 0 0 1.5px rgba(192,138,46,.4); }
   .sdot img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .sdot::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--c); opacity:0; transition:opacity .7s ease 0s; }
+  .sdot::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--c); opacity:0; transition:opacity .55s ease var(--td,0s); }
   .shape-layer.on .sdot::after{ opacity:var(--ta,.6); }
-  .shape-layer:not(.on) .sdot::after{ transition-delay:0s; }
   .hive-stage.shaping .bubble{ opacity:0 !important; pointer-events:none !important; }
   .hive-stage.pan.shaping{ -webkit-mask-image:none; mask-image:none; }
   .gallery-hero .eyebrow{ display:inline-block; animation: gal-rise .55s .02s both cubic-bezier(.2,.8,.2,1); }
@@ -1346,10 +1345,12 @@
     var done = 0, total = els.length;
     els.forEach(function(e, j){
       var o = plan.dots[j];
-      var a = e.animate(dotKeys(o, dd, false), { duration: MAGNET ? 1400 : 1500, delay: o.an * (MAGNET ? 360 : 420) + Math.random() * 90, easing: "linear", fill: "backwards" });
+      var dl = o.an * (MAGNET ? 360 : 420) + Math.random() * 90;
+      e.style.setProperty("--td", dl.toFixed(0) + "ms");   // each circle takes its colour the moment it sets off
+      var a = e.animate(dotKeys(o, dd, false), { duration: MAGNET ? 1400 : 1500, delay: dl, easing: "linear", fill: "backwards" });
       a.onfinish = function(){ if (++done === total && SHAPE.layer === layer){ SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; } };
     });
-    window.setTimeout(function(){ if (SHAPE.layer === layer) layer.classList.add("on"); }, MAGNET ? 1000 : 1100);   // colours ink in as the circles arrive
+    window.requestAnimationFrame(function(){ window.requestAnimationFrame(function(){ if (SHAPE.layer === layer) layer.classList.add("on"); }); });
   }
   function shapeOff(){
     if (!SHAPE.on || SHAPE.busy) return;
@@ -1357,14 +1358,16 @@
     SHAPE.busy = true; if (shapeBtn) shapeBtn.disabled = true; setShapeLabel(false);
     var els = Array.prototype.slice.call(layer.children);
     if (reduceMotion || !els[0] || !els[0].animate){ shapeClean(); return; }
-    layer.classList.remove("on");
     var plan = shapePlan(), dd = plan.dd;
     stage.classList.remove("shaping");   // real photos sit underneath and fade in as the circles leave
     var bs = bubbles; bs.forEach(function(b){ b.el.style.transition = "opacity .5s ease .9s"; });
     var done = 0, total = els.length;
+    layer.classList.remove("on");
     els.forEach(function(e, j){
       var o = plan.dots[j];
-      var a = e.animate(dotKeys(o, dd, true), { duration: 1300, delay: (1 - o.an) * 320 + Math.random() * 80, easing: "linear", fill: "both" });
+      var dl = (1 - o.an) * 320 + Math.random() * 80;
+      e.style.setProperty("--td", dl.toFixed(0) + "ms");
+      var a = e.animate(dotKeys(o, dd, true), { duration: 1300, delay: dl, easing: "linear", fill: "both" });
       a.onfinish = function(){ if (++done === total){ bs.forEach(function(b){ b.el.style.transition = ""; }); shapeClean(); } };
     });
     kick();
