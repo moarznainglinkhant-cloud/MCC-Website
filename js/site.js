@@ -968,13 +968,6 @@ function buildSnake() {
   yearEl.innerHTML = tlOdometer(cardYears[0] || years[years.length - 1] || "2026");
   stage.appendChild(yearEl);
 
-  // Zoom-out finale title: "22 events and counting".
-  const fin = document.createElement("div");
-  fin.className = "snake-finale";
-  fin.setAttribute("aria-hidden", "true");
-  fin.innerHTML = `<div>${escapeHtml(t("snake_count_done")).replace("{n}", `<b>${cards.length}</b>`)}</div>` +
-    `<div class="snake-cap">${escapeHtml(t("snake_wall_hint"))}</div>`;
-  stage.appendChild(fin);
 
   // A quiet hint as the section locks in, gone as soon as the line starts moving.
   const hint = document.createElement("div");
@@ -1002,12 +995,9 @@ function buildSnake() {
     });
   }
 
-  // Dock: live counter ("11 events since 2022") + Skip.
+  // Dock: Show all + Skip.
   const dock = document.createElement("div");
   dock.className = "snake-dock";
-  const counter = document.createElement("div");
-  counter.className = "snake-count";
-  counter.setAttribute("aria-hidden", "true");
   const skip = document.createElement("button");
   skip.type = "button";
   skip.className = "snake-skip";
@@ -1018,7 +1008,7 @@ function buildSnake() {
   all.className = "snake-skip snake-all";
   all.textContent = t("snake_show_all");
   all.addEventListener("click", snakeShowAll);
-  dock.append(counter, all, skip);
+  dock.append(all, skip);
   document.body.appendChild(dock);
 
   // Seen the whole thing already this visit? Then the line stays drawn and the grid just scrolls.
@@ -1026,7 +1016,7 @@ function buildSnake() {
   if (SNAKE.free) cards.forEach(c => { c.dataset.fill = "1"; c.style.setProperty("--fill", "1"); c.classList.add("lit"); });
 
   Object.assign(SNAKE, {
-    g, cards, svg, counter, dock, pin, stage, yearEl, fin, hint, cap: fin.querySelector(".snake-cap"), cardYears, year: null, z: 0, hintDone: !!SNAKE.free,
+    g, cards, svg, counter: null, dock, pin, stage, yearEl, hint, cardYears, year: null, z: 0, hintDone: !!SNAKE.free,
     since: years[0] || "", litCount: -1,
     guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
     cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
@@ -1108,7 +1098,7 @@ function snakeLayout() {
   // Finale: every poster flies into one wide wall that fits the screen under the title.
   // Pick the column count that makes the posters as big as possible.
   const n = cards.length, cw0 = cards[0].offsetWidth, ch0 = cards[0].offsetHeight;
-  const stageW = SNAKE.stage.clientWidth, topRoom = 136, bottomRoom = 60, mg = 14;
+  const stageW = SNAKE.stage.clientWidth, topRoom = 44, bottomRoom = 44, mg = 14;
   const availW = stageW - 2 * Math.max(24, (stageW - g.offsetWidth) / 2), availH = SNAKE.stageH - topRoom - bottomRoom;
   let best = { cw: 0, cols: n };
   for (let c = 3; c <= n; c++) {
@@ -1265,7 +1255,6 @@ function snakeFrame(now) {
   SNAKE.svg.style.opacity = String(1 - Math.min(1, z * 2.5));
   const fade = (70 * (1 - e)).toFixed(1) + "px";
   if (fade !== SNAKE.fade) { SNAKE.fade = fade; SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", fade); }
-  SNAKE.fin.style.opacity = String(Math.max(0, Math.min(1, (z - 0.55) / 0.35)));
   const wall = e >= 0.999 && !moving;
   if (wall !== SNAKE.wallOn) {
     SNAKE.wallOn = wall;
