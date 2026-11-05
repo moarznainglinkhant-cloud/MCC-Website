@@ -558,7 +558,7 @@
     <div class="wrap">
       <span class="eyebrow" data-i18n="gallery_eyebrow">Gallery</span>
       <h1 data-i18n="gallery_h1">Moments from our events</h1>
-      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span class="shape-btn-dot" aria-hidden="true"></span><span id="shapeLabel" data-i18n="gallery_shape_on">Form the logo</span></button>
+      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span class="shape-btn-dot" aria-hidden="true"></span><span id="shapeLabel" data-i18n="gallery_shape_on">Surprise Me</span></button>
     </div>
   </section>
 
@@ -1241,7 +1241,7 @@
     if (!shapeLabel) return;
     shapeLabel.setAttribute("data-i18n", on ? "gallery_shape_off" : "gallery_shape_on");
     if (typeof t === "function"){ var v = t(on ? "gallery_shape_off" : "gallery_shape_on"); if (v) shapeLabel.textContent = v; }
-    else shapeLabel.textContent = on ? "Back to photos" : "Form the logo";
+    else shapeLabel.textContent = on ? "Back to photos" : "Surprise Me";
     shapeBtn.setAttribute("aria-pressed", on ? "true" : "false");
   }
   function wrapA(a){ while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; }
