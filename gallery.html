@@ -1388,15 +1388,15 @@
     // hover lens (mouse only): eases in and out, so it also relaxes smoothly when the logo flies back
     var hv = SH.hov; hv.x += (hv.tx - hv.x) * 0.22; hv.y += (hv.ty - hv.y) * 0.22;
     hv.a += ((SH.dir ? 0 : hv.ta) - hv.a) * 0.12; if (hv.a < 0.002) hv.a = 0;
-    var HS = P.dd * 2.1, H2 = 2 * HS * HS;
+    var HS = P.dd * 1.5, H2 = 2 * HS * HS;
     for (var i = 0; i < parts.length; i++){
       var p = parts[i]; shAt(P, p, t, o); p.x = ox + o.x; p.y = oy + o.y; p.d = o.d; p.tint = o.tint; p.a = o.a; p.z = o.z; p.sh = o.sh;
       if (hv.a > 0){
         var hx = p.x - hv.x, hy = p.y - hv.y, h2 = hx * hx + hy * hy, gk = Math.exp(-h2 / H2) * hv.a;
         if (gk > 0.004){
-          var hd = Math.sqrt(h2) || 1, push = gk * P.dd * 0.35;
+          var hd = Math.sqrt(h2) || 1, push = 0;
           p.x += hx / hd * push; p.y += hy / hd * push;   // neighbours make a little room
-          p.d *= 1 + 0.5 * gk; p.tint *= 1 - 0.6 * gk; p.z += gk;   // lifted, and the colour clears to show the photo
+          p.d *= 1 + 0.16 * gk; p.tint *= 1 - 0.35 * gk; p.z += gk;   // lifted, and the colour clears to show the photo
         }
       }
     }
