@@ -225,10 +225,10 @@
   .gallery-hero h1{ font-size:clamp(2.1rem,5vw,3.2rem); margin-block:10px 0; animation: gal-rise .65s .08s both cubic-bezier(.2,.8,.2,1); }
 
   /* ---------- HONEYCOMB (Apple Watch style) ---------- */
-  .hive-section{ padding-block: 8px clamp(48px,7vw,80px); }
+  .hive-section{ padding-block: 8px clamp(48px,7vw,80px); overflow-x:clip; }
   .hive-stage{ position:relative; margin-inline:auto; opacity:0; transition: opacity .3s ease; }
   .hive-stage.ready{ opacity:1; }
-  .hive-stage.fill{ overflow:hidden; }
+  .hive-stage.fill{ overflow:visible; }   /* no clipping box: circles that grow past the edge are never sliced by a straight line */
   .hive-stage.pan{
     width:100%; height:min(72vh, 640px); height:min(72svh, 640px);
     overflow:hidden; touch-action:none; cursor:grab;
