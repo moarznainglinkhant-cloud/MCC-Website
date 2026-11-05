@@ -222,7 +222,7 @@
   }
   .gallery-hero .wrap{ position:relative; z-index:1; }
   .shape-btn{
-    display:inline-flex; align-items:center; gap:9px; margin-top:16px; padding:9px 16px 9px 12px;
+    display:inline-flex; align-items:center; gap:9px; margin-top:16px; padding:9px 16px;
     font:600 .9rem/1 inherit; font-family:inherit; color:var(--navy,#1C2440); background:var(--bg-raised,#FDFAF2);
     border:1px solid rgba(28,36,64,.18); border-radius:999px; cursor:pointer; -webkit-tap-highlight-color:transparent;
     box-shadow:0 2px 10px rgba(28,36,64,.08); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
@@ -231,7 +231,6 @@
   .shape-btn:hover{ transform:translateY(-1px); border-color:rgba(174,54,40,.5); box-shadow:0 6px 16px rgba(28,36,64,.12); }
   .shape-btn:focus-visible{ outline:2px solid var(--red,#AE3628); outline-offset:3px; }
   .shape-btn[disabled]{ opacity:.6; cursor:default; transform:none; }
-  .shape-btn-dot{ width:14px; height:14px; border-radius:50%; background:conic-gradient(#b92123 0 33%, #263161 0 66%, #f2c200 0); box-shadow:0 0 0 2px var(--bg-raised,#FDFAF2), 0 0 0 3px rgba(192,138,46,.45); }
   @media (min-width:720px){ .shape-btn{ position:absolute; right:0; bottom:6px; margin-top:0; } }
   .shape-canvas{ position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:0; }
   .hive-stage.shaping .bubble{ opacity:0 !important; pointer-events:none !important; }
@@ -291,8 +290,6 @@
     opacity:0; transition: opacity .2s ease;
   }
   .hive-cap.on{ opacity:1; }
-  .hive-hint{ text-align:center; font-size:0.76rem; color:var(--ink-soft); margin-top:14px; padding-inline:16px; }
-  .hive-hint[hidden]{ display:none; }
 
   /* ---------- LIGHTBOX ---------- */
   .lb{ position:fixed; inset:0; z-index:100; }
@@ -554,14 +551,13 @@
     <div class="wrap">
       <span class="eyebrow" data-i18n="gallery_eyebrow">Gallery</span>
       <h1 data-i18n="gallery_h1">Moments from our events</h1>
-      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span class="shape-btn-dot" aria-hidden="true"></span><span id="shapeLabel" data-i18n="gallery_shape_on">Surprise Me</span></button>
+      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span id="shapeLabel" data-i18n="gallery_shape_on">Surprise Me</span></button>
     </div>
   </section>
 
   <section class="hive-section" aria-label="Event photos">
     <div class="hive-glow" id="hiveGlow" aria-hidden="true"></div>
     <div class="hive-stage" id="hiveStage"></div>
-    <p class="hive-hint" id="hiveHint" data-i18n="gallery_hint" hidden>Drag to explore · tap a photo to open it</p>
   </section>
 
   <footer class="contact" id="connect">
