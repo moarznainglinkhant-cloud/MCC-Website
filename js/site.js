@@ -658,8 +658,65 @@ function renderFeaturedEvent(ev) {
     ${eventMetaRow(ev)}
     ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
     ${calendarRow(ev, mmClass)}
-    ${ev.link ? `<a class="btn ${mmClass}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${t("register_now")}</a>` : ""}
+    ${registerButton(ev, `btn ${mmClass}`, t("register_now"))}
   `;
+}
+
+/* ---------- REGISTER BUTTONS ---------- */
+// In the Events sheet's "link" column:
+//   a Google Form (or any) link → "Register" opens that link, as before;
+//   the word  site              → "Register" opens the website's own registration (js/register.js),
+//                                  which records it in Supabase and gives a ticket with a QR code;
+//   blank                       → no button.
+const REG_EVENTS = {};
+function isSiteRegistration(ev) { return /^\s*(site|website)\s*$/i.test(ev && ev.link || ""); }
+function registerButton(ev, cls, label) {
+  if (!ev || !ev.link) return "";
+  if (isSiteRegistration(ev) && /^[a-z0-9-]{1,80}$/.test(ev.id || "")) {
+    REG_EVENTS[ev.id] = ev;
+    return `<button type="button" class="${cls} js-register" data-reg="${escapeHtml(ev.id)}">${label}</button>`;
+  }
+  if (isSiteRegistration(ev)) return "";            // "site" but no usable id: nothing to register against
+  return `<a class="${cls}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${label}</a>`;
+}
+
+// The registration window and what it needs are only downloaded the first time someone taps Register.
+function loadScriptOnce(src, ready) {
+  if (ready()) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[data-src="${src}"]`);
+    if (existing) { existing.addEventListener("load", resolve); existing.addEventListener("error", reject); return; }
+    const el = document.createElement("script");
+    el.src = src; el.async = true; el.dataset.src = src;
+    el.onload = resolve; el.onerror = reject;
+    document.head.appendChild(el);
+  });
+}
+function loadRegistration() {
+  return loadScriptOnce("js/exec-config.js", () => !!window.MCC_EXEC_CONFIG)
+    .then(() => loadScriptOnce("js/supabase.js", () => !!(window.supabase && window.supabase.createClient)))
+    .then(() => loadScriptOnce("js/vendor/qrcode.min.js", () => typeof window.qrcode === "function"))
+    .then(() => loadScriptOnce("js/register.js", () => !!window.MCCRegister));
+}
+function initRegisterButtons() {
+  document.addEventListener("click", e => {
+    const btn = e.target.closest && e.target.closest(".js-register");
+    if (!btn) return;
+    const ev = REG_EVENTS[btn.dataset.reg];
+    if (!ev) return;
+    btn.disabled = true;
+    loadRegistration()
+      .then(() => window.MCCRegister.open(ev))
+      .catch(err => { console.error("Couldn't load registration:", err); alertRegistrationDown(btn); })
+      .finally(() => { btn.disabled = false; });
+  });
+  // Arrived from a "reset your password" email?
+  if (/[#&]type=recovery(&|$)/.test(location.hash) && !document.body.matches('[data-page="exec"], [data-page="login"]')) {
+    loadRegistration().then(() => window.MCCRegister.recover()).catch(() => {});
+  }
+}
+function alertRegistrationDown(btn) {
+  btn.textContent = "Try again";
 }
 
 /* ---------- ADD TO CALENDAR + MAP LINK (next event) ---------- */
@@ -767,7 +824,7 @@ function renderComingUp(rest) {
       <h3>${escapeHtml(ev.name)}</h3>
       ${eventMetaRow(ev)}
       ${ev.description ? `<p class="desc">${escapeHtml(ev.description)}</p>` : ""}
-      ${ev.link ? `<a class="btn small ${mmClass}" href="${safeUrl(ev.link)}" target="_blank" rel="noopener">${t("rsvp")}</a>` : ""}
+      ${registerButton(ev, `btn small ${mmClass}`, t("rsvp"))}
     </div>
   `).join("");
 }
@@ -2416,5 +2473,6 @@ document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
 document.addEventListener("DOMContentLoaded", initFunFact);
 document.addEventListener("DOMContentLoaded", initEventTilt);
+document.addEventListener("DOMContentLoaded", initRegisterButtons);
 document.addEventListener("DOMContentLoaded", initGreeting);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);

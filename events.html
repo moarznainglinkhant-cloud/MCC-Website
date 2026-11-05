@@ -449,6 +449,8 @@
   @media (max-width:600px){ .tl-head{ flex-direction:column; align-items:flex-start; gap:4px; } .tl-count{ display:none; } }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
+  button.btn{ border:0; cursor:pointer; font-family:inherit; }
+  button.btn[disabled]{ opacity:.6; cursor:progress; }
   footer.contact{
     background:var(--footer-bg); color:var(--footer-ink);
     position:relative; overflow:clip;

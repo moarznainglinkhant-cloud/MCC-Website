@@ -63,6 +63,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M4 7.5 12 13l8-5.5"/></svg>
         <span>Newsletters</span>
       </a>
+      <a class="nav-item" href="#registrations" data-view="registrations">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 3v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-3z"/><path d="M14.5 6v12" stroke-dasharray="2 2.2"/></svg>
+        <span>Registrations</span>
+      </a>
       <a class="nav-item" href="#account" data-view="account">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
         <span>Account</span>
@@ -365,6 +369,30 @@
       </div>
 
       <!-- ===================== ACCOUNT ===================== -->
+      <section class="view wide" id="view-registrations" data-view="registrations" hidden aria-labelledby="reg-h1">
+        <div class="view-head">
+          <h1 id="reg-h1" tabindex="-1">Registrations</h1>
+          <p class="panel-sub">Everyone who registered on the website, per event. At the door, search a name or the 8-letter ticket code and tick them in.</p>
+          <p class="msg" id="reg-msg" role="status" aria-live="polite"></p>
+        </div>
+        <section class="panel" id="reg-panel" aria-label="Registrations">
+          <div class="reg-bar">
+            <label class="reg-pick"><span class="meta">Event</span><select class="opt" id="reg-event" aria-label="Event"></select></label>
+            <input class="opt" id="reg-search" type="search" placeholder="Search name, email or ticket code" aria-label="Search registrations" autocomplete="off">
+            <button type="button" class="btn ghost" id="reg-csv">Download CSV</button>
+          </div>
+          <div class="reg-stats" id="reg-stats"></div>
+          <div class="reg-table-wrap">
+            <table class="reg-table" id="reg-table">
+              <thead><tr><th>Name</th><th>Type</th><th>Email</th><th>Student #</th><th>Year · Program</th><th>Ticket</th><th>Registered</th><th class="c">Checked in</th></tr></thead>
+              <tbody id="reg-rows"></tbody>
+            </table>
+          </div>
+          <p class="meta" id="reg-empty" hidden>No registrations for this event yet.</p>
+        </section>
+        <p class="meta" id="reg-missing" hidden>Registrations aren't set up yet — run <code>supabase/members-2-registration.sql</code> in the Supabase SQL editor.</p>
+      </section>
+
       <section class="view" id="view-account" data-view="account" hidden aria-labelledby="account-h1">
         <div class="view-head">
           <h1 id="account-h1" tabindex="-1">Account</h1>

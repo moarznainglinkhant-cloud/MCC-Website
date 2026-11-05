@@ -1279,6 +1279,121 @@
       newsletters.forEach(function (n) { list.appendChild(newsletterItem(n)); });
     }
 
+    // ----- Registrations (from the website's Register buttons) -----
+    var regs = [], regEvent = "", regInit = false;
+    function regName(r) { return r.members ? r.members.full_name : (r.guest_name || ""); }
+    function regEmail(r) { return r.members ? r.members.email : (r.guest_email || ""); }
+    function regShort(r) { return String(r.ticket_code || "").replace(/-/g, "").slice(0, 8).toUpperCase(); }
+    function regDate(iso) {
+      var d = new Date(iso);
+      return isNaN(d) ? "" : d.toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    }
+
+    function loadRegistrations() {
+      return sb.from("event_registrations")
+        .select("id, event_id, event_name, event_date, user_id, guest_name, guest_email, ticket_code, created_at, checked_in_at, members(full_name, email, student_number, year, program)")
+        .order("created_at", { ascending: true })
+        .then(function (r) {
+          if (r.error) { $("reg-panel").hidden = true; $("reg-missing").hidden = false; return; }
+          $("reg-panel").hidden = false; $("reg-missing").hidden = true;
+          regs = r.data || [];
+          renderRegEvents();
+          renderRegs();
+          stamp("registrations");
+        });
+    }
+
+    function renderRegEvents() {
+      var sel = $("reg-event"), byId = {};
+      regs.forEach(function (r) {
+        var e = byId[r.event_id] || (byId[r.event_id] = { id: r.event_id, name: r.event_name || r.event_id, date: r.event_date || "", n: 0 });
+        e.n++;
+      });
+      var list = Object.keys(byId).map(function (k) { return byId[k]; })
+        .sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); });
+      if (!regEvent || !byId[regEvent]) regEvent = list.length ? list[0].id : "";
+      sel.textContent = "";
+      if (!list.length) { var o0 = el("option", null, "No registrations yet"); o0.value = ""; sel.appendChild(o0); }
+      list.forEach(function (e) {
+        var o = el("option", null, e.name + (e.date ? " · " + e.date : "") + " (" + e.n + ")");
+        o.value = e.id;
+        if (e.id === regEvent) o.selected = true;
+        sel.appendChild(o);
+      });
+    }
+
+    function regFiltered() {
+      var q = ($("reg-search").value || "").trim().toLowerCase().replace(/-/g, "");
+      return regs.filter(function (r) {
+        if (r.event_id !== regEvent) return false;
+        if (!q) return true;
+        return (regName(r) + " " + regEmail(r) + " " + regShort(r) + " " + String(r.ticket_code || "").replace(/-/g, "")).toLowerCase().indexOf(q) > -1;
+      });
+    }
+
+    function renderRegs() {
+      var rows = regFiltered(), body = $("reg-rows");
+      var all = regs.filter(function (r) { return r.event_id === regEvent; });
+      var members = all.filter(function (r) { return r.user_id; }).length;
+      var inCount = all.filter(function (r) { return r.checked_in_at; }).length;
+      var stats = $("reg-stats");
+      stats.textContent = "";
+      [[all.length, "Registered"], [members, "Members"], [all.length - members, "Guests"], [inCount, "Checked in"]].forEach(function (s) {
+        var b = el("div", "reg-stat"); b.appendChild(el("b", null, String(s[0]))); b.appendChild(el("span", null, s[1])); stats.appendChild(b);
+      });
+      body.textContent = "";
+      $("reg-empty").hidden = all.length > 0;
+      rows.forEach(function (r) {
+        var tr = el("tr", r.checked_in_at ? "in" : "");
+        var m = r.members || {};
+        tr.appendChild(el("td", null, regName(r)));
+        var t = el("td"); t.appendChild(el("span", "reg-tag" + (r.user_id ? " member" : ""), r.user_id ? "Member" : "Guest")); tr.appendChild(t);
+        tr.appendChild(el("td", null, regEmail(r)));
+        tr.appendChild(el("td", null, m.student_number || ""));
+        tr.appendChild(el("td", null, [m.year, m.program].filter(Boolean).join(" · ")));
+        tr.appendChild(el("td", "reg-code", regShort(r)));
+        tr.appendChild(el("td", null, regDate(r.created_at)));
+        var c = el("td", "c"), box = el("input", "reg-check");
+        box.type = "checkbox"; box.checked = !!r.checked_in_at;
+        box.setAttribute("aria-label", "Checked in: " + regName(r));
+        box.addEventListener("change", function () {
+          var val = box.checked ? new Date().toISOString() : null;
+          box.disabled = true;
+          sb.from("event_registrations").update({ checked_in_at: val }).eq("id", r.id).then(function (res) {
+            box.disabled = false;
+            if (res.error) { box.checked = !box.checked; setMsg($("reg-msg"), "Couldn't save that check-in. Try again.", "error"); return; }
+            r.checked_in_at = val;
+            renderRegs();
+          });
+        });
+        c.appendChild(box); tr.appendChild(c);
+        body.appendChild(tr);
+      });
+    }
+
+    function regCsv() {
+      var cell = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+      var head = ["name", "type", "email", "student_number", "year", "program", "ticket", "registered_at", "checked_in_at"];
+      var lines = [head.join(",")].concat(regs.filter(function (r) { return r.event_id === regEvent; }).map(function (r) {
+        var m = r.members || {};
+        return [regName(r), r.user_id ? "member" : "guest", regEmail(r), m.student_number, m.year, m.program, regShort(r), r.created_at, r.checked_in_at].map(cell).join(",");
+      }));
+      var blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "registrations-" + (regEvent || "event") + ".csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+    }
+
+    function initRegistrations() {
+      if (regInit) return;
+      regInit = true;
+      $("reg-event").addEventListener("change", function () { regEvent = this.value; renderRegs(); });
+      $("reg-search").addEventListener("input", renderRegs);
+      $("reg-csv").addEventListener("click", regCsv);
+    }
+
     function loadNewsletters() {
       return sb.from("newsletters")
         .select("id, name, status, edit_link, publish_link, updated_at")
@@ -1440,8 +1555,8 @@
     }
 
     // ----- App shell: views, routing, lazy loading -----
-    var VIEWS = ["home", "todo", "meet", "newsletters", "account"];
-    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", account: "Account" };
+    var VIEWS = ["home", "todo", "meet", "newsletters", "registrations", "account"];
+    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", registrations: "Registrations", account: "Account" };
     var locked = false;       // true until a new exec has chosen their own password
     var appStarted = false, viewNow = null, welcomed = false;
     var loadedAt = {};        // view key -> ms timestamp of last data load
@@ -1500,6 +1615,9 @@
         if (window.MCCMeet) window.MCCMeet.init(sb, me.id);     // starts once; retries if a load failed
       } else if (name === "newsletters") {
         if (!fresh("newsletters", 15)) loadNewsletters();
+      } else if (name === "registrations") {
+        initRegistrations();
+        if (!fresh("registrations", 10)) loadRegistrations();
       }
     }
 

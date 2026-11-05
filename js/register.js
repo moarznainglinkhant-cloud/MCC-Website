@@ -1,0 +1,485 @@
+/* MCC event registration: members and guests.
+ *
+ * Loaded on demand by js/site.js the first time someone taps a "Register" button on an event that
+ * has "site" in the link column of the Events sheet. Talks to Supabase (see
+ * supabase/members-2-registration.sql); the database decides what anyone is allowed to do.
+ *
+ *   Signed-in member  → one tap: "Register as <name>" → ticket
+ *   Not signed in     → Guest (name + email) → ticket → "Become a member?" (can say no)
+ *                     → or Member sign-in (email + password) → ticket
+ *                     → or Create account (name, email, password, student number, year, program) → ticket
+ *
+ * The ticket has a QR code (the ticket's unique code) for check-in at the door.
+ * Also handles the "reset your password" link from a forgotten-password email.
+ */
+(function () {
+  "use strict";
+
+  var cfg = window.MCC_EXEC_CONFIG || {};
+  var sb = null;
+  function client(fromRecoveryLink) {
+    if (!sb) {
+      sb = window.supabase.createClient(cfg.url, cfg.key, {
+        auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: !!fromRecoveryLink }
+      });
+    }
+    return sb;
+  }
+
+  // ---------- little helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function $(sel, root) { return (root || document).querySelector(sel); }
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  function niceDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+    if (!m) return iso || "";
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], 12));
+    var wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()];
+    return wd + ", " + MONTHS[+m[2] - 1] + " " + (+m[3]) + ", " + m[1];
+  }
+  function friendlyError(err) {
+    var msg = (err && (err.message || err.error_description)) || "";
+    if (/invalid login credentials/i.test(msg)) return "That email and password didn't match.";
+    if (/already registered|already been registered|user already exists/i.test(msg)) return "There's already an account with that email. Try signing in instead.";
+    if (/password.*(at least|short|weak)/i.test(msg)) return "Please choose a longer password (at least 8 characters).";
+    if (/rate limit|too many/i.test(msg)) return "Lots of people are registering right now. Please try again in a minute.";
+    if (/email not confirmed/i.test(msg)) return "Please confirm your email first (check your inbox), then sign in.";
+    if (/please enter|unknown event/i.test(msg)) return msg;
+    if (/failed to fetch|network/i.test(msg)) return "Couldn't reach the server. Check your connection and try again.";
+    return "Something went wrong. Please try again." + (msg ? " (" + msg + ")" : "");
+  }
+
+  // ---------- styles (kept here so no page needs extra CSS) ----------
+  function injectStyles() {
+    if (document.getElementById("reg-style")) return;
+    var css = [
+      ".reg-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;",
+      "background:rgba(18,22,42,0.48);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .35s ease}",
+      ".reg-overlay.open{opacity:1}",
+      ".reg-sheet{position:relative;width:min(520px,100%);max-height:calc(100dvh - 40px);overflow:auto;background:var(--bg,#F6F1E4);",
+      "border-radius:26px;padding:30px 28px 26px;box-shadow:0 30px 80px rgba(18,22,42,0.35);transform:translateY(24px) scale(.98);",
+      "transition:transform .55s cubic-bezier(.22,1,.36,1);color:var(--ink,#1C2440);font-family:'Work Sans',system-ui,sans-serif}",
+      ".reg-overlay.open .reg-sheet{transform:none}",
+      "@media (max-width:560px){.reg-overlay{align-items:flex-end;padding:0}.reg-sheet{border-radius:26px 26px 0 0;max-height:92dvh;padding:26px 20px calc(22px + env(safe-area-inset-bottom))}}",
+      ".reg-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line,rgba(28,36,64,.16));",
+      "background:transparent;color:inherit;font-size:20px;line-height:1;cursor:pointer}",
+      ".reg-kicker{font-size:.68rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red,#AE3628)}",
+      ".reg-title{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.55rem;line-height:1.15;margin:6px 40px 4px 0}",
+      ".reg-meta{font-size:.86rem;color:var(--ink-soft,#5F5A48);margin-bottom:20px}",
+      ".reg-tabs{display:flex;gap:4px;padding:4px;border-radius:999px;background:var(--bg-sunk,#EEE6D3);margin-bottom:18px}",
+      ".reg-tabs button{flex:1;padding:10px 12px;border-radius:999px;border:0;background:transparent;font:inherit;font-size:.86rem;font-weight:700;color:var(--ink-soft,#5F5A48);cursor:pointer;transition:background .25s,color .25s}",
+      ".reg-tabs button[aria-selected=true]{background:var(--bg-raised,#FDFAF2);color:var(--ink,#1C2440);box-shadow:0 2px 8px rgba(28,36,64,.1)}",
+      ".reg-form{display:grid;gap:12px}",
+      ".reg-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}",
+      "@media (max-width:420px){.reg-row{grid-template-columns:1fr}}",
+      ".reg-field{display:grid;gap:6px;font-size:.78rem;font-weight:700;letter-spacing:.02em;color:var(--ink-soft,#5F5A48)}",
+      ".reg-field input,.reg-field select{font:inherit;font-size:1rem;font-weight:500;color:var(--ink,#1C2440);padding:12px 14px;border-radius:14px;",
+      "border:1px solid var(--line,rgba(28,36,64,.16));background:var(--bg-raised,#FDFAF2);outline:none;transition:border-color .2s,box-shadow .2s;width:100%;box-sizing:border-box}",
+      ".reg-field input:focus,.reg-field select:focus{border-color:var(--navy,#1C2440);box-shadow:0 0 0 3px rgba(28,36,64,.12)}",
+      ".reg-hint{font-weight:500;letter-spacing:0;color:var(--ink-soft,#5F5A48);opacity:.8}",
+      ".reg-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 20px;border-radius:999px;border:0;cursor:pointer;",
+      "background:var(--navy,#1C2440);color:var(--footer-ink,#F6F1E4);font:inherit;font-size:.86rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:transform .2s,opacity .2s}",
+      ".reg-btn:hover{transform:translateY(-1px)}.reg-btn[disabled]{opacity:.55;cursor:default;transform:none}",
+      ".reg-btn.ghost{background:transparent;color:var(--ink,#1C2440);border:1px solid var(--line,rgba(28,36,64,.16))}",
+      ".reg-link{background:none;border:0;padding:0;font:inherit;font-size:.84rem;font-weight:600;color:var(--ink,#1C2440);text-decoration:underline;text-underline-offset:3px;cursor:pointer}",
+      ".reg-small{font-size:.84rem;color:var(--ink-soft,#5F5A48);text-align:center;margin-top:4px}",
+      ".reg-msg{font-size:.86rem;border-radius:12px;padding:10px 12px;display:none}",
+      ".reg-msg.show{display:block}.reg-msg.error{background:rgba(174,54,40,.1);color:#8C2A1F}.reg-msg.info{background:rgba(28,36,64,.07);color:var(--ink,#1C2440)}",
+      ".reg-me{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:var(--bg-raised,#FDFAF2);border:1px solid var(--line,rgba(28,36,64,.16));margin-bottom:16px}",
+      ".reg-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--red,#AE3628);color:#fff;font-weight:700;flex:none}",
+      ".reg-spin{display:block;width:26px;height:26px;margin:30px auto;border-radius:50%;border:3px solid var(--line,rgba(28,36,64,.16));border-top-color:var(--navy,#1C2440);animation:reg-spin .8s linear infinite}",
+      "@keyframes reg-spin{to{transform:rotate(360deg)}}",
+      /* ticket */
+      ".tk{position:relative;display:grid;grid-template-columns:1fr 132px;border-radius:20px;background:var(--navy,#1C2440);color:var(--footer-ink,#F6F1E4);",
+      "overflow:hidden;margin:6px 0 16px;opacity:0;transform:translateY(26px) rotate(-1.5deg);animation:tk-in .9s .1s cubic-bezier(.22,1,.36,1) forwards}",
+      "@keyframes tk-in{to{opacity:1;transform:none}}",
+      ".tk-main{padding:20px 18px 18px 22px;min-width:0}",
+      ".tk-brand{font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--gold,#C08A2E)}",
+      ".tk-event{font-family:'Fraunces',Georgia,serif;font-size:1.25rem;font-weight:600;line-height:1.15;margin:6px 0 14px}",
+      ".tk-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}",
+      ".tk-k{font-size:.56rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(246,241,228,.55)}",
+      ".tk-v{font-size:.84rem;font-weight:600;margin-top:2px;overflow-wrap:anywhere}",
+      ".tk-stub{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:16px 12px;background:var(--bg-raised,#FDFAF2);color:var(--ink,#1C2440)}",
+      ".tk-stub::before{content:'';position:absolute;left:0;top:10px;bottom:10px;border-left:2px dashed rgba(28,36,64,.25)}",
+      ".tk::before,.tk::after{content:'';position:absolute;right:122px;width:20px;height:20px;border-radius:50%;background:var(--bg,#F6F1E4);z-index:2}",
+      ".tk::before{top:-10px}.tk::after{bottom:-10px}",
+      ".tk-qr{width:96px;height:96px}.tk-qr svg{width:100%;height:100%;display:block}",
+      ".tk-code{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;font-weight:700;letter-spacing:.12em}",
+      ".tk-status{display:flex;align-items:center;gap:10px;font-size:.92rem;font-weight:600;margin-bottom:4px}",
+      ".tk-status i{width:26px;height:26px;border-radius:50%;background:var(--green,#4B7A3C);display:grid;place-items:center;color:#fff;font-style:normal;font-size:.9rem;flex:none}",
+      ".tk-cal{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:2px 0 14px;font-size:.82rem;color:var(--ink-soft,#5F5A48)}",
+      ".tk-cal a{padding:8px 14px;border-radius:999px;border:1px solid var(--line,rgba(28,36,64,.16));color:var(--ink,#1C2440);text-decoration:none;font-weight:700;font-size:.78rem}",
+      ".reg-join{margin-top:6px;padding:18px;border-radius:18px;background:var(--bg-raised,#FDFAF2);border:1px solid var(--line,rgba(28,36,64,.16))}",
+      ".reg-join h4{font-family:'Fraunces',Georgia,serif;font-size:1.15rem;font-weight:600;margin:0 0 4px}",
+      ".reg-join p{font-size:.86rem;color:var(--ink-soft,#5F5A48);margin:0 0 14px}",
+      ".reg-join .reg-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}",
+      "@media (max-width:420px){.tk{grid-template-columns:1fr 112px}.tk::before,.tk::after{right:102px}.tk-qr{width:84px;height:84px}}",
+      "@media (prefers-reduced-motion: reduce){.reg-overlay,.reg-sheet,.tk{transition:none!important;animation:none!important;opacity:1!important;transform:none!important}}"
+    ].join("");
+    var st = document.createElement("style");
+    st.id = "reg-style";
+    st.textContent = css;
+    document.head.appendChild(st);
+  }
+
+  // ---------- the window ----------
+  var overlay = null, body = null, current = null, lastFocus = null;
+
+  function openShell() {
+    injectStyles();
+    lastFocus = document.activeElement;
+    overlay = document.createElement("div");
+    overlay.className = "reg-overlay";
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    overlay.setAttribute("aria-labelledby", "reg-title");
+    overlay.innerHTML = '<div class="reg-sheet"><button type="button" class="reg-close" aria-label="Close">&times;</button><div class="reg-body"></div></div>';
+    document.body.appendChild(overlay);
+    body = $(".reg-body", overlay);
+    document.documentElement.style.overflow = "hidden";
+    requestAnimationFrame(function () { overlay.classList.add("open"); });
+    $(".reg-close", overlay).addEventListener("click", close);
+    overlay.addEventListener("mousedown", function (e) { if (e.target === overlay) close(); });
+    document.addEventListener("keydown", onKey);
+  }
+  function onKey(e) { if (e.key === "Escape") close(); }
+  function close() {
+    if (!overlay) return;
+    var o = overlay;
+    overlay = null;
+    document.removeEventListener("keydown", onKey);
+    o.classList.remove("open");
+    document.documentElement.style.overflow = "";
+    setTimeout(function () { o.remove(); }, 380);
+    if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch (e) { /* ignore */ }
+  }
+
+  function header(ev, kicker) {
+    var when = [niceDate(ev.date), ev.time].filter(Boolean).join(" · ");
+    var meta = [when, ev.location].filter(Boolean).join(" · ");
+    return '<span class="reg-kicker">' + esc(kicker || "Register") + '</span>' +
+      '<h2 class="reg-title" id="reg-title">' + esc(ev.name) + '</h2>' +
+      (meta ? '<div class="reg-meta">' + esc(meta) + '</div>' : "");
+  }
+  function show(html, focusSel) {
+    body.innerHTML = html;
+    var f = focusSel ? $(focusSel, body) : $("input, button.reg-btn", body);
+    if (f && window.matchMedia && window.matchMedia("(hover: hover)").matches) setTimeout(function () { f.focus(); }, 60);
+  }
+  function setMsg(text, kind) {
+    var m = $(".reg-msg", body);
+    if (!m) return;
+    m.textContent = text || "";
+    m.className = "reg-msg" + (text ? " show " + (kind || "error") : "");
+  }
+  function busy(btn, on, label) {
+    if (!btn) return;
+    if (on) { btn.dataset.label = btn.textContent; btn.textContent = label || "One moment…"; btn.disabled = true; }
+    else { btn.textContent = btn.dataset.label || btn.textContent; btn.disabled = false; }
+  }
+
+  function loading(ev) { show(header(ev) + '<span class="reg-spin" aria-label="Loading"></span>'); }
+
+  // ---------- data ----------
+  function getMember() {
+    return client().auth.getSession().then(function (r) {
+      var session = r.data && r.data.session;
+      if (!session) return null;
+      return client().from("members").select("id, full_name, email").eq("id", session.user.id).maybeSingle()
+        .then(function (m) { return m.data ? m.data : { notMember: true, email: session.user.email }; });
+    });
+  }
+  function register(ev, guest) {
+    return client().rpc("register_for_event", {
+      p_event_id: ev.id, p_event_name: ev.name || "", p_event_date: /^\d{4}-\d{2}-\d{2}$/.test(ev.date || "") ? ev.date : null,
+      p_guest_name: guest ? guest.name : null, p_guest_email: guest ? guest.email : null
+    }).then(function (r) {
+      if (r.error) throw r.error;
+      var row = Array.isArray(r.data) ? r.data[0] : r.data;
+      if (!row || !row.ticket_code) throw new Error("No ticket came back");
+      return row;
+    });
+  }
+
+  // ---------- views ----------
+  function viewMember(ev, me) {
+    var initials = (me.full_name || "?").trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join("").toUpperCase();
+    show(header(ev) +
+      '<div class="reg-me"><span class="reg-avatar">' + esc(initials) + '</span><div><div style="font-weight:700">' + esc(me.full_name) +
+      '</div><div class="reg-hint" style="font-size:.84rem">' + esc(me.email || "") + '</div></div></div>' +
+      '<div class="reg-msg"></div>' +
+      '<button type="button" class="reg-btn" data-go>Register</button>' +
+      '<p class="reg-small">Not you? <button type="button" class="reg-link" data-out>Sign out</button></p>');
+    $("[data-go]", body).addEventListener("click", function () {
+      var b = this; busy(b, true, "Registering…"); setMsg("");
+      register(ev, null).then(function (t) { viewTicket(ev, t, { member: true }); })
+        .catch(function (e) { busy(b, false); setMsg(friendlyError(e)); });
+    });
+    $("[data-out]", body).addEventListener("click", function () {
+      client().auth.signOut().then(function () { viewChoose(ev, "guest"); });
+    });
+  }
+
+  function viewChoose(ev, tab, note) {
+    tab = tab || "guest";
+    var guest =
+      '<form class="reg-form" data-form="guest" novalidate>' +
+        '<label class="reg-field">Your name<input name="name" autocomplete="name" required maxlength="120"></label>' +
+        '<label class="reg-field">Email<input name="email" type="email" autocomplete="email" required maxlength="254"></label>' +
+        '<div class="reg-msg"></div>' +
+        '<button class="reg-btn" type="submit">Register as a guest</button>' +
+        '<p class="reg-small">No account needed. Members get one-tap registration — <button type="button" class="reg-link" data-signup>create an account</button>.</p>' +
+      '</form>';
+    var member =
+      '<form class="reg-form" data-form="member" novalidate>' +
+        '<label class="reg-field">Email<input name="email" type="email" autocomplete="email" required></label>' +
+        '<label class="reg-field">Password<input name="password" type="password" autocomplete="current-password" required></label>' +
+        '<div class="reg-msg"></div>' +
+        '<button class="reg-btn" type="submit">Sign in &amp; register</button>' +
+        '<p class="reg-small"><button type="button" class="reg-link" data-forgot>Forgot password?</button> · New here? <button type="button" class="reg-link" data-signup>Create an account</button></p>' +
+      '</form>';
+    show(header(ev) +
+      '<div class="reg-tabs" role="tablist">' +
+        '<button type="button" role="tab" data-tab="guest" aria-selected="' + (tab === "guest") + '">Guest</button>' +
+        '<button type="button" role="tab" data-tab="member" aria-selected="' + (tab === "member") + '">Member sign-in</button>' +
+      '</div>' + (tab === "guest" ? guest : member));
+    if (note) setMsg(note, "info");
+    body.querySelectorAll("[data-tab]").forEach(function (b) {
+      b.addEventListener("click", function () { if (b.dataset.tab !== tab) viewChoose(ev, b.dataset.tab); });
+    });
+    body.querySelectorAll("[data-signup]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var f = $("form", body);
+        viewSignup(ev, { name: f.name ? f.name.value : "", email: f.email ? f.email.value : "" }, true);
+      });
+    });
+    var forgot = $("[data-forgot]", body);
+    if (forgot) forgot.addEventListener("click", function () {
+      var email = $("form", body).email.value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { setMsg("Type your email above first, then tap Forgot password."); return; }
+      client().auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname.replace(/[^/]*$/, "") + "index.html" })
+        .then(function (r) {
+          if (r.error) throw r.error;
+          setMsg("If that email has an account, a link to reset your password is on its way.", "info");
+        }).catch(function (e) { setMsg(friendlyError(e)); });
+    });
+
+    var form = $("form", body);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = $("button[type=submit]", form);
+      setMsg("");
+      if (tab === "guest") {
+        var g = { name: form.name.value.trim(), email: form.email.value.trim() };
+        if (!g.name) return setMsg("Please enter your name.");
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(g.email)) return setMsg("Please enter a valid email.");
+        busy(btn, true, "Registering…");
+        register(ev, g).then(function (t) { viewTicket(ev, t, { guest: g }); })
+          .catch(function (err) { busy(btn, false); setMsg(friendlyError(err)); });
+      } else {
+        var email = form.email.value.trim(), password = form.password.value;
+        if (!email || !password) return setMsg("Enter your email and password.");
+        busy(btn, true, "Signing in…");
+        client().auth.signInWithPassword({ email: email, password: password })
+          .then(function (r) {
+            if (r.error) throw r.error;
+            return getMember();
+          })
+          .then(function (me) {
+            if (!me || me.notMember) {
+              busy(btn, false);
+              return viewChoose(ev, "guest", "That account isn't a member account (exec accounts are separate). You can register as a guest instead.");
+            }
+            busy(btn, true, "Registering…");
+            return register(ev, null).then(function (t) { viewTicket(ev, t, { member: true }); });
+          })
+          .catch(function (err) { busy(btn, false); setMsg(friendlyError(err)); });
+      }
+    });
+  }
+
+  // withEvent: also register for this event (the "create an account" path before registering).
+  // Without it, they already have a guest ticket and are just turning it into an account.
+  function viewSignup(ev, prefill, withEvent) {
+    prefill = prefill || {};
+    var years = ["1st year", "2nd year", "3rd year", "4th year", "5th year+", "Graduate", "Alumni", "Other"];
+    show(header(ev, withEvent ? "Create your account" : "Become a member") +
+      '<form class="reg-form" novalidate>' +
+        '<label class="reg-field">Full name<input name="name" autocomplete="name" required maxlength="120" value="' + esc(prefill.name || "") + '"></label>' +
+        '<label class="reg-field">Email<input name="email" type="email" autocomplete="email" required value="' + esc(prefill.email || "") + '"></label>' +
+        '<label class="reg-field">Password <span class="reg-hint">at least 8 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="8"></label>' +
+        '<label class="reg-field">UofT student number <span class="reg-hint">9 or 10 digits</span><input name="student" inputmode="numeric" autocomplete="off" required pattern="[0-9]{9,10}"></label>' +
+        '<div class="reg-row">' +
+          '<label class="reg-field">Year<select name="year" required><option value="">Choose…</option>' +
+            years.map(function (y) { return "<option>" + esc(y) + "</option>"; }).join("") + '</select></label>' +
+          '<label class="reg-field">Program<input name="program" autocomplete="off" maxlength="120" placeholder="e.g. Computer Science"></label>' +
+        '</div>' +
+        '<div class="reg-msg"></div>' +
+        '<button class="reg-btn" type="submit">' + (withEvent ? "Create account &amp; register" : "Create my account") + '</button>' +
+        '<p class="reg-small">Your details are only seen by MCC execs and are never shared.</p>' +
+        (withEvent ? '<p class="reg-small"><button type="button" class="reg-link" data-back>Back</button></p>' : "") +
+      '</form>');
+    var back = $("[data-back]", body);
+    if (back) back.addEventListener("click", function () { viewChoose(ev, "guest"); });
+    var form = $("form", body);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = $("button[type=submit]", form);
+      var d = {
+        name: form.name.value.trim(), email: form.email.value.trim(), password: form.password.value,
+        student: form.student.value.replace(/\D/g, ""), year: form.year.value, program: form.program.value.trim()
+      };
+      setMsg("");
+      if (!d.name) return setMsg("Please enter your name.");
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(d.email)) return setMsg("Please enter a valid email.");
+      if (d.password.length < 8) return setMsg("Please choose a password of at least 8 characters.");
+      if (!/^\d{9,10}$/.test(d.student)) return setMsg("Your UofT student number should be 9 or 10 digits.");
+      if (!d.year) return setMsg("Please choose your year.");
+      busy(btn, true, "Creating your account…");
+
+      // Register first (as a guest with this email), then create the account: the database moves
+      // the registration into the new account, whether or not email confirmation is switched on.
+      var first = withEvent ? register(ev, { name: d.name, email: d.email }) : Promise.resolve(null);
+      first.then(function (ticket) {
+        return client().auth.signUp({
+          email: d.email, password: d.password,
+          options: { data: { account: "member", full_name: d.name, student_number: d.student, year: d.year, program: d.program } }
+        }).then(function (r) {
+          if (r.error) {
+            if (ticket) return viewTicket(ev, ticket, { note: friendlyError(r.error) + " You're registered for this event either way." });
+            throw r.error;
+          }
+          var confirmed = !!(r.data && r.data.session);
+          var note = confirmed ? "Welcome to MCC! Next time, registering is one tap."
+                               : "Welcome to MCC! Check your inbox to confirm your email, then you can sign in.";
+          if (ticket) return viewTicket(ev, ticket, { member: confirmed, note: note });
+          viewWelcome(ev, note);
+        });
+      }).catch(function (err) { busy(btn, false); setMsg(friendlyError(err)); });
+    });
+  }
+
+  function viewWelcome(ev, note) {
+    show(header(ev, "You're a member") +
+      '<div class="tk-status"><i>✓</i><span>' + esc(note) + '</span></div>' +
+      '<p class="reg-small" style="text-align:left">Your ticket for this event is now saved in your account — tap Register on the event any time to see it again.</p>' +
+      '<button type="button" class="reg-btn" data-done style="margin-top:14px">Done</button>');
+    $("[data-done]", body).addEventListener("click", close);
+  }
+
+  function qrSvg(code) {
+    try {
+      var qr = window.qrcode(0, "M");
+      qr.addData("MCC:" + code);
+      qr.make();
+      return qr.createSvgTag({ cellSize: 4, margin: 0, scalable: true });
+    } catch (e) { return ""; }
+  }
+
+  function viewTicket(ev, t, opts) {
+    opts = opts || {};
+    var code = String(t.ticket_code || "");
+    var short = code.replace(/-/g, "").slice(0, 8).toUpperCase();
+    var cal = "";
+    try {
+      if (typeof window.calendarLinks === "function" && /^\d{4}-\d{2}-\d{2}$/.test(ev.date || "")) {
+        var c = window.calendarLinks(ev);
+        cal = '<div class="tk-cal">Add to calendar <a href="' + esc(c.google) + '" target="_blank" rel="noopener">Google</a>' +
+              '<a href="' + esc(c.ics) + '" download="' + esc(c.file) + '">Apple / Outlook</a></div>';
+      }
+    } catch (e) { cal = ""; }
+    var status = t.already ? "You're already registered — here's your ticket." : "You're in! See you there.";
+    var join = opts.guest
+      ? '<div class="reg-join"><h4>Become an MCC member?</h4><p>Members register for events in one tap, and this ticket moves into your account.</p>' +
+        '<div class="reg-actions"><button type="button" class="reg-btn" data-join>Join MCC</button><button type="button" class="reg-btn ghost" data-nojoin>No thanks</button></div></div>'
+      : '<button type="button" class="reg-btn ghost" data-done>Done</button>';
+    show(header(ev, "Your ticket") +
+      '<div class="tk-status"><i>✓</i><span>' + esc(status) + '</span></div>' +
+      (opts.note ? '<p class="reg-small" style="text-align:left;margin:0 0 6px">' + esc(opts.note) + '</p>' : "") +
+      '<div class="tk" aria-label="Ticket for ' + esc(ev.name) + '">' +
+        '<div class="tk-main">' +
+          '<div class="tk-brand">Myanmar Culture Club · UofT</div>' +
+          '<div class="tk-event">' + esc(ev.name) + '</div>' +
+          '<div class="tk-grid">' +
+            '<div><div class="tk-k">Date</div><div class="tk-v">' + esc(niceDate(ev.date)) + '</div></div>' +
+            '<div><div class="tk-k">Time</div><div class="tk-v">' + esc(ev.time || "TBA") + '</div></div>' +
+            '<div style="grid-column:1/-1"><div class="tk-k">Place</div><div class="tk-v">' + esc(ev.location || "TBA") + '</div></div>' +
+            '<div style="grid-column:1/-1"><div class="tk-k">Name</div><div class="tk-v">' + esc(t.holder || (opts.guest && opts.guest.name) || "") + '</div></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="tk-stub"><div class="tk-qr" aria-label="Check-in QR code">' + qrSvg(code) + '</div><div class="tk-code">' + esc(short) + '</div></div>' +
+      '</div>' +
+      cal +
+      '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door — a screenshot works.' +
+        (opts.member ? " It's also saved in your account: tap Register on this event any time to see it again." : "") + '</p>' +
+      join);
+    var done = $("[data-done]", body);
+    if (done) done.addEventListener("click", close);
+    var nj = $("[data-nojoin]", body);
+    if (nj) nj.addEventListener("click", close);
+    var j = $("[data-join]", body);
+    if (j) j.addEventListener("click", function () { viewSignup(ev, opts.guest, false); });
+  }
+
+  // ---------- password reset (from the emailed link) ----------
+  function recover() {
+    openShell();
+    var ev = { name: "Set a new password" };
+    show('<span class="reg-kicker">Your MCC account</span><h2 class="reg-title" id="reg-title">Set a new password</h2>' +
+      '<form class="reg-form" novalidate style="margin-top:14px">' +
+        '<label class="reg-field">New password <span class="reg-hint">at least 8 characters</span><input name="password" type="password" autocomplete="new-password" required minlength="8"></label>' +
+        '<div class="reg-msg"></div>' +
+        '<button class="reg-btn" type="submit">Save password</button>' +
+      '</form>');
+    var form = $("form", body);
+    client(true);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var btn = $("button[type=submit]", form), pw = form.password.value;
+      if (pw.length < 8) return setMsg("Please choose a password of at least 8 characters.");
+      busy(btn, true, "Saving…");
+      client().auth.getSession().then(function (r) {
+        if (!r.data || !r.data.session) throw new Error("This reset link has expired. Request a new one from the Register window.");
+        return client().auth.updateUser({ password: pw });
+      }).then(function (r) {
+        if (r && r.error) throw r.error;
+        if (history.replaceState) history.replaceState(null, "", location.pathname);
+        show('<span class="reg-kicker">Your MCC account</span><h2 class="reg-title" id="reg-title">Password updated</h2>' +
+          '<div class="tk-status" style="margin-top:12px"><i>✓</i><span>You\'re signed in. Registering for events is one tap now.</span></div>' +
+          '<button type="button" class="reg-btn" data-done style="margin-top:16px">Done</button>');
+        $("[data-done]", body).addEventListener("click", close);
+      }).catch(function (err) { busy(btn, false); setMsg(/expired/.test(err.message || "") ? err.message : friendlyError(err)); });
+    });
+    void ev;
+  }
+
+  // ---------- entry point ----------
+  function open(ev) {
+    if (!cfg.url || !cfg.key || !window.supabase) { alertless(ev); return; }
+    current = ev;
+    openShell();
+    loading(ev);
+    getMember().then(function (me) {
+      if (!overlay || current !== ev) return;
+      if (me && !me.notMember) {
+        // Already registered? Go straight to the ticket.
+        return client().from("event_registrations").select("ticket_code").eq("event_id", ev.id).eq("user_id", me.id).maybeSingle()
+          .then(function (r) {
+            if (r.data && r.data.ticket_code) viewTicket(ev, { ticket_code: r.data.ticket_code, already: true, holder: me.full_name }, { member: true });
+            else viewMember(ev, me);
+          });
+      }
+      viewChoose(ev, "guest");
+    }).catch(function () { viewChoose(ev, "guest"); });
+  }
+  function alertless(ev) {
+    openShell();
+    show(header(ev) + '<div class="reg-msg show error">Registration isn\'t available right now. Please try again later.</div>');
+  }
+
+  window.MCCRegister = { open: open, recover: recover };
+})();
