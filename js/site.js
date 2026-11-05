@@ -1518,7 +1518,7 @@ function tlMeasure() {
   TL.top = top;
   const vw = TL.el.clientWidth;
   const w = TL.cards[0].offsetWidth;
-  const gap = Math.round(Math.max(18, Math.min(44, vw * 0.035)));
+  const gap = Math.round(Math.max(TL.ink ? 40 : 18, Math.min(44, vw * 0.035)));   // wider when the ink runs between posters
   TL.track.style.setProperty("--tl-gap", gap + "px");
   const pad = Math.max(0, (vw - w) / 2);
   TL.track.style.paddingLeft = pad + "px";
@@ -1571,7 +1571,7 @@ function tlInkLayout() {
   const ink = TL.ink;
   if (!ink) return;
   const poster = TL.cards[0].querySelector(".tl-poster");
-  const top = poster.offsetTop + poster.offsetHeight + 4, H = 26, y0 = H / 2;
+  const H = 26, y0 = H / 2, top = poster.offsetTop + poster.offsetHeight / 2 - y0;   // through the middle, behind the posters
   const x0 = TL.pad - 14, x1 = TL.pad + (TL.n - 1) * TL.step + TL.w + 8;
   ink.svg.style.top = top + "px";
   ink.svg.setAttribute("width", Math.ceil(TL.track.scrollWidth));
@@ -1594,7 +1594,7 @@ function tlInkLayout() {
 function tlInkDraw(x) {
   const ink = TL.ink;
   if (!ink || ink.x0 == null) return;
-  const head = Math.min(ink.x1, TL.pad + x + TL.w + 6);
+  const head = Math.min(ink.x1, TL.pad + x + TL.w + TL.gap * 0.5);   // tip waits in the gap after the centred poster
   if (ink.lastX !== null && Math.abs(head - ink.lastX) < 0.1) return;
   const moving = ink.lastX !== null;
   ink.lastX = head;
@@ -1652,7 +1652,9 @@ function tlFrame() {
     const scale = 1 - Math.min(ad, 2) * 0.09;
     const rot = Math.max(-16, Math.min(16, -d * 11));
     c.style.transform = `perspective(1400px) rotateY(${rot.toFixed(2)}deg) scale(${scale.toFixed(4)})`;
-    c.style.opacity = (1 - Math.min(ad, 1.6) * 0.34).toFixed(3);
+    const op = (1 - Math.min(ad, 1.6) * 0.34).toFixed(3);
+    // with the ink behind, fade the artwork rather than the card, so the ink doesn't show through
+    if (TL.ink) c.style.setProperty("--tlo", op); else c.style.opacity = op;
   });
 
   const active = Math.max(0, Math.min(TL.cards.length - 1, Math.round(pos)));
