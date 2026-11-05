@@ -1386,7 +1386,10 @@ function snakeFrame(now) {
     // Finale: fly into the wall, slightly staggered so they cascade in.
     const w = SNAKE.wall[i];
     const ei = easeInOut(Math.max(0, Math.min(1, (z - (i / SNAKE.cards.length) * 0.3) / 0.7)));
-    const sF = 1 - rd * 0.035, sc2 = sF + (w.s - sF) * ei;
+    // The poster the line is passing grows a touch, easing up as the line arrives and back as it leaves.
+    const near = free ? 0 : Math.max(0, 1 - Math.abs(L - SNAKE.thr[i]) / (h * 1.6));
+    const on = near * near * (3 - 2 * near);
+    const sF = 1 - rd * 0.035 + on * 0.05, sc2 = sF + (w.s - sF) * ei;
     const dx = (w.tx - w.ox - (w.w - w.w * w.s) / 2) * ei;
     const dy = (w.ty - (w.oy - SNAKE.cam) - (w.h - w.h * w.s) / 2) * ei;
     const tr = ei > 0 ? `${dx.toFixed(1)}px ${dy.toFixed(1)}px` : "", scl = sc2.toFixed(3), op = (1 - rd * 0.3 * (1 - ei)).toFixed(2);
