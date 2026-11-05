@@ -244,7 +244,7 @@
   .bubble-face{
     display:block; width:100%; height:100%; border-radius:50%; overflow:hidden;
     background:var(--bg-sunk);
-    box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px rgba(192,138,46,0.45), 0 10px 24px rgba(28,36,64,0.14);
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px rgba(192,138,46,0.45), 0 10px 24px rgba(28,36,64,0.14);
     transition: box-shadow .25s ease;
   }
   .bubble-face img{ display:block; width:100%; height:100%; object-fit:cover; pointer-events:none; user-select:none; -webkit-user-drag:none; }
@@ -615,13 +615,71 @@
   // w/h (size of the full image), event (optional caption) and alt (describe what's in the photo).
   // Order matters: the first photos sit in the centre of the honeycomb.
   var PHOTOS = [
-    { thumb:"images/gallery/thumbs/welcome-top.webp",      full:"images/welcome_top.jpg",      w:1440, h:960, event:null, alt:"Members gathered on a lawn on campus" },
-    { thumb:"images/gallery/thumbs/welcome-bottom.webp",   full:"images/welcome_bottom.jpg",   w:1000, h:563, event:null, alt:"Members playing on a field on campus" },
-    { thumb:"images/gallery/thumbs/welcome-vertical.webp", full:"images/welcome_vertical.jpg", w:890,  h:733, event:null, alt:"A row of small painted dolls on a sunny windowsill" }
+    { thumb:"images/gallery/thumbs/mcc-p6-01.webp", full:"images/gallery/mcc-gallery-photos/p6-01.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-03.webp", full:"images/gallery/mcc-gallery-photos/p6-03.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-04.webp", full:"images/gallery/mcc-gallery-photos/p6-04.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-05.webp", full:"images/gallery/mcc-gallery-photos/p6-05.jpg", w:1600, h:899, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-07.webp", full:"images/gallery/mcc-gallery-photos/p6-07.jpg", w:1600, h:899, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-09.webp", full:"images/gallery/mcc-gallery-photos/p6-09.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-10.webp", full:"images/gallery/mcc-gallery-photos/p6-10.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-11.webp", full:"images/gallery/mcc-gallery-photos/p6-11.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-14.webp", full:"images/gallery/mcc-gallery-photos/p6-14.jpg", w:1600, h:900, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p6-16.webp", full:"images/gallery/mcc-gallery-photos/p6-16.jpg", w:1600, h:899, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-00.webp", full:"images/gallery/mcc-gallery-photos/p16-00.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-01.webp", full:"images/gallery/mcc-gallery-photos/p16-01.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-02.webp", full:"images/gallery/mcc-gallery-photos/p16-02.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-03.webp", full:"images/gallery/mcc-gallery-photos/p16-03.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-05.webp", full:"images/gallery/mcc-gallery-photos/p16-05.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-06.webp", full:"images/gallery/mcc-gallery-photos/p16-06.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-07.webp", full:"images/gallery/mcc-gallery-photos/p16-07.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-08.webp", full:"images/gallery/mcc-gallery-photos/p16-08.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-10.webp", full:"images/gallery/mcc-gallery-photos/p16-10.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-11.webp", full:"images/gallery/mcc-gallery-photos/p16-11.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-12.webp", full:"images/gallery/mcc-gallery-photos/p16-12.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-13.webp", full:"images/gallery/mcc-gallery-photos/p16-13.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-15.webp", full:"images/gallery/mcc-gallery-photos/p16-15.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-16.webp", full:"images/gallery/mcc-gallery-photos/p16-16.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-18.webp", full:"images/gallery/mcc-gallery-photos/p16-18.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p16-19.webp", full:"images/gallery/mcc-gallery-photos/p16-19.jpg", w:1440, h:953, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p18-06.webp", full:"images/gallery/mcc-gallery-photos/p18-06.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-01.webp", full:"images/gallery/mcc-gallery-photos/p20-01.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-02.webp", full:"images/gallery/mcc-gallery-photos/p20-02.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-03.webp", full:"images/gallery/mcc-gallery-photos/p20-03.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-05.webp", full:"images/gallery/mcc-gallery-photos/p20-05.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-07.webp", full:"images/gallery/mcc-gallery-photos/p20-07.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-08.webp", full:"images/gallery/mcc-gallery-photos/p20-08.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-09.webp", full:"images/gallery/mcc-gallery-photos/p20-09.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-10.webp", full:"images/gallery/mcc-gallery-photos/p20-10.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p20-14.webp", full:"images/gallery/mcc-gallery-photos/p20-14.jpg", w:1212, h:909, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p23-03.webp", full:"images/gallery/mcc-gallery-photos/p23-03.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p24-00.webp", full:"images/gallery/mcc-gallery-photos/p24-00.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-04.webp", full:"images/gallery/mcc-gallery-photos/p25-04.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-06.webp", full:"images/gallery/mcc-gallery-photos/p25-06.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-07.webp", full:"images/gallery/mcc-gallery-photos/p25-07.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-08.webp", full:"images/gallery/mcc-gallery-photos/p25-08.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-09.webp", full:"images/gallery/mcc-gallery-photos/p25-09.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p25-10.webp", full:"images/gallery/mcc-gallery-photos/p25-10.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-00.webp", full:"images/gallery/mcc-gallery-photos/p30-00.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-01.webp", full:"images/gallery/mcc-gallery-photos/p30-01.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-04.webp", full:"images/gallery/mcc-gallery-photos/p30-04.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-05.webp", full:"images/gallery/mcc-gallery-photos/p30-05.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-06.webp", full:"images/gallery/mcc-gallery-photos/p30-06.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p30-09.webp", full:"images/gallery/mcc-gallery-photos/p30-09.jpg", w:1440, h:960, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p32-03.webp", full:"images/gallery/mcc-gallery-photos/p32-03.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p34-00.webp", full:"images/gallery/mcc-gallery-photos/p34-00.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p37-05.webp", full:"images/gallery/mcc-gallery-photos/p37-05.jpg", w:1440, h:1085, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p37-08.webp", full:"images/gallery/mcc-gallery-photos/p37-08.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p41-00.webp", full:"images/gallery/mcc-gallery-photos/p41-00.jpg", w:1280, h:1600, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p44-06.webp", full:"images/gallery/mcc-gallery-photos/p44-06.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p48-00.webp", full:"images/gallery/mcc-gallery-photos/p48-00.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p50-00.webp", full:"images/gallery/mcc-gallery-photos/p50-00.jpg", w:1440, h:961, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p50-04.webp", full:"images/gallery/mcc-gallery-photos/p50-04.jpg", w:1402, h:938, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p51-00.webp", full:"images/gallery/mcc-gallery-photos/p51-00.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
+    { thumb:"images/gallery/thumbs/mcc-p51-06.webp", full:"images/gallery/mcc-gallery-photos/p51-06.jpg", w:1440, h:1080, event:null, alt:"Members at a Myanmar Culture Club event" },
   ];
   // Until there are enough photos, the empty spots in the honeycomb show soft placeholders.
   // Set FILL_EMPTY to false once the gallery has plenty of real photos.
-  var FILL_EMPTY = true;
+  var FILL_EMPTY = false;
   var MIN_SPOTS = 30;          // phones: the honeycomb has at least this many spots
   var PH_TINTS = ["#E9D8B4","#D9B37A","#E2B9A8","#B9C9A6","#A9B7CC","#C8B6D2","#E6CDA9","#D7A9A3","#C9D3B8","#B8C4D6"];
 
@@ -689,7 +747,7 @@
 
   // Hex lattice that covers a W x H area with whole bubbles, rows offset by half a step.
   function lattice(P, W, H){
-    var D = P * 0.88, inset = D / 2 + 10, rowH = P * 0.8660254, pts = [];
+    var D = P * 0.93, inset = D / 2 + 10, rowH = P * 0.8660254, pts = [];
     var rows = Math.max(1, Math.floor((H - 2 * inset) / rowH) + 1);
     var nE = Math.max(1, Math.floor((W - 2 * inset) / P) + 1);
     var y0 = (H - (rows - 1) * rowH) / 2, x0 = (W - (nE - 1) * P) / 2;
@@ -720,7 +778,7 @@
         if (t.length >= want){ P = tryP; pts = t; break; }
       }
       if (!pts){ P = 104; do { H += P * 0.8660254; pts = lattice(P, W, H); } while (pts.length < want); }   // more photos than one screen: grow taller
-      M.D = Math.round(P * 0.88);
+      M.D = Math.round(P * 0.93);
       M.P = P;
       M.w = W; M.h = H;
       M.ox = W / 2; M.oy = H / 2;
@@ -732,7 +790,7 @@
       pos = pts.slice(0, N).map(function(pt){ return { x: pt.x - W / 2, y: pt.y - H / 2 }; });
     } else {
       M.D = 92;
-      M.P = M.D + 12;
+      M.P = M.D + 8;
       stage.style.width = "";
       stage.style.height = "";
       M.w = stage.clientWidth; M.h = stage.clientHeight;
