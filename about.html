@@ -1405,7 +1405,7 @@
     });
     void hub.offsetWidth;
     dots.forEach(function(d){ d.classList.add("bloom"); });
-    // Rings from the crest: gold (its own rim) and the ink red, alternating, slow and staggered.
+    // One ring from the crest, slow, like a drop landing in still water.
     var old = sticky.querySelector(".close-ripples");
     if (old) old.remove();
     var rip = document.createElement("div");
@@ -1414,9 +1414,7 @@
     rip.style.left = hub.style.left;
     rip.style.top = hub.style.top;
     var size = hub.offsetWidth + 16, html = "";
-    for (var k = 0; k < 4; k++){
-      html += '<i style="--s:' + size + 'px;--c:' + (k % 2 ? "rgba(174,54,40,.55)" : "rgba(192,138,46,.75)") + ';--d:' + (k * 0.42).toFixed(2) + 's"></i>';
-    }
+    html = '<i style="--s:' + size + 'px;--c:rgba(192,138,46,.75);--d:0s"></i>';     // a single ring, in the crest's gold
     rip.innerHTML = html;
     sticky.appendChild(rip);
     setTimeout(function(){ if (rip.parentNode) rip.remove(); }, 4600);

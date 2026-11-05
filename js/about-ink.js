@@ -1,9 +1,9 @@
 // About page: the team wheel's progress line — "ink in water".
 //  - A calm, thin line in the site's ink red traces the ring as you scroll. The pen stays at the
 //    focus point and the line trails out behind it as the wheel turns.
-//  - As the line reaches each department's dot, the dot sends out three soft ripples in its own
-//    colour, like a drop landing in still water, and keeps a faint halo. Scroll back past a dot and
-//    its halo fades with the line; come forward again and it ripples again.
+//  - As the line reaches each department's dot, the dot sends out one ripple in its own colour
+//    (the same ring as the dots at the closing moment) and keeps a faint halo. Scroll back past a
+//    dot and its halo fades with the line; come forward again and it ripples again.
 // The wheel's own motion (about.html) is untouched; this only redraws the progress arc. The closing
 // ripples from the crest live in about.html (bloom()).
 (function () {
@@ -38,9 +38,8 @@
       ".dot-ripple circle{opacity:0}" +
       ".dot-ripple .h{scale:.4;transition:opacity .4s ease, scale .4s ease}" +
       ".dot-ripple.on .h{opacity:.2;scale:1;transition:opacity 1.2s ease .2s, scale 1.2s ease .2s}" +
-      ".dot-ripple.on .w{animation:dot-wave 1.8s cubic-bezier(.2,.7,.3,1) both}" +
-      ".dot-ripple.on .w2{animation-delay:.35s}.dot-ripple.on .w3{animation-delay:.7s}" +
-      "@keyframes dot-wave{0%{opacity:.7;scale:.3}100%{opacity:0;scale:2.2}}";
+      ".dot-ripple.on .w{animation:dot-wave 1.6s cubic-bezier(.2,.7,.3,1) both}" +
+      "@keyframes dot-wave{0%{opacity:.8;scale:1}100%{opacity:0;scale:4.2}}";   // matches .wheel-dot.bloom in about.html
     document.head.appendChild(css);
 
     function makeRipple(dot) {
@@ -52,10 +51,9 @@
       var o = x + "px " + y + "px";
       var h = mk("circle", { class: "h", cx: x, cy: y, r: 13, fill: col }, box);
       h.style.transformOrigin = o;
-      ["w", "w w2", "w w3"].forEach(function (c) {
-        var w = mk("circle", { class: c, cx: x, cy: y, r: 11, fill: "none", stroke: col, "stroke-width": 1.2 }, box);
-        w.style.transformOrigin = o;
-      });
+      // one ring, starting at the dot's own size (as it looks when in focus)
+      var w = mk("circle", { class: "w", cx: x, cy: y, r: 10, fill: "none", stroke: col, "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }, box);
+      w.style.transformOrigin = o;
       void box.getBoundingClientRect();
       return box;
     }
