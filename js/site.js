@@ -1727,8 +1727,13 @@ function initGreeting() {
     defs.innerHTML =
       `<linearGradient id="greet-feather" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${F}" y2="0">` +
       `<stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
-      `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${bbAll.x - F - 10}" y="${bbAll.y - 10}" width="${bbAll.width + 2 * F + 20}" height="${bbAll.height + 20}">` +
-      `<rect x="${bbAll.x - F - 10}" y="${bbAll.y - 10}" width="${bbAll.width + 2 * F + 20}" height="${bbAll.height + 20}" fill="url(#greet-feather)"/></mask>`;
+      // "Soak": the ink's leading edge is pushed around by a little noise, so it spreads unevenly
+      // like ink into paper instead of a perfectly straight wipe. It calms to nothing as it finishes.
+      `<filter id="greet-soak" filterUnits="userSpaceOnUse" x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}">` +
+      `<feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7" result="n"/>` +
+      `<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>` +
+      `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}">` +
+      `<rect x="${bbAll.x - F - 40}" y="${bbAll.y - 40}" width="${bbAll.width + 2 * F + 80}" height="${bbAll.height + 80}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>`;
     const ink = make("greet-ink");
     ink.setAttribute("mask", "url(#greet-mask)");
     const pen = make("greet-pen");
@@ -1744,7 +1749,8 @@ function initGreeting() {
       t.style.strokeDasharray = `${len} ${len}`;
       return { el: t, len, x0: b.x, w: b.width };
     });
-    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), sylls, F, x0: bbAll.x, w: bbAll.width });
+    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), soak: defs.querySelector("feDisplacementMap"),
+      noise: defs.querySelector("feTurbulence"), sylls, F, x0: bbAll.x, w: bbAll.width });
     fitBox();
     paint(-1);
     return true;
@@ -1765,6 +1771,9 @@ function initGreeting() {
     const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
     G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
     G.grad.setAttribute("x2", inkX.toFixed(1));
+    // the wobble is strongest while the ink is moving and fades out as it settles
+    const wob = t < 0 ? 0 : 46 * Math.sin(Math.PI * Math.min(1, Math.max(0, q))) ;
+    G.soak.setAttribute("scale", wob.toFixed(1));
     G.sylls.forEach(s => {                            // each outline fades once the ink has covered it
       const covered = Math.max(0, Math.min(1, (inkX - G.F - (s.x0 + s.w * 0.4)) / (s.w * 0.6 + 1)));
       if (t >= 0) s.el.style.opacity = String(Math.min(Number(s.el.style.opacity), 1 - covered));
@@ -1775,6 +1784,7 @@ function initGreeting() {
     reveal();
     if (!GREET.sylls) return;
     cancelAnimationFrame(GREET.raf);
+    GREET.noise.setAttribute("seed", String(1 + Math.floor(Math.random() * 90)));  // a different spread each time
     const t0 = performance.now();
     const frame = now => {
       const t = (now - t0) / 1000;
@@ -1789,6 +1799,11 @@ function initGreeting() {
     try { ok = build(); } catch (e) { ok = false; }
     if (!ok) { reveal(); return; }
     setTimeout(write, 500);
+    // Hover (or tap) to have it written again — once the current write has finished.
+    const again = () => { if (!GREET.raf) write(); };
+    svg.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") again(); });
+    svg.addEventListener("click", again);
+    svg.style.cursor = "pointer";
     let away = false;                               // write it again when it comes back into view
     new IntersectionObserver(entries => {
       const e = entries[0];
