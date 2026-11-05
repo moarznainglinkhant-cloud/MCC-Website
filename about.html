@@ -808,7 +808,7 @@
       <div class="wheel-title" id="wheelTitle">
         <span class="wheel-num" id="wheelNum" aria-hidden="true">01</span>
         <span class="wheel-count"><b id="wheelCount">01</b> / 07</span>
-        <h2 class="wheel-name"><span class="wheel-name-inner" id="wheelName">Leadership</span></h2>
+        <h2 class="wheel-name"><span class="wheel-name-inner" id="wheelName">Administration</span></h2>
         <span class="wheel-bar" id="wheelBar"></span>
         <div class="wheel-pips" id="wheelPips" aria-hidden="true"></div>
       </div>
@@ -902,7 +902,7 @@
 <script>
 (function(){
   var ALL_GROUPS = [
-    { key:"leadership", label:"Leadership",         color:"#C08A2E" },
+    { key:"leadership", label:"Administration",     color:"#C08A2E" },   // key kept so Sheet rows saying "Leadership" still land here
     { key:"finance",     label:"Finance",            color:"#4B7A3C" },
     { key:"media",       label:"Media",              color:"#AE3628" },
     { key:"website",     label:"Website",            color:"#2B4C7E" },
@@ -914,10 +914,10 @@
   // ---------- team roster (Google Sheet "Team" tab) ----------
   // Columns: name, preferred_name, title, department, year, program, linkedin, instagram, fun_fact.
   // Only name, title and department are needed; leave any other cell blank and that detail simply doesn't show.
-  // department must be one of the group names above (Leadership, Finance, Media, Website, Events,
+  // department must be one of the group names above (Administration, Finance, Media, Website, Events,
   // External Relations, Associates). The sheet's own order is the order people appear in.
   // Until TEAM_CSV_URL in js/site.js points at the published tab, this built-in copy is used.
-  var FALLBACK_TEAM_CSV = "name,preferred_name,title,department,year,program,linkedin,instagram,fun_fact\nThant Thiri Oo,Tina,Co-President,Leadership,,,,,\nKaung Min Phyo,Martin,Co-President,Leadership,,,,,\nEaint Htoo Pyae Aung,Lu Lu,Secretary,Leadership,,,,,\nYu Ya Saung Tan Sin,,Treasurer,Finance,,,,,\nMin Thu Ta,Min,Treasurer,Finance,,,,,\nHsu Myat Noe Chan,Noelle,Graphic Designer,Media,,,,,\nThant Thu Raeil Tun,Hauk,Graphic Designer,Media,,,,,\nKing Ben Sen,Ben,Social Media Manager,Media,,,,,\nKhin Kyi Thar Swe,,Social Media Manager,Media,,,,,\nAung Phone Myat,,Freelance Photographer,Media,,,,,\nNaing Lin Khant,Moarz,Website Coordinator,Website,2nd year,Computer Science,,,\nSong Hnin Set,Scarlett,Events Coordinator,Events,,,,,\nSu April Aung,Su,Events Coordinator,Events,,,,,\nEi Than Sin Oo,Hazel,Events Coordinator,Events,,,,,\nEaint Chan Myae,Grace,Events Coordinator,Events,,,,,\nSu Thiri Khit,Su Khit,Events Coordinator,Events,,,,,\nSatt Paing Htoo,Hugo,Events Coordinator,Events,,,,,\nEaint Myint Mo Kyaw,Catherine,External Relations,External Relations,,,,,\nKhaing Su Wai,,Associate,Associates,,,,,\nAlvin Oakga,,Associate,Associates,,,,,\n";
+  var FALLBACK_TEAM_CSV = "name,preferred_name,title,department,year,program,linkedin,instagram,fun_fact\nThant Thiri Oo,Tina,Co-President,Administration,,,,,\nKaung Min Phyo,Martin,Co-President,Administration,,,,,\nEaint Htoo Pyae Aung,Lu Lu,Secretary,Administration,,,,,\nYu Ya Saung Tan Sin,,Treasurer,Finance,,,,,\nMin Thu Ta,Min,Treasurer,Finance,,,,,\nHsu Myat Noe Chan,Noelle,Graphic Designer,Media,,,,,\nThant Thu Raeil Tun,Hauk,Graphic Designer,Media,,,,,\nKing Ben Sen,Ben,Social Media Manager,Media,,,,,\nKhin Kyi Thar Swe,,Social Media Manager,Media,,,,,\nAung Phone Myat,,Freelance Photographer,Media,,,,,\nNaing Lin Khant,Moarz,Website Coordinator,Website,2nd year,Computer Science,,,\nSong Hnin Set,Scarlett,Events Coordinator,Events,,,,,\nSu April Aung,Su,Events Coordinator,Events,,,,,\nEi Than Sin Oo,Hazel,Events Coordinator,Events,,,,,\nEaint Chan Myae,Grace,Events Coordinator,Events,,,,,\nSu Thiri Khit,Su Khit,Events Coordinator,Events,,,,,\nSatt Paing Htoo,Hugo,Events Coordinator,Events,,,,,\nEaint Myint Mo Kyaw,Catherine,External Relations,External Relations,,,,,\nKhaing Su Wai,,Associate,Associates,,,,,\nAlvin Oakga,,Associate,Associates,,,,,\n";
   var TEAM_URL = typeof TEAM_CSV_URL === "string" ? TEAM_CSV_URL : "";
 
   function cell(row, names){
