@@ -905,7 +905,7 @@
     { key:"leadership", label:"Administration",     color:"#C08A2E" },   // key kept so Sheet rows saying "Leadership" still land here
     { key:"finance",     label:"Finance",            color:"#4B7A3C" },
     { key:"media",       label:"Media",              color:"#AE3628" },
-    { key:"website",     label:"Website",            color:"#2B4C7E" },
+    { key:"website",     label:"Tech",               color:"#2B4C7E" },   // key kept so Sheet rows saying "Website" still land here
     { key:"events",      label:"Events",             color:"#B5651D" },
     { key:"external",    label:"External Relations", color:"#6B4C8A" },
     { key:"associates",  label:"Associates",         color:"#5F5A48" }
@@ -914,10 +914,10 @@
   // ---------- team roster (Google Sheet "Team" tab) ----------
   // Columns: name, preferred_name, title, department, year, program, linkedin, instagram, fun_fact.
   // Only name, title and department are needed; leave any other cell blank and that detail simply doesn't show.
-  // department must be one of the group names above (Administration, Finance, Media, Website, Events,
+  // department must be one of the group names above (Administration, Finance, Media, Tech, Events,
   // External Relations, Associates). The sheet's own order is the order people appear in.
   // Until TEAM_CSV_URL in js/site.js points at the published tab, this built-in copy is used.
-  var FALLBACK_TEAM_CSV = "name,preferred_name,title,department,year,program,linkedin,instagram,fun_fact\nThant Thiri Oo,Tina,Co-President,Administration,,,,,\nKaung Min Phyo,Martin,Co-President,Administration,,,,,\nEaint Htoo Pyae Aung,Lu Lu,Secretary,Administration,,,,,\nYu Ya Saung Tan Sin,,Treasurer,Finance,,,,,\nMin Thu Ta,Min,Treasurer,Finance,,,,,\nHsu Myat Noe Chan,Noelle,Graphic Designer,Media,,,,,\nThant Thu Raeil Tun,Hauk,Graphic Designer,Media,,,,,\nKing Ben Sen,Ben,Social Media Manager,Media,,,,,\nKhin Kyi Thar Swe,,Social Media Manager,Media,,,,,\nAung Phone Myat,,Freelance Photographer,Media,,,,,\nNaing Lin Khant,Moarz,Website Coordinator,Website,2nd year,Computer Science,,,\nSong Hnin Set,Scarlett,Events Coordinator,Events,,,,,\nSu April Aung,Su,Events Coordinator,Events,,,,,\nEi Than Sin Oo,Hazel,Events Coordinator,Events,,,,,\nEaint Chan Myae,Grace,Events Coordinator,Events,,,,,\nSu Thiri Khit,Su Khit,Events Coordinator,Events,,,,,\nSatt Paing Htoo,Hugo,Events Coordinator,Events,,,,,\nEaint Myint Mo Kyaw,Catherine,External Relations,External Relations,,,,,\nKhaing Su Wai,,Associate,Associates,,,,,\nAlvin Oakga,,Associate,Associates,,,,,\n";
+  var FALLBACK_TEAM_CSV = "name,preferred_name,title,department,year,program,linkedin,instagram,fun_fact\nThant Thiri Oo,Tina,Co-President,Administration,,,,,\nKaung Min Phyo,Martin,Co-President,Administration,,,,,\nEaint Htoo Pyae Aung,Lu Lu,Secretary,Administration,,,,,\nYu Ya Saung Tan Sin,,Treasurer,Finance,,,,,\nMin Thu Ta,Min,Treasurer,Finance,,,,,\nHsu Myat Noe Chan,Noelle,Graphic Designer,Media,,,,,\nThant Thu Raeil Tun,Hauk,Graphic Designer,Media,,,,,\nKing Ben Sen,Ben,Social Media Manager,Media,,,,,\nKhin Kyi Thar Swe,,Social Media Manager,Media,,,,,\nAung Phone Myat,,Freelance Photographer,Media,,,,,\nNaing Lin Khant,Moarz,Website Coordinator,Tech,2nd year,Computer Science,,,\nSong Hnin Set,Scarlett,Events Coordinator,Events,,,,,\nSu April Aung,Su,Events Coordinator,Events,,,,,\nEi Than Sin Oo,Hazel,Events Coordinator,Events,,,,,\nEaint Chan Myae,Grace,Events Coordinator,Events,,,,,\nSu Thiri Khit,Su Khit,Events Coordinator,Events,,,,,\nSatt Paing Htoo,Hugo,Events Coordinator,Events,,,,,\nEaint Myint Mo Kyaw,Catherine,External Relations,External Relations,,,,,\nKhaing Su Wai,,Associate,Associates,,,,,\nAlvin Oakga,,Associate,Associates,,,,,\n";
   var TEAM_URL = typeof TEAM_CSV_URL === "string" ? TEAM_CSV_URL : "";
 
   function cell(row, names){
