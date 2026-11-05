@@ -89,6 +89,9 @@
       ".reg-btn.ghost{background:transparent;color:var(--ink,#1C2440);border:1px solid var(--line,rgba(28,36,64,.16))}",
       ".reg-link{background:none;border:0;padding:0;font:inherit;font-size:.84rem;font-weight:600;color:var(--ink,#1C2440);text-decoration:underline;text-underline-offset:3px;cursor:pointer}",
       ".reg-small{font-size:.84rem;color:var(--ink-soft,#5F5A48);text-align:center;margin-top:4px}",
+      ".reg-demo{font-size:.86rem;line-height:1.45;padding:12px 14px;margin:-6px 0 18px;border-radius:14px;background:rgba(192,138,46,.14);border:1px solid rgba(192,138,46,.45);color:var(--ink,#1C2440)}",
+      ".reg-demo a{color:inherit;font-weight:700;text-underline-offset:3px}",
+      ".tk-demo{position:absolute;top:12px;right:-34px;transform:rotate(35deg);background:var(--gold,#C08A2E);color:var(--navy,#1C2440);font-size:.56rem;font-weight:800;letter-spacing:.16em;padding:4px 40px;z-index:3}",
       ".reg-msg{font-size:.86rem;border-radius:12px;padding:10px 12px;display:none}",
       ".reg-msg.show{display:block}.reg-msg.error{background:rgba(174,54,40,.1);color:#8C2A1F}.reg-msg.info{background:rgba(28,36,64,.07);color:var(--ink,#1C2440)}",
       ".reg-me{display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:var(--bg-raised,#FDFAF2);border:1px solid var(--line,rgba(28,36,64,.16));margin-bottom:16px}",
@@ -160,12 +163,18 @@
     if (lastFocus && lastFocus.focus) try { lastFocus.focus(); } catch (e) { /* ignore */ }
   }
 
+  // While window.MCC_REG_DEMO is on (set in js/site.js), every step carries this notice.
+  function demoNote() {
+    if (!window.MCC_REG_DEMO) return "";
+    return '<div class="reg-demo"><strong>Demo only — this doesn\'t count.</strong> To actually register, fill out the Google Form ' +
+      'linked in <a href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">@mcc_uoft\'s Instagram bio</a>.</div>';
+  }
   function header(ev, kicker) {
     var when = [niceDate(ev.date), ev.time].filter(Boolean).join(" · ");
     var meta = [when, ev.location].filter(Boolean).join(" · ");
     return '<span class="reg-kicker">' + esc(kicker || "Register") + '</span>' +
       '<h2 class="reg-title" id="reg-title">' + esc(ev.name) + '</h2>' +
-      (meta ? '<div class="reg-meta">' + esc(meta) + '</div>' : "");
+      (meta ? '<div class="reg-meta">' + esc(meta) + '</div>' : "") + demoNote();
   }
   function show(html, focusSel) {
     body.innerHTML = html;
@@ -410,10 +419,11 @@
             '<div style="grid-column:1/-1"><div class="tk-k">Name</div><div class="tk-v">' + esc(t.holder || (opts.guest && opts.guest.name) || "") + '</div></div>' +
           '</div>' +
         '</div>' +
+        (window.MCC_REG_DEMO ? '<span class="tk-demo">DEMO</span>' : '') +
         '<div class="tk-stub"><div class="tk-qr" aria-label="Check-in QR code">' + qrSvg(code) + '</div><div class="tk-code">' + esc(short) + '</div></div>' +
       '</div>' +
       cal +
-      '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>' +
+      (window.MCC_REG_DEMO ? '' : '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>') +
       join);
     var done = $("[data-done]", body);
     if (done) done.addEventListener("click", close);
