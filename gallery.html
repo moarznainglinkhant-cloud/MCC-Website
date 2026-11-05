@@ -232,7 +232,7 @@
   @property --gy{ syntax:'<length>'; inherits:false; initial-value:0px; }
   .hive-glow{
     position:absolute; inset:-140px 0; z-index:-1; pointer-events:none;
-    background: radial-gradient(circle 760px at var(--gx) var(--gy), var(--glow), rgba(255,255,255,0) 72%);
+    background: radial-gradient(circle 640px at var(--gx) var(--gy), var(--glow), rgba(255,255,255,0) 72%);
     /* fade to nothing on every side, so the wash never ends in a visible straight edge */
     -webkit-mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent), linear-gradient(to bottom, transparent, #000 24%, #000 76%, transparent);
             mask-image: linear-gradient(to right, transparent, #000 24%, #000 76%, transparent), linear-gradient(to bottom, transparent, #000 24%, #000 76%, transparent);
@@ -904,7 +904,7 @@
     var gr = glowEl.getBoundingClientRect(), sr = stage.getBoundingClientRect();
     glowEl.style.setProperty("--gx", (sr.left + b.x + M.ox - gr.left).toFixed(0) + "px");
     glowEl.style.setProperty("--gy", (sr.top + b.y + M.oy - gr.top).toFixed(0) + "px");
-    glowEl.style.setProperty("--glow", hexA(b.tint, 0.36));
+    glowEl.style.setProperty("--glow", hexA(b.tint, 0.24));
   }
   function frame(){
     raf = null;
