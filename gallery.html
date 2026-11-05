@@ -238,6 +238,8 @@
   .sdot img{ width:100%; height:100%; object-fit:cover; display:block; }
   .sdot::after{ content:""; position:absolute; inset:0; border-radius:50%; background:var(--c); opacity:0; transition:opacity .55s ease var(--td,0s); }
   .shape-layer.on .sdot::after{ opacity:var(--ta,.6); }
+  .shape-layer.on .sdot{ box-shadow:0 0 0 1px var(--bg), 0 0 0 2px var(--c); }
+  .sdot{ transition: box-shadow .55s ease var(--td,0s); }
   .hive-stage.shaping .bubble{ opacity:0 !important; pointer-events:none !important; }
   .hive-stage.pan.shaping{ -webkit-mask-image:none; mask-image:none; }
   .gallery-hero .eyebrow{ display:inline-block; animation: gal-rise .55s .02s both cubic-bezier(.2,.8,.2,1); }
@@ -1244,78 +1246,79 @@
     else shapeLabel.textContent = on ? "Back to photos" : "Surprise Me";
     shapeBtn.setAttribute("aria-pressed", on ? "true" : "false");
   }
-  function wrapA(a){ while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; }
-  function easeIO(t){ return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; }
   function shapePlan(){
     var d = Math.min(M.h * 0.92, M.w - 24, 720, Math.max(300, window.innerHeight - 130)), dd = d * 0.0514 * 0.96;
     var srcs = bubbles.map(function(b){ var im = b.el.querySelector("img"); return im ? im.getAttribute("src") : null; });
     var good = []; srcs.forEach(function(x, i){ if (x) good.push(i); });
     var dots = LOGO_DOTS.map(function(q){
       var x = q[0] / 1000 * d, y = q[1] / 1000 * d;
-      return { cx: M.ox + x, cy: M.oy + y, c: LOGO_PAL[q[2]], k: q[2], bi: -1, pf: { r: Math.sqrt(x * x + y * y), a: Math.atan2(y, x) }, p0: null };
+      return { cx: M.ox + x, cy: M.oy + y, c: LOGO_PAL[q[2]], k: q[2], bi: -1, pf: { x: x, y: y, r: Math.sqrt(x * x + y * y) }, st: null };
     });
     var pairs = [];
-    good.forEach(function(i){ var b = bubbles[i]; dots.forEach(function(o, j){ var dx = o.cx - (b.x + M.ox), dy = o.cy - (b.y + M.oy); pairs.push([dx * dx + dy * dy, i, j]); }); });
+    good.forEach(function(i){ var b = bubbles[i]; dots.forEach(function(o, j){ var dx = o.pf.x - b.x, dy = o.pf.y - b.y; pairs.push([dx * dx + dy * dy, i, j]); }); });
     pairs.sort(function(a, b){ return a[0] - b[0]; });
-    var usedB = {}, usedD = {};
+    var usedB = {}, usedD = {}, maxSt = 1;
     pairs.forEach(function(p){
       if (usedB[p[1]] || usedD[p[2]]) return; usedB[p[1]] = usedD[p[2]] = 1;
       var b = bubbles[p[1]], o = dots[p[2]]; o.bi = p[1];
-      o.p0 = { r: Math.sqrt(b.x * b.x + b.y * b.y), a: Math.atan2(b.y, b.x), s: b.s * M.D / dd, o: 1, x: b.x, y: b.y };
-      o.dA = wrapA(o.pf.a - o.p0.a);
+      o.st = { x: b.x, y: b.y, s: b.s * M.D / dd, r: Math.sqrt(b.x * b.x + b.y * b.y) };
+      if (o.st.r > maxSt) maxSt = o.st.r;
     });
-    var far = Math.max(M.w, M.h) * 0.62 + d * 0.3, k = 0;
+    var k = 0, maxR = 1;
     dots.forEach(function(o, j){
       var pi = o.bi >= 0 ? o.bi : good[(j * 17 + 5 + k++) % good.length];
       o.src = srcs[pi];
-      if (!o.p0 && MAGNET){   // specks converge from the direction of their own spot, so the pull reads as one coherent inhale
-        var dir = o.pf.a + (Math.random() - 0.5) * 0.55, rr = o.pf.r + d * (0.26 + Math.random() * 0.5);
-        var px = Math.cos(dir) * rr, py = Math.sin(dir) * rr, lx = M.w / 2 - dd, ly = M.h / 2 - dd;
-        o.p0 = { x: Math.max(-lx, Math.min(lx, px)), y: Math.max(-ly, Math.min(ly, py)), s: 0.3 + Math.random() * 0.22, o: 0, r: 0, a: 0 };
-        o.dA = 0;
-      }
-      if (!o.p0){   // no copying: the rest of the circles sweep in from far outside, spiralling into place
-        o.p0 = { r: o.pf.r + far, a: o.pf.a + 2.5, s: 0.7, o: 0 };
-        o.dA = -2.5;
-      }
-      o.an = MAGNET ? Math.min(1, o.pf.r / (d * 0.5)) : (o.pf.a + Math.PI) / (2 * Math.PI);
-      o.pf.x = o.cx - M.ox; o.pf.y = o.cy - M.oy; o.dur = 1300 + Math.random() * 350; o.curl = (Math.random() < 0.5 ? -1 : 1) * (0.07 + Math.random() * 0.09);   // 0..1 around the logo: drives the pinwheel stagger
+      var a = Math.random() * 6.2832, rr = Math.sqrt(Math.random()) * Math.min(26, d * 0.07);   // the seed: one tight, dense knot at the centre
+      o.sd = { x: Math.cos(a) * rr, y: Math.sin(a) * rr, s: 0.5 };
+      o.an = 0; if (o.pf.r > maxR) maxR = o.pf.r;
+      o.curl = (Math.random() < 0.5 ? -1 : 1) * (0.06 + Math.random() * 0.08);
+      o.dur = 1000 + Math.random() * 320;
     });
-    return { d: d, dd: dd, dots: dots };
+    dots.forEach(function(o){ o.an = o.pf.r / maxR; });
+    return { d: d, dd: dd, dots: dots, maxR: maxR, maxSt: maxSt };
   }
   function tf(x, y, s, dd){ return "translate3d(" + (x - dd / 2).toFixed(1) + "px," + (y - dd / 2).toFixed(1) + "px,0) scale(" + s.toFixed(3) + ")"; }
-  var MAGNET = !/[?&]shape=swirl/.test(location.search);
-  function dotKeysMag(o, dd, rev){
-    var n = 44, ks = [], ANT = rev ? 0 : 0.11;
-    var dx = o.pf.x - o.p0.x, dy = o.pf.y - o.p0.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / dist, ny = dx / dist;
+  // Collapse: a path from A to B that accelerates (gravity) and swirls around the centre on the way.
+  function collapseKeys(A, B, sA, sB, dd, swirl, fadeTo){
+    var n = 18, ks = [];
     for (var i = 0; i <= n; i++){
-      var t = i / n, u = rev ? 1 - t : t, v, w, e, sc, x, y;
-      if (!rev && u < ANT){   // anticipation: the photo draws a breath in before it's pulled away
-        v = 0; e = 0; sc = o.p0.s * (1 - 0.07 * Math.sin(Math.PI * u / ANT));
-      } else {
-        v = rev ? u : (u - ANT) / (1 - ANT);
-        w = v < 0.5 ? 2 * v * v : 1 - 2 * (1 - v) * (1 - v);                  // starts slow, accelerates like a magnet taking hold
-        e = rev ? w : 1 - Math.exp(-7 * w) * Math.cos(9 * w);                  // damped spring: overshoots, rings, settles
-        sc = o.p0.s + (1 - o.p0.s) * (1 - Math.pow(1 - v, 3)) + 0.16 * Math.sin(Math.PI * v);   // lifts off the page mid-flight
-      }
-      var arc = Math.sin(Math.PI * Math.min(1, Math.max(0, e))) * dist * o.curl;              // gentle curl instead of a ruler line
-      x = o.p0.x + dx * e + nx * arc; y = o.p0.y + dy * e + ny * arc;
-      var op = o.p0.o + (1 - o.p0.o) * Math.min(1, (rev ? 1 - v : v) * 2.4);
-      if (rev) op = o.p0.o + (1 - o.p0.o) * Math.min(1, u * 2.4);
-      ks.push({ transform: tf(M.ox + x, M.oy + y, sc, dd), opacity: op, offset: t });
+      var u = i / n, e = Math.pow(u, 2.1), th = swirl * Math.sin(Math.PI * e), c = Math.cos(th), sn = Math.sin(th);
+      var x = A.x + (B.x - A.x) * e, y = A.y + (B.y - A.y) * e, rx = x * c - y * sn, ry = x * sn + y * c;
+      ks.push({ transform: tf(M.ox + rx, M.oy + ry, sA + (sB - sA) * e, dd), opacity: fadeTo === undefined ? 1 : 1 - (1 - fadeTo) * Math.max(0, (u - 0.6) / 0.4), offset: u });
     }
     return ks;
   }
-  function dotKeys(o, dd, rev){
-    if (MAGNET) return dotKeysMag(o, dd, rev);
-    var n = 20, ks = [];
+  // Burst: an explosive launch from the seed that rings like a spring and settles into place.
+  function burstKeys(o, dd){
+    var n = 44, ks = [], A = o.sd, B = o.pf, dx = B.x - A.x, dy = B.y - A.y, dist = Math.sqrt(dx * dx + dy * dy) || 1, nx = -dy / dist, ny = dx / dist;
     for (var i = 0; i <= n; i++){
-      var t = i / n, u = rev ? 1 - t : t, e = easeIO(u);
-      var r = o.p0.r + (o.pf.r - o.p0.r) * e, a = o.p0.a + o.dA * e, sc = o.p0.s + (1 - o.p0.s) * e;
-      var op = o.p0.o + (1 - o.p0.o) * Math.min(1, u * 3.5);
-      ks.push({ transform: tf(M.ox + Math.cos(a) * r, M.oy + Math.sin(a) * r, sc, dd), opacity: op, offset: t });
+      var v = i / n, e = 1 - Math.exp(-6.5 * v) * Math.cos(8.5 * v);
+      var arc = Math.sin(Math.PI * Math.min(1, Math.max(0, e))) * dist * o.curl;
+      var sc = A.s + (1 - A.s) * (1 - Math.pow(1 - v, 3)) + 0.14 * Math.sin(Math.PI * Math.min(1, v * 1.15));
+      ks.push({ transform: tf(M.ox + A.x + dx * e + nx * arc, M.oy + A.y + dy * e + ny * arc, sc, dd), opacity: Math.min(1, v * 9), offset: v });
     }
     return ks;
+  }
+  function flare(a){
+    if (!glowEl) return;
+    glowEl.style.setProperty("--glow", hexA("#2e4a9e", a));
+  }
+  function ring(plan, delay, col, big){
+    var r = document.createElement("span"), sz = 120;
+    r.style.cssText = "position:absolute;left:" + (M.ox - sz / 2) + "px;top:" + (M.oy - sz / 2) + "px;width:" + sz + "px;height:" + sz + "px;border-radius:50%;border:" + (big ? 3 : 2) + "px solid " + col + ";pointer-events:none;opacity:0";
+    SHAPE.layer.appendChild(r);
+    var k = (plan.d * 1.05) / sz;
+    var an = r.animate([{ transform: "scale(0.08)", opacity: 0.85 }, { transform: "scale(" + k + ")", opacity: 0 }], { duration: 1050, delay: delay, easing: "cubic-bezier(.15,.7,.2,1)", fill: "backwards" });
+    an.onfinish = function(){ if (r.parentNode) r.parentNode.removeChild(r); };
+  }
+  function shine(plan, delay){
+    var w = document.createElement("span"), d = plan.d;
+    w.style.cssText = "position:absolute;left:" + (M.ox - d / 2) + "px;top:" + (M.oy - d / 2) + "px;width:" + d + "px;height:" + d + "px;border-radius:50%;overflow:hidden;pointer-events:none;mix-blend-mode:soft-light;z-index:4";
+    var b = document.createElement("span");
+    b.style.cssText = "position:absolute;top:-10%;bottom:-10%;left:0;width:38%;background:linear-gradient(100deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.95) 50%,rgba(255,255,255,0) 100%);transform:translateX(-120%) skewX(-12deg)";
+    w.appendChild(b); SHAPE.layer.appendChild(w);
+    var an = b.animate([{ transform: "translateX(-120%) skewX(-12deg)" }, { transform: "translateX(330%) skewX(-12deg)" }], { duration: 1100, delay: delay, easing: "cubic-bezier(.4,0,.2,1)", fill: "backwards" });
+    an.onfinish = function(){ if (w.parentNode) w.parentNode.removeChild(w); };
   }
   function shapeClean(){
     if (SHAPE.layer && SHAPE.layer.parentNode) SHAPE.layer.parentNode.removeChild(SHAPE.layer);
@@ -1332,7 +1335,8 @@
     var els = plan.dots.map(function(o){
       var e = document.createElement("span"); e.className = "sdot";
       e.style.width = e.style.height = dd.toFixed(1) + "px"; e.style.setProperty("--c", o.c);
-      e.style.setProperty("--ta", o.k === 2 ? ".3" : o.k === 0 ? ".66" : ".55");
+      e.style.setProperty("--ta", o.k === 2 ? ".3" : o.k === 0 ? ".6" : ".52");
+      e.style.zIndex = o.bi >= 0 ? 2 : 1;
       e.style.transform = tf(o.cx, o.cy, 1, dd);
       e.innerHTML = '<img src="' + esc(o.src) + '" alt="" decoding="async" draggable="false">';
       layer.appendChild(e);
@@ -1346,50 +1350,63 @@
       glowEl.style.setProperty("--gy", (sr.top + M.oy - gr.top).toFixed(0) + "px");
       glowEl.style.setProperty("--glow", hexA("#2e4a9e", 0.24));
     }
-    // bring the whole logo into view if any of it would be off-screen
     var sr2 = stage.getBoundingClientRect(), cy = sr2.top + M.oy, topEdge = cy - plan.d / 2, botEdge = cy + plan.d / 2;
     if (topEdge < 84 || botEdge > window.innerHeight - 10){
       window.scrollTo({ top: Math.max(0, window.pageYOffset + cy - (84 + (window.innerHeight - 84) / 2)), behavior: reduceMotion ? "auto" : "smooth" });
     }
     if (reduceMotion || !els[0].animate){ layer.classList.add("on"); SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; return; }
-    var done = 0, total = els.length, tEnd = 0, maxR = 1;
-    plan.dots.forEach(function(o){ if (o.pf.r > maxR) maxR = o.pf.r; });
+    var COLL = 720, TB = 1000, done = 0, total = els.length, tEnd = 0;
     els.forEach(function(e, j){
       var o = plan.dots[j];
-      e.style.zIndex = o.bi >= 0 ? 2 : 1;   // real photos stay in front of the specks
-      var dl = o.an * (MAGNET ? 280 : 420) + Math.random() * 60, du = MAGNET ? o.dur : 1500;
-      if (dl + du > tEnd) tEnd = dl + du;
-      e.style.setProperty("--td", (dl + (MAGNET ? 160 : 0)).toFixed(0) + "ms");   // each circle takes its colour as it sets off
-      var a = e.animate(dotKeys(o, dd, false), { duration: du, delay: dl, easing: "linear", fill: "backwards" });
+      if (o.st){   // Act 1 - the honeycomb is drawn into the centre: far photos set off first so they all arrive together
+        var dc = (1 - Math.min(1, o.st.r / plan.maxSt)) * 220;
+        e.animate(collapseKeys(o.st, o.sd, o.st.s, o.sd.s, dd, 1.0), { duration: COLL, delay: dc, easing: "linear", fill: "both" });
+      }
+      // Act 2 - the knot detonates; the logo's shape is drawn outward from the middle by a shockwave
+      var bd = TB + o.an * 300 + Math.random() * 50;
+      e.style.setProperty("--td", bd.toFixed(0) + "ms");   // each circle takes its colour the instant it is released
+      if (bd + o.dur > tEnd) tEnd = bd + o.dur;
+      var a = e.animate(burstKeys(o, dd), { duration: o.dur, delay: bd, easing: "linear", fill: o.st ? "forwards" : "both" });
       a.onfinish = function(){ if (++done === total && SHAPE.layer === layer){ SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; } };
     });
     window.requestAnimationFrame(function(){ window.requestAnimationFrame(function(){ if (SHAPE.layer === layer) layer.classList.add("on"); }); });
-    if (MAGNET) window.setTimeout(function(){   // payoff: one soft breath ripples out from the centre of the finished logo
+    window.setTimeout(function(){ if (SHAPE.layer === layer) flare(0.5); }, TB - 140);
+    window.setTimeout(function(){ if (SHAPE.layer === layer){ flare(0.24); ring(plan, 0, "rgba(185,33,35,.6)", true); ring(plan, 130, "rgba(38,49,97,.55)", false); } }, TB - 20);
+    window.setTimeout(function(){   // Act 3 - a highlight glides across the finished logo and it breathes once
       if (SHAPE.layer !== layer) return;
       els.forEach(function(e, j){
         var o = plan.dots[j], base = tf(o.cx, o.cy, 1, dd);
-        e.animate([{ transform: base }, { transform: tf(o.cx, o.cy, 1.16, dd), offset: 0.4 }, { transform: base }], { duration: 640, delay: (o.pf.r / maxR) * 420, easing: "ease-in-out" });
+        var pr = ((o.pf.x * 0.866 + o.pf.y * 0.5) / plan.d + 0.55) / 1.1;   // position along a diagonal: the glint travels corner to corner through the circles
+        e.animate([{ transform: base }, { transform: tf(o.cx, o.cy, 1.14, dd), offset: 0.4 }, { transform: base }], { duration: 620, delay: 120 + o.an * 380, easing: "ease-in-out" });
+        e.animate([{ filter: "brightness(1) saturate(1)" }, { filter: "brightness(1.75) saturate(1.25)", offset: 0.45 }, { filter: "brightness(1) saturate(1)" }], { duration: 520, delay: 80 + Math.max(0, Math.min(1, pr)) * 900, easing: "ease-in-out" });
       });
-    }, tEnd - 60);
+    }, tEnd - 220);
   }
   function shapeOff(){
     if (!SHAPE.on || SHAPE.busy) return;
     var layer = SHAPE.layer; if (!layer) return shapeClean();
     SHAPE.busy = true; if (shapeBtn) shapeBtn.disabled = true; setShapeLabel(false);
-    var els = Array.prototype.slice.call(layer.children);
+    var els = Array.prototype.slice.call(layer.querySelectorAll(".sdot"));
     if (reduceMotion || !els[0] || !els[0].animate){ shapeClean(); return; }
-    var plan = shapePlan(), dd = plan.dd;
-    stage.classList.remove("shaping");   // real photos sit underneath and fade in as the circles leave
-    var bs = bubbles; bs.forEach(function(b){ b.el.style.transition = "opacity .5s ease .9s"; });
-    var done = 0, total = els.length;
+    var plan = shapePlan(), dd = plan.dd, done = 0, total = els.length, maxEnd = 0;
     layer.classList.remove("on");
     els.forEach(function(e, j){
       var o = plan.dots[j];
-      var dl = (1 - o.an) * 320 + Math.random() * 80;
+      if (!e.classList.contains("sdot")){ return; }
+      e.style.zIndex = o.bi >= 0 ? 2 : 1;
+      var dl = (1 - o.an) * 240 + Math.random() * 40;   // outer circles fall in first, like the logo being drawn back into a point
       e.style.setProperty("--td", dl.toFixed(0) + "ms");
-      var a = e.animate(dotKeys(o, dd, true), { duration: 1300, delay: dl, easing: "linear", fill: "both" });
-      a.onfinish = function(){ if (++done === total){ bs.forEach(function(b){ b.el.style.transition = ""; }); shapeClean(); } };
+      if (dl + 680 > maxEnd) maxEnd = dl + 680;
+      var a = e.animate(collapseKeys(o.pf, o.sd, 1, o.sd.s, dd, -1.0, o.bi >= 0 ? 1 : 0), { duration: 680, delay: dl, easing: "linear", fill: "both" });
+      a.onfinish = function(){
+        if (++done === total){
+          // the seed hands over to the real honeycomb, which blooms back outward exactly as it does on page load
+          ENT.done = false; ENT.start = performance.now() + 30;
+          shapeClean();
+        }
+      };
     });
+    window.setTimeout(function(){ if (SHAPE.layer === layer) flare(0.5); }, Math.max(0, maxEnd - 160));
     kick();
   }
   function shapeKill(){ if (SHAPE.layer){ els_cancel(); shapeClean(); } }
