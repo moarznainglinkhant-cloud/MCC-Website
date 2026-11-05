@@ -1,15 +1,16 @@
 // About page: the team wheel's progress arc in the Events ink.
-//  - The arc is an even, round-ended stroke: red, amber while wet near the pen. The pen sits at
-//    the focus point and the ink trails out behind it as the wheel turns.
-//  - When a department's dot is reached, ink splashes near it in that department's colour: a few
-//    irregular drops, never the same twice (the line and the dots stay clean and even; the
-//    splashes are where the hand shows). They turn with the wheel, and they belong to the stroke:
-//    scroll back past a dot and its splash goes with the ink; come forward again and it returns.
+//  - The arc is an even, round-ended stroke in the Events red. While you scroll, the ink near the
+//    pen (the focus point) glistens amber as if wet, and dries back to red within a second of
+//    stopping. The pen stays put; the ink trails out behind it as the wheel turns.
+//  - When the ink reaches a department's dot, it splashes in that department's colour: an uneven
+//    splat joined to the dot with short pointed spikes and loose droplets, never the same twice (the line
+//    and the dots stay clean and even; the splashes are where the hand shows). Splashes belong to
+//    the stroke: scroll back past a dot and its splash goes; come forward and the same one returns.
 // The wheel's own motion (about.html) is untouched; this only redraws the arc.
 (function () {
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   var NS = "http://www.w3.org/2000/svg";
-  var W = 4.2;                      // stroke width
+  var W = 3;                        // stroke width (the old gold arc was 2.5)
   function mk(tag, attrs, parent) {
     var e = document.createElementNS(NS, tag);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -26,80 +27,112 @@
 
     // ---------- the arc ----------
     var g = mk("g", { fill: "none", "stroke-linecap": "round", "stroke-width": W }, svg);
-    var dry = mk("path", { stroke: "#AE3628" }, g), wets = [];
-    for (var j = 0; j < 5; j++) wets.push(mk("path", { stroke: "#D9742A", "stroke-opacity": 0.2 }, g));
+    var dry = mk("path", { stroke: "#AE3628" }, g);
+    var wetG = mk("g", { opacity: 0 }, g), wets = [];
+    for (var j = 0; j < 5; j++) wets.push(mk("path", { stroke: "#D9742A", "stroke-opacity": 0.22 }, wetG));
     var last = -1, lastR = -1;
 
-    // Arc from the pen (θ = 0) round to θ = a, as a path (split in two so a full circle still draws).
+    // Arc from the pen (θ = 0) round to θ = a (split in two so a full circle still draws).
     function arcPath(cx, cy, r, a) {
       if (a < 0.002) return "";
       a = Math.min(a, Math.PI * 2 - 0.001);
-      var x0 = cx + r, y0 = cy, h = a / 2;
-      var x1 = cx + r * Math.cos(h), y1 = cy + r * Math.sin(h);
-      var x2 = cx + r * Math.cos(a), y2 = cy + r * Math.sin(a);
-      return "M" + x0.toFixed(2) + "," + y0.toFixed(2) + "A" + r + "," + r + " 0 0 1 " + x1.toFixed(2) + "," + y1.toFixed(2) +
-             "A" + r + "," + r + " 0 0 1 " + x2.toFixed(2) + "," + y2.toFixed(2);
+      var h = a / 2;
+      return "M" + (cx + r).toFixed(2) + "," + cy.toFixed(2) +
+        "A" + r + "," + r + " 0 0 1 " + (cx + r * Math.cos(h)).toFixed(2) + "," + (cy + r * Math.sin(h)).toFixed(2) +
+        "A" + r + "," + r + " 0 0 1 " + (cx + r * Math.cos(a)).toFixed(2) + "," + (cy + r * Math.sin(a)).toFixed(2);
     }
     function draw(cx, cy, r, frac) {
       var A = frac * Math.PI * 2;
       dry.setAttribute("d", arcPath(cx, cy, r, A));
-      var drawing = frac > 0.002 && frac < 0.999;
-      for (var k = 0; k < wets.length; k++) {
-        wets[k].setAttribute("d", drawing ? arcPath(cx, cy, r, Math.min(A, 0.85 * (1 - k / wets.length))) : "");
-      }
+      for (var k = 0; k < wets.length; k++) wets[k].setAttribute("d", arcPath(cx, cy, r, Math.min(A, 0.85 * (1 - k / wets.length))));
     }
 
-    // ---------- splashes near each dot, in that department's colour ----------
+    // ---------- splashes ----------
     var css = document.createElement("style");
-    css.textContent = ".ink-splash{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none}" +
-      ".ink-drop{position:absolute;scale:0;opacity:0;transition:scale .28s ease-in, opacity .28s ease-in}" +
-      ".ink-splash.on .ink-drop{scale:1;opacity:var(--o);transition:scale .5s cubic-bezier(.2,1.6,.4,1) var(--d), opacity .15s ease var(--d)}";
+    css.textContent = ".ink-splash{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}" +
+      ".ink-splash>*{scale:0;transition:scale .25s ease-in}" +
+      ".ink-splash.on>*{scale:1;transition:scale .45s cubic-bezier(.2,1.5,.4,1) var(--d)}";
     document.head.appendChild(css);
-    function blobRadius() {           // an uneven, organic outline
-      var v = []; for (var i = 0; i < 8; i++) v.push(Math.round(rand(35, 65)) + "%");
-      return v.slice(0, 4).join(" ") + " / " + v.slice(4).join(" ");
+    // An ink splat thrown from the dot: an uneven blob joined to the dot's edge, a few short
+    // pointed spikes (thick at the root), and loose droplets of different sizes beyond them.
+    function splatPath(cx, cy, r0, spikes) {
+      var pts = [], N = 84, ph = rand(0, 6.28);
+      for (var i = 0; i < N; i++) {
+        var a = (i / N) * Math.PI * 2, R = r0 * (1 + 0.1 * Math.sin(3 * a + ph) + 0.06 * Math.sin(5 * a + ph * 2));
+        spikes.forEach(function (sp) {
+          var d = Math.atan2(Math.sin(a - sp.a), Math.cos(a - sp.a));
+          var t = Math.max(0, 1 - Math.abs(d) / sp.w);
+          R += sp.len * Math.pow(t, 2.2);
+        });
+        pts.push([cx + Math.cos(a) * R, cy + Math.sin(a) * R]);
+      }
+      // smooth closed outline through the midpoints
+      var mid = function (p, q) { return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]; };
+      var m0 = mid(pts[N - 1], pts[0]), d = "M" + m0[0].toFixed(1) + "," + m0[1].toFixed(1);
+      for (var k = 0; k < N; k++) {
+        var p = pts[k], m = mid(p, pts[(k + 1) % N]);
+        d += "Q" + p[0].toFixed(1) + "," + p[1].toFixed(1) + " " + m[0].toFixed(1) + "," + m[1].toFixed(1);
+      }
+      return d + "Z";
     }
-    function drop(box, x, y, w, h, rot, col, op, delay) {
-      var d = document.createElement("i");
-      d.className = "ink-drop";
-      d.style.cssText = "left:" + (x - w / 2).toFixed(1) + "px;top:" + (y - h / 2).toFixed(1) + "px;width:" + w.toFixed(1) + "px;height:" + h.toFixed(1) +
-        "px;background:" + col + ";--o:" + op.toFixed(2) + ";border-radius:" + blobRadius() + ";transform:rotate(" + rot.toFixed(0) + "deg);--d:" + delay + "ms";
-      box.appendChild(d);
-    }
-    // Each dot's splash is made once (random shape), then shown or hidden with the stroke.
     function makeSplash(dot) {
       var m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(dot.style.transform || "");
       if (!m) return null;
-      var box = document.createElement("span");
-      box.className = "ink-splash";
-      wheel.appendChild(box);
       var x = Number(m[1]), y = Number(m[2]), col = dot.style.background || getComputedStyle(dot).backgroundColor;
-      // fling mostly outward from the wheel's centre, with a random lean
-      var out = Math.atan2(y, x) + rand(-0.9, 0.9), n = 3 + Math.floor(Math.random() * 5), t = 0;
-      // one main drop, stretched in the direction it flew
-      var dist = rand(14, 22), s = rand(4, 7.5);
-      drop(box, x + Math.cos(out) * dist, y + Math.sin(out) * dist, s * rand(1.3, 1.9), s, out * 57.3, col, rand(0.75, 0.9), 0);
-      // smaller satellites scattered around it, all different
-      for (var k = 0; k < n; k++) {
-        var a = out + rand(-1.3, 1.3), dd = rand(10, 34), sz = Math.random() < 0.25 ? rand(3, 4.5) : rand(1.2, 2.8);
-        t += Math.round(rand(25, 70));
-        drop(box, x + Math.cos(a) * dd, y + Math.sin(a) * dd, sz * rand(1, 1.5), sz, rand(0, 180), col, rand(0.55, 0.9), t);
+      var box = mk("svg", { class: "ink-splash", "aria-hidden": "true" });
+      wheel.appendChild(box);
+      var origin = x.toFixed(1) + "px " + y.toFixed(1) + "px";
+      function add(el, delay) { el.style.transformOrigin = origin; el.style.setProperty("--d", delay + "ms"); }
+      // thrown outward from the wheel's centre, with a random lean
+      var out = Math.atan2(y, x) + rand(-0.7, 0.7);
+      var cx = x + Math.cos(out) * 6, cy = y + Math.sin(out) * 6, r0 = rand(3.8, 5.2);
+      var spikes = [], n = 3 + Math.floor(Math.random() * 3);
+      for (var k = 0; k < n; k++) spikes.push({ a: out + rand(-1.5, 1.5), len: rand(4, 13), w: rand(0.24, 0.44) });
+      add(mk("path", { d: splatPath(cx, cy, r0, spikes), fill: col }, box), 0);
+      // loose droplets past the longer spikes, all different
+      var delay = 40;
+      spikes.forEach(function (sp) {
+        if (sp.len < 6 || Math.random() < 0.35) return;
+        var dist = r0 + sp.len + rand(3, 9), rr = rand(0.9, 2.3);
+        var px = cx + Math.cos(sp.a) * dist, py = cy + Math.sin(sp.a) * dist;
+        // a droplet stretched along its flight: drawn with plain coordinates (no transform attribute)
+        var st = rr * rand(1.2, 1.8), c = Math.cos(sp.a), sn = Math.sin(sp.a);
+        add(mk("path", { d: "M" + (px - c * st).toFixed(1) + "," + (py - sn * st).toFixed(1) +
+          "A" + st.toFixed(1) + "," + rr.toFixed(1) + " " + (sp.a * 57.3).toFixed(0) + " 1 1 " + (px + c * st).toFixed(1) + "," + (py + sn * st).toFixed(1) +
+          "A" + st.toFixed(1) + "," + rr.toFixed(1) + " " + (sp.a * 57.3).toFixed(0) + " 1 1 " + (px - c * st).toFixed(1) + "," + (py - sn * st).toFixed(1) + "Z", fill: col }, box), delay);
+        delay += Math.round(rand(25, 60));
+      });
+      if (Math.random() < 0.5) {           // the odd tiny speck further out
+        var a2 = out + rand(-1, 1), d2 = rand(20, 30);
+        add(mk("circle", { cx: (cx + Math.cos(a2) * d2).toFixed(1), cy: (cy + Math.sin(a2) * d2).toFixed(1), r: rand(0.7, 1.2).toFixed(1), fill: col }, box), delay);
       }
-      void box.offsetWidth;          // so the first showing animates in
+      void box.getBoundingClientRect();            // so the first showing animates in
       return box;
     }
     var splashes = [];
 
-    function frame() {
+    // ---------- loop ----------
+    var wet = 0, prevFrac = 0, prevT = 0;
+    function frame(now) {
+      var dt = prevT ? Math.min(0.05, (now - prevT) / 1000) : 1 / 60;
+      prevT = now;
       var r = Number(arc.getAttribute("r")), cx = Number(arc.getAttribute("cx")), cy = Number(arc.getAttribute("cy"));
       var circ = 2 * Math.PI * r, off = parseFloat(arc.style.strokeDashoffset);
       var frac = isNaN(off) || !r ? 0 : Math.max(0, Math.min(1, 1 - off / circ));
       g.style.opacity = arc.style.opacity || "1";
       if (r && (Math.abs(frac - last) > 1e-4 || r !== lastR)) { last = frac; lastR = r; draw(cx, cy, r, frac); }
+
+      // wet only while the ink is moving forward; dries within about a second of stopping
+      var moving = frac - prevFrac > 0.00005 && frac < 0.999;
+      prevFrac = frac;
+      wet += ((moving ? 1 : 0) - wet) * (1 - Math.exp(-(moving ? 10 : 2.5) * dt));
+      if (wet < 0.005) wet = 0;
+      wetG.setAttribute("opacity", wet.toFixed(3));
+
       // splashes follow the stroke: dot j has one exactly while the ink has reached it
       var dots = wheel.querySelectorAll(".wheel-dot");
       if (dots.length && r) {
-        var reach = frac * dots.length;              // how many dot-gaps the ink has covered
+        var reach = frac * dots.length;
         for (var i = 0; i < dots.length; i++) {
           var on = i === 0 ? frac > 0.004 : reach >= i - 0.01;
           var sp = splashes[i];
