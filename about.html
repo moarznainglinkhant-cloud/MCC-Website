@@ -261,7 +261,6 @@
   .wheel-dot::before{ content:''; position:absolute; inset:0; border-radius:50%; background:inherit; opacity:0; pointer-events:none; }
   .wheel-dot.bloom::before{ animation: dot-bloom 1.1s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--d, 0s); }
   @keyframes dot-bloom{ 0%{ transform:scale(1); opacity:.75; } 100%{ transform:scale(3.8); opacity:0; } }
-  .wheel-bezel{ position:absolute; left:0; top:0; transform:translate(-50%,-50%); overflow:visible; pointer-events:none; }
   .wheel-progress{ position:absolute; left:0; top:0; z-index:2; overflow:visible; pointer-events:none; }
   .wheel-progress circle{ fill:none; stroke:var(--gold); stroke-width:2.5; stroke-linecap:round; }
   .wheel-hub{
@@ -889,6 +888,7 @@
 </script>
 
 <script src="js/site.js"></script>
+<script src="js/about-ink.js"></script>
 
 <script>
 (function(){
@@ -1070,10 +1070,6 @@
   var innerRing = document.createElement("div"); innerRing.className = "wheel-ring inner";
   wheel.appendChild(outerRing); wheel.appendChild(innerRing);
   var SVGNS = "http://www.w3.org/2000/svg";
-  var bezel = document.createElementNS(SVGNS, "svg");
-  bezel.setAttribute("class", "wheel-bezel");
-  bezel.setAttribute("aria-hidden", "true");
-  wheel.appendChild(bezel);
   glow.innerHTML = "<i></i><i></i><i></i>";
 
   // Odometer reels for the big outlined number.
@@ -1200,20 +1196,6 @@
     outerRing.style.width = outerRing.style.height = (L.R * 2) + "px";
     innerRing.style.width = innerRing.style.height = (L.rInner * 2) + "px";
 
-    // Watch-bezel ticks: 60 marks, a longer gold one every fifth.
-    var rO = L.rInner - (L.mobile ? 14 : 16), minor = L.mobile ? 5 : 8, major = L.mobile ? 9 : 15;
-    var bs = rO * 2 + 6;
-    bezel.setAttribute("width", bs);
-    bezel.setAttribute("height", bs);
-    bezel.setAttribute("viewBox", (-bs / 2) + " " + (-bs / 2) + " " + bs + " " + bs);
-    var ticks = "";
-    for (var t = 0; t < 60; t++){
-      var big = t % 5 === 0, a = t * 6 * Math.PI / 180, len = big ? major : minor;
-      var c = Math.cos(a), sn = Math.sin(a);
-      ticks += '<line x1="' + (c * rO).toFixed(2) + '" y1="' + (sn * rO).toFixed(2) + '" x2="' + (c * (rO - len)).toFixed(2) + '" y2="' + (sn * (rO - len)).toFixed(2) +
-        '" stroke="' + (big ? "#C08A2E" : "rgba(28,36,64,0.22)") + '" stroke-width="' + (big ? 1.8 : 1) + '" stroke-linecap="round"/>';
-    }
-    bezel.innerHTML = ticks;
 
     var s = L.rInner * 2 + 6;
     progSvg.setAttribute("width", s);
