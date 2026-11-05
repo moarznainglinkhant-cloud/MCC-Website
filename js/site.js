@@ -121,6 +121,11 @@ const I18N = {
     snake_count: "{n} events since {y}",
     snake_count_done: "{n} events and counting",
     snake_skip: "Skip",
+    snake_show_all: "Show all",
+    snake_hint: "Scroll to follow the line",
+    snake_wall_hint: "Hover a poster for its name · click to see it up close",
+    snake_open: "Open poster",
+    snake_close: "Close",
     reg_soon: "Website registration for this event isn't open yet — we're still setting it up. Check back soon!",
     bento_eyebrow: "Explore MCC",
     bento_h2: "Everything MCC, at a glance",
@@ -208,6 +213,11 @@ const I18N = {
     snake_count: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
     snake_count_done: "အခမ်းအနား {n} ခု — ဆက်လက်ရှိနေဆဲ",
     snake_skip: "ကျော်ရန်",
+    snake_show_all: "အားလုံးကြည့်ရန်",
+    snake_hint: "မျဉ်းကြောင်းနောက်သို့ လိုက်ရန် အောက်သို့ ဆွဲချပါ",
+    snake_wall_hint: "ပိုစတာပေါ် တင်ကြည့်ပါ · အကြီးကြည့်ရန် နှိပ်ပါ",
+    snake_open: "ပိုစတာ ဖွင့်ရန်",
+    snake_close: "ပိတ်ရန်",
     reg_soon: "ဤပွဲအတွက် ဝက်ဘ်ဆိုက်မှ စာရင်းသွင်းခြင်းကို မဖွင့်ရသေးပါ — ပြင်ဆင်နေဆဲဖြစ်ပါသည်။ မကြာမီ ပြန်လာကြည့်ပါ။",
     bento_eyebrow: "MCC ကို လေ့လာပါ",
     bento_h2: "MCC အကြောင်း အားလုံး တစ်ချက်တည်းဖြင့်",
@@ -895,6 +905,7 @@ function teardownSnake() {
   g.querySelectorAll(".past-card").forEach(c => {
     c.style.gridColumn = ""; c.style.gridRow = ""; c.style.removeProperty("--fill");
     c.classList.remove("lit", "ripple", "done");
+    c.removeAttribute("tabindex"); c.removeAttribute("role"); c.removeAttribute("aria-label");
     const color = c.querySelector(".snake-color"); if (color) color.remove();
   });
   if (SNAKE.dock) { SNAKE.dock.remove(); SNAKE.dock = null; SNAKE.counter = null; }
@@ -961,8 +972,45 @@ function buildSnake() {
   const fin = document.createElement("div");
   fin.className = "snake-finale";
   fin.setAttribute("aria-hidden", "true");
-  fin.innerHTML = escapeHtml(t("snake_count_done")).replace("{n}", `<b>${cards.length}</b>`);
+  fin.innerHTML = `<div>${escapeHtml(t("snake_count_done")).replace("{n}", `<b>${cards.length}</b>`)}</div>` +
+    `<div class="snake-cap">${escapeHtml(t("snake_wall_hint"))}</div>`;
   stage.appendChild(fin);
+
+  // A quiet hint as the section locks in, gone as soon as the line starts moving.
+  const hint = document.createElement("div");
+  hint.className = "snake-hint";
+  hint.setAttribute("aria-hidden", "true");
+  hint.innerHTML = `<span class="snake-hint-mouse"><i></i></span>${escapeHtml(t("snake_hint"))}`;
+  stage.appendChild(hint);
+
+  // Posters open up close (click, or Enter/Space). On the finale wall, hovering names them.
+  cards.forEach(c => {
+    const title = (c.querySelector(".info .title") || {}).textContent || "";
+    c.setAttribute("tabindex", "0");
+    c.setAttribute("role", "button");
+    c.setAttribute("aria-label", t("snake_open") + ": " + title);
+  });
+  if (!g.__snakeWired) {
+    g.__snakeWired = true;
+    g.addEventListener("click", e => {
+      const c = e.target.closest(".past-card");
+      if (c && SNAKE.g === g) openPoster(c);
+    });
+    g.addEventListener("keydown", e => {
+      const c = e.target.closest && e.target.closest(".past-card");
+      if (c && SNAKE.g === g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPoster(c, true); }
+    });
+    g.addEventListener("pointerover", e => {
+      const c = e.target.closest(".past-card");
+      if (!c || SNAKE.g !== g || !SNAKE.cap || !SNAKE.pin.classList.contains("snake-wall")) return;
+      const title = (c.querySelector(".info .title") || {}).textContent || "";
+      const date = (c.querySelector(".info .date") || {}).textContent || "";
+      SNAKE.cap.innerHTML = `<b>${escapeHtml(title)}</b> · ${escapeHtml(date)}`;
+    });
+    g.addEventListener("pointerleave", () => {
+      if (SNAKE.g === g && SNAKE.cap) SNAKE.cap.textContent = t("snake_wall_hint");
+    });
+  }
 
   // Dock: live counter ("11 events since 2022") + Skip.
   const dock = document.createElement("div");
@@ -975,11 +1023,20 @@ function buildSnake() {
   skip.className = "snake-skip";
   skip.textContent = t("snake_skip") + " \u2193";
   skip.addEventListener("click", snakeSkip);
-  dock.append(counter, skip);
+  const all = document.createElement("button");
+  all.type = "button";
+  all.className = "snake-skip snake-all";
+  all.textContent = t("snake_show_all");
+  all.addEventListener("click", snakeShowAll);
+  dock.append(counter, all, skip);
   document.body.appendChild(dock);
 
+  // Seen the whole thing already this visit? Then the line stays drawn and the grid just scrolls.
+  try { if (sessionStorage.getItem(SNAKE_FREE_KEY) === "1") { SNAKE.free = true; SNAKE.finaleDone = true; } } catch (err) {}
+  if (SNAKE.free) cards.forEach(c => { c.dataset.fill = "1"; c.style.setProperty("--fill", "1"); c.classList.add("lit"); });
+
   Object.assign(SNAKE, {
-    g, cards, svg, counter, dock, pin, stage, yearEl, fin, cardYears, year: null, z: 0,
+    g, cards, svg, counter, dock, pin, stage, yearEl, fin, hint, cap: fin.querySelector(".snake-cap"), cardYears, year: null, z: 0, hintDone: !!SNAKE.free,
     since: years[0] || "", litCount: -1,
     guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
     cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
@@ -1061,7 +1118,7 @@ function snakeLayout() {
   // Finale: every poster flies into one wide wall that fits the screen under the title.
   // Pick the column count that makes the posters as big as possible.
   const n = cards.length, cw0 = cards[0].offsetWidth, ch0 = cards[0].offsetHeight;
-  const stageW = SNAKE.stage.clientWidth, topRoom = 104, bottomRoom = 60, mg = 14;
+  const stageW = SNAKE.stage.clientWidth, topRoom = 136, bottomRoom = 60, mg = 14;
   const availW = stageW - 2 * Math.max(24, (stageW - g.offsetWidth) / 2), availH = SNAKE.stageH - topRoom - bottomRoom;
   let best = { cw: 0, cols: n };
   for (let c = 3; c <= n; c++) {
@@ -1078,7 +1135,7 @@ function snakeLayout() {
     tx: x0 + (i % mc) * (cwF + mg) + (Math.floor(i / mc) === mr - 1 ? ((mc * mr - n) * (cwF + mg)) / 2 : 0),
     ty: y0 + Math.floor(i / mc) * (chF + mg), s: cwF / c.offsetWidth
   }));
-  SNAKE.pin.style.height = (SNAKE.stageH + SNAKE.drawS + SNAKE.zoomS) + "px";
+  SNAKE.pin.style.height = (SNAKE.stageH + snakeLead() + SNAKE.zoomS) + "px";
   SNAKE.cur = null;
   SNAKE.cam = null;
   SNAKE.fade = null;
@@ -1134,10 +1191,38 @@ function snakeFinale() {
   snakeCounter(n);
 }
 
-// Where the scroll is inside the pinned section, in px (0 … drawing … zoom-out finale).
+// Once the finale has played (this visit only), the line stays drawn and the pinned stretch before
+// the zoom is just the grid scrolling past, 1:1, instead of the long line-drawing budget.
+const SNAKE_FREE_KEY = "mcc_snake_seen";
+function snakeLead() { return SNAKE.free ? SNAKE.maxShift : SNAKE.drawS; }
+
+// Where the scroll is inside the pinned section, in px (0 … drawing/grid … zoom-out finale).
 function snakeTarget() {
   const r = SNAKE.pin.getBoundingClientRect();
-  return Math.max(0, Math.min(SNAKE.drawS + SNAKE.zoomS, SNAKE.top - r.top));
+  SNAKE.pinTop = r.top;
+  return Math.max(0, Math.min(snakeLead() + SNAKE.zoomS, SNAKE.top - r.top));
+}
+
+// Switch to free mode while sitting on the wall: shorten the pin and move the scroll position by the
+// same amount, so nothing on screen moves.
+function snakeGoFree() {
+  const delta = SNAKE.maxShift - SNAKE.drawS;
+  const y0 = window.scrollY;
+  SNAKE.free = true;
+  SNAKE.hintDone = true;
+  try { sessionStorage.setItem(SNAKE_FREE_KEY, "1"); } catch (err) {}
+  const de = document.documentElement, oa = de.style.overflowAnchor;
+  de.style.overflowAnchor = "none";
+  SNAKE.pin.style.height = (SNAKE.stageH + snakeLead() + SNAKE.zoomS) + "px";
+  window.scrollTo({ top: y0 + delta, behavior: "instant" });
+  de.style.overflowAnchor = oa;
+  SNAKE.cur = null;
+}
+
+function snakeShowAll() {
+  if (!SNAKE.pin) return;
+  const pinTop = SNAKE.pin.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top: pinTop - SNAKE.top + snakeLead() + SNAKE.zoomS * 0.85, behavior: "smooth" });
 }
 
 function snakeSkip() {
@@ -1163,14 +1248,15 @@ function snakeFrame(now) {
   const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 1 / 60;   // first frame after a rest eases too (was an instant jump)
   SNAKE.last = now;
   const target = snakeTarget();
-  if (SNAKE.cur === null) SNAKE.cur = target;
+  const free = !!SNAKE.free;
+  if (SNAKE.cur === null || free) SNAKE.cur = target;          // free mode: the grid follows the page 1:1
   SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-SNAKE_EASE * dt));
   if (Math.abs(target - SNAKE.cur) < 0.1) SNAKE.cur = target;
   const moving = SNAKE.cur !== target;
   if (moving !== SNAKE.moving) { SNAKE.moving = moving; SNAKE.g.classList.toggle("snake-moving", moving); }
   const sc = SNAKE.cur;
-  const L = Math.min(SNAKE.total, sc * SNAKE_RATIO);
-  const z = Math.max(0, Math.min(1, (sc - SNAKE.drawS) / (SNAKE.zoomS * 0.75)));
+  const L = free ? SNAKE.total : Math.min(SNAKE.total, sc * SNAKE_RATIO);
+  const z = Math.max(0, Math.min(1, (sc - snakeLead()) / (SNAKE.zoomS * 0.75)));
   const e = easeInOut(z);
   if ((z >= 0.35) !== (SNAKE.z >= 0.35)) { SNAKE.z = z; snakeKick(); }
   SNAKE.z = z;
@@ -1183,13 +1269,22 @@ function snakeFrame(now) {
 
   // Camera: follows the pen (the grid only moves while the line heads down a row), then in the
   // finale pulls back until the whole grid fits on screen.
-  SNAKE.cam = snakeCamFor(L);
+  SNAKE.cam = free ? Math.min(sc, SNAKE.maxShift) : snakeCamFor(L);
   SNAKE.g.style.transform = `translate3d(0, ${(-SNAKE.cam).toFixed(2)}px, 0)`;
   SNAKE.yearEl.style.opacity = String(1 - e);
   SNAKE.svg.style.opacity = String(1 - Math.min(1, z * 2.5));
   const fade = (70 * (1 - e)).toFixed(1) + "px";
   if (fade !== SNAKE.fade) { SNAKE.fade = fade; SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", fade); }
   SNAKE.fin.style.opacity = String(Math.max(0, Math.min(1, (z - 0.55) / 0.35)));
+  const wall = e >= 0.999 && !moving;
+  if (wall !== SNAKE.wallOn) {
+    SNAKE.wallOn = wall;
+    SNAKE.pin.classList.toggle("snake-wall", wall);
+    if (!wall && SNAKE.cap) SNAKE.cap.textContent = t("snake_wall_hint");
+  }
+  if (!SNAKE.hintDone && sc > 30) SNAKE.hintDone = true;
+  const hintOn = !SNAKE.hintDone && SNAKE.pinTop < window.innerHeight * 0.35;
+  if (hintOn !== SNAKE.hintOn) { SNAKE.hintOn = hintOn; SNAKE.hint.classList.toggle("show", hintOn); }
 
   const focusY = SNAKE.cam - SNAKE.padTop + SNAKE.stageH * 0.5;
   let lit = 0, current = 0;
@@ -1197,14 +1292,14 @@ function snakeFrame(now) {
     // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
     // Colour only ever grows, so posters stay lit if you scroll back up.
     const h = SNAKE.half[i];
-    if (L >= SNAKE.thr[i] - h) current = i;
+    if (free ? SNAKE.rowY[SNAKE.rowOf[i]] <= focusY + SNAKE.pitch * 0.5 : L >= SNAKE.thr[i] - h) current = i;
     const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
     const prev = Number(c.dataset.fill || 0);
     if (f > prev) { c.dataset.fill = f.toFixed(4); c.style.setProperty("--fill", f.toFixed(4)); }
     if (f > 0.01 && !c.classList.contains("lit")) c.classList.add("lit");
     if (Math.max(f, prev) >= 0.999) lit++;
     // Focus: the row the pen is on stays crisp; rows above and below recede a little.
-    const rd = Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - focusY) / SNAKE.pitch);
+    const rd = free ? 0 : Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - focusY) / SNAKE.pitch);
     // Finale: fly into the wall, slightly staggered so they cascade in.
     const w = SNAKE.wall[i];
     const ei = easeInOut(Math.max(0, Math.min(1, (z - (i / SNAKE.cards.length) * 0.3) / 0.7)));
@@ -1224,7 +1319,71 @@ function snakeFrame(now) {
   }
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
+  if (!free && SNAKE.finaleDone && z >= 1) { snakeGoFree(); snakeKick(); return; }
   if (SNAKE.cur !== target) snakeKick(); else SNAKE.last = 0;
+}
+
+// ---------- Poster up close (desktop past-events grid and finale wall) ----------
+// The poster grows out of its card to the middle of the screen; Esc, the close button or a click
+// outside sends it back. The page underneath doesn't scroll while it's open.
+function openPoster(card, viaKey) {
+  if (document.querySelector(".pv")) return;
+  const src = card.querySelector(".photo img:not(.snake-color)");
+  if (!src) return;
+  const title = (card.querySelector(".info .title") || {}).textContent || "";
+  const date = (card.querySelector(".info .date") || {}).textContent || "";
+  const returnFocus = document.activeElement;
+  const ov = document.createElement("div");
+  ov.className = "pv";
+  ov.setAttribute("role", "dialog");
+  ov.setAttribute("aria-modal", "true");
+  ov.setAttribute("aria-label", title);
+  ov.innerHTML = `
+    <div class="pv-back"></div>
+    <figure class="pv-fig">
+      <img class="pv-img" src="${safeUrl(src.currentSrc || src.src)}" alt="${escapeHtml(src.alt || title)}">
+      <figcaption><b>${escapeHtml(title)}</b><span>${escapeHtml(date)}</span></figcaption>
+    </figure>
+    <button type="button" class="pv-close" aria-label="${escapeHtml(t("snake_close"))}">&times;</button>`;
+  document.body.appendChild(ov);
+  const img = ov.querySelector(".pv-img"), back = ov.querySelector(".pv-back"), cap = ov.querySelector("figcaption"), btn = ov.querySelector(".pv-close");
+  const EASE = "cubic-bezier(.2,.8,.2,1)";
+  const fromCard = () => {
+    const a = (card.querySelector(".photo") || card).getBoundingClientRect(), b = img.getBoundingClientRect();
+    if (!a.width || !b.width) return null;
+    return `translate(${a.left + a.width / 2 - (b.left + b.width / 2)}px, ${a.top + a.height / 2 - (b.top + b.height / 2)}px) scale(${a.width / b.width}, ${a.height / b.height})`;
+  };
+  const grow = () => {
+    const from = fromCard();
+    back.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 320, easing: "ease-out", fill: "both" });
+    cap.animate([{ opacity: 0, transform: "translateY(8px)" }, { opacity: 1, transform: "none" }], { duration: 360, delay: 200, easing: EASE, fill: "both" });
+    btn.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, delay: 200, fill: "both" });
+    if (from) img.animate([{ transform: from, borderRadius: "10px" }, { transform: "none", borderRadius: "14px" }], { duration: 460, easing: EASE });
+  };
+  if (img.complete && img.naturalWidth) grow(); else { img.style.opacity = "0"; img.addEventListener("load", () => { img.style.opacity = ""; grow(); }, { once: true }); }
+  let closing = false;
+  function close() {
+    if (closing) return;
+    closing = true;
+    document.removeEventListener("keydown", onKey, true);
+    const to = fromCard();
+    back.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 300, easing: "ease-in", fill: "both" });
+    cap.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "both" });
+    btn.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 160, fill: "both" });
+    const anim = to ? img.animate([{ transform: "none" }, { transform: to, borderRadius: "10px" }], { duration: 380, easing: EASE, fill: "both" })
+                    : img.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, fill: "both" });
+    anim.onfinish = () => { ov.remove(); if (viaKey && returnFocus && returnFocus.focus) returnFocus.focus({ preventScroll: true }); };
+  }
+  function onKey(e) {
+    if (e.key === "Escape") { e.preventDefault(); close(); }
+    else if (e.key === "Tab") { e.preventDefault(); btn.focus(); }
+    else if ([" ", "PageDown", "PageUp", "ArrowDown", "ArrowUp", "Home", "End"].includes(e.key) && e.target !== btn) e.preventDefault();
+  }
+  document.addEventListener("keydown", onKey, true);
+  ov.addEventListener("click", e => { if (e.target !== img) close(); });
+  ov.addEventListener("wheel", e => e.preventDefault(), { passive: false });
+  ov.addEventListener("touchmove", e => e.preventDefault(), { passive: false });
+  btn.focus({ preventScroll: true });
 }
 
 // ---------- "Since 2022" timeline (events page) ----------
