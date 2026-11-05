@@ -222,15 +222,22 @@
   }
   .gallery-hero .wrap{ position:relative; z-index:1; }
   .shape-btn{
-    display:inline-flex; align-items:center; gap:9px; margin-top:16px; padding:9px 16px;
+    position:relative; isolation:isolate; display:inline-flex; align-items:center; gap:9px; margin-top:16px; padding:9px 16px;
     font:600 .9rem/1 inherit; font-family:inherit; color:var(--navy,#1C2440); background:var(--bg-raised,#FDFAF2);
     border:1px solid rgba(28,36,64,.18); border-radius:999px; cursor:pointer; -webkit-tap-highlight-color:transparent;
-    box-shadow:0 2px 10px rgba(28,36,64,.08); transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    box-shadow:0 2px 10px rgba(28,36,64,.08); transition:transform .2s ease, box-shadow .2s ease, border-color .35s ease, color .3s ease;
     animation: gal-rise .65s .16s both cubic-bezier(.2,.8,.2,1);
   }
   .shape-btn:hover{ transform:translateY(-1px); border-color:rgba(174,54,40,.5); box-shadow:0 6px 16px rgba(28,36,64,.12); }
   .shape-btn:focus-visible{ outline:2px solid var(--red,#AE3628); outline-offset:3px; }
-  .shape-btn[disabled]{ opacity:.6; cursor:default; transform:none; }
+  .shape-btn[disabled]{ cursor:progress; transform:none; }
+  /* Wet-ink fill: an amber wet edge leads, navy ink follows from where you pressed (same ink as the homepage greeting). */
+  .shape-btn #shapeLabel{ position:relative; z-index:1; }
+  .shape-ink{ position:absolute; inset:-8px; z-index:0; pointer-events:none; filter:url(#shapeInkEdge); clip-path:inset(8px round 999px); }
+  .shape-ink i{ position:absolute; left:0; top:0; border-radius:50%; transform:scale(0); will-change:transform; }
+  .shape-ink .wet{ background:radial-gradient(circle closest-side, #D9742A 78%, rgba(217,116,42,0) 100%); }
+  .shape-ink .body{ background:radial-gradient(circle closest-side, #1C2440 86%, rgba(28,36,64,0) 100%); }
+  .shape-btn.inked{ color:var(--bg-raised,#FDFAF2); border-color:#1C2440; transition-delay:0s, 0s, .12s, .16s; }
   @media (min-width:720px){ .shape-btn{ position:absolute; right:0; bottom:6px; margin-top:0; } }
   .shape-canvas{ position:fixed; left:0; top:0; width:100%; height:100%; pointer-events:none; z-index:0; }
   .hive-stage.shaping .bubble{ opacity:0 !important; pointer-events:none !important; }
@@ -551,7 +558,7 @@
     <div class="wrap">
       <span class="eyebrow" data-i18n="gallery_eyebrow">Gallery</span>
       <h1 data-i18n="gallery_h1">Moments from our events</h1>
-      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span id="shapeLabel" data-i18n="gallery_shape_on">Surprise Me</span></button>
+      <button type="button" class="shape-btn" id="shapeBtn" aria-pressed="false"><span class="shape-ink" aria-hidden="true"><i class="wet"></i><i class="body"></i></span><span id="shapeLabel" data-i18n="gallery_shape_on">Surprise Me</span></button>
     </div>
   </section>
 
@@ -1428,7 +1435,46 @@
   }
   function shRun(dir){ SH.dir = dir; SH.last = 0; if (SH.raf) window.cancelAnimationFrame(SH.raf); SH.raf = window.requestAnimationFrame(shTick); }   // always (re)start the clock, even if a hover or scroll redraw was queued
   function shapeReady(){ SHAPE.busy = false; if (shapeBtn) shapeBtn.disabled = false; }
+  // ---------- wet-ink fill on the button ----------
+  var INK = { x: 0, y: 0, on: false, anims: [], soak: null, raf: null };
+  (function(){
+    if (!shapeBtn) return;
+    var ns = "http://www.w3.org/2000/svg", svg = document.createElementNS(ns, "svg");
+    svg.setAttribute("width", "0"); svg.setAttribute("height", "0"); svg.setAttribute("aria-hidden", "true"); svg.style.position = "absolute";
+    svg.innerHTML = '<filter id="shapeInkEdge" x="-20%" y="-40%" width="140%" height="180%"><feTurbulence type="fractalNoise" baseFrequency="0.09" numOctaves="2" seed="4" result="n"/>' +
+      '<feDisplacementMap in="SourceGraphic" in2="n" scale="3" xChannelSelector="R" yChannelSelector="G"/></filter>';
+    document.body.appendChild(svg); INK.soak = svg.querySelector("feDisplacementMap");
+  })();
+  function shInk(on, instant){
+    if (!shapeBtn || INK.on === on) return;
+    INK.on = on;
+    var ink = shapeBtn.querySelector(".shape-ink"); if (!ink) return;
+    var wet = ink.querySelector(".wet"), body = ink.querySelector(".body");
+    var w = shapeBtn.offsetWidth, h = shapeBtn.offsetHeight, x = INK.x + 8, y = INK.y + 8;   // +8: the ink layer reaches 8px past the button
+    var R = 2 * Math.max(Math.hypot(INK.x, INK.y), Math.hypot(w - INK.x, INK.y), Math.hypot(INK.x, h - INK.y), Math.hypot(w - INK.x, h - INK.y)) + 30;
+    [wet, body].forEach(function(e){ e.style.width = e.style.height = R + "px"; e.style.left = (x - R / 2) + "px"; e.style.top = (y - R / 2) + "px"; });
+    INK.anims.forEach(function(a){ a.cancel(); }); INK.anims = [];
+    shapeBtn.classList.toggle("inked", on);
+    if (instant || reduceMotion || !body.animate){ body.style.transform = wet.style.transform = on ? "scale(1)" : "scale(0)"; wet.style.opacity = "1"; return; }
+    var from = on ? 0 : 1, to = on ? 1 : 0;
+    // filling: the wet edge leads and the ink follows; draining: the ink pulls back first and leaves a wet trail that dries
+    INK.anims.push(wet.animate([{ transform: "scale(" + from + ")", opacity: 1 }, { transform: "scale(" + to + ")", opacity: on ? 1 : 0.2 }],
+      { duration: on ? 520 : 560, delay: on ? 0 : 90, easing: on ? "cubic-bezier(.25,.7,.3,1)" : "cubic-bezier(.5,0,.75,.4)", fill: "forwards" }));
+    INK.anims.push(body.animate([{ transform: "scale(" + from + ")" }, { transform: "scale(" + to + ")" }],
+      { duration: on ? 640 : 480, delay: on ? 110 : 0, easing: on ? "cubic-bezier(.3,.6,.25,1)" : "cubic-bezier(.55,0,.8,.45)", fill: "forwards" }));
+    // the edge "soaks": its wobble is strongest mid-spread and settles as the ink stops
+    if (INK.soak){
+      var t0 = performance.now(), D = on ? 750 : 650;
+      if (INK.raf) window.cancelAnimationFrame(INK.raf);
+      (function soak(now){
+        var u = Math.min(1, (now - t0) / D);
+        INK.soak.setAttribute("scale", (3 + 9 * Math.sin(Math.PI * u)).toFixed(2));
+        INK.raf = u < 1 ? window.requestAnimationFrame(soak) : null;
+      })(t0);
+    }
+  }
   function shapeClean(){
+    shInk(false, !SHAPE.on || !INK.on ? false : true);
     SH.dir = 0; if (SH.raf){ window.cancelAnimationFrame(SH.raf); SH.raf = null; }
     if (SH.cv){ SH.ctx.setTransform(1, 0, 0, 1, 0, 0); SH.ctx.clearRect(0, 0, SH.cv.width, SH.cv.height); SH.cv.hidden = true; }
     SH.plan = null; SHAPE.on = false; SHAPE.busy = false;
@@ -1443,19 +1489,22 @@
     shCanvas();
     var P = shapePlan(); SH.plan = P; SH.order = P.parts.slice(); SH.t = 0; shSprites(); SH.hov.a = SH.hov.ta = 0;
     pointer.inside = false; pointer.tact = 0; TOUR.on = false;
-    SHAPE.on = true; stage.classList.add("shaping"); setShapeLabel(true);
+    SHAPE.on = true; stage.classList.add("shaping"); setShapeLabel(true); shInk(true);
     if (glowEl){ window.clearTimeout(SH.gt); glowEl.style.transition = "opacity .6s ease"; glowEl.style.opacity = "0"; }   // fade the mood glow with opacity only (cheap), not by repainting its colour
     SH.cv.hidden = false;
     var sr = stage.getBoundingClientRect(), cy = sr.top + M.oy;
     if (cy - P.d / 2 < 84 || cy + P.d / 2 > window.innerHeight - 10){
-      window.scrollTo({ top: Math.max(0, window.pageYOffset + cy - (84 + (window.innerHeight - 84) / 2)), behavior: reduceMotion ? "auto" : "smooth" });
+      var goTo = Math.max(0, window.pageYOffset + cy - (84 + (window.innerHeight - 84) / 2));
+      // let the ink fill the button first, then bring the logo into view (the flock is only just lifting off by then)
+      if (reduceMotion) window.scrollTo(0, goTo);
+      else window.setTimeout(function(){ if (SHAPE.on) window.scrollTo({ top: goTo, behavior: "smooth" }); }, 700);
     }
     if (reduceMotion){ SH.t = P.Tend; shDraw(); shapeReady(); return; }
     shDraw(); shRun(1);
   }
   function shapeOff(){
     if (!SHAPE.on || SHAPE.busy) return;
-    SHAPE.busy = true; if (shapeBtn) shapeBtn.disabled = true; setShapeLabel(false);
+    SHAPE.busy = true; if (shapeBtn) shapeBtn.disabled = true; setShapeLabel(false); shInk(false);
     if (reduceMotion || !SH.plan){ shapeClean(); return; }
     SH.t = Math.min(SH.t, SH.plan.Tmain); shRun(-1);   // the same flight played backwards: the flock returns every photo to its honeycomb spot
   }
@@ -1478,7 +1527,12 @@
   // the canvas is fixed to the screen, so redraw the logo when the page scrolls under it
   window.addEventListener("scroll", function(){ if (SHAPE.on && !SH.raf && SH.plan) SH.raf = window.requestAnimationFrame(function(){ SH.raf = null; if (SH.dir) shRun(SH.dir); else shDraw(); }); }, { passive: true });
   if (shapeBtn){
-    shapeBtn.addEventListener("click", function(){ if (SHAPE.on) shapeOff(); else shapeOn(); });
+    shapeBtn.addEventListener("click", function(ev){
+      // remember where it was pressed so the ink spreads from that spot (keyboard: the middle)
+      var br = shapeBtn.getBoundingClientRect();
+      INK.x = ev.clientX || ev.clientY ? ev.clientX - br.left : br.width / 2; INK.y = ev.clientX || ev.clientY ? ev.clientY - br.top : br.height / 2;
+      if (SHAPE.on) shapeOff(); else shapeOn();
+    });
     ["pointerenter", "focus", "touchstart"].forEach(function(ev){ shapeBtn.addEventListener(ev, shWarm, { passive: true }); });
   }
   window.setTimeout(shWarm, 1800);
