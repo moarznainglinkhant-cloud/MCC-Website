@@ -365,6 +365,11 @@
             mask-image:linear-gradient(to left, #000 calc(var(--fill, 0) * 140% - 40%), transparent calc(var(--fill, 0) * 140%));
   }
   .snake .past-card .info{ opacity:0.45; transition:opacity 1.2s ease; }
+  /* While the grid is gliding, posters sliding under the cursor don't each start a hover lift/shadow
+     (that repainting is what made the motion stutter). Hover comes back the moment it settles. */
+  .snake.snake-moving .past-card{ pointer-events:none; }
+  .snake .past-card{ will-change:transform, opacity; }
+  .snake-svg{ will-change:transform; }
   .snake .past-card.lit .info{ opacity:1; }
 
   /* finale: a soft glow passes back through the grid */

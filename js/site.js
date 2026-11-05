@@ -898,7 +898,8 @@ function teardownSnake() {
     const color = c.querySelector(".snake-color"); if (color) color.remove();
   });
   if (SNAKE.dock) { SNAKE.dock.remove(); SNAKE.dock = null; SNAKE.counter = null; }
-  g.querySelectorAll(".past-card").forEach(c => { c.style.scale = ""; c.style.opacity = ""; c.style.translate = ""; });
+  g.classList.remove("snake-moving");
+  g.querySelectorAll(".past-card").forEach(c => { c.style.scale = ""; c.style.opacity = ""; c.style.translate = ""; c._tr = c._sc = c._op = undefined; });
   SNAKE.g = null;
 }
 
@@ -1016,7 +1017,7 @@ function snakeLayout() {
   const xL = -G, xR = W + G;
   const cx = c => c.offsetLeft + c.offsetWidth / 2;
   const pitch = ys.length > 1 ? ys[1] - ys[0] : 400;
-  const span = pitch * 0.42;
+  const span = pitch * 0.3;     // camera drifts this far either side of a row's centre while the line crosses it
 
   let d = `M ${xL} ${ys[0]}`, L = 0;
   const thr = new Map(), keys = [];
@@ -1080,15 +1081,33 @@ function snakeLayout() {
   SNAKE.pin.style.height = (SNAKE.stageH + SNAKE.drawS + SNAKE.zoomS) + "px";
   SNAKE.cur = null;
   SNAKE.cam = null;
+  SNAKE.fade = null;
+  SNAKE.moving = false;
 }
 
 // 1px of scrolling draws SNAKE_RATIO px of line. Lower = slower.
 const SNAKE_RATIO = 1.5;
-// Easing: the line follows your scroll with a short, soft lag (smooths out mouse-wheel steps),
-// and the camera follows the line with a slightly longer one, so the grid never starts or stops
-// moving abruptly when the line turns a corner.
-const SNAKE_EASE = 8;
-const SNAKE_CAM_EASE = 4.5;
+// Easing: one soft lag between your scroll and everything on screen (smooths out mouse-wheel
+// steps). The camera is worked out from the line, not eased separately, so the two move together.
+const SNAKE_EASE = 6;
+
+// Camera position for a given length of line: glides continuously through the rows
+// (keyframes from snakeLayout), so the grid never starts or stops with a jolt.
+function snakeCamFor(L) {
+  const k = SNAKE.keys;
+  let y;
+  if (!k.length) y = 0;
+  else if (L <= k[0].L) y = k[0].y;
+  else if (L >= k[k.length - 1].L) y = k[k.length - 1].y;
+  else {
+    let i = 1;
+    while (i < k.length - 1 && k[i].L < L) i++;
+    const a = k[i - 1], b = k[i];
+    const f = b.L > a.L ? (L - a.L) / (b.L - a.L) : 1;
+    y = a.y + (b.y - a.y) * f;
+  }
+  return Math.max(0, Math.min(SNAKE.maxShift, y + SNAKE.padTop - SNAKE.stageH * 0.5));
+}
 
 
 function snakeCounter(n) {
@@ -1141,12 +1160,14 @@ function snakeKick() {
 function snakeFrame(now) {
   SNAKE.raf = null;
   if (!SNAKE.g) return;
-  const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 1;
+  const dt = SNAKE.last ? Math.min(0.05, (now - SNAKE.last) / 1000) : 1 / 60;   // first frame after a rest eases too (was an instant jump)
   SNAKE.last = now;
   const target = snakeTarget();
   if (SNAKE.cur === null) SNAKE.cur = target;
   SNAKE.cur += (target - SNAKE.cur) * (1 - Math.exp(-SNAKE_EASE * dt));
-  if (Math.abs(target - SNAKE.cur) < 0.2) SNAKE.cur = target;
+  if (Math.abs(target - SNAKE.cur) < 0.1) SNAKE.cur = target;
+  const moving = SNAKE.cur !== target;
+  if (moving !== SNAKE.moving) { SNAKE.moving = moving; SNAKE.g.classList.toggle("snake-moving", moving); }
   const sc = SNAKE.cur;
   const L = Math.min(SNAKE.total, sc * SNAKE_RATIO);
   const z = Math.max(0, Math.min(1, (sc - SNAKE.drawS) / (SNAKE.zoomS * 0.75)));
@@ -1162,16 +1183,15 @@ function snakeFrame(now) {
 
   // Camera: follows the pen (the grid only moves while the line heads down a row), then in the
   // finale pulls back until the whole grid fits on screen.
-  const camTarget = Math.max(0, Math.min(SNAKE.maxShift, pt.y + SNAKE.padTop - SNAKE.stageH * 0.5));
-  if (SNAKE.cam == null) SNAKE.cam = camTarget;
-  SNAKE.cam += (camTarget - SNAKE.cam) * (1 - Math.exp(-SNAKE_CAM_EASE * dt));
-  if (Math.abs(camTarget - SNAKE.cam) < 0.2) SNAKE.cam = camTarget;
+  SNAKE.cam = snakeCamFor(L);
   SNAKE.g.style.transform = `translate3d(0, ${(-SNAKE.cam).toFixed(2)}px, 0)`;
   SNAKE.yearEl.style.opacity = String(1 - e);
   SNAKE.svg.style.opacity = String(1 - Math.min(1, z * 2.5));
-  SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", (70 * (1 - e)).toFixed(1) + "px");
+  const fade = (70 * (1 - e)).toFixed(1) + "px";
+  if (fade !== SNAKE.fade) { SNAKE.fade = fade; SNAKE.stage.querySelector(".snake-view").style.setProperty("--snake-fade", fade); }
   SNAKE.fin.style.opacity = String(Math.max(0, Math.min(1, (z - 0.55) / 0.35)));
 
+  const focusY = SNAKE.cam - SNAKE.padTop + SNAKE.stageH * 0.5;
   let lit = 0, current = 0;
   SNAKE.cards.forEach((c, i) => {
     // How far the line has got across this card: 0 at the edge it enters, 1 at the far edge.
@@ -1184,16 +1204,17 @@ function snakeFrame(now) {
     if (f > 0.01 && !c.classList.contains("lit")) c.classList.add("lit");
     if (Math.max(f, prev) >= 0.999) lit++;
     // Focus: the row the pen is on stays crisp; rows above and below recede a little.
-    const rd = Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - pt.y) / SNAKE.pitch);
+    const rd = Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - focusY) / SNAKE.pitch);
     // Finale: fly into the wall, slightly staggered so they cascade in.
     const w = SNAKE.wall[i];
     const ei = easeInOut(Math.max(0, Math.min(1, (z - (i / SNAKE.cards.length) * 0.3) / 0.7)));
     const sF = 1 - rd * 0.035, sc2 = sF + (w.s - sF) * ei;
     const dx = (w.tx - w.ox - (w.w - w.w * w.s) / 2) * ei;
     const dy = (w.ty - (w.oy - SNAKE.cam) - (w.h - w.h * w.s) / 2) * ei;
-    c.style.translate = ei > 0 ? `${dx.toFixed(2)}px ${dy.toFixed(2)}px` : "";
-    c.style.scale = sc2.toFixed(4);
-    c.style.opacity = (1 - rd * 0.3 * (1 - ei)).toFixed(3);
+    const tr = ei > 0 ? `${dx.toFixed(1)}px ${dy.toFixed(1)}px` : "", scl = sc2.toFixed(3), op = (1 - rd * 0.3 * (1 - ei)).toFixed(2);
+    if (c._tr !== tr) { c._tr = tr; c.style.translate = tr; }
+    if (c._sc !== scl) { c._sc = scl; c.style.scale = scl; }
+    if (c._op !== op) { c._op = op; c.style.opacity = op; }
   });
   const year = SNAKE.cardYears[current];
   if (year && year !== SNAKE.year) {
@@ -1203,7 +1224,7 @@ function snakeFrame(now) {
   }
   snakeCounter(lit);
   if (lit === SNAKE.cards.length && !SNAKE.finaleDone) snakeFinale();
-  if (SNAKE.cur !== target || SNAKE.cam !== camTarget) snakeKick(); else SNAKE.last = 0;
+  if (SNAKE.cur !== target) snakeKick(); else SNAKE.last = 0;
 }
 
 // ---------- "Since 2022" timeline (events page) ----------
