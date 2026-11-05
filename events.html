@@ -339,8 +339,12 @@
   .snake-finale b{ color:var(--red); font-weight:600; }
   .snake-svg{ position:absolute; left:0; top:0; width:100%; height:100%; overflow:visible; pointer-events:none; z-index:0; }
   .snake-guide{ fill:none; stroke:var(--line); stroke-width:1.5; stroke-dasharray:1 9; stroke-linecap:round; opacity:0.6; }
-  .snake-line{ fill:none; stroke:var(--red); stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; }
-  .snake-head{ fill:var(--red); transition:opacity .6s ease; }
+  .snake-line{ fill:none; stroke:none; }   /* geometry only; the visible stroke is the ink below */
+  .snake-ink-dry path, .snake-ink-tail{ fill:var(--red); }
+  .snake-ink-wet path{ fill:#D9742A; opacity:.2; }
+  .snake-head{ fill:#D9742A; transition:opacity .6s ease; }
+  .snake-drop{ fill:var(--red); opacity:.85; transform-box:fill-box; transform-origin:center; animation:snake-drop .55s cubic-bezier(.2,1.6,.4,1) both; }
+  @keyframes snake-drop{ from{ transform:scale(0); opacity:0; } to{ transform:scale(1); opacity:.85; } }
 
   .snake .past-card.reveal{
     position:relative; z-index:1; opacity:1;
@@ -357,14 +361,18 @@
   .snake .past-card:hover .photo img{ transform:none; }
   .snake .past-card .photo img.snake-color{
     position:absolute; inset:0; width:100%; height:100%; object-fit:cover; filter:none; opacity:1; transform:none;
-    -webkit-mask-image:linear-gradient(to right, #000 calc(var(--fill, 0) * 140% - 40%), transparent calc(var(--fill, 0) * 140%));
-            mask-image:linear-gradient(to right, #000 calc(var(--fill, 0) * 140% - 40%), transparent calc(var(--fill, 0) * 140%));
+    /* ragged ink-soak edge (mask built in js/site.js), slid across by --fill */
+    -webkit-mask-image:var(--soak-l); mask-image:var(--soak-l);
+    -webkit-mask-size:300% 100%; mask-size:300% 100%;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:calc(82.5% - var(--fill, 0) * 65%) 0; mask-position:calc(82.5% - var(--fill, 0) * 65%) 0;
   }
   .snake .past-card[data-from="r"] .photo img.snake-color{
-    -webkit-mask-image:linear-gradient(to left, #000 calc(var(--fill, 0) * 140% - 40%), transparent calc(var(--fill, 0) * 140%));
-            mask-image:linear-gradient(to left, #000 calc(var(--fill, 0) * 140% - 40%), transparent calc(var(--fill, 0) * 140%));
+    -webkit-mask-image:var(--soak-r); mask-image:var(--soak-r);
+    -webkit-mask-position:calc(17.5% + var(--fill, 0) * 65%) 0; mask-position:calc(17.5% + var(--fill, 0) * 65%) 0;
   }
-  .snake .past-card .info{ opacity:0.45; transition:opacity 1.2s ease; }
+  .snake .past-card .info{ opacity:calc(0.45 * var(--dim, 1)); transition:opacity 1.2s ease; }
+  .snake .past-card .photo{ opacity:var(--dim, 1); }
   /* While the grid is gliding, posters sliding under the cursor don't each start a hover lift/shadow
      (that repainting is what made the motion stutter). Hover comes back the moment it settles. */
   .snake.snake-moving .past-card{ pointer-events:none; }
@@ -406,9 +414,9 @@
   }
   .pv-close:hover{ background:rgba(246,241,228,0.18); }
   .pv-close:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
-  .snake .past-card{ will-change:transform, opacity; }
+  .snake .past-card{ will-change:transform; }
   .snake-svg{ will-change:transform; }
-  .snake .past-card.lit .info{ opacity:1; }
+  .snake .past-card.lit .info{ opacity:var(--dim, 1); }
 
   /* finale: a soft glow passes back through the grid */
   .snake .past-card.ripple{ animation:snake-ripple 1.8s cubic-bezier(.22,1,.36,1) both; }

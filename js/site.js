@@ -910,7 +910,7 @@ function teardownSnake() {
   });
   if (SNAKE.dock) { SNAKE.dock.remove(); SNAKE.dock = null; SNAKE.counter = null; }
   g.classList.remove("snake-moving");
-  g.querySelectorAll(".past-card").forEach(c => { c.style.scale = ""; c.style.opacity = ""; c.style.translate = ""; c._tr = c._sc = c._op = undefined; });
+  g.querySelectorAll(".past-card").forEach(c => { c.style.scale = ""; c.style.opacity = ""; c.style.translate = ""; c.style.removeProperty("--dim"); c._tr = c._sc = c._op = undefined; });
   SNAKE.g = null;
 }
 
@@ -943,7 +943,9 @@ function buildSnake() {
   svg.innerHTML = `
     <path class="snake-guide"/>
     <path class="snake-line"/>
-    <circle class="snake-head" r="4.5"/>`;
+    <g class="snake-ink"><g class="snake-ink-dry"></g><path class="snake-ink-tail"/><g class="snake-ink-wet"></g></g>
+    <g class="snake-drops"></g>
+    <ellipse class="snake-head" rx="6" ry="3.8"/>`;
   g.prepend(svg);
   const q = sel => svg.querySelector(sel);
 
@@ -1014,11 +1016,16 @@ function buildSnake() {
   // Seen the whole thing already this visit? Then the line stays drawn and the grid just scrolls.
   try { if (sessionStorage.getItem(SNAKE_FREE_KEY) === "1") { SNAKE.free = true; SNAKE.finaleDone = true; } } catch (err) {}
   if (SNAKE.free) cards.forEach(c => { c.dataset.fill = "1"; c.style.setProperty("--fill", "1"); c.classList.add("lit"); });
+  // Ragged "soak" masks for the colour coming into each poster (one per direction), made once.
+  if (!SNAKE.soak) SNAKE.soak = { l: inkSoakMask(false), r: inkSoakMask(true) };
+  g.style.setProperty("--soak-l", SNAKE.soak.l);
+  g.style.setProperty("--soak-r", SNAKE.soak.r);
 
   Object.assign(SNAKE, {
     g, cards, svg, counter: null, dock, pin, stage, yearEl, hint, cardYears, year: null, z: 0, hintDone: !!SNAKE.free,
     since: years[0] || "", litCount: -1,
     guide: q(".snake-guide"), line: q(".snake-line"), head: q(".snake-head"),
+    inkDry: q(".snake-ink-dry"), inkTail: q(".snake-ink-tail"), inkWet: q(".snake-ink-wet"), drops: q(".snake-drops"), inkL: -1,
     cur: null, max: 0, total: 0, thr: [], keys: [], raf: null, last: 0
   });
   snakeCounter(SNAKE.finaleDone ? cards.length : 0);
@@ -1080,7 +1087,7 @@ function snakeLayout() {
   SNAKE.thr = cards.map(c => thr.get(c) * k);
   SNAKE.half = cards.map(c => (c.offsetWidth / 2) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
-  SNAKE.line.style.strokeDasharray = `${SNAKE.total} ${SNAKE.total}`;
+  inkLayout();
 
   // Pin: tall enough that scrolling through it draws the whole line.
   const nav = document.querySelector("header.nav");
@@ -1171,6 +1178,105 @@ function snakeFinale() {
   snakeCounter(n);
 }
 
+// ---------- Wet ink: the line is a brush stroke ----------
+// Thick on the straights, thin round the bends (like a broad brush held at an angle), with a little
+// unevenness along its length. Behind the tip it glistens amber while "wet" and dries to red.
+// The stroke is cut into fixed chunks that are built once; only the last stretch near the tip is
+// rebuilt each frame, so long lines stay cheap to draw.
+const INK_STEP = 3, INK_CHUNK = 80, INK_WET = 180;
+
+function inkWidth(p) {
+  // broad-nib feel: horizontals thick, verticals thin, plus a slow, uneven wobble
+  const w = 2.4 + 4.6 * Math.abs(Math.cos(p.a - 0.35));
+  return w * (1 + 0.14 * Math.sin(p.s * 0.031) * Math.sin(p.s * 0.0077 + 1.3)) * (0.25 + 0.75 * Math.min(1, p.s / 46));
+}
+function inkLayout() {
+  const line = SNAKE.line, total = SNAKE.total, pts = [];
+  for (let s = 0; s <= total; s += INK_STEP) { const q = line.getPointAtLength(s); pts.push({ s, x: q.x, y: q.y, a: 0 }); }
+  const q = line.getPointAtLength(total); pts.push({ s: total, x: q.x, y: q.y, a: 0 });
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
+    pts[i].a = Math.atan2(b.y - a.y, b.x - a.x);
+  }
+  pts.forEach(p => { p.w = inkWidth(p) / 2; p.nx = -Math.sin(p.a); p.ny = Math.cos(p.a); });
+  SNAKE.ink = pts;
+  SNAKE.inkDry.innerHTML = "";
+  SNAKE.inkChunks = [];
+  for (let k = 0; k * INK_CHUNK < pts.length - 1; k++) {
+    const a = k * INK_CHUNK, b = Math.min(pts.length - 1, (k + 1) * INK_CHUNK + 1);
+    const el = document.createElementNS(SVG_NS, "path");
+    el.setAttribute("d", inkRibbon(a, b, null));
+    el.style.display = "none";
+    SNAKE.inkDry.appendChild(el);
+    SNAKE.inkChunks.push(el);
+  }
+  SNAKE.inkShown = 0;
+  SNAKE.inkL = -1;
+  SNAKE.drops.innerHTML = "";
+}
+// Polygon outline of the stroke between sample a and b; if L is given, the end tapers to a point.
+function inkRibbon(a, b, L) {
+  const pts = SNAKE.ink;
+  if (b - a < 1) return "";
+  let left = "", right = "";
+  for (let i = a; i <= b; i++) {
+    const p = pts[i];
+    let w = p.w;
+    if (L !== null) w *= 0.3 + 0.7 * Math.min(1, Math.max(0, (L - p.s) / 26));
+    const lx = (p.x + p.nx * w).toFixed(1), ly = (p.y + p.ny * w).toFixed(1);
+    const rx = (p.x - p.nx * w).toFixed(1), ry = (p.y - p.ny * w).toFixed(1);
+    left += (i === a ? "M" : "L") + lx + "," + ly;
+    right = "L" + rx + "," + ry + right;
+  }
+  return left + right + "Z";
+}
+function inkPoint(L) {
+  const pts = SNAKE.ink, i = Math.max(0, Math.min(pts.length - 1, Math.round(L / INK_STEP)));
+  return pts[i];
+}
+function inkDraw(L) {
+  if (!SNAKE.ink || Math.abs(L - SNAKE.inkL) < 0.05) return;
+  SNAKE.inkL = L;
+  const pts = SNAKE.ink, n = Math.min(pts.length - 1, Math.floor(L / INK_STEP));
+  // whole chunks safely behind the tip are shown as they are; the rest is rebuilt
+  const dynFrom = Math.floor(Math.max(0, Math.floor((L - 60) / INK_STEP)) / INK_CHUNK) * INK_CHUNK;
+  const shown = dynFrom / INK_CHUNK;
+  if (shown !== SNAKE.inkShown) {
+    SNAKE.inkChunks.forEach((c, k) => { c.style.display = k < shown ? "" : "none"; });
+    SNAKE.inkShown = shown;
+  }
+  SNAKE.inkTail.setAttribute("d", L > 1 ? inkRibbon(dynFrom, n, L) : "");
+  // wet sheen: stacked, shorter and shorter amber overlays, so it fades from the tip backwards
+  const wet = SNAKE.inkWet;
+  if (!wet.children.length) for (let j = 0; j < 5; j++) wet.appendChild(document.createElementNS(SVG_NS, "path"));
+  const drawing = L > 1 && L < SNAKE.total - 0.5;
+  Array.from(wet.children).forEach((p, j) => {
+    const from = Math.max(0, Math.floor((L - INK_WET * (1 - j / 5)) / INK_STEP));
+    p.setAttribute("d", drawing ? inkRibbon(from, n, L) : "");
+  });
+}
+// A few drops of ink land where the brush first reaches a poster.
+function inkDrops(c, i) {
+  const ys = SNAKE.rowY[SNAKE.rowOf[i]], fromL = c.dataset.from !== "r";
+  const x0 = c.offsetLeft + (fromL ? -10 : c.offsetWidth + 10);
+  let html = "";
+  for (let k = 0; k < 6; k++) {
+    const r = 1.2 + Math.random() * 3, dx = (Math.random() - 0.5) * 30, dy = (Math.random() - 0.5) * 90;
+    html += `<circle class="snake-drop" cx="${(x0 + dx).toFixed(1)}" cy="${(ys + dy).toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${k * 45}ms"/>`;
+  }
+  SNAKE.drops.insertAdjacentHTML("beforeend", html);
+}
+// The colour soaks into a poster with a ragged, paper-like edge: a wide mask image whose edge is
+// slid across the poster by --fill (see .snake-color in events.html).
+function inkSoakMask(flip) {
+  let d = "M0,0 L150,0", y = 0, seed = flip ? 7 : 3;
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  while (y < 100) { y = Math.min(100, y + 3 + rnd() * 4); d += ` L${(150 + (rnd() - 0.5) * 16 + Math.sin(y * 0.11) * 5).toFixed(1)},${y.toFixed(1)}`; }
+  d += " L0,100 Z";
+  const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 100' preserveAspectRatio='none'><filter id='b' x='-5%' y='-5%' width='110%' height='110%'><feGaussianBlur stdDeviation='1.6'/></filter><path filter='url(#b)' fill='#fff' d='${d}'${flip ? " transform='translate(300 0) scale(-1 1)'" : ""}/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+}
+
 // Once the finale has played (this visit only), the line stays drawn and the pinned stretch before
 // the zoom is just the grid scrolling past, 1:1, instead of the long line-drawing budget.
 const SNAKE_FREE_KEY = "mcc_snake_seen";
@@ -1241,11 +1347,10 @@ function snakeFrame(now) {
   if ((z >= 0.35) !== (SNAKE.z >= 0.35)) { SNAKE.z = z; snakeKick(); }
   SNAKE.z = z;
 
-  SNAKE.line.style.strokeDashoffset = String(SNAKE.total - L);
-  const pt = SNAKE.line.getPointAtLength(Math.max(0, Math.min(SNAKE.total, L)));
-  SNAKE.head.setAttribute("cx", pt.x.toFixed(1));
-  SNAKE.head.setAttribute("cy", pt.y.toFixed(1));
-  SNAKE.head.style.opacity = L > 0.5 && L < SNAKE.total - 0.5 ? "" : "0";
+  inkDraw(L);
+  const pt = inkPoint(L);
+  SNAKE.head.setAttribute("transform", `translate(${pt.x.toFixed(1)} ${pt.y.toFixed(1)}) rotate(${(pt.a * 57.2958).toFixed(1)})`);
+  SNAKE.head.style.opacity = L > 4 && L < SNAKE.total - 0.5 ? "" : "0";
 
   // Camera: follows the pen (the grid only moves while the line heads down a row), then in the
   // finale pulls back until the whole grid fits on screen.
@@ -1274,7 +1379,7 @@ function snakeFrame(now) {
     const f = Math.max(0, Math.min(1, (L - (SNAKE.thr[i] - h)) / (2 * h)));
     const prev = Number(c.dataset.fill || 0);
     if (f > prev) { c.dataset.fill = f.toFixed(4); c.style.setProperty("--fill", f.toFixed(4)); }
-    if (f > 0.01 && !c.classList.contains("lit")) c.classList.add("lit");
+    if (f > 0.01 && !c.classList.contains("lit")) { c.classList.add("lit"); if (!free) inkDrops(c, i); }
     if (Math.max(f, prev) >= 0.999) lit++;
     // Focus: the row the pen is on stays crisp; rows above and below recede a little.
     const rd = free ? 0 : Math.min(1.5, Math.abs(SNAKE.rowY[SNAKE.rowOf[i]] - focusY) / SNAKE.pitch);
@@ -1287,7 +1392,7 @@ function snakeFrame(now) {
     const tr = ei > 0 ? `${dx.toFixed(1)}px ${dy.toFixed(1)}px` : "", scl = sc2.toFixed(3), op = (1 - rd * 0.3 * (1 - ei)).toFixed(2);
     if (c._tr !== tr) { c._tr = tr; c.style.translate = tr; }
     if (c._sc !== scl) { c._sc = scl; c.style.scale = scl; }
-    if (c._op !== op) { c._op = op; c.style.opacity = op; }
+    if (c._op !== op) { c._op = op; c.style.setProperty("--dim", op); }   // dims the contents only, so the card stays solid over the ink
   });
   const year = SNAKE.cardYears[current];
   if (year && year !== SNAKE.year) {
