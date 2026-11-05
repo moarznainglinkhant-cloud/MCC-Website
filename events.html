@@ -455,15 +455,32 @@
   .odo-s{ display:block; transition:transform .75s cubic-bezier(.2,.85,.2,1); }
   .odo-s span{ display:block; height:1.08em; line-height:1.08em; }
 
-  .tl-track{ display:flex; gap:var(--tl-gap, 28px); width:max-content; will-change:transform; padding-block:8px 4px; }
+  .tl-track{ position:relative; display:flex; gap:var(--tl-gap, 28px); width:max-content; will-change:transform; padding-block:8px 4px; }
   .tl-card{
-    --w: max(170px, min(300px, 64vw, calc((100svh - 340px) * 0.8)));
+    --w: max(170px, min(300px, 64vw, calc((100svh - 356px) * 0.8)));
     width:var(--w); flex:none; transform-origin:50% 45%; will-change:transform, opacity;
   }
   .tl-poster{ aspect-ratio:4/5; border-radius:18px; overflow:hidden; background:var(--bg-sunk); box-shadow:0 18px 40px rgba(28,36,64,0.16); }
   .tl-poster img{ width:100%; height:100%; object-fit:cover; display:block; }
   .tl-info{ padding:12px 2px 0; min-height:3.6em; opacity:0; transform:translateY(6px); transition:opacity .35s ease, transform .35s ease; }
   .tl-card.is-active .tl-info{ opacity:1; transform:none; }
+  /* Wet ink under the posters (js/site.js tlInkBuild): posters start faded grey and the colour
+     soaks in from the left with the same ragged edge as the desktop grid. */
+  .tl-ink{ position:absolute; left:0; z-index:0; overflow:visible; pointer-events:none; }
+  .tl-ink-dry{ fill:var(--red); }
+  .tl-ink-head{ fill:#D9742A; transition:opacity .4s ease; }
+  .tl-inked .tl-card{ position:relative; z-index:1; }
+  .tl-inked .tl-info{ padding-top:28px; }
+  .tl-poster{ position:relative; }
+  .tl-inked .tl-poster img.tl-base{ filter:grayscale(1); opacity:.55; }
+  .tl-poster img.tl-color{ display:none; }
+  .tl-inked .tl-poster img.tl-color{
+    display:block; position:absolute; inset:0;
+    -webkit-mask-image:var(--soak-l); mask-image:var(--soak-l);
+    -webkit-mask-size:300% 100%; mask-size:300% 100%;
+    -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+    -webkit-mask-position:calc(82.5% - var(--fill, 0) * 65%) 0; mask-position:calc(82.5% - var(--fill, 0) * 65%) 0;
+  }
   .tl-title{ font-family:'Fraunces', serif; font-size:1.02rem; font-weight:600; line-height:1.25; }
   .tl-date{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
 

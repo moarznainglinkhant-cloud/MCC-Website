@@ -1444,7 +1444,7 @@ function buildPastTimeline(past) {
 
   const cards = events.map((ev, i) => `
       <article class="tl-card" data-year="${ev.date.slice(0, 4)}">
-        <div class="tl-poster"><img src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}" loading="${i < 4 ? "eager" : "lazy"}" decoding="async"></div>
+        <div class="tl-poster"><img class="tl-base" src="${safeUrl(ev.photo)}" alt="${escapeHtml(ev.name)} — ${formatDate(ev.date)}" loading="${i < 4 ? "eager" : "lazy"}" decoding="async"><img class="tl-color" src="${safeUrl(ev.photo)}" alt="" aria-hidden="true" loading="${i < 4 ? "eager" : "lazy"}" decoding="async"></div>
         <div class="tl-info">
           <div class="tl-title">${escapeHtml(ev.name)}</div>
           <div class="tl-date">${formatDate(ev.date)}${ev.location ? " &middot; " + escapeHtml(ev.location) : ""}</div>
@@ -1491,6 +1491,7 @@ function buildPastTimeline(past) {
   TL.count = el.querySelector(".tl-count");
   TL.ticks = Array.from(el.querySelectorAll(".tl-tick"));
   TL.ticks.forEach(b => b.addEventListener("click", () => tlJump(Number(b.dataset.i))));
+  tlInkBuild();
   TL.cards[TL.cards.length - 1].querySelector("a").addEventListener("click", e => {
     const target = document.getElementById("next-event");
     if (!target) return;
@@ -1526,6 +1527,8 @@ function tlMeasure() {
   TL.dist = TL.step * (TL.cards.length - 1);          // sideways travel = downward scroll, 1:1
   const stageH = window.innerHeight - top;
   TL.el.style.height = (stageH + TL.dist) + "px";
+  TL.w = w; TL.pad = pad; TL.gap = gap;
+  tlInkLayout();
 
   // On narrow screens, years that sit too close together keep their dot but drop the label
   // (always keeping the most recent year's label).
@@ -1537,6 +1540,89 @@ function tlMeasure() {
     TL.ticks[i].querySelector("span").style.visibility = tight ? "hidden" : "";
     if (!tight) lastX = x;
   }
+}
+
+// ---------- Wet ink on the phone timeline ----------
+// The same brush stroke as the desktop grid, running just under the posters. Its tip sits at the
+// right edge of the poster in the middle of the screen, so as you scroll, the ink reaches the next
+// poster and its colour soaks in from the left (same ragged mask as desktop). Colour stays once in.
+function tlInkBuild() {
+  const svg = document.createElementNS(SVG_NS, "svg");
+  svg.setAttribute("class", "tl-ink");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = `
+    <defs>
+      <clipPath id="tl-ink-clip"><rect x="0" y="-20" width="0" height="80"/></clipPath>
+      <linearGradient id="tl-ink-wet" gradientUnits="userSpaceOnUse" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#D9742A" stop-opacity="0"/><stop offset="1" stop-color="#D9742A" stop-opacity=".95"/>
+      </linearGradient>
+    </defs>
+    <g clip-path="url(#tl-ink-clip)"><path class="tl-ink-dry"/><path class="tl-ink-wet" fill="url(#tl-ink-wet)"/></g>
+    <g class="tl-ink-drops"></g>
+    <ellipse class="tl-ink-head" rx="6.5" ry="4"/>`;
+  TL.track.prepend(svg);
+  TL.ink = { svg, clip: svg.querySelector("rect"), dry: svg.querySelector(".tl-ink-dry"), wet: svg.querySelector(".tl-ink-wet"),
+             grad: svg.querySelector("linearGradient"), drops: svg.querySelector(".tl-ink-drops"), head: svg.querySelector(".tl-ink-head"), fills: [], started: false };
+  if (!SNAKE.soak) SNAKE.soak = { l: inkSoakMask(false), r: inkSoakMask(true) };
+  TL.track.style.setProperty("--soak-l", SNAKE.soak.l);
+  TL.el.classList.add("tl-inked");
+}
+function tlInkLayout() {
+  const ink = TL.ink;
+  if (!ink) return;
+  const poster = TL.cards[0].querySelector(".tl-poster");
+  const top = poster.offsetTop + poster.offsetHeight + 4, H = 26, y0 = H / 2;
+  const x0 = TL.pad - 14, x1 = TL.pad + (TL.n - 1) * TL.step + TL.w + 8;
+  ink.svg.style.top = top + "px";
+  ink.svg.setAttribute("width", Math.ceil(TL.track.scrollWidth));
+  ink.svg.setAttribute("height", H);
+  ink.x0 = x0; ink.x1 = x1; ink.y0 = y0;
+  // one long, slightly wavering brush stroke; drawn once, revealed up to the tip with a clip
+  let top1 = "", bot = "";
+  for (let s = 0; x0 + s <= x1 + 4; s += 4) {
+    const x = x0 + s, y = y0 + 2.2 * Math.sin(s * 0.019) + 1.1 * Math.sin(s * 0.053 + 1);
+    const w = 2.8 * (1 + 0.2 * Math.sin(s * 0.031) * Math.sin(s * 0.0077 + 1.3)) * (0.3 + 0.7 * Math.min(1, s / 40));
+    top1 += (s ? "L" : "M") + x.toFixed(1) + "," + (y - w).toFixed(1);
+    bot = "L" + x.toFixed(1) + "," + (y + w).toFixed(1) + bot;
+  }
+  ink.path = top1 + bot + "Z";
+  ink.dry.setAttribute("d", ink.path);
+  ink.wet.setAttribute("d", ink.path);
+  ink.yAt = x => { const s = x - x0; return y0 + 2.2 * Math.sin(s * 0.019) + 1.1 * Math.sin(s * 0.053 + 1); };
+  ink.lastX = null;
+}
+function tlInkDraw(x) {
+  const ink = TL.ink;
+  if (!ink || ink.x0 == null) return;
+  const head = Math.min(ink.x1, TL.pad + x + TL.w + 6);
+  if (ink.lastX !== null && Math.abs(head - ink.lastX) < 0.1) return;
+  const moving = ink.lastX !== null;
+  ink.lastX = head;
+  ink.clip.setAttribute("width", Math.max(0, head + 1).toFixed(1));
+  ink.grad.setAttribute("x1", (head - 170).toFixed(1));
+  ink.grad.setAttribute("x2", head.toFixed(1));
+  const hy = ink.yAt(head);
+  ink.head.setAttribute("transform", `translate(${head.toFixed(1)} ${hy.toFixed(1)})`);
+  ink.head.style.opacity = head < ink.x1 - 1 ? "" : "0";
+  // colour soaks into each event poster as the tip passes it (only ever grows)
+  for (let i = 0; i < TL.n; i++) {
+    const left = TL.pad + i * TL.step, f = Math.max(0, Math.min(1, (head - 6 - left) / TL.w));
+    const prev = ink.fills[i] || 0;
+    if (f > prev) {
+      ink.fills[i] = f;
+      TL.cards[i].style.setProperty("--fill", f.toFixed(4));
+      if (prev === 0 && moving && ink.started) tlInkDrops(left, ink.yAt(left));
+    }
+  }
+  ink.started = true;
+}
+function tlInkDrops(x, y) {
+  let html = "";
+  for (let k = 0; k < 5; k++) {
+    const r = 1 + Math.random() * 2.4, dx = (Math.random() - 0.5) * 26, dy = (Math.random() - 0.5) * 18;
+    html += `<circle class="snake-drop" cx="${(x + dx - 6).toFixed(1)}" cy="${(y + dy).toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${k * 45}ms"/>`;
+  }
+  TL.ink.drops.insertAdjacentHTML("beforeend", html);
 }
 
 function tlTarget() {
@@ -1560,6 +1646,7 @@ function tlFrame() {
   TL.track.style.transform = `translate3d(${-x}px,0,0)`;
 
   const pos = x / TL.step;
+  tlInkDraw(x);
   TL.cards.forEach((c, i) => {
     const d = i - pos, ad = Math.abs(d);
     const scale = 1 - Math.min(ad, 2) * 0.09;
