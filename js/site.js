@@ -123,7 +123,7 @@ const I18N = {
     snake_skip: "Skip",
     snake_show_all: "Show all",
     snake_hint: "Scroll to follow the line",
-    snake_wall_hint: "Hover a poster for its name · click to see it up close",
+    snake_wall_hint: "Click any poster to see it up close",
     snake_open: "Open poster",
     snake_close: "Close",
     reg_soon: "Website registration for this event isn't open yet — we're still setting it up. Check back soon!",
@@ -215,7 +215,7 @@ const I18N = {
     snake_skip: "ကျော်ရန်",
     snake_show_all: "အားလုံးကြည့်ရန်",
     snake_hint: "မျဉ်းကြောင်းနောက်သို့ လိုက်ရန် အောက်သို့ ဆွဲချပါ",
-    snake_wall_hint: "ပိုစတာပေါ် တင်ကြည့်ပါ · အကြီးကြည့်ရန် နှိပ်ပါ",
+    snake_wall_hint: "အကြီးကြည့်ရန် ပိုစတာကို နှိပ်ပါ",
     snake_open: "ပိုစတာ ဖွင့်ရန်",
     snake_close: "ပိတ်ရန်",
     reg_soon: "ဤပွဲအတွက် ဝက်ဘ်ဆိုက်မှ စာရင်းသွင်းခြင်းကို မဖွင့်ရသေးပါ — ပြင်ဆင်နေဆဲဖြစ်ပါသည်။ မကြာမီ ပြန်လာကြည့်ပါ။",
@@ -983,7 +983,7 @@ function buildSnake() {
   hint.innerHTML = `<span class="snake-hint-mouse"><i></i></span>${escapeHtml(t("snake_hint"))}`;
   stage.appendChild(hint);
 
-  // Posters open up close (click, or Enter/Space). On the finale wall, hovering names them.
+  // Posters open up close (click, or Enter/Space).
   cards.forEach(c => {
     const title = (c.querySelector(".info .title") || {}).textContent || "";
     c.setAttribute("tabindex", "0");
@@ -999,16 +999,6 @@ function buildSnake() {
     g.addEventListener("keydown", e => {
       const c = e.target.closest && e.target.closest(".past-card");
       if (c && SNAKE.g === g && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openPoster(c, true); }
-    });
-    g.addEventListener("pointerover", e => {
-      const c = e.target.closest(".past-card");
-      if (!c || SNAKE.g !== g || !SNAKE.cap || !SNAKE.pin.classList.contains("snake-wall")) return;
-      const title = (c.querySelector(".info .title") || {}).textContent || "";
-      const date = (c.querySelector(".info .date") || {}).textContent || "";
-      SNAKE.cap.innerHTML = `<b>${escapeHtml(title)}</b> · ${escapeHtml(date)}`;
-    });
-    g.addEventListener("pointerleave", () => {
-      if (SNAKE.g === g && SNAKE.cap) SNAKE.cap.textContent = t("snake_wall_hint");
     });
   }
 
@@ -1280,7 +1270,6 @@ function snakeFrame(now) {
   if (wall !== SNAKE.wallOn) {
     SNAKE.wallOn = wall;
     SNAKE.pin.classList.toggle("snake-wall", wall);
-    if (!wall && SNAKE.cap) SNAKE.cap.textContent = t("snake_wall_hint");
   }
   if (!SNAKE.hintDone && sc > 30) SNAKE.hintDone = true;
   const hintOn = !SNAKE.hintDone && SNAKE.pinTop < window.innerHeight * 0.35;

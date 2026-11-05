@@ -370,10 +370,10 @@
   .snake.snake-moving .past-card{ pointer-events:none; }
   .snake .past-card{ cursor:zoom-in; }
   .snake .past-card:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; }
-  /* Finale wall: posters can be hovered (lift + name in the caption) and clicked open. */
-  .snake-wall .snake .past-card.reveal.lit{ transition:transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease; }
+  /* Finale wall: hovering a poster enlarges it slightly; clicking opens it. */
+  .snake-wall .snake .past-card.reveal.lit{ transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease; }
   .snake-wall .snake .past-card.reveal.lit:hover,
-  .snake-wall .snake .past-card.reveal.lit:focus-visible{ transform:translateY(-10px) scale(1.12); z-index:5; box-shadow:0 26px 52px rgba(28,36,64,0.24); }
+  .snake-wall .snake .past-card.reveal.lit:focus-visible{ transform:scale(1.05); z-index:5; box-shadow:0 20px 40px rgba(28,36,64,0.18); }
   .snake-cap{
     margin-top:10px; font-family:'Work Sans', system-ui, sans-serif; font-size:0.92rem; font-weight:500;
     color:var(--ink-soft); letter-spacing:0.01em; min-height:1.4em;
