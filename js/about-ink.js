@@ -1,8 +1,8 @@
 // About page: the team wheel's strokes in wet ink (same drawing language as the Events line).
-//  - The progress arc is a brush stroke. The pen sits at the focus point and the ink trails out
-//    behind it as the wheel turns; each stretch takes the colour of the department it belongs to,
-//    so the colour changes as the ink passes each dot. Fresh ink near the pen glistens in a lighter
-//    tint of that colour, then dries.
+//  - The progress arc is a brush stroke in the Events ink: red, amber while wet near the pen, with an
+//    even width. The pen sits at the focus point and the ink trails out behind it as the wheel turns.
+//  - When a department's dot is reached, a few drops land near it in that department's colour
+//    (the dots keep their own colours; only the line is one ink). The drops turn with the wheel.
 //  - The big outer ring is a faint dry-brush circle, painted once as the wheel comes into view.
 // The wheel's own motion (about.html) is untouched; this only redraws its strokes.
 (function () {
@@ -14,11 +14,6 @@
     if (parent) parent.appendChild(e);
     return e;
   }
-  function rgbOf(str) {
-    var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(str || "");
-    return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : [174, 54, 40];
-  }
-  function tint(rgb, k) { return "rgb(" + rgb.map(function (v) { return Math.round(v + (255 - v) * k); }).join(",") + ")"; }
 
   function start() {
     var svg = document.getElementById("wheelProgress"), arc = document.getElementById("wheelProgressArc");
@@ -28,11 +23,10 @@
 
     // ---------- progress arc as wet ink ----------
     var g = mk("g", {}, svg);
-    var segG = mk("g", {}, g), wetG = mk("g", {}, g);
-    var segs = [], wets = [];
-    for (var j = 0; j < 5; j++) wets.push(mk("path", { opacity: 0.22 }, wetG));
-    var tip = mk("ellipse", { rx: 5.5, ry: 3.4 }, g);
-    var colors = null, last = -1, lastR = -1;
+    var dry = mk("path", { fill: "#AE3628" }, g), wets = [];
+    for (var j = 0; j < 5; j++) wets.push(mk("path", { fill: "#D9742A", opacity: 0.2 }, g));
+    var tip = mk("ellipse", { rx: 5.5, ry: 3.4, fill: "#D9742A" }, g);
+    var last = -1, lastR = -1;
 
     // Brush outline between angles t0..t1 (θ measured from the pen, at the focus point).
     // Width is tied to the ink itself (φ = distance from where the stroke began), so its texture
@@ -43,8 +37,7 @@
       for (var t = t0; ; t += step) {
         if (t > t1) t = t1;
         var phi = A - t, deg = phi * 57.2958;
-        var w = 2.6 + 2.8 * Math.abs(Math.cos(phi * 1.3 + 0.4));
-        w *= 1 + 0.15 * Math.sin(deg * 0.21) * Math.sin(deg * 0.047 + 1.3);
+        var w = 4.2 * (1 + 0.06 * Math.sin(deg * 0.21) * Math.sin(deg * 0.047 + 1.3));   // even, with just a hint of hand
         w *= 0.3 + 0.7 * Math.min(1, phi / 0.2);                // brush lands softly where it began
         w *= 0.35 + 0.65 * Math.min(1, t / 0.1);                 // and tapers at the pen
         var c = Math.cos(t), s = Math.sin(t), ro = r + w / 2, ri = r - w / 2;
@@ -55,26 +48,38 @@
       return out + back + "Z";
     }
     function draw(cx, cy, r, frac) {
-      var n = colors.length, STEP = Math.PI * 2 / n, A = frac * Math.PI * 2;
-      // Dot j sits at θ = A − j·STEP. The stretch from dot j to dot j+1 is department j's colour.
-      while (segs.length < n) segs.push(mk("path", {}, segG));
-      for (var j = 0; j < n; j++) {
-        var t1 = Math.min(A, A - j * STEP), t0 = Math.max(0, A - (j + 1) * STEP);
-        segs[j].setAttribute("fill", "rgb(" + colors[j].join(",") + ")");
-        segs[j].setAttribute("d", t1 > t0 ? ribbon(cx, cy, r, t0, t1, A) : "");
-      }
-      // Fresh ink at the pen: a lighter tint of the department being drawn now.
-      var cur = colors[Math.max(0, Math.min(n - 1, Math.floor(A / STEP - 1e-6)))];
-      var drawing = frac > 0.002 && frac < 0.999, wetC = tint(cur, 0.38);
+      var A = frac * Math.PI * 2;
+      dry.setAttribute("d", ribbon(cx, cy, r, 0, A, A));
+      var drawing = frac > 0.002 && frac < 0.999;
       for (var k = 0; k < wets.length; k++) {
         var to = Math.min(A, 0.85 * (1 - k / wets.length));
-        wets[k].setAttribute("fill", wetC);
         wets[k].setAttribute("d", drawing ? ribbon(cx, cy, r, 0, to, A) : "");
       }
-      tip.setAttribute("fill", wetC);
       tip.setAttribute("transform", "translate(" + (cx + r).toFixed(1) + " " + cy.toFixed(1) + ") rotate(90)");
       tip.style.opacity = drawing ? "1" : "0";
     }
+
+    // ---------- drops near each dot, in that department's colour ----------
+    var active = -1, started = false;
+    function dotScale(d) { var m = /scale\(([\d.]+)\)/.exec(d.style.transform || ""); return m ? Number(m[1]) : 1; }
+    function drops(dot) {
+      var m = /translate\((-?[\d.]+)px,\s*(-?[\d.]+)px\)/.exec(dot.style.transform || "");
+      if (!m || dot._inked) return;
+      dot._inked = true;
+      var x = Number(m[1]), y = Number(m[2]), col = dot.style.background || getComputedStyle(dot).backgroundColor;
+      for (var k = 0; k < 6; k++) {
+        var d = document.createElement("i");
+        var rr = 1.4 + Math.random() * 2.8, ang = Math.random() * 6.283, dist = 13 + Math.random() * 18;
+        d.className = "ink-drop";
+        d.style.cssText = "width:" + (rr * 2).toFixed(1) + "px;height:" + (rr * 2).toFixed(1) + "px;left:" + (x + Math.cos(ang) * dist - rr).toFixed(1) +
+          "px;top:" + (y + Math.sin(ang) * dist - rr).toFixed(1) + "px;background:" + col + ";animation-delay:" + (k * 45) + "ms";
+        wheel.appendChild(d);
+      }
+    }
+    var css = document.createElement("style");
+    css.textContent = ".ink-drop{position:absolute;border-radius:50%;pointer-events:none;opacity:.85;animation:ink-drop .55s cubic-bezier(.2,1.6,.4,1) both}" +
+      "@keyframes ink-drop{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:.85}}";
+    document.head.appendChild(css);
 
     // ---------- dry-brush outer ring ----------
     var ring = null, ringSvg = null, ringSize = 0, ringMask = null, painted = false;
@@ -120,15 +125,19 @@
 
     function frame() {
       if (!ring) setupRing();
-      if (!colors) {
-        var dots = wheel.querySelectorAll(".wheel-dot");
-        if (dots.length) colors = Array.prototype.map.call(dots, function (d) { return rgbOf(d.style.background || getComputedStyle(d).backgroundColor); });
-      }
       var r = Number(arc.getAttribute("r")), cx = Number(arc.getAttribute("cx")), cy = Number(arc.getAttribute("cy"));
       var circ = 2 * Math.PI * r, off = parseFloat(arc.style.strokeDashoffset);
       var frac = isNaN(off) || !r ? 0 : Math.max(0, Math.min(1, 1 - off / circ));
       g.style.opacity = arc.style.opacity || "1";
-      if (colors && r && (Math.abs(frac - last) > 1e-4 || r !== lastR)) { last = frac; lastR = r; draw(cx, cy, r, frac); }
+      if (r && (Math.abs(frac - last) > 1e-4 || r !== lastR)) { last = frac; lastR = r; draw(cx, cy, r, frac); }
+      // drops: the first dot once the ink starts, then each dot as it comes into focus
+      var dots = wheel.querySelectorAll(".wheel-dot");
+      if (dots.length) {
+        if (!started && frac > 0.004) { started = true; drops(dots[0]); }
+        var best = -1, bs = 1.4;
+        for (var i = 0; i < dots.length; i++) { var sc = dotScale(dots[i]); if (sc > bs) { bs = sc; best = i; } }
+        if (best !== -1 && best !== active) { if (started) drops(dots[best]); active = best; }
+      }
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
