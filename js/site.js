@@ -1713,19 +1713,27 @@ function initGreeting() {
       `<feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7" result="n"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>` +
       `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
-      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>`;
+      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>` +
+      // the "wet" edge: the same spill, a little further ahead, in warm amber — the navy ink
+      // behind it covers it as it dries, so only a glowing band shows at the front
+      `<linearGradient id="greet-wet-feather" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${F}" y2="0">` +
+      `<stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
+      `<mask id="greet-wet-mask" maskUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
+      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-wet-feather)" filter="url(#greet-soak)"/></mask>`;
     const pen = layer("greet-pen");
     const cover = layer("greet-cover");
+    const wet = layer("greet-wet");
+    wet.setAttribute("mask", "url(#greet-wet-mask)");
     const ink = layer("greet-ink");
     ink.setAttribute("mask", "url(#greet-mask)");
-    src.replaceWith(defs, pen, cover, ink);
+    src.replaceWith(defs, pen, cover, wet, ink);
     const sylls = Array.from(pen.children).map(el => {
       const len = Math.ceil(el.getTotalLength()) + 2;
       el.style.strokeDasharray = `${len} ${len}`;
       const b = el.getBBox();
       return { el, len, x0: b.x, w: b.width };
     });
-    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), soak: defs.querySelector("feDisplacementMap"),
+    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), wetGrad: defs.querySelector("#greet-wet-feather"), soak: defs.querySelector("feDisplacementMap"),
       noise: defs.querySelector("feTurbulence"), sylls, F, x0: bb.x, w: bb.width });
     paint(-1);
     return true;
@@ -1740,6 +1748,9 @@ function initGreeting() {
     const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
     G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
     G.grad.setAttribute("x2", inkX.toFixed(1));
+    const wetX = inkX + 52;                          // the amber edge runs this far ahead of the navy
+    G.wetGrad.setAttribute("x1", (wetX - G.F).toFixed(1));
+    G.wetGrad.setAttribute("x2", wetX.toFixed(1));
     G.soak.setAttribute("scale", (t < 0 ? 0 : 46 * Math.sin(Math.PI * q)).toFixed(1)); // wobbles while moving, calm at rest
     G.sylls.forEach((s, i) => {
       const p = ease((t - i * 0.34) / 1.4);         // syllables overlap, so it reads as one motion
