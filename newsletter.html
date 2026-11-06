@@ -418,6 +418,41 @@
   }
 
 
+  /* ---------- SIGN-UP FORM (posts to the Kit page) ---------- */
+  .nl-signup{ margin-top:26px; max-width:520px; scroll-margin-top:300px; }
+  .nl-signup form{
+    display:flex; align-items:center; gap:8px;
+    background:#fff; border:1px solid var(--line); border-radius:999px; padding:6px;
+    box-shadow:0 14px 30px -20px rgba(28,36,64,.45);
+    transition:border-color .2s ease, box-shadow .2s ease;
+  }
+  .nl-signup form:focus-within{ border-color:var(--red); box-shadow:0 0 0 3px rgba(174,54,40,.16); }
+  .nl-signup input[type="email"]{
+    flex:1; min-width:0; border:0; background:transparent; outline:none;
+    padding:12px 8px 12px 18px; font:inherit; font-size:1rem; color:var(--ink);
+  }
+  .nl-signup input[type="email"]::placeholder{ color:var(--ink-soft); opacity:.7; }
+  .nl-signup button{
+    flex:none; cursor:pointer; background:var(--navy); color:var(--footer-ink);
+    border:1px solid var(--navy); border-radius:999px; padding:13px 26px;
+    font:inherit; font-size:0.82rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    transition:transform .18s ease, background .18s ease;
+  }
+  .nl-signup button:hover{ transform:translateY(-2px); background:var(--navy-deep); }
+  .nl-signup button:disabled{ opacity:.6; cursor:default; transform:none; }
+  .nl-signup .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .nl-signup-msg{ margin:12px 6px 0; font-size:0.92rem; min-height:1.3em; color:var(--ink-soft); }
+  .nl-signup-msg.err{ color:var(--red-ink); }
+  .nl-signup-done{
+    display:none; align-items:center; gap:12px; background:#fff; border:1px solid var(--line);
+    border-radius:18px; padding:16px 20px; color:var(--ink); font-weight:600;
+    box-shadow:0 14px 30px -20px rgba(28,36,64,.45);
+  }
+  .nl-signup-done svg{ flex:none; width:22px; height:22px; color:var(--green); }
+  .nl-signup.is-done form, .nl-signup.is-done .nl-signup-msg{ display:none; }
+  .nl-signup.is-done .nl-signup-done{ display:flex; }
+  @media (max-width:420px){ .nl-signup button{ padding:13px 18px; } }
+
   /* ---------- POLISH (shared across pages) ---------- */
   ::selection{ background:rgba(192,138,46,0.28); color:var(--ink); }
   a:focus-visible, button:focus-visible, [role="button"]:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
@@ -509,7 +544,7 @@
       <a href="events.html" data-i18n="label_all_events">Events</a>
       <a href="about.html" data-i18n="label_about">About</a>
       <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
-      <a href="https://uoft-mcc.kit.com/profile" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
+      <a href="newsletter.html#subscribe" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
       <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
       <div class="lang-toggle" role="group" aria-label="Language">
         <span class="lang-toggle-slider" aria-hidden="true"></span>
@@ -540,6 +575,18 @@
       <span class="eyebrow" data-i18n="newsletter_eyebrow">MCC Newsletter</span>
       <h1 data-i18n="newsletter_h1">What's new with MCC.</h1>
       <p class="lede" data-i18n="newsletter_lede">Club updates, upcoming events, and stories from the community, published every couple of weeks.</p>
+      <div class="nl-signup" id="subscribe">
+        <form id="nl-signup-form" novalidate>
+          <label class="hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+          <input type="email" id="nl-signup-email" name="email_address" placeholder="Email address" autocomplete="email" inputmode="email" required aria-label="Email address">
+          <button type="submit" id="nl-signup-btn">Subscribe</button>
+        </form>
+        <p class="nl-signup-msg" id="nl-signup-msg" role="status" aria-live="polite"></p>
+        <div class="nl-signup-done" id="nl-signup-done" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l3 3 5-6"/></svg>
+          <span>Thanks, you're on the list! Check your inbox (and spam) for a confirmation email.</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -577,7 +624,7 @@
           <h2 data-i18n="footer_h2">Let's stay in touch.</h2>
           <div class="cta-row">
             <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
-            <a class="btn-footer ghost celebrate" href="https://uoft-mcc.kit.com/profile" data-i18n="label_join_newsletter_footer">Join the Newsletter</a>
+            <a class="btn-footer ghost celebrate" href="newsletter.html#subscribe" data-i18n="label_join_newsletter_footer">Join the Newsletter</a>
             <a class="btn-footer exec" href="login.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec login</a>
           </div>
         </div>
@@ -623,6 +670,47 @@
     </div>
   </footer>
 </main>
+<script>
+// Newsletter sign-up: posts straight to the Kit page's own subscribe endpoint (it allows cross-site
+// requests and answers with JSON), so people subscribe without ever leaving this site.
+(function(){
+  var KIT_SUBSCRIBE_URL = "https://uoft-mcc.kit.com/posts";
+  var form = document.getElementById("nl-signup-form");
+  if (!form) return;
+  var box = document.getElementById("subscribe"),
+      input = document.getElementById("nl-signup-email"),
+      btn = document.getElementById("nl-signup-btn"),
+      msg = document.getElementById("nl-signup-msg");
+  function say(text, bad){ msg.textContent = text || ""; msg.className = "nl-signup-msg" + (bad ? " err" : ""); }
+  function done(){ box.classList.add("is-done"); }
+
+  form.addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = input.value.trim();
+    if (form.website && form.website.value) { done(); return; }            // honeypot: bots fill this in
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Please enter a valid email address.", true); input.focus(); return; }
+    say(""); btn.disabled = true; btn.textContent = "Subscribing\u2026";
+    fetch(KIT_SUBSCRIBE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+      body: "email_address=" + encodeURIComponent(email)
+    }).then(function(r){
+      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok && j.status !== "error", j: j }; });
+    }).then(function(res){
+      if (res.ok) { done(); }
+      else { say("That didn't go through. Please check the address and try again.", true); }
+    }).catch(function(){
+      say("Couldn't reach the sign-up service. Please try again in a moment.", true);
+    }).then(function(){ btn.disabled = false; btn.textContent = "Subscribe"; });
+  });
+
+  // Arriving from a "Join Newsletter" button: put the cursor in the box.
+  function focusIfLinked(){ if (location.hash === "#subscribe") setTimeout(function(){ input.focus({ preventScroll: true }); }, 400); }
+  focusIfLinked();
+  window.addEventListener("hashchange", focusIfLinked);
+})();
+</script>
+
 
 <script>
 (function(){
