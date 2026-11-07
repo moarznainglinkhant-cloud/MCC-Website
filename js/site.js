@@ -719,7 +719,7 @@ function loadRegistration() {
   return loadScriptOnce("js/exec-config.js", () => !!window.MCC_EXEC_CONFIG)
     .then(() => loadScriptOnce("js/supabase.js", () => !!(window.supabase && window.supabase.createClient)))
     .then(() => loadScriptOnce("js/vendor/qrcode.min.js", () => typeof window.qrcode === "function"))
-    .then(() => loadScriptOnce("js/register.js?v=wallet2", () => !!window.MCCRegister));
+    .then(() => loadScriptOnce("js/register.js?v=wallet3", () => !!window.MCCRegister));
 }
 function initRegisterButtons() {
   document.addEventListener("click", e => {

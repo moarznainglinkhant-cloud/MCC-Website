@@ -602,7 +602,7 @@
     var win = null;
     try { win = window.open("", "_blank"); if (win) win.document.write("<p style=\"font:16px system-ui;padding:24px\">Making your Wallet pass…</p>"); } catch (e) { win = null; }
     walletBanner(ev, name || "Guest").then(function (banner) {
-      return withTimeout(fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/wallet-pass", {
+      return withTimeout(fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/swift-task"  /* the wallet-pass function (Supabase gave it this address) */, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: cfg.key },
         body: JSON.stringify({ ticket: String(t.ticket_code || ""), banner: banner, time: ev.time || "", place: ev.location || "" })
