@@ -92,7 +92,7 @@
 
   /* ---------- SCROLL REVEAL ---------- */
   /* Cards start visible; site.js hides only the ones further down the page, then slides them in on scroll. */
-  .reveal-on .reveal{ opacity:0; transform:translateY(18px); transition: opacity .6s ease, transform .6s ease; }
+  .reveal-on .reveal{ opacity:0; transition: opacity .6s ease, transform .6s ease; }  /* fade only — no slide-up (user dislikes it) */
   .reveal-on .reveal.is-visible{ opacity:1; transform:translateY(0); }
   /* Safety net: if JS never runs (blocked, fails to load), don't leave content permanently invisible. */
   @media (scripting: none){ .reveal{ opacity:1 !important; transform:none !important; } }
