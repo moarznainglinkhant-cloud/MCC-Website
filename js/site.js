@@ -133,7 +133,7 @@ const I18N = {
     bento_events_big: "{n} events since {y}",
     bento_events_link: "See them all",
     bento_about_kicker: "The people",
-    bento_about_title: "Meet the team behind MCC",
+    bento_about_title: "Meet the team",
     bento_about_sub: "{n} people across {d} teams",
     bento_gallery_kicker: "Gallery",
     bento_gallery_title: "Moments from our events",
@@ -142,7 +142,6 @@ const I18N = {
     bento_news_link: "Read",
     bento_fact_kicker: "Did you know?",
     bento_fact_btn: "Another one",
-    bento_ig_sub: "Follow along between events",
 
     about_eyebrow: "The People",
     about_h1: "The team behind MCC",
@@ -225,7 +224,7 @@ const I18N = {
     bento_events_big: "{y} ခုနှစ်ကတည်းက အခမ်းအနား {n} ခု",
     bento_events_link: "အားလုံးကြည့်ရန်",
     bento_about_kicker: "အဖွဲ့ဝင်များ",
-    bento_about_title: "MCC နောက်ကွယ်ရှိ အဖွဲ့နှင့် တွေ့ဆုံပါ",
+    bento_about_title: "အဖွဲ့နှင့် တွေ့ဆုံပါ",
     bento_about_sub: "အဖွဲ့ {d} ဖွဲ့တွင် လူ {n} ဦး",
     bento_gallery_kicker: "ဓာတ်ပုံပြခန်း",
     bento_gallery_title: "ကျွန်ုပ်တို့ ပွဲများမှ အမှတ်တရများ",
@@ -234,7 +233,6 @@ const I18N = {
     bento_news_link: "ဖတ်ရန်",
     bento_fact_kicker: "သင်သိပါသလား?",
     bento_fact_btn: "နောက်တစ်ခု",
-    bento_ig_sub: "ပွဲများကြားတွင်လည်း လိုက်ကြည့်ပါ",
 
     about_eyebrow: "အဖွဲ့ဝင်များ",
     about_h1: "MCC နောက်ကွယ်ရှိ အဖွဲ့",
@@ -2244,8 +2242,8 @@ function tiltCard(card) {
 
 // ---------- Homepage: "Explore MCC" bento grid ----------
 // Each tile is a small live preview of another page. Filled from the same data the rest of the
-// site uses: past events (Sheet), the team (Team tab, or data/team.csv), the latest published
-// newsletter (Supabase, public read), and the fun facts list above.
+// site uses: past events (Sheet), the team (Team tab, or data/team.csv), gallery thumbnails and the
+// fun facts list above. The Newsletter tile keeps its fixed title (it no longer shows the latest issue's name).
 const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "", count: 0 };
 
 // Events tile posters — edit these two lists to curate it (matched against the event's name or
@@ -2280,7 +2278,7 @@ function renderBento(past) {
     }
     initBentoPosters(box);
   }
-  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); loadBentoNews(); initBentoFact(); renderBentoGallery(); initBentoIg(); }
+  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); initBentoFact(); renderBentoGallery(); initBentoIg(); }
 }
 
 function renderBentoText() {
@@ -2342,21 +2340,6 @@ async function loadBentoTeam() {
   faces.innerHTML = show.map((r, i) => `<span class="t-face" style="background:${BENTO_COLORS[i % BENTO_COLORS.length]}">${escapeHtml(initials(r))}</span>`).join("")
     + (rows.length > show.length ? `<span class="t-face" style="background:var(--bg-sunk);color:var(--ink)">+${rows.length - show.length}</span>` : "");
   renderBentoText();
-}
-
-async function loadBentoNews() {
-  const el = document.getElementById("js-bento-news");
-  const cfg = window.MCC_EXEC_CONFIG;
-  if (!el || !cfg || !cfg.url || !cfg.key) return;
-  try {
-    const res = await fetch(`${cfg.url}/rest/v1/newsletters?select=name,updated_at&status=eq.published&order=updated_at.desc&limit=1`,
-      { headers: { apikey: cfg.key } });
-    if (!res.ok) return;
-    const rows = await res.json();
-    if (!rows || !rows[0] || !rows[0].name) return;
-    el.removeAttribute("data-i18n");
-    el.textContent = rows[0].name;
-  } catch (e) { /* keep the fallback text */ }
 }
 
 function initBentoFact() {
