@@ -2450,20 +2450,23 @@ function renderBentoGallery() {
         cards.push({ el, r, y0, x: i * step - pw, ph: Math.random() * 6, tilt: Math.random() * 6 - 3 });
       }
     });
-    const span = per * step, speed = [16, 21, 18];
+    // Calm pace, matched to the Events posters: the strings creep along at about 8-11px a second
+    // (the tile is narrow, so this reads like the posters' drift), and scrolling nudges them gently.
+    const span = per * step, speed = [8, 11, 9.5];
     let t = 0, swing = 0;
     const yAt = (y0, x) => { const u = (x / W) * 2 - 1; return y0 + sag * (1 - u * u); };
     const slope = x => { const u = (x / W) * 2 - 1; return Math.atan2(-4 * sag * u / W, 1) * 180 / Math.PI; };
     const part = {
       tick(dt, k) {
-        t += dt; swing += ((k - 1) * 2.2 - swing) * Math.min(1, dt * 3);
+        const kk = 1 + (k - 1) * 0.35;
+        t += dt; swing += ((kk - 1) * 1.2 - swing) * Math.min(1, dt * 2);
         cards.forEach(c => {
           const dir = c.r % 2 ? -1 : 1;
-          c.x += dir * speed[c.r % 3] * k * dt;
+          c.x += dir * speed[c.r % 3] * kk * dt;
           if (c.x > W + pw) { c.x -= span; c.el.firstChild.src = pool[next++ % pool.length]; }
           if (c.x < -pw * 2) { c.x += span; c.el.firstChild.src = pool[next++ % pool.length]; }
           const cx = c.x + pw / 2;
-          const ang = slope(cx) + c.tilt + Math.sin(t * 1.6 + c.ph) * (1.5 + swing * 3);
+          const ang = slope(cx) + c.tilt + Math.sin(t * 1.1 + c.ph) * (1.2 + swing * 2.5);
           c.el.style.transform = `translate(${c.x.toFixed(1)}px,${(yAt(c.y0, cx) + 2).toFixed(1)}px) rotate(${ang.toFixed(2)}deg)`;
         });
       }
@@ -2512,6 +2515,8 @@ function renderBentoGallery() {
 function initBentoIg() {
   const tile = document.querySelector(".t-ig");
   if (!tile || tile.querySelector(".ig-fx")) return;
+  // Phones and tablets keep the original plain red tile: a tap would otherwise light it up and leave it lit.
+  if (!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches)) return;
   const fx = document.createElement("span");
   fx.className = "ig-fx"; fx.setAttribute("aria-hidden", "true");
   tile.insertBefore(fx, tile.firstChild);
@@ -2531,8 +2536,9 @@ function initBentoIg() {
     fx.appendChild(el);
     el.addEventListener("animationend", () => el.remove(), { once: true });
   };
-  tile.addEventListener("pointerenter", e => { const [x, y] = at(e); glowAt(x, y); tile.classList.add("is-lit"); });
+  tile.addEventListener("pointerenter", e => { if (e.pointerType !== "mouse") return; const [x, y] = at(e); glowAt(x, y); tile.classList.add("is-lit"); });
   tile.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse") return;
     const [x, y] = at(e); glowAt(x, y);
     const now = performance.now();
     if (!reduce && now - last > 30) { last = now; ember(x, y); }
