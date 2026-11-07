@@ -461,11 +461,11 @@
 
   /* Gallery tile (js/site.js renderBentoGallery): a magnifier over a contact sheet on wider screens,
      a clothesline of pegged polaroids on phones. Both drift on their own and speed up while you scroll. */
-  .t-gallery{ grid-area:ga; background:var(--bg-sunk); isolation:isolate; }
+  .t-gallery{ grid-area:ga; background:var(--bg-raised); isolation:isolate; }
   .t-gallery > .t-kicker, .t-gallery > .t-title{ position:relative; z-index:2; }
   .t-gstage{ position:absolute; inset:0; z-index:0; pointer-events:none; }
   .t-gallery::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
-    background:linear-gradient(to top, var(--bg-sunk) 16%, rgba(238,230,211,0.82) 34%, rgba(238,230,211,0) 62%); }
+    background:linear-gradient(to top, var(--bg-raised) 16%, rgba(253,250,242,0.82) 34%, rgba(253,250,242,0) 62%); }
   .lz-grid{ position:absolute; left:-6px; right:-6px; top:-6px; display:grid; gap:3px; grid-template-columns:repeat(var(--cols,4), 1fr); }
   .lz-grid img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; }
   .lz-base{ filter:grayscale(1) sepia(.45) contrast(.85) brightness(1.08); opacity:.5; }
