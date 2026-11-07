@@ -2419,10 +2419,12 @@ function renderBentoGallery() {
     if (window.matchMedia("(hover: hover)").matches) { tile.addEventListener("pointermove", move); tile.addEventListener("pointerleave", leave); }
     draw();
     return {
+      // Calm pace, matched to the Events posters: the loupe glides at roughly 15-25px a second,
+      // and scrolling nudges it along like it nudges the posters (just more gently).
       tick(dt, k) {
-        t += dt * 0.55 * (1 + (k - 1) * 0.5);
+        t += dt * 0.22 * (1 + (k - 1) * 0.35);
         const tx = ptr ? ptr[0] : W / 2 + (W / 2 - R * 0.55) * Math.sin(t * 0.9),
-              ty = ptr ? ptr[1] : H * 0.34 + (H * 0.22) * Math.sin(t * 1.37 + 1);
+              ty = ptr ? ptr[1] : H * 0.34 + (H * 0.22) * Math.sin(t * 1.1 + 1);
         const ease = 1 - Math.exp(-(ptr ? 10 : 4) * dt);
         x += (tx - x) * ease; y += (ty - y) * ease;
         draw();
@@ -2505,8 +2507,8 @@ function renderBentoGallery() {
   }).observe(tile);
 }
 
-// Instagram tile: plain red at rest. On hover a warm glow follows the cursor, a ripple spreads out
-// from it every so often, and a few sparks fly when the cursor first comes in.
+// Instagram tile: plain red at rest. On hover, warm embers trail the cursor and float up as they fade,
+// over a faint glow that follows it. Nothing on touch screens (no hover there).
 function initBentoIg() {
   const tile = document.querySelector(".t-ig");
   if (!tile || tile.querySelector(".ig-fx")) return;
@@ -2514,33 +2516,26 @@ function initBentoIg() {
   fx.className = "ig-fx"; fx.setAttribute("aria-hidden", "true");
   tile.insertBefore(fx, tile.firstChild);
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let lastRipple = 0;
+  let last = 0;
   const at = e => { const b = tile.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
-  const spawn = (cls, x, y, extra) => {
+  const glowAt = (x, y) => { fx.style.setProperty("--mx", x + "px"); fx.style.setProperty("--my", y + "px"); };
+  const ember = (x, y) => {
     const el = document.createElement("span");
-    el.className = cls; el.style.left = x + "px"; el.style.top = y + "px";
-    if (extra) Object.assign(el.style, extra);
+    el.className = "ig-ember";
+    el.style.left = (x + Math.random() * 10 - 5) + "px";
+    el.style.top = (y + Math.random() * 10 - 5) + "px";
+    el.style.setProperty("--s", (5 + Math.random() * 7).toFixed(1) + "px");
+    el.style.setProperty("--dx", (Math.random() * 30 - 15).toFixed(1) + "px");
+    el.style.setProperty("--dy", (-40 - Math.random() * 60).toFixed(1) + "px");
+    el.style.setProperty("--d", (0.9 + Math.random() * 0.8).toFixed(2) + "s");
     fx.appendChild(el);
     el.addEventListener("animationend", () => el.remove(), { once: true });
   };
-  const ripple = (x, y) => spawn("ig-ripple", x, y);
-  const sparks = (x, y) => {
-    for (let i = 0; i < 9; i++) {
-      const a = Math.random() * Math.PI * 2, r = 30 + Math.random() * 50;
-      spawn("ig-spark", x, y, { "--dx": `${(Math.cos(a) * r).toFixed(1)}px`, "--dy": `${(Math.sin(a) * r).toFixed(1)}px`, animationDelay: `${(Math.random() * 0.12).toFixed(2)}s` });
-    }
-  };
-  tile.addEventListener("pointerenter", e => {
-    const [x, y] = at(e);
-    fx.style.setProperty("--mx", x + "px"); fx.style.setProperty("--my", y + "px");
-    tile.classList.add("is-lit");
-    if (!reduce) { ripple(x, y); sparks(x, y); lastRipple = performance.now(); }
-  });
+  tile.addEventListener("pointerenter", e => { const [x, y] = at(e); glowAt(x, y); tile.classList.add("is-lit"); });
   tile.addEventListener("pointermove", e => {
-    const [x, y] = at(e);
-    fx.style.setProperty("--mx", x + "px"); fx.style.setProperty("--my", y + "px");
+    const [x, y] = at(e); glowAt(x, y);
     const now = performance.now();
-    if (!reduce && now - lastRipple > 650) { lastRipple = now; ripple(x, y); }
+    if (!reduce && now - last > 30) { last = now; ember(x, y); }
   });
   tile.addEventListener("pointerleave", () => tile.classList.remove("is-lit"));
 }
