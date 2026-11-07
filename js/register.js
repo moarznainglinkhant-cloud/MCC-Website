@@ -491,7 +491,7 @@
         '<div class="tk-foil"></div><div class="tk-glare"></div>' +
       '</div></div></div>' +
       cal +
-      (window.MCC_REG_DEMO ? '' : '<button type="button" class="reg-btn wallet" data-wallet>Add to Apple Wallet</button><p class="reg-small reg-wallet-note" hidden></p>') +
+      '<button type="button" class="reg-btn wallet" data-wallet>Add to Apple Wallet</button><p class="reg-small reg-wallet-note" hidden></p>' +
       (window.MCC_REG_DEMO ? '' : '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>') +
       join);
     holdable($(".tk-stage", body));
