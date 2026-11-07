@@ -86,6 +86,7 @@
       ".reg-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px 20px;border-radius:999px;border:0;cursor:pointer;",
       "background:var(--navy,#1C2440);color:var(--footer-ink,#F6F1E4);font:inherit;font-size:.86rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;transition:transform .2s,opacity .2s}",
       ".reg-btn:hover{transform:translateY(-1px)}.reg-btn[disabled]{opacity:.55;cursor:default;transform:none}",
+      ".reg-btn.wallet{background:#000;color:#fff;margin:0 0 6px}.reg-wallet-note{text-align:left;margin:0 0 12px;color:#8C2A1F}",
       ".reg-btn.ghost{background:transparent;color:var(--ink,#1C2440);border:1px solid var(--line,rgba(28,36,64,.16))}",
       ".reg-link{background:none;border:0;padding:0;font:inherit;font-size:.84rem;font-weight:600;color:var(--ink,#1C2440);text-decoration:underline;text-underline-offset:3px;cursor:pointer}",
       ".reg-small{font-size:.84rem;color:var(--ink-soft,#5F5A48);text-align:center;margin-top:4px}",
@@ -490,15 +491,139 @@
         '<div class="tk-foil"></div><div class="tk-glare"></div>' +
       '</div></div></div>' +
       cal +
+      (window.MCC_REG_DEMO ? '' : '<button type="button" class="reg-btn wallet" data-wallet>Add to Apple Wallet</button><p class="reg-small reg-wallet-note" hidden></p>') +
       (window.MCC_REG_DEMO ? '' : '<p class="reg-small" style="text-align:left;margin:0 0 14px">Show this at the door.</p>') +
       join);
     holdable($(".tk-stage", body));
+    var wb = $("[data-wallet]", body);
+    if (wb) wb.addEventListener("click", function () {
+      addToWallet(ev, t, t.holder || (opts.guest && opts.guest.name) || "", wb, $(".reg-wallet-note", body));
+    });
     var done = $("[data-done]", body);
     if (done) done.addEventListener("click", close);
     var nj = $("[data-nojoin]", body);
     if (nj) nj.addEventListener("click", close);
     var j = $("[data-join]", body);
     if (j) j.addEventListener("click", function () { viewSignup(ev, opts.guest, false); });
+  }
+
+  // ---------- Apple Wallet pass ----------
+  // Draws the pass banner (event poster + guest name + event name) on a canvas, then asks the
+  // wallet-pass Supabase function to make the pass. The function keeps the WalletWallet key secret.
+  var WALLET_W = 1125, WALLET_H = 432;
+  function loadImg(src) {
+    return new Promise(function (resolve) {
+      if (!src) return resolve(null);
+      var im = new Image();
+      im.decoding = "async";
+      im.onload = function () { resolve(im); };
+      im.onerror = function () { resolve(null); };
+      im.src = src;
+    });
+  }
+  function walletFonts() {
+    var jobs = [];
+    try {
+      if (window.FontFace && document.fonts && !walletFonts.cp) {
+        walletFonts.cp = new FontFace("Courier Prime", "url(fonts/CourierPrime-Bold.woff2)", { weight: "700" });
+        jobs.push(walletFonts.cp.load().then(function (f) { document.fonts.add(f); }));
+      }
+      if (document.fonts) jobs.push(document.fonts.load('600 84px "Fraunces"'));
+    } catch (e) { /* fonts are a nicety; fall back to system fonts */ }
+    return Promise.all(jobs.map(function (j) { return j.catch(function () {}); }));
+  }
+  function wrapLines(ctx, text, maxW) {
+    var words = String(text).split(/\s+/), lines = [], line = "";
+    words.forEach(function (w) {
+      var test = line ? line + " " + w : w;
+      if (line && ctx.measureText(test).width > maxW) { lines.push(line); line = w; } else line = test;
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+  function drawBanner(img, name, title, scale) {
+    var W = Math.round(WALLET_W * scale), H = Math.round(WALLET_H * scale);
+    var c = document.createElement("canvas");
+    c.width = W; c.height = H;
+    var x = c.getContext("2d");
+    x.scale(scale, scale);
+    var w = WALLET_W, h = WALLET_H, L = 66;
+    x.fillStyle = "#1C2440"; x.fillRect(0, 0, w, h);
+    if (img) {
+      var s = Math.max(w / img.naturalWidth, h / img.naturalHeight);
+      var iw = img.naturalWidth * s, ih = img.naturalHeight * s;
+      x.drawImage(img, (w - iw) / 2, (h - ih) * 0.3, iw, ih);
+    }
+    var g = x.createLinearGradient(0, h, 0, 0);
+    g.addColorStop(0, "rgba(20,26,49,.96)"); g.addColorStop(0.45, "rgba(20,26,49,.8)"); g.addColorStop(1, "rgba(20,26,49,.5)");
+    x.fillStyle = g; x.fillRect(0, 0, w, h);
+    // guest name, typewriter, gold
+    var nameSize = 64;
+    x.font = '700 ' + nameSize + 'px "Courier Prime", "Courier New", Courier, monospace';
+    while (nameSize > 36 && x.measureText(name).width > w - 2 * L) {
+      nameSize -= 4; x.font = '700 ' + nameSize + 'px "Courier Prime", "Courier New", Courier, monospace';
+    }
+    x.save();
+    x.shadowColor = "rgba(10,14,30,.7)"; x.shadowBlur = 14; x.shadowOffsetY = 2;
+    x.fillStyle = "#D9A441"; x.textBaseline = "alphabetic";
+    x.fillText(name, L, 148);
+    x.restore();
+    // event name, Fraunces, cream, up to two lines
+    var size = 84, lines;
+    for (;;) {
+      x.font = '600 ' + size + 'px "Fraunces", Georgia, serif';
+      lines = wrapLines(x, title, w - 2 * L);
+      if (lines.length <= 2 || size <= 56) break;
+      size -= 6;
+    }
+    if (lines.length > 2) {
+      lines = lines.slice(0, 2);
+      while (lines[1].length > 1 && x.measureText(lines[1] + "\u2026").width > w - 2 * L) lines[1] = lines[1].slice(0, -1);
+      lines[1] = lines[1].replace(/\s+$/, "") + "\u2026";
+    }
+    x.fillStyle = "#F6F1E4";
+    var lh = size * 1.04, y = 200 + size * 0.86;
+    lines.forEach(function (ln) { x.fillText(ln, L, y); y += lh; });
+    return c.toDataURL("image/png");
+  }
+  function walletBanner(ev, name) {
+    return Promise.all([loadImg(ev.photo), walletFonts()]).then(function (r) {
+      var url;
+      try { url = drawBanner(r[0], name, ev.name || "", 1); }
+      catch (e) { url = drawBanner(null, name, ev.name || "", 1); } // poster from another site can't be drawn
+      if (url.length > 1300000) url = drawBanner(r[0], name, ev.name || "", 2 / 3);
+      return url;
+    });
+  }
+  function addToWallet(ev, t, name, btn, note) {
+    busy(btn, true, "Making your pass…");
+    note.hidden = true;
+    // open the tab now, while we still have the tap (browsers block pop-ups opened later)
+    var win = null;
+    try { win = window.open("", "_blank"); if (win) win.document.write("<p style=\"font:16px system-ui;padding:24px\">Making your Wallet pass…</p>"); } catch (e) { win = null; }
+    walletBanner(ev, name || "Guest").then(function (banner) {
+      return withTimeout(fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/wallet-pass", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: cfg.key },
+        body: JSON.stringify({ ticket: String(t.ticket_code || ""), banner: banner, time: ev.time || "", place: ev.location || "" })
+      }), 30000);
+    }).then(function (res) {
+      return res.json().catch(function () { return {}; }).then(function (j) {
+        if (!res.ok || !j.url) throw new Error(j.error || "The Wallet pass couldn't be made right now. Your ticket above still works.");
+        return j.url;
+      });
+    }).then(function (url) {
+      busy(btn, false);
+      if (win && !win.closed) win.location.href = url; else window.location.href = url;
+    }).catch(function (err) {
+      busy(btn, false);
+      if (win && !win.closed) win.close();
+      var msg = (err && err.message) || "";
+      note.textContent = /failed to fetch|network|load failed|timeout/i.test(msg)
+        ? "Couldn't reach the server. Check your connection and try again."
+        : msg;
+      note.hidden = false;
+    });
   }
 
   // ---------- password reset (from the emailed link) ----------
