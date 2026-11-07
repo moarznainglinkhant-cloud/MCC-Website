@@ -138,7 +138,6 @@ const I18N = {
     bento_gallery_kicker: "Gallery",
     bento_gallery_title: "Moments from our events",
     bento_news_kicker: "Newsletter",
-    bento_news_fallback: "Every issue, in one place",
     bento_news_link: "Read",
     bento_fact_kicker: "Did you know?",
     bento_fact_btn: "Another one",
@@ -229,7 +228,6 @@ const I18N = {
     bento_gallery_kicker: "ဓာတ်ပုံပြခန်း",
     bento_gallery_title: "ကျွန်ုပ်တို့ ပွဲများမှ အမှတ်တရများ",
     bento_news_kicker: "သတင်းလွှာ",
-    bento_news_fallback: "စာစောင်အားလုံး တစ်နေရာတည်းတွင်",
     bento_news_link: "ဖတ်ရန်",
     bento_fact_kicker: "သင်သိပါသလား?",
     bento_fact_btn: "နောက်တစ်ခု",
@@ -2243,7 +2241,7 @@ function tiltCard(card) {
 // ---------- Homepage: "Explore MCC" bento grid ----------
 // Each tile is a small live preview of another page. Filled from the same data the rest of the
 // site uses: past events (Sheet), the team (Team tab, or data/team.csv), gallery thumbnails and the
-// fun facts list above. The Newsletter tile keeps its fixed title (it no longer shows the latest issue's name).
+// fun facts list above. The Newsletter tile is just its label and a Read link.
 const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "", count: 0 };
 
 // Events tile posters — edit these two lists to curate it (matched against the event's name or
