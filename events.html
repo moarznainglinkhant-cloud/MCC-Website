@@ -91,10 +91,11 @@
   ::view-transition-old(next-poster), ::view-transition-new(next-poster){
     width:100%; height:100%; object-fit:cover; object-position:center top; animation-duration:.65s;
   }
-  /* One quick, true cross-fade: the new page dissolves straight over the old one. No gap where both
-     are faded out (that read as a blink), no movement, and the nav is identical on every page so it
-     stays perfectly still — the eye has nothing to re-find. */
-  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.24s; animation-timing-function:cubic-bezier(.4,0,.2,1); }
+  /* A true cross-fade: the new page dissolves straight over the old one. No gap where both are faded
+     out (that read as a blink), no movement, and the nav is identical on every page so it stays
+     perfectly still. 0.4s with a symmetric ease-in-out: long enough to read as a calm dissolve,
+     short enough that the page never feels like it's making you wait. */
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.4s; animation-timing-function:cubic-bezier(.45,0,.55,1); }
   @media (prefers-reduced-motion: reduce){ ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*){ animation:none !important; } }
   [data-pending]{ visibility:hidden; }
 

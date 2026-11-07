@@ -2099,6 +2099,12 @@ function initGreeting() {
   const html = document.documentElement;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const reveal = () => html.classList.remove("greet-pending");
+  // Hero photos start dissolving in straight away (see .hero-wait in index.html), so the top of the
+  // page is never empty while the pen gets ready. Two frames so the hidden state is painted first.
+  if (html.classList.contains("hero-wait")) {
+    requestAnimationFrame(() => requestAnimationFrame(() => html.classList.remove("hero-wait")));
+    setTimeout(() => html.classList.remove("hero-intro"), 2800);   // then hover goes back to its quick zoom
+  }
   const NS = "http://www.w3.org/2000/svg";
   const src = svg.querySelector(".greet-src");
 

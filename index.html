@@ -93,10 +93,11 @@
   ::view-transition-old(next-poster), ::view-transition-new(next-poster){
     width:100%; height:100%; object-fit:cover; object-position:center top; animation-duration:.65s;
   }
-  /* One quick, true cross-fade: the new page dissolves straight over the old one. No gap where both
-     are faded out (that read as a blink), no movement, and the nav is identical on every page so it
-     stays perfectly still — the eye has nothing to re-find. */
-  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.24s; animation-timing-function:cubic-bezier(.4,0,.2,1); }
+  /* A true cross-fade: the new page dissolves straight over the old one. No gap where both are faded
+     out (that read as a blink), no movement, and the nav is identical on every page so it stays
+     perfectly still. 0.4s with a symmetric ease-in-out: long enough to read as a calm dissolve,
+     short enough that the page never feels like it's making you wait. */
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.4s; animation-timing-function:cubic-bezier(.45,0,.55,1); }
   @media (prefers-reduced-motion: reduce){ ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*){ animation:none !important; } }
   [data-pending]{ visibility:hidden; }
 
@@ -256,6 +257,16 @@
   .hero-copy .lede{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .7s; }
   .hero-copy .cta-row{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .95s; }
   .greet-pending .hero-copy .lede, .greet-pending .hero-copy .cta-row{ opacity:0; transition:none; }
+  /* Hero photos dissolve in from the very first frame, one after another, settling from a hair larger
+     (no sliding) — so the top of the page is alive while the pen gets ready. */
+  .hero-intro .collage .panel{ transition: opacity 1.1s cubic-bezier(.4,0,.2,1); }
+  .hero-intro .collage .panel-b{ transition-delay:.15s; }
+  .hero-intro .collage .panel-c{ transition-delay:.3s; }
+  .hero-intro .collage .panel img{ transition: transform 2s cubic-bezier(.2,.7,.2,1), opacity .45s ease; }
+  .hero-intro .collage .panel-b img{ transition-delay:.15s, 0s; }
+  .hero-intro .collage .panel-c img{ transition-delay:.3s, 0s; }
+  .hero-wait .collage .panel{ opacity:0; }
+  .hero-wait .collage .panel img{ transform:scale(1.06); }
   .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
   .greet .greet-cover path{ fill:var(--bg); }
   .greet .greet-wet path{ fill:#D9742A; }
@@ -728,8 +739,9 @@
             // Hide the greeting until js/site.js writes it in (it un-hides itself after 3s if anything goes wrong).
             (function(){try{
               if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-              var h=document.documentElement; h.classList.add('greet-pending');
-              setTimeout(function(){ h.classList.remove('greet-pending'); }, 3000);
+              var h=document.documentElement; h.classList.add('greet-pending','hero-wait','hero-intro');
+              setTimeout(function(){ h.classList.remove('greet-pending','hero-wait'); }, 3000);
+              setTimeout(function(){ h.classList.remove('hero-intro'); }, 5000);
             }catch(e){}})();
           </script>
         </h1>
