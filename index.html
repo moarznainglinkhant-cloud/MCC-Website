@@ -93,10 +93,10 @@
   ::view-transition-old(next-poster), ::view-transition-new(next-poster){
     width:100%; height:100%; object-fit:cover; object-position:center top; animation-duration:.65s;
   }
-  ::view-transition-old(root){ animation: vt-out .14s ease both; }
-  ::view-transition-new(root){ animation: vt-in .3s .1s cubic-bezier(.2,.8,.2,1) both; }
-  @keyframes vt-out{ to{ opacity:0; } }
-  @keyframes vt-in{ from{ opacity:0; transform:translateY(6px); } }
+  /* One quick, true cross-fade: the new page dissolves straight over the old one. No gap where both
+     are faded out (that read as a blink), no movement, and the nav is identical on every page so it
+     stays perfectly still — the eye has nothing to re-find. */
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.24s; animation-timing-function:cubic-bezier(.4,0,.2,1); }
   @media (prefers-reduced-motion: reduce){ ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*){ animation:none !important; } }
   [data-pending]{ visibility:hidden; }
 
@@ -251,6 +251,11 @@
      identical in every browser — Safari places split-up Burmese text differently from Chrome. */
   .greet path{ fill:currentColor; }
   .greet-pending .greet{ visibility:hidden; }
+  /* The greeting leads: the paragraph and buttons wait until it starts writing, then fade in slowly
+     behind the pen (no movement). With reduced motion they're simply there. */
+  .hero-copy .lede{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .7s; }
+  .hero-copy .cta-row{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .95s; }
+  .greet-pending .hero-copy .lede, .greet-pending .hero-copy .cta-row{ opacity:0; transition:none; }
   .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
   .greet .greet-cover path{ fill:var(--bg); }
   .greet .greet-wet path{ fill:#D9742A; }
@@ -670,6 +675,8 @@
 </script>
 <noscript><style>[data-pending]{ visibility:visible !important; }</style></noscript>
 <link rel="expect" href="#js-event-visual" blocking="render">
+<!-- Fetch a page as soon as the visitor shows intent (hover / press), so the click doesn't wait on the network. -->
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
 </head>
 <body>
 
