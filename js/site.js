@@ -2280,7 +2280,7 @@ function renderBento(past) {
     }
     initBentoPosters(box);
   }
-  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); loadBentoNews(); initBentoFact(); renderBentoHexes(); }
+  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); loadBentoNews(); initBentoFact(); renderBentoGallery(); initBentoIg(); }
 }
 
 function renderBentoText() {
@@ -2378,20 +2378,171 @@ function initBentoFact() {
   if (btn) btn.addEventListener("click", () => show(true));
 }
 
-function renderBentoHexes() {
-  const box = document.getElementById("js-bento-hexes");
+// Gallery tile photos — edit this list to change which gallery thumbnails the tile uses.
+const BENTO_GALLERY_PHOTOS = ["p6-01","p6-03","p6-04","p6-05","p6-07","p6-09","p6-10","p6-14","p16-00","p16-02","p16-05","p16-07",
+  "p16-10","p16-12","p16-15","p16-18","p18-06","p20-01","p20-03","p20-07","p20-09","p20-14","p23-03","p24-00","p25-04","p25-07",
+  "p25-09","p30-00","p30-04","p30-06","p30-09","p32-03","p34-00","p37-05","p41-00","p44-06","p48-00","p50-00","p51-00"]
+  .map(n => `images/gallery/thumbs/mcc-${n}.webp`);
+const BENTO_PHONE_MQ = "(max-width: 560px)";
+
+// Gallery tile. Wider screens: a faded sepia contact sheet with a magnifying loupe wandering over it
+// (it follows the cursor while you hover). Phones: three strings of pegged polaroids running across the
+// tile. Like the Events posters, both move on their own and speed up while the page scrolls.
+function renderBentoGallery() {
+  const box = document.getElementById("js-bento-gallery");
   if (!box) return;
-  // the same photos that sit at the centre of the Gallery honeycomb
-  const photos = ["p6-01", "p6-03", "p6-04", "p6-05", "p6-07", "p6-09", "p6-10"].map(n => `images/gallery/thumbs/mcc-mini-${n}.webp`);
-  // a small honeycomb: 7 cells, all filled (first photo in the middle cell, the rest around it)
-  const cells = [[52, 0], [100, 0], [28, 40], [76, 40], [124, 40], [52, 80], [100, 80]];
-  const fill = { 3: 0, 0: 1, 1: 2, 4: 3, 6: 4, 5: 5, 2: 6 };
-  const tints = ["rgba(174,54,40,0.22)", "rgba(192,138,46,0.3)", "rgba(75,122,60,0.25)", "rgba(28,36,64,0.16)"];
-  box.innerHTML = cells.map(([x, y], i) => {
-    const inner = i in fill ? `<img src="${photos[fill[i]]}" alt="" loading="lazy">` : "";
-    const bg = i in fill ? "" : `background:${tints[i % tints.length]};`;
-    return `<span class="t-hex" style="left:${x - 24}px;top:${y}px;${bg}">${inner}</span>`;
-  }).join("");
+  const tile = box.closest(".t-gallery");
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const mq = window.matchMedia(BENTO_PHONE_MQ);
+  const st = { boost: 0, lastY: window.scrollY, raf: null, last: 0, visible: false, part: null, w: 0, h: 0 };
+  const img = src => `<img src="${src}" alt="" loading="lazy" decoding="async">`;
+  const shuffled = a => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
+
+  function magnifier(W, H) {
+    const cols = W < 200 ? 3 : 4;
+    const rows = Math.ceil(H / ((W + 12) / cols)) + 1;
+    const html = shuffled(BENTO_GALLERY_PHOTOS).slice(0, cols * rows).map(img).join("");
+    box.innerHTML = `<div class="lz-grid lz-base" style="--cols:${cols}">${html}</div>
+      <div class="lz-clip"><div class="lz-zoom"><div class="lz-grid" style="--cols:${cols}">${html}</div></div></div>
+      <div class="lz-ring"></div>`;
+    const clip = box.querySelector(".lz-clip"), zoom = box.querySelector(".lz-zoom"), ring = box.querySelector(".lz-ring");
+    const R = Math.round(Math.min(W, H) * 0.3), Z = 1.9;
+    ring.style.width = ring.style.height = R * 2 + "px";
+    let t = Math.random() * 10, x = W / 2, y = H * 0.35, ptr = null;
+    const draw = () => {
+      clip.style.clipPath = `circle(${R}px at ${x.toFixed(1)}px ${y.toFixed(1)}px)`;
+      zoom.style.transform = `translate(${x}px,${y}px) scale(${Z}) translate(${-x}px,${-y}px)`;
+      ring.style.transform = `translate(${(x - R).toFixed(1)}px,${(y - R).toFixed(1)}px)`;
+    };
+    const move = e => { const b = tile.getBoundingClientRect(); ptr = [e.clientX - b.left, Math.min(e.clientY - b.top, H * 0.62)]; };
+    const leave = () => { ptr = null; };
+    if (window.matchMedia("(hover: hover)").matches) { tile.addEventListener("pointermove", move); tile.addEventListener("pointerleave", leave); }
+    draw();
+    return {
+      tick(dt, k) {
+        t += dt * 0.55 * (1 + (k - 1) * 0.5);
+        const tx = ptr ? ptr[0] : W / 2 + (W / 2 - R * 0.55) * Math.sin(t * 0.9),
+              ty = ptr ? ptr[1] : H * 0.34 + (H * 0.22) * Math.sin(t * 1.37 + 1);
+        const ease = 1 - Math.exp(-(ptr ? 10 : 4) * dt);
+        x += (tx - x) * ease; y += (ty - y) * ease;
+        draw();
+      },
+      destroy() { tile.removeEventListener("pointermove", move); tile.removeEventListener("pointerleave", leave); }
+    };
+  }
+
+  function clothesline(W, H) {
+    const pw = Math.round(Math.max(58, Math.min(96, W * 0.36)));
+    const rows = H > 300 ? 3 : 2;
+    const ys = Array.from({ length: rows }, (_, i) => 10 + i * (H * 0.62 / rows));
+    const sag = pw * 0.28, step = pw * 1.18, per = Math.ceil((W + pw * 2) / step) + 1;
+    box.style.setProperty("--pw", pw + "px");
+    box.innerHTML = `<svg class="cl-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">${ys.map(y => `<path d="M-10 ${y} Q ${W / 2} ${y + sag * 2} ${W + 10} ${y}"/>`).join("")}</svg>`;
+    const pool = shuffled(BENTO_GALLERY_PHOTOS); let next = 0;
+    const cards = [];
+    ys.forEach((y0, r) => {
+      for (let i = 0; i < per; i++) {
+        const el = document.createElement("div"); el.className = "pc";
+        el.innerHTML = img(pool[next++ % pool.length]) + `<span class="peg"></span>`;
+        box.appendChild(el);
+        cards.push({ el, r, y0, x: i * step - pw, ph: Math.random() * 6, tilt: Math.random() * 6 - 3 });
+      }
+    });
+    const span = per * step, speed = [16, 21, 18];
+    let t = 0, swing = 0;
+    const yAt = (y0, x) => { const u = (x / W) * 2 - 1; return y0 + sag * (1 - u * u); };
+    const slope = x => { const u = (x / W) * 2 - 1; return Math.atan2(-4 * sag * u / W, 1) * 180 / Math.PI; };
+    const part = {
+      tick(dt, k) {
+        t += dt; swing += ((k - 1) * 2.2 - swing) * Math.min(1, dt * 3);
+        cards.forEach(c => {
+          const dir = c.r % 2 ? -1 : 1;
+          c.x += dir * speed[c.r % 3] * k * dt;
+          if (c.x > W + pw) { c.x -= span; c.el.firstChild.src = pool[next++ % pool.length]; }
+          if (c.x < -pw * 2) { c.x += span; c.el.firstChild.src = pool[next++ % pool.length]; }
+          const cx = c.x + pw / 2;
+          const ang = slope(cx) + c.tilt + Math.sin(t * 1.6 + c.ph) * (1.5 + swing * 3);
+          c.el.style.transform = `translate(${c.x.toFixed(1)}px,${(yAt(c.y0, cx) + 2).toFixed(1)}px) rotate(${ang.toFixed(2)}deg)`;
+        });
+      }
+    };
+    part.tick(0, 1);   // place the cards for the first (or reduced-motion) frame
+    return part;
+  }
+
+  function build() {
+    if (st.part && st.part.destroy) st.part.destroy();
+    st.w = tile.clientWidth; st.h = tile.clientHeight;
+    if (!st.w || !st.h) return;
+    st.part = (mq.matches ? clothesline : magnifier)(st.w, st.h);
+  }
+  build();
+  if (mq.addEventListener) mq.addEventListener("change", build);
+  let rs = null;
+  new ResizeObserver(() => {
+    if (Math.abs(tile.clientWidth - st.w) < 2 && Math.abs(tile.clientHeight - st.h) < 2) return;
+    clearTimeout(rs); rs = setTimeout(build, 150);
+  }).observe(tile);
+  if (reduce) return;
+
+  function frame(now) {
+    st.raf = null;
+    if (!st.visible) { st.last = 0; return; }
+    const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 0;
+    st.last = now;
+    st.boost *= Math.exp(-2.2 * dt);
+    if (st.part) st.part.tick(dt, 1 + st.boost);
+    st.raf = requestAnimationFrame(frame);
+  }
+  window.addEventListener("scroll", () => {
+    const y = window.scrollY, d = Math.abs(y - st.lastY);
+    st.lastY = y;
+    st.boost = Math.min(12, st.boost + d * 0.04);
+  }, { passive: true });
+  new IntersectionObserver(entries => {
+    st.visible = entries[0].isIntersecting;
+    if (st.visible && !st.raf) st.raf = requestAnimationFrame(frame);
+  }).observe(tile);
+}
+
+// Instagram tile: plain red at rest. On hover a warm glow follows the cursor, a ripple spreads out
+// from it every so often, and a few sparks fly when the cursor first comes in.
+function initBentoIg() {
+  const tile = document.querySelector(".t-ig");
+  if (!tile || tile.querySelector(".ig-fx")) return;
+  const fx = document.createElement("span");
+  fx.className = "ig-fx"; fx.setAttribute("aria-hidden", "true");
+  tile.insertBefore(fx, tile.firstChild);
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let lastRipple = 0;
+  const at = e => { const b = tile.getBoundingClientRect(); return [e.clientX - b.left, e.clientY - b.top]; };
+  const spawn = (cls, x, y, extra) => {
+    const el = document.createElement("span");
+    el.className = cls; el.style.left = x + "px"; el.style.top = y + "px";
+    if (extra) Object.assign(el.style, extra);
+    fx.appendChild(el);
+    el.addEventListener("animationend", () => el.remove(), { once: true });
+  };
+  const ripple = (x, y) => spawn("ig-ripple", x, y);
+  const sparks = (x, y) => {
+    for (let i = 0; i < 9; i++) {
+      const a = Math.random() * Math.PI * 2, r = 30 + Math.random() * 50;
+      spawn("ig-spark", x, y, { "--dx": `${(Math.cos(a) * r).toFixed(1)}px`, "--dy": `${(Math.sin(a) * r).toFixed(1)}px`, animationDelay: `${(Math.random() * 0.12).toFixed(2)}s` });
+    }
+  };
+  tile.addEventListener("pointerenter", e => {
+    const [x, y] = at(e);
+    fx.style.setProperty("--mx", x + "px"); fx.style.setProperty("--my", y + "px");
+    tile.classList.add("is-lit");
+    if (!reduce) { ripple(x, y); sparks(x, y); lastRipple = performance.now(); }
+  });
+  tile.addEventListener("pointermove", e => {
+    const [x, y] = at(e);
+    fx.style.setProperty("--mx", x + "px"); fx.style.setProperty("--my", y + "px");
+    const now = performance.now();
+    if (!reduce && now - lastRipple > 650) { lastRipple = now; ripple(x, y); }
+  });
+  tile.addEventListener("pointerleave", () => tile.classList.remove("is-lit"));
 }
 
 function rerenderDynamicText() {

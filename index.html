@@ -419,7 +419,10 @@
 
   /* ---------- EXPLORE: bento grid of live previews (js/site.js renderBento) ---------- */
   .bento-sec{ padding-block: clamp(24px,4vw,48px) clamp(56px,8vw,96px); }
-  .bento{ display:grid; gap:16px; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:220px; }
+  /* Desktop: Events 2x2, Gallery a tall column between News and Instagram. Narrower screens keep it a two-column box (see media queries). */
+  #explore .wrap{ container-type:inline-size; }
+  .bento{ display:grid; gap:16px; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:220px;
+          grid-template-areas:"ev ev ab ab" "ev ev ga ne" "fa fa ga ig"; }
   .tile{
     position:relative; overflow:hidden; border-radius:24px; padding:24px;
     background:var(--bg-raised); border:1px solid var(--line); color:var(--ink); text-decoration:none;
@@ -435,7 +438,7 @@
   .t-link svg{ width:14px; height:14px; transition:transform .4s cubic-bezier(.22,1,.36,1); }
   a.tile:hover .t-link svg{ transform:translateX(4px); }
 
-  .t-events{ grid-column:1 / 3; grid-row:span 2; background:var(--navy); border-color:transparent; color:var(--footer-ink); }
+  .t-events{ grid-area:ev; background:var(--navy); border-color:transparent; color:var(--footer-ink); }
   .t-events .t-kicker{ color:var(--gold); }
   .t-events .t-sub{ color:var(--footer-ink-soft); }
   .t-posters{ position:absolute; inset:-12% -8%; display:flex; gap:14px; transform:rotate(-8deg); pointer-events:none; }
@@ -446,7 +449,7 @@
   .t-big{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(2rem,3.6vw,3rem); line-height:1.05; margin-top:8px; }
   .t-big b{ color:var(--gold); font-weight:600; }
 
-  .t-about{ grid-column:3 / 5; }
+  .t-about{ grid-area:ab; }
   .t-faces{ position:absolute; top:22px; left:24px; right:24px; display:flex; flex-wrap:wrap; gap:8px; }
   .t-face{
     width:40px; height:40px; border-radius:50%; display:grid; place-items:center;
@@ -456,11 +459,28 @@
   .t-about:hover .t-face{ transform:translateY(-3px); }
   .t-about:hover .t-face:nth-child(2n){ transform:translateY(2px); }
 
-  .t-gallery{ background:var(--bg-sunk); }
-  .t-hexes{ position:absolute; top:16px; right:12px; width:150px; height:132px; scale:0.72; transform-origin:top right; transition:transform .8s cubic-bezier(.22,1,.36,1); }
-  .t-gallery:hover .t-hexes{ transform:scale(1.06) rotate(-3deg); }
-  .t-hex{ position:absolute; width:46px; height:52px; clip-path:polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%); background:var(--line); }
-  .t-hex img{ width:100%; height:100%; object-fit:cover; display:block; }
+  /* Gallery tile (js/site.js renderBentoGallery): a magnifier over a contact sheet on wider screens,
+     a clothesline of pegged polaroids on phones. Both drift on their own and speed up while you scroll. */
+  .t-gallery{ grid-area:ga; background:var(--bg-sunk); isolation:isolate; }
+  .t-gallery > .t-kicker, .t-gallery > .t-title{ position:relative; z-index:2; }
+  .t-gstage{ position:absolute; inset:0; z-index:0; pointer-events:none; }
+  .t-gallery::after{ content:""; position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:linear-gradient(to top, var(--bg-sunk) 16%, rgba(238,230,211,0.82) 34%, rgba(238,230,211,0) 62%); }
+  .lz-grid{ position:absolute; left:-6px; right:-6px; top:-6px; display:grid; gap:3px; grid-template-columns:repeat(var(--cols,4), 1fr); }
+  .lz-grid img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+  .lz-base{ filter:grayscale(1) sepia(.45) contrast(.85) brightness(1.08); opacity:.5; }
+  .lz-clip{ position:absolute; inset:0; }
+  .lz-zoom{ position:absolute; inset:0; transform-origin:0 0; will-change:transform; }
+  .lz-ring{ position:absolute; left:0; top:0; border-radius:50%; border:2px solid #FFFDF7; will-change:transform;
+    box-shadow:0 0 0 1px rgba(28,36,64,.25), 0 14px 30px rgba(28,36,64,.28), inset 0 0 18px rgba(255,255,255,.35); }
+  .lz-ring::after{ content:""; position:absolute; right:-22%; bottom:-22%; width:34%; height:9px; background:var(--ink); border-radius:5px; rotate:45deg; transform-origin:left center; }
+  .pc{ position:absolute; left:0; top:0; width:var(--pw); padding:calc(var(--pw) * .05) calc(var(--pw) * .05) calc(var(--pw) * .17);
+       background:#FFFDF7; border-radius:3px; will-change:transform; transform-origin:50% 0;
+       box-shadow:0 1px 2px rgba(28,36,64,.2), 0 8px 18px rgba(28,36,64,.16); }
+  .pc img{ width:100%; aspect-ratio:1; object-fit:cover; display:block; border-radius:1px; }
+  .pc .peg{ position:absolute; top:-7px; left:50%; width:7px; height:16px; translate:-50% 0; background:#C9A26A; border-radius:2px; box-shadow:inset -2px 0 0 rgba(0,0,0,.12); }
+  .cl-svg{ position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+  .cl-svg path{ fill:none; stroke:#8A6A3A; stroke-width:1.4; opacity:.75; }
 
   .t-news .t-sheets{ position:absolute; top:22px; right:22px; width:62px; height:76px; }
   .t-sheets i{ position:absolute; inset:0; border-radius:8px; background:var(--bg); border:1px solid var(--line); transition:transform .7s cubic-bezier(.22,1,.36,1); }
@@ -471,7 +491,7 @@
   .t-news:hover .t-sheets i:nth-child(1){ transform:rotate(-14deg) translate(-12px,6px); }
   .t-news:hover .t-sheets i:nth-child(2){ transform:rotate(9deg) translate(8px,2px); }
 
-  .t-fact{ grid-column:1 / 4; justify-content:center; }
+  .t-fact{ grid-area:fa; justify-content:center; }
   .t-fact-row{ display:flex; align-items:center; gap:20px; }
   .t-fact-emoji{ font-size:2.6rem; line-height:1; flex:none; }
   .t-fact-text{ font-family:'Fraunces', serif; font-size:clamp(1.05rem,1.6vw,1.3rem); line-height:1.35; transition:opacity .45s ease, transform .45s ease; }
@@ -483,28 +503,51 @@
   }
   .t-fact-btn:hover{ background:var(--bg-sunk); border-color:var(--ink-soft); }
 
-  .t-ig{ background:var(--red); border-color:transparent; color:#fff; }
+  .t-ig{ grid-area:ig; background:var(--red); border-color:transparent; color:#fff; isolation:isolate; }
+  .t-news{ grid-area:ne; }
   .t-ig .t-kicker{ color:rgba(255,255,255,0.75); }
   .t-ig svg.big{ position:absolute; top:22px; right:22px; width:44px; height:44px; opacity:0.9; transition:transform .7s cubic-bezier(.22,1,.36,1); }
   .t-ig:hover svg.big{ transform:rotate(-10deg) scale(1.08); }
+  /* Instagram hover: stays plain red, then a warm glow follows the cursor, ripples spread from it and a few sparks fly (js/site.js initBentoIg) */
+  .t-ig > :not(.ig-fx){ position:relative; z-index:2; }
+  .t-ig svg.big{ position:absolute; z-index:2; }
+  .ig-fx{ position:absolute; inset:0; z-index:1; pointer-events:none; overflow:hidden; border-radius:inherit; }
+  .ig-fx::before{ content:""; position:absolute; inset:0; opacity:0; transition:opacity .5s ease;
+    background:radial-gradient(220px circle at var(--mx,50%) var(--my,50%), rgba(240,160,70,.55), rgba(192,138,46,.18) 40%, rgba(120,26,52,.35) 75%, rgba(120,26,52,0) 100%); }
+  .t-ig.is-lit .ig-fx::before{ opacity:1; }
+  .ig-ripple{ position:absolute; width:320px; height:320px; margin:-160px 0 0 -160px; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,214,150,0) 38%, rgba(255,214,150,.45) 48%, rgba(232,128,58,.25) 56%, rgba(232,128,58,0) 66%);
+    animation:ig-ripple 1.1s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes ig-ripple{ from{ transform:scale(.08); opacity:1; } to{ transform:scale(1); opacity:0; } }
+  .ig-spark{ position:absolute; width:5px; height:5px; margin:-2.5px 0 0 -2.5px; border-radius:50%; background:#FFE2A8;
+    box-shadow:0 0 8px 2px rgba(255,200,120,.8); animation:ig-spark .8s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes ig-spark{ from{ transform:translate(0,0) scale(1); opacity:1; } to{ transform:translate(var(--dx),var(--dy)) scale(.2); opacity:0; } }
 
   @media (max-width:980px){
-    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); }
-    .t-events{ grid-column:1 / 3; grid-row:span 2; }
-    .t-about{ grid-column:1 / 3; }
-    .t-fact{ grid-column:1 / 3; }
-    .t-ig{ grid-column:1 / 3; }
+    /* two columns that stay a box: Events square on top, team, then a tall Gallery beside News and Instagram, then the fact */
+    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:"ev ev" "ev ev" "ab ab" "ga ne" "ga ig" "fa fa";
+            grid-template-rows:220px 220px auto 220px 220px auto; grid-auto-rows:auto; }
+    .t-about{ min-height:150px; }
   }
   @media (max-width:560px){
-    .bento{ grid-template-columns:1fr; grid-auto-rows:auto; }
-    .tile{ min-height:190px; }
-    .t-events, .t-about, .t-fact, .t-ig{ grid-column:auto; }
-    .t-events{ grid-row:auto; min-height:380px; }
-    .t-fact-row{ flex-wrap:wrap; }
-    .t-about{ justify-content:flex-start; }
-    .t-faces{ position:static; margin-bottom:18px; }
+    .bento{ --sq:calc((100cqw - 12px) / 2); gap:12px; grid-template-rows:var(--sq) var(--sq) auto var(--sq) var(--sq) auto; }
+    .tile{ border-radius:20px; padding:16px; }
+    .t-big{ font-size:clamp(1.7rem, 8.5cqw, 2.2rem); }
+    .t-title{ font-size:1.08rem; }
+    .t-kicker{ font-size:0.62rem; }
+    .t-link{ margin-top:8px; }
+    .t-about{ min-height:0; justify-content:flex-start; }
+    .t-faces{ position:static; flex-wrap:nowrap; gap:0; padding-left:8px; margin-bottom:14px; }
+    .t-face{ width:34px; height:34px; margin-left:-8px; border:2px solid var(--bg-raised); font-size:0.68rem; flex:none; }
+    .t-news .t-sheets{ top:14px; right:14px; scale:0.72; transform-origin:top right; }
+    .t-ig svg.big{ top:14px; right:14px; width:34px; height:34px; }
+    .t-ig .t-sub{ font-size:0.78rem; }
+    .t-fact-row{ flex-wrap:wrap; gap:12px 16px; }
+    .t-fact-emoji{ font-size:2rem; }
+    .t-fact-text{ flex:1 1 200px; font-size:1.02rem; }
     .t-fact-btn{ margin-left:0; }
   }
+  @media (prefers-reduced-motion:reduce){ .ig-ripple, .ig-spark{ display:none; } }
 
   button.btn{ border:0; cursor:pointer; font-family:inherit; }
   button.btn[disabled]{ opacity:.6; cursor:progress; }
@@ -830,7 +873,7 @@
           <div class="t-title" data-i18n="bento_about_title">Meet the team behind MCC</div>
         </a>
         <a class="tile t-gallery reveal" href="gallery.html">
-          <div class="t-hexes" id="js-bento-hexes" aria-hidden="true"></div>
+          <div class="t-gstage" id="js-bento-gallery" aria-hidden="true"></div>
           <span class="t-kicker" data-i18n="bento_gallery_kicker">Gallery</span>
           <div class="t-title" data-i18n="bento_gallery_title">Moments from our events</div>
         </a>
