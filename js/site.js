@@ -2095,12 +2095,22 @@ function initGreeting() {
   const html = document.documentElement;
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const reveal = () => html.classList.remove("greet-pending");
-  // Hero photos start dissolving in straight away (see .hero-wait in index.html), so the top of the
-  // page is never empty while the pen gets ready. Two frames so the hidden state is painted first.
-  if (html.classList.contains("hero-wait")) {
+  // Opening order: words first. The page opens with "Welcome", the greeting starts writing almost at
+  // once, and the hero photos fade in one by one as the pen crosses the word (left photo, then the two
+  // on the right); the paragraph and buttons come last (CSS delays in index.html).
+  // Which photos are still waiting lives on <html> (hold-a/b/c), because the photo panels are
+  // re-rendered when the hero data loads.
+  let photosLetIn = !html.classList.contains("hero-wait");
+  if (!photosLetIn) {
+    html.classList.add("hold-a", "hold-b", "hold-c");
     requestAnimationFrame(() => requestAnimationFrame(() => html.classList.remove("hero-wait")));
-    setTimeout(() => html.classList.remove("hero-intro"), 2800);   // then hover goes back to its quick zoom
   }
+  const letPhotosIn = () => {
+    if (photosLetIn) return;
+    photosLetIn = true;
+    ["a", "b", "c"].forEach((x, i) => setTimeout(() => html.classList.remove("hold-" + x), 900 + i * 350));
+    setTimeout(() => html.classList.remove("hero-intro"), 5200);   // then hover goes back to its quick zoom
+  };
   const NS = "http://www.w3.org/2000/svg";
   const src = svg.querySelector(".greet-src");
 
@@ -2118,27 +2128,19 @@ function initGreeting() {
       `<feTurbulence type="fractalNoise" baseFrequency="0.035 0.09" numOctaves="2" seed="7" result="n"/>` +
       `<feDisplacementMap in="SourceGraphic" in2="n" scale="0" xChannelSelector="R" yChannelSelector="G"/></filter>` +
       `<mask id="greet-mask" maskUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
-      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>` +
-      // the "wet" edge: the same spill, a little further ahead, in warm amber — the navy ink
-      // behind it covers it as it dries, so only a glowing band shows at the front
-      `<linearGradient id="greet-wet-feather" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="${F}" y2="0">` +
-      `<stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>` +
-      `<mask id="greet-wet-mask" maskUnits="userSpaceOnUse" x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}">` +
-      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-wet-feather)" filter="url(#greet-soak)"/></mask>`;
+      `<rect x="${M.x}" y="${M.y}" width="${M.w}" height="${M.h}" fill="url(#greet-feather)" filter="url(#greet-soak)"/></mask>`;
     const pen = layer("greet-pen");
     const cover = layer("greet-cover");
-    const wet = layer("greet-wet");
-    wet.setAttribute("mask", "url(#greet-wet-mask)");
     const ink = layer("greet-ink");
     ink.setAttribute("mask", "url(#greet-mask)");
-    src.replaceWith(defs, pen, cover, wet, ink);
+    src.replaceWith(defs, pen, cover, ink);
     const sylls = Array.from(pen.children).map(el => {
       const len = Math.ceil(el.getTotalLength()) + 2;
       el.style.strokeDasharray = `${len} ${len}`;
       const b = el.getBBox();
       return { el, len, x0: b.x, w: b.width };
     });
-    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), wetGrad: defs.querySelector("#greet-wet-feather"), soak: defs.querySelector("feDisplacementMap"),
+    Object.assign(GREET, { svg, grad: defs.querySelector("#greet-feather"), soak: defs.querySelector("feDisplacementMap"),
       noise: defs.querySelector("feTurbulence"), sylls, F, x0: bb.x, w: bb.width });
     paint(-1);
     return true;
@@ -2153,9 +2155,6 @@ function initGreeting() {
     const inkX = G.x0 - 2 + q * (G.w + G.F + 4);
     G.grad.setAttribute("x1", (inkX - G.F).toFixed(1));
     G.grad.setAttribute("x2", inkX.toFixed(1));
-    const wetX = inkX + 52 * Math.min(1, q / 0.12);  // the amber edge runs ahead of the navy — only once the ink is moving
-    G.wetGrad.setAttribute("x1", (wetX - G.F).toFixed(1));
-    G.wetGrad.setAttribute("x2", wetX.toFixed(1));
     G.soak.setAttribute("scale", (t < 0 ? 0 : 46 * Math.sin(Math.PI * q)).toFixed(1)); // wobbles while moving, calm at rest
     G.sylls.forEach((s, i) => {
       const p = ease((t - i * 0.34) / 1.4);         // syllables overlap, so it reads as one motion
@@ -2167,6 +2166,7 @@ function initGreeting() {
 
   const write = () => {
     reveal();
+    letPhotosIn();
     if (!GREET.sylls) return;
     cancelAnimationFrame(GREET.raf);
     GREET.noise.setAttribute("seed", String(1 + Math.floor(Math.random() * 90)));  // a different spread each time
@@ -2181,8 +2181,8 @@ function initGreeting() {
 
   let ok = false;
   try { ok = build(); } catch (e) { ok = false; }
-  if (!ok) { reveal(); return; }
-  setTimeout(write, 500);
+  if (!ok) { reveal(); letPhotosIn(); return; }
+  setTimeout(write, 250);
   // Hover (or tap) to have it written again — once the current write has finished.
   const again = () => { if (!GREET.raf) write(); };
   svg.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") again(); });

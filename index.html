@@ -252,24 +252,21 @@
      identical in every browser — Safari places split-up Burmese text differently from Chrome. */
   .greet path{ fill:currentColor; }
   .greet-pending .greet{ visibility:hidden; }
-  /* The greeting leads: the paragraph and buttons wait until it starts writing, then fade in slowly
-     behind the pen (no movement). With reduced motion they're simply there. */
-  .hero-copy .lede{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .7s; }
-  .hero-copy .cta-row{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) .95s; }
+  /* Words first: the greeting leads, the photos fade in as the pen crosses the word, and the paragraph
+     and buttons fade in last (no movement). With reduced motion everything is simply there. */
+  .hero-copy .lede{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) 1.9s; }
+  .hero-copy .cta-row{ transition: opacity 1.4s cubic-bezier(.4,0,.2,1) 2.2s; }
   .greet-pending .hero-copy .lede, .greet-pending .hero-copy .cta-row{ opacity:0; transition:none; }
-  /* Hero photos dissolve in from the very first frame, one after another, settling from a hair larger
-     (no sliding) — so the top of the page is alive while the pen gets ready. */
+  /* Hero photos wait for the pen (js/site.js initGreeting lets each in by removing hold-a/b/c from <html>),
+     then dissolve in one after another, settling from a hair larger (no sliding). */
   .hero-intro .collage .panel{ transition: opacity 1.1s cubic-bezier(.4,0,.2,1); }
-  .hero-intro .collage .panel-b{ transition-delay:.15s; }
-  .hero-intro .collage .panel-c{ transition-delay:.3s; }
   .hero-intro .collage .panel img{ transition: transform 2s cubic-bezier(.2,.7,.2,1), opacity .45s ease; }
-  .hero-intro .collage .panel-b img{ transition-delay:.15s, 0s; }
-  .hero-intro .collage .panel-c img{ transition-delay:.3s, 0s; }
-  .hero-wait .collage .panel{ opacity:0; }
-  .hero-wait .collage .panel img{ transform:scale(1.06); }
+  .hero-wait .collage .panel,
+  .hero-intro.hold-a .collage .panel-a, .hero-intro.hold-b .collage .panel-b, .hero-intro.hold-c .collage .panel-c{ opacity:0; }
+  .hero-wait .collage .panel img,
+  .hero-intro.hold-a .collage .panel-a img, .hero-intro.hold-b .collage .panel-b img, .hero-intro.hold-c .collage .panel-c img{ transform:scale(1.06); }
   .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
   .greet .greet-cover path{ fill:var(--bg); }
-  .greet .greet-wet path{ fill:#D9742A; }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;
@@ -790,6 +787,7 @@
               if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
               var h=document.documentElement; h.classList.add('greet-pending','hero-wait','hero-intro');
               setTimeout(function(){ h.classList.remove('greet-pending','hero-wait'); }, 3000);
+              setTimeout(function(){ h.classList.remove('hold-a','hold-b','hold-c'); }, 4500);
               setTimeout(function(){ h.classList.remove('hero-intro'); }, 5000);
             }catch(e){}})();
           </script>
