@@ -1011,7 +1011,16 @@ function buildSnake() {
   });
   snakeCounter(SNAKE.finaleDone ? cards.length : 0);
   snakeLayout();
-  SNAKE.ro = new ResizeObserver(() => { if (SNAKE.g) { snakeLayout(); snakeKick(); } });
+  // ResizeObserver also fires once straight away; skip that (and any no-op) so the
+  // layout isn't rebuilt twice while the page is still fading in.
+  let roW = g.clientWidth, roH = g.offsetHeight;
+  SNAKE.ro = new ResizeObserver(() => {
+    if (!SNAKE.g) return;
+    const w = g.clientWidth, h = g.offsetHeight;
+    if (w === roW && h === roH) return;
+    roW = w; roH = h;
+    snakeLayout(); snakeKick();
+  });
   SNAKE.ro.observe(g);
   if (!SNAKE.listening) {
     SNAKE.listening = true;
@@ -1045,6 +1054,10 @@ function snakeLayout() {
 
   let d = `M ${xL} ${ys[0]}`, L = 0;
   const thr = new Map(), keys = [];
+  // The same path as plain geometry, so the ink can be sampled with arithmetic instead of
+  // thousands of getPointAtLength() calls (each one re-walks the path: that froze the page ~1s).
+  const segs = [];
+  const seg = (o) => { segs.push(o); };
   rows.forEach((row, r) => {
     const y = ys[r], ltr = r % 2 === 0, last = r === rows.length - 1;
     const hs = r === 0 ? xL : (ltr ? xL + R : xR - R);
@@ -1056,11 +1069,16 @@ function snakeLayout() {
     const len = Math.abs(he - hs);
     keys.push({ y, L: L + (r === 0 ? 0 : Math.min(70, len * 0.1)) });
     d += ` H ${he}`;
+    seg({ k: "l", x0: hs, y0: y, x1: he, y1: y, len });
     L += len;
     keys.push({ y, L: L - (last ? 0 : Math.min(140, len * 0.15)) });
     if (!last) {
       const yn = ys[r + 1], sweep = ltr ? 1 : 0, xs = ltr ? xR : xL;
       d += ` A ${R} ${R} 0 0 ${sweep} ${xs} ${y + R} V ${yn - R} A ${R} ${R} 0 0 ${sweep} ${ltr ? xR - R : xL + R} ${yn}`;
+      const cxA = ltr ? xR - R : xL + R, vlen = Math.max(0, yn - y - 2 * R);
+      seg({ k: "a", cx: cxA, cy: y + R, a0: -Math.PI / 2, a1: ltr ? 0 : -Math.PI, r: R, len: Math.PI * R / 2 });
+      seg({ k: "l", x0: xs, y0: y + R, x1: xs, y1: yn - R, len: vlen });
+      seg({ k: "a", cx: cxA, cy: yn - R, a0: ltr ? 0 : Math.PI, a1: Math.PI / 2, r: R, len: Math.PI * R / 2 });
       L += Math.PI * R + Math.max(0, yn - y - 2 * R);
     }
   });
@@ -1070,6 +1088,8 @@ function snakeLayout() {
   SNAKE.thr = cards.map(c => thr.get(c) * k);
   SNAKE.half = cards.map(c => (c.offsetWidth / 2) * k);
   SNAKE.keys = keys.map(p => ({ y: p.y, L: p.L * k }));
+  SNAKE.segs = segs;
+  SNAKE.segK = k;
   inkLayout();
 
   // Pin: tall enough that scrolling through it draws the whole line.
@@ -1174,10 +1194,26 @@ function inkWidth(p) {
   const w = 2.4 + 4.6 * Math.abs(Math.cos(p.a - 0.35));
   return w * (1 + 0.14 * Math.sin(p.s * 0.031) * Math.sin(p.s * 0.0077 + 1.3)) * (0.25 + 0.75 * Math.min(1, p.s / 46));
 }
+// Point at distance s along the snake path, from the geometry recorded in snakeLayout.
+// Calls must come in increasing s (it walks forward through the segments).
+function inkSampler() {
+  const segs = SNAKE.segs || [], k = SNAKE.segK || 1;
+  let i = 0, base = 0;
+  return s => {
+    s /= k;
+    while (i < segs.length - 1 && s > base + segs[i].len) { base += segs[i].len; i++; }
+    const g = segs[i];
+    if (!g) return { x: 0, y: 0 };
+    const f = g.len ? Math.max(0, Math.min(1, (s - base) / g.len)) : 1;
+    if (g.k === "l") return { x: g.x0 + (g.x1 - g.x0) * f, y: g.y0 + (g.y1 - g.y0) * f };
+    const a = g.a0 + (g.a1 - g.a0) * f;
+    return { x: g.cx + g.r * Math.cos(a), y: g.cy + g.r * Math.sin(a) };
+  };
+}
 function inkLayout() {
-  const line = SNAKE.line, total = SNAKE.total, pts = [];
-  for (let s = 0; s <= total; s += INK_STEP) { const q = line.getPointAtLength(s); pts.push({ s, x: q.x, y: q.y, a: 0 }); }
-  const q = line.getPointAtLength(total); pts.push({ s: total, x: q.x, y: q.y, a: 0 });
+  const total = SNAKE.total, pts = [], at = inkSampler();
+  for (let s = 0; s <= total; s += INK_STEP) { const q = at(s); pts.push({ s, x: q.x, y: q.y, a: 0 }); }
+  const q = at(total); pts.push({ s: total, x: q.x, y: q.y, a: 0 });
   for (let i = 0; i < pts.length; i++) {
     const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)];
     pts[i].a = Math.atan2(b.y - a.y, b.x - a.x);
