@@ -526,6 +526,24 @@
     box-shadow: 0 0 0 6px var(--bg-raised), 0 0 0 8px var(--gold), 0 20px 44px rgba(28,36,64,0.18);
   }
   .person-photo.has-photo, .pp-photo.has-photo{ background-size:cover; background-position:center; background-repeat:no-repeat; }
+  .pp-photo.has-photo{ cursor:zoom-in; }
+  .pp-photo.has-photo::after{
+    content:''; position:absolute; right:2px; bottom:2px; width:38px; height:38px; border-radius:50%;
+    background:var(--navy) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7'/%3E%3C/svg%3E") center/18px no-repeat;
+    box-shadow:0 0 0 3px var(--bg-raised); transition:transform .2s ease;
+  }
+  .pp-photo.has-photo:hover::after{ transform:scale(1.1); }
+  .pp-photo.has-photo:focus-visible{ outline:3px solid var(--gold); outline-offset:6px; }
+  .pp-view{ position:fixed; inset:0; z-index:102; display:flex; align-items:center; justify-content:center; padding:20px;
+    background:rgba(14,18,36,.82); opacity:0; transition:opacity .28s ease; cursor:zoom-out; }
+  .pp-view[hidden]{ display:none; }
+  .pp-view.show{ opacity:1; }
+  .pp-view img{ display:block; max-width:min(92vw, 760px); max-height:88vh; width:auto; height:auto; border-radius:18px; box-shadow:0 30px 80px rgba(0,0,0,.45); background:var(--bg-raised); }
+  .pp-view .pp-view-x{ position:absolute; top:max(14px, env(safe-area-inset-top, 0px)); right:max(14px, env(safe-area-inset-right, 0px));
+    width:44px; height:44px; border-radius:50%; border:0; background:rgba(255,255,255,.14); color:#fff; display:grid; place-items:center; cursor:pointer; }
+  .pp-view .pp-view-x svg{ width:20px; height:20px; }
+  .pp-view .pp-view-x:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ .pp-view{ transition:none; } }
   .pp-dept{
     display:inline-flex; align-items:center; gap:7px; margin-top:22px;
     font-size:0.7rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-soft);
@@ -1500,16 +1518,52 @@
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
+  // Full-size photo viewer (opens from the panel's photo; fades only, no movement).
+  var view = document.createElement("div");
+  view.className = "pp-view"; view.hidden = true;
+  view.setAttribute("role", "dialog"); view.setAttribute("aria-modal", "true"); view.setAttribute("aria-label", "Photo");
+  view.innerHTML = '<img alt=""><button type="button" class="pp-view-x" aria-label="Close photo">' + CROSS + '</button>';
+  document.body.appendChild(view);
+  var viewImg = view.querySelector("img"), viewX = view.querySelector(".pp-view-x"), viewOpen = false;
+  function openView(){
+    var p = PEOPLE[panelIdx];
+    if (!p || !p.photo || viewOpen) return;
+    viewImg.src = p.photo; viewImg.alt = p.name;
+    view.hidden = false; viewOpen = true;
+    void view.offsetWidth; view.classList.add("show");
+    viewX.focus({ preventScroll:true });
+  }
+  function closeView(){
+    if (!viewOpen) return;
+    viewOpen = false; view.classList.remove("show");
+    setTimeout(function(){ if (!viewOpen) view.hidden = true; }, 300);
+    var ph = overlay.querySelector(".pp-photo");
+    if (ph && ph.classList.contains("has-photo")) ph.focus({ preventScroll:true });
+  }
+  view.addEventListener("click", closeView);
+  view.addEventListener("wheel", function(e){ e.preventDefault(); }, { passive:false });
+  view.addEventListener("touchmove", function(e){ e.preventDefault(); }, { passive:false });
+  document.addEventListener("keydown", function(ev){
+    if (!viewOpen) return;
+    if (ev.key === "Escape" || ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); ev.stopPropagation(); closeView(); }
+    else if (ev.key === "Tab"){ ev.preventDefault(); ev.stopPropagation(); viewX.focus(); }
+  }, true);
   var shell = overlay.querySelector(".pp-shell"), inner = overlay.querySelector(".pp-inner");
   var q = function(sel){ return overlay.querySelector(sel); };
   var panelOpen = false, panelIdx = null, lastFocus = null, busy = false;
 
+  overlay.querySelector(".pp-photo").addEventListener("click", function(){ if (!busy) openView(); });
+  overlay.querySelector(".pp-photo").addEventListener("keydown", function(ev){
+    if (ev.key === "Enter" || ev.key === " "){ ev.preventDefault(); if (!busy) openView(); }
+  });
   function fillPanel(idx){
     var p = PEOPLE[idx], g = GROUPS[GIDX[p.group]];
     shell.style.setProperty("--tint", g.color);
     var ppp = q(".pp-photo");
     ppp.textContent = p.photo ? "" : p.i;
     ppp.classList.toggle("has-photo", !!p.photo);
+    if (p.photo){ ppp.setAttribute("role", "button"); ppp.setAttribute("tabindex", "0"); ppp.setAttribute("aria-label", "View " + p.name + "\u2019s photo"); ppp.removeAttribute("aria-hidden"); }
+    else { ppp.removeAttribute("role"); ppp.removeAttribute("tabindex"); ppp.removeAttribute("aria-label"); ppp.setAttribute("aria-hidden", "true"); }
     ppp.style.backgroundImage = p.photo ? "url('" + p.photo + "')" : "";
     ppp.style.backgroundSize = p.photo ? "cover" : "";
     ppp.style.backgroundPosition = p.photo ? "center" : "";
