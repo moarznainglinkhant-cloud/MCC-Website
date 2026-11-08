@@ -496,8 +496,9 @@
       join);
     holdable($(".tk-stage", body));
     var wb = $("[data-wallet]", body);
+    if (wb) { try { prepareWallet(ev, t.holder || (opts.guest && opts.guest.name) || "Guest"); } catch (e) {} }
     if (wb) wb.addEventListener("click", function () {
-      addToWallet(ev, t, t.holder || (opts.guest && opts.guest.name) || "", wb, $(".reg-wallet-note", body));
+      addToWallet(ev, t, t.holder || (opts.guest && opts.guest.name) || "Guest", wb, $(".reg-wallet-note", body));
     });
     var done = $("[data-done]", body);
     if (done) done.addEventListener("click", close);
@@ -589,11 +590,17 @@
   function walletBanner(ev, name) {
     return Promise.all([loadImg(ev.photo), walletFonts()]).then(function (r) {
       var url;
-      try { url = drawBanner(r[0], name, ev.name || "", 1); }
-      catch (e) { url = drawBanner(null, name, ev.name || "", 1); } // poster from another site can't be drawn
-      if (url.length > 1300000) url = drawBanner(r[0], name, ev.name || "", 2 / 3);
+      try { url = drawBanner(r[0], name, ev.name || "", 2 / 3); }
+      catch (e) { url = drawBanner(null, name, ev.name || "", 2 / 3); } // poster from another site can't be drawn
+      if (url.length > 1300000) url = drawBanner(r[0], name, ev.name || "", 0.5);
       return url;
     });
+  }
+  var walletPre = {};
+  function prepareWallet(ev, name) {
+    var k = (ev.id || ev.name) + "|" + name;
+    if (!walletPre[k]) walletPre[k] = walletBanner(ev, name).catch(function () { delete walletPre[k]; throw new Error("banner"); });
+    return walletPre[k];
   }
   function addToWallet(ev, t, name, btn, note) {
     busy(btn, true, "Making your pass…");
@@ -601,7 +608,7 @@
     // open the tab now, while we still have the tap (browsers block pop-ups opened later)
     var win = null;
     try { win = window.open("", "_blank"); if (win) win.document.write("<p style=\"font:16px system-ui;padding:24px\">Making your Wallet pass…</p>"); } catch (e) { win = null; }
-    walletBanner(ev, name || "Guest").then(function (banner) {
+    prepareWallet(ev, name || "Guest").then(function (banner) {
       return withTimeout(fetch(cfg.url.replace(/\/$/, "") + "/functions/v1/swift-task"  /* the wallet-pass function (Supabase gave it this address) */, {
         method: "POST",
         headers: { "Content-Type": "application/json", apikey: cfg.key },
