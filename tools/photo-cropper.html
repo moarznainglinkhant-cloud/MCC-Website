@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MCC Team Photo Cropper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap">
+<style>
+  /* Layout: a square crop stage on the left, the real About-page circles on the right, controls under the stage. */
+  :root{
+    --bg:#F6F3EC; --raised:#FDFAF3; --ink:#1C2440; --soft:#5C6177; --line:#E1DBCB;
+    --gold:#C08A2E; --red:#AE3628; --navy:#1C2440; --stage:#12162A; --chip:#EFE6D2;
+    --display:'Fraunces', Georgia, 'Times New Roman', serif;
+    --body:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F1324; --raised:#171C33; --ink:#EEE9DC; --soft:#9AA0B8; --line:#2A3050;
+      --gold:#D9A441; --red:#E2705F; --navy:#EEE9DC; --stage:#070A16; --chip:#262C48; color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1324; --raised:#171C33; --ink:#EEE9DC; --soft:#9AA0B8; --line:#2A3050;
+    --gold:#D9A441; --red:#E2705F; --navy:#EEE9DC; --stage:#070A16; --chip:#262C48; color-scheme:dark;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font:15px/1.5 var(--body);
+    padding-block:32px 56px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); }
+  .wrap{ max-width:1040px; margin:0 auto; }
+  h1{ font:600 clamp(1.6rem,3vw,2.1rem)/1.15 var(--display); margin:0 0 6px; text-wrap:balance; }
+  .lede{ color:var(--soft); margin:0 0 28px; max-width:60ch; }
+  .grid{ display:grid; grid-template-columns:minmax(0,460px) minmax(0,1fr); gap:36px; align-items:start; }
+  @media (max-width:860px){ .grid{ grid-template-columns:minmax(0,1fr); } }
+  label.cap, .cap{ display:block; font-size:.72rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--soft); margin-bottom:8px; }
+
+  /* stage */
+  .stage-box{ position:relative; width:100%; aspect-ratio:1/1; background:var(--stage); border-radius:14px; overflow:hidden;
+    touch-action:none; cursor:grab; user-select:none; -webkit-user-select:none; }
+  .stage-box.drag{ cursor:grabbing; }
+  .stage-box img{ position:absolute; max-width:none; pointer-events:none; -webkit-user-drag:none; }
+  .mask{ position:absolute; inset:0; border-radius:50%; box-shadow:0 0 0 999px rgba(10,13,28,.62); outline:2px solid var(--gold); outline-offset:0; pointer-events:none; }
+  .mask::after{ content:''; position:absolute; left:8%; right:8%; top:38%; border-top:1px dashed rgba(255,255,255,.28); }
+  .drop{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center;
+    color:#D8D3C4; padding:24px; cursor:pointer; border:2px dashed rgba(255,255,255,.22); border-radius:14px; margin:12px; }
+  .drop strong{ font:600 1.15rem var(--display); }
+  .drop small{ color:#9AA0B8; }
+  .stage-box.has .drop{ display:none; }
+  .stage-box:not(.has) .mask{ display:none; }
+
+  .controls{ display:grid; gap:14px; margin-top:16px; }
+  .row{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  input[type=range]{ flex:1; min-width:140px; accent-color:var(--gold); }
+  input[type=text]{ width:100%; font:inherit; color:var(--ink); background:var(--raised); border:1px solid var(--line); border-radius:9px; padding:10px 12px; }
+  input[type=text]:focus-visible, button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  button{ font:600 .9rem var(--body); border-radius:9px; border:1px solid var(--line); background:var(--raised); color:var(--ink); padding:10px 14px; cursor:pointer; }
+  button:hover{ border-color:var(--gold); }
+  button.primary{ background:var(--navy); color:var(--bg); border-color:var(--navy); }
+  button:disabled{ opacity:.45; cursor:not-allowed; }
+  .hint{ color:var(--soft); font-size:.85rem; margin:0; }
+  code{ font:500 .85em ui-monospace, 'SF Mono', Menlo, monospace; background:var(--chip); padding:2px 6px; border-radius:5px; }
+  #msg{ color:var(--red); min-height:1.3em; font-size:.88rem; margin:0; }
+
+  /* previews, drawn like the About page */
+  .previews{ display:grid; gap:24px; }
+  .pv-card{ background:var(--raised); border:1px solid var(--line); border-radius:16px; padding:26px 20px 22px; display:flex; flex-direction:column; align-items:center; gap:6px; text-align:center; max-width:260px; }
+  .pv{ border-radius:50%; background-color:var(--chip); background-repeat:no-repeat; flex:none;
+    box-shadow:0 0 0 5px var(--raised), 0 0 0 7px var(--gold); }
+  .pv.panel{ box-shadow:0 0 0 6px var(--raised), 0 0 0 8px var(--gold), 0 20px 44px rgba(28,36,64,.18); }
+  .pv.small{ box-shadow:0 0 0 4px var(--raised), 0 0 0 6px var(--gold); }
+  .pv-name{ font-weight:600; margin-top:12px; }
+  .pv-title{ font-size:.74rem; font-weight:600; color:var(--red); background:var(--chip); padding:4px 13px; border-radius:99px; }
+  .pv-set{ display:flex; gap:28px; flex-wrap:wrap; align-items:flex-end; }
+  .pv-set figure{ margin:0; display:flex; flex-direction:column; align-items:center; gap:14px; }
+  figcaption{ font-size:.75rem; color:var(--soft); }
+  .out{ border-top:1px solid var(--line); padding-top:18px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MCC Team Photo Cropper</h1>
+  <p class="lede">Drop in a photo, drag it into place, and watch it in the same circles the About page uses. Save the result as <code>images/team/&lt;name&gt;.jpg</code>.</p>
+
+  <div class="grid">
+    <div>
+      <span class="cap">1 · Photo</span>
+      <div class="stage-box" id="stage" aria-label="Crop area. Drag to move the photo, scroll or use the slider to zoom.">
+        <img id="img" alt="" hidden>
+        <div class="mask"></div>
+        <label class="drop" id="drop" for="file">
+          <strong>Drop a photo here</strong>
+          <small>or click to choose one · JPG, PNG, WebP (HEIC works in Safari)</small>
+        </label>
+      </div>
+      <input id="file" type="file" accept="image/*" hidden>
+
+      <div class="controls">
+        <div class="row">
+          <label class="cap" for="zoom" style="margin:0">Zoom</label>
+          <input id="zoom" type="range" min="1" max="5" step="0.01" value="1" disabled>
+          <button id="reset" disabled>Reset</button>
+        </div>
+        <p class="hint">Drag to move. Scroll or use the slider to zoom. Arrow keys nudge by a pixel when the crop area is focused (click it first). The dashed line is roughly where the eyes look best.</p>
+      </div>
+    </div>
+
+    <div>
+      <span class="cap">2 · Preview, at real size</span>
+      <div class="previews">
+        <div class="pv-card" aria-label="Team card preview">
+          <div class="pv" id="pvCard" style="width:116px;height:116px"></div>
+          <div class="pv-name" id="pvName">Member name</div>
+          <div class="pv-title">Website Coordinator</div>
+        </div>
+        <div class="pv-set">
+          <figure><div class="pv panel" id="pvPanel" style="width:164px;height:164px"></div><figcaption>Panel · 164px</figcaption></figure>
+          <figure><div class="pv small" id="pvPhone" style="width:78px;height:78px"></div><figcaption>Phone card · 78px</figcaption></figure>
+          <figure><div class="pv small" id="pvTiny" style="width:48px;height:48px"></div><figcaption>Small · 48px</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="out">
+        <label class="cap" for="name">3 · Member name</label>
+        <input id="name" type="text" placeholder="Full name, e.g. Naing Lin Khant" autocomplete="off">
+        <div class="row" style="margin-top:14px">
+          <button class="primary" id="save" disabled>Save cropped photo</button>
+          <span class="hint" id="fname">Saves as <code>photo.jpg</code> · 600 × 600</span>
+        </div>
+        <p id="msg" role="status"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var stage = $('stage'), img = $('img'), zoom = $('zoom'), file = $('file'), nameIn = $('name'), msg = $('msg');
+  var OUT = 600;
+  var st = { w:0, h:0, url:null, z:1, cx:0, cy:0, loaded:false };
+
+  function S(){ return stage.clientWidth; }
+  function scale(){ return st.z * S() / Math.min(st.w, st.h); }   // screen px per source px
+  function cropSize(){ return S() / scale(); }                    // side of the crop square, in source px
+  function clamp(){
+    var c = cropSize();
+    st.cx = Math.min(Math.max(st.cx, c/2), st.w - c/2);
+    st.cy = Math.min(Math.max(st.cy, c/2), st.h - c/2);
+  }
+  function slug(s){
+    s = (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    return s || 'photo';
+  }
+  function paintPreview(el, D, x, y, c){
+    el.style.backgroundImage = "url('" + st.url + "')";
+    el.style.backgroundSize = (st.w / c * D) + 'px ' + (st.h / c * D) + 'px';
+    el.style.backgroundPosition = (-x / c * D) + 'px ' + (-y / c * D) + 'px';
+  }
+  function render(){
+    if (!st.loaded) return;
+    clamp();
+    var s = scale(), sz = S();
+    img.style.width = st.w * s + 'px';
+    img.style.height = st.h * s + 'px';
+    img.style.left = (sz/2 - st.cx * s) + 'px';
+    img.style.top  = (sz/2 - st.cy * s) + 'px';
+    var c = cropSize(), x = st.cx - c/2, y = st.cy - c/2;
+    paintPreview($('pvCard'), 116, x, y, c);
+    paintPreview($('pvPanel'), 164, x, y, c);
+    paintPreview($('pvPhone'), 78, x, y, c);
+    paintPreview($('pvTiny'), 48, x, y, c);
+    zoom.value = st.z;
+  }
+  function labels(){
+    var n = nameIn.value.trim();
+    $('pvName').textContent = n || 'Member name';
+    $('fname').innerHTML = 'Saves as <code>' + slug(n) + '.jpg</code> · ' + OUT + ' × ' + OUT;
+  }
+
+  function load(f){
+    msg.textContent = '';
+    if (!f) return;
+    var url = URL.createObjectURL(f);
+    var probe = new Image();
+    probe.onload = function(){
+      if (st.url) URL.revokeObjectURL(st.url);
+      st.url = url; st.w = probe.naturalWidth; st.h = probe.naturalHeight;
+      st.z = 1; st.cx = st.w/2; st.cy = st.h * 0.4 > st.w/2 ? st.h * 0.4 : st.h/2; st.loaded = true;
+      img.src = url; img.hidden = false;
+      stage.classList.add('has'); zoom.disabled = false; $('reset').disabled = false; $('save').disabled = false;
+      if (!nameIn.value && f.name) { /* leave the name for the user to type */ }
+      render();
+    };
+    probe.onerror = function(){
+      URL.revokeObjectURL(url);
+      msg.textContent = /heic|heif/i.test(f.name + f.type)
+        ? 'This browser cannot open HEIC photos. Open this page in Safari, or export the photo as JPG first.'
+        : 'That file could not be read as an image.';
+    };
+    probe.src = url;
+  }
+
+  file.addEventListener('change', function(){ load(file.files[0]); });
+  ['dragenter','dragover'].forEach(function(t){ stage.addEventListener(t, function(e){ e.preventDefault(); }); });
+  stage.addEventListener('drop', function(e){ e.preventDefault(); if (e.dataTransfer.files[0]) load(e.dataTransfer.files[0]); });
+
+  // drag to move
+  var drag = null;
+  stage.addEventListener('pointerdown', function(e){
+    if (!st.loaded) return;
+    drag = { x:e.clientX, y:e.clientY, cx:st.cx, cy:st.cy };
+    stage.setPointerCapture(e.pointerId); stage.classList.add('drag'); stage.tabIndex = 0; stage.focus({preventScroll:true});
+  });
+  stage.addEventListener('pointermove', function(e){
+    if (!drag) return;
+    var s = scale();
+    st.cx = drag.cx - (e.clientX - drag.x) / s;
+    st.cy = drag.cy - (e.clientY - drag.y) / s;
+    render();
+  });
+  function end(){ drag = null; stage.classList.remove('drag'); }
+  stage.addEventListener('pointerup', end); stage.addEventListener('pointercancel', end);
+
+  // zoom
+  stage.addEventListener('wheel', function(e){
+    if (!st.loaded) return; e.preventDefault();
+    st.z = Math.min(5, Math.max(1, st.z * Math.exp(-e.deltaY * 0.0015))); render();
+  }, { passive:false });
+  zoom.addEventListener('input', function(){ st.z = parseFloat(zoom.value); render(); });
+  $('reset').addEventListener('click', function(){ st.z = 1; st.cx = st.w/2; st.cy = st.h/2; render(); });
+
+  // keyboard nudge
+  stage.addEventListener('keydown', function(e){
+    if (!st.loaded) return;
+    var d = (e.shiftKey ? 10 : 1) / scale(), used = true;
+    if (e.key === 'ArrowLeft') st.cx += d; else if (e.key === 'ArrowRight') st.cx -= d;
+    else if (e.key === 'ArrowUp') st.cy += d; else if (e.key === 'ArrowDown') st.cy -= d;
+    else if (e.key === '+' || e.key === '=') st.z = Math.min(5, st.z * 1.05);
+    else if (e.key === '-') st.z = Math.max(1, st.z / 1.05);
+    else used = false;
+    if (used){ e.preventDefault(); render(); }
+  });
+
+  window.addEventListener('resize', render);
+  nameIn.addEventListener('input', labels);
+
+  // export
+  $('save').addEventListener('click', function(){
+    var c = cropSize(), x = st.cx - c/2, y = st.cy - c/2;
+    var cv = document.createElement('canvas'); cv.width = cv.height = OUT;
+    var g = cv.getContext('2d'); g.imageSmoothingQuality = 'high';
+    var im = new Image();
+    im.onload = function(){
+      g.drawImage(im, x, y, c, c, 0, 0, OUT, OUT);
+      cv.toBlob(function(b){
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(b); a.download = slug(nameIn.value) + '.jpg';
+        document.body.appendChild(a); a.click(); a.remove();
+        msg.style.color = 'var(--soft)';
+        msg.textContent = 'Saved ' + a.download + '. Move it into images/team/ in the website folder.';
+      }, 'image/jpeg', 0.88);
+    };
+    im.src = st.url;
+  });
+
+  labels();
+})();
+</script>
+</body>
+</html>
