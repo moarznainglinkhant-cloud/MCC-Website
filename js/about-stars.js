@@ -13,7 +13,7 @@
   var ctx = cv.getContext("2d");
   if (!ctx) return;
 
-  var INTENSITY = 0.45;                      // quieter than the "Subtle" preview (0.6)
+  var INTENSITY = 0.3;                       // well below the "Subtle" preview (0.6)
   var GOLD = "192,138,46", AMB = "217,164,65", DEEP = "150,104,30";
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var W = 0, H = 0, pts = [], mouse = { x: -999, y: -999, on: false };
@@ -76,7 +76,7 @@
         if (dx > L || dx < -L || dy > L || dy < -L) continue;
         var d = Math.sqrt(dx * dx + dy * dy);
         if (d < L) {
-          ctx.strokeStyle = "rgba(" + DEEP + "," + ((1 - d / L) * 0.32 * INTENSITY) + ")";
+          ctx.strokeStyle = "rgba(" + DEEP + "," + ((1 - d / L) * 0.3 * INTENSITY) + ")";
           ctx.beginPath(); ctx.moveTo(pts[i].x, pts[i].y); ctx.lineTo(pts[j].x, pts[j].y); ctx.stroke();
         }
       }
@@ -92,8 +92,8 @@
           ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(mouse.x, mouse.y); ctx.stroke();
         }
       }
-      if (p.star) spark(p.x, p.y, 5 + near * 4, 0.5 + near * 0.4, AMB);
-      else orb(p.x, p.y, 4 + near * 6, 0.5 + near * 0.4, GOLD);
+      if (p.star) spark(p.x, p.y, 4.5 + near * 4, 0.38 + near * 0.4, AMB);
+      else orb(p.x, p.y, 3.6 + near * 6, 0.38 + near * 0.4, GOLD);
     }
   }
 
