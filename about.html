@@ -525,6 +525,7 @@
     background: color-mix(in srgb, var(--tint) 13%, var(--bg-raised)); color:var(--tint);
     box-shadow: 0 0 0 6px var(--bg-raised), 0 0 0 8px var(--gold), 0 20px 44px rgba(28,36,64,0.18);
   }
+  .person-photo.has-photo, .pp-photo.has-photo{ background-size:cover; background-position:center; background-repeat:no-repeat; }
   .pp-dept{
     display:inline-flex; align-items:center; gap:7px; margin-top:22px;
     font-size:0.7rem; font-weight:700; letter-spacing:0.16em; text-transform:uppercase; color:var(--ink-soft);
@@ -968,6 +969,8 @@
     v = v.replace(/^@/, "");
     return /^[A-Za-z0-9._]{1,30}$/.test(v) ? v : null;
   }
+  // Team photos kept in images/team/. Key = full name (lower case). A `photo` column in the Team tab also works.
+  var TEAM_PHOTOS = { "naing lin khant": "images/team/moarz.jpg" };
   function initialsOf(s){
     var w = s.split(/\s+/).filter(Boolean);
     return w.slice(0, 2).map(function(x){ return x.charAt(0).toUpperCase(); }).join("");
@@ -990,7 +993,8 @@
         line: line || null,
         linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"])),
         instagram: instagramHandle(cell(row, ["instagram", "instagram_handle"])),
-        fact: cell(row, ["fun_fact", "fact", "funfact"]) || null
+        fact: cell(row, ["fun_fact", "fact", "funfact"]) || null,
+        photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null
       });
     });
     return list;
@@ -1055,12 +1059,13 @@
   var CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function photoStyle(p){ return p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\')"' : ''; }
   function cardHTML(p){
     var idx = PEOPLE.indexOf(p);
     var nm = p.pref ? esc(p.name) + ' <span class="pref">(' + esc(p.pref) + ')</span>' : esc(p.name);
     return '<div class="person-card" role="button" tabindex="-1" aria-haspopup="dialog" data-idx="' + idx + '">' +
       '<span class="card-more" aria-hidden="true">' + PLUS + '</span>' +
-      '<span class="person-photo" aria-hidden="true">' + esc(p.i) + '</span>' +
+      '<span class="person-photo' + (p.photo ? ' has-photo' : '') + '" aria-hidden="true"' + photoStyle(p) + '>' + (p.photo ? '' : esc(p.i)) + '</span>' +
       '<span class="person-name">' + nm + '</span>' +
       '<span class="person-title">' + esc(p.title) + '</span>' +
       (p.line ? '<span class="person-line">' + esc(p.line) + '</span>' : '') +
@@ -1502,7 +1507,10 @@
   function fillPanel(idx){
     var p = PEOPLE[idx], g = GROUPS[GIDX[p.group]];
     shell.style.setProperty("--tint", g.color);
-    q(".pp-photo").textContent = p.i;
+    var ppp = q(".pp-photo");
+    ppp.textContent = p.photo ? "" : p.i;
+    ppp.classList.toggle("has-photo", !!p.photo);
+    ppp.style.backgroundImage = p.photo ? "url('" + p.photo + "')" : "";
     q(".pp-dept .dot").style.background = g.color;
     q(".pp-dept-name").textContent = g.label;
     q(".pp-name").textContent = p.name;
@@ -1544,6 +1552,7 @@
     fly.className = "pp-fly";
     fly.setAttribute("aria-hidden", "true");
     fly.textContent = src.textContent;
+    if (cs.backgroundImage && cs.backgroundImage !== "none") { fly.style.backgroundImage = cs.backgroundImage; fly.style.backgroundSize = "cover"; fly.style.backgroundPosition = "center"; fly.style.backgroundRepeat = "no-repeat"; }
     fly.style.cssText = "left:" + sr.left + "px;top:" + sr.top + "px;width:" + sr.width + "px;height:" + sr.height + "px;" +
       "background-color:" + cs.backgroundColor + ";color:" + cs.color + ";box-shadow:" + cs.boxShadow + ";font-size:" + cs.fontSize + ";";
     document.body.appendChild(fly);
