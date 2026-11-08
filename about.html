@@ -309,7 +309,7 @@
     box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 24px 48px rgba(28,36,64,0.14);
   }
   .cluster .person-photo{
-    width:116px; height:116px; font-size:1.45rem;
+    width:150px; height:150px; font-size:1.8rem;
     background: color-mix(in srgb, var(--tint, var(--gold)) 13%, var(--bg-raised));
     color: var(--tint, var(--ink-soft));
     box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 7px var(--gold);
@@ -418,7 +418,7 @@
   .wheel-sticky.is-mobile .wheel-name{ font-size:2.3rem; margin:6px 0 0; }
   .wheel-sticky.is-mobile .wheel-cue{ display:none; }
   .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:20px 10px 16px; gap:8px; border-radius:18px; }
-  .wheel-sticky.is-mobile .cluster .person-photo{ width:78px; height:78px; font-size:1.1rem; box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold); }
+  .wheel-sticky.is-mobile .cluster .person-photo{ width:106px; height:106px; font-size:1.5rem; box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold); }
   .wheel-sticky.is-mobile .cluster .person-name{ font-size:0.9rem; margin-top:2px; }
   .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.66rem; padding:3px 10px; }
   .wheel-sticky.is-mobile .person-line{ font-size:0.74rem; }
@@ -519,7 +519,7 @@
       color-mix(in srgb, var(--tint) 9%, var(--bg-raised));
   }
   .pp-photo{
-    position:relative; width:164px; height:164px; border-radius:50%; margin:-88px auto 0;
+    position:relative; width:200px; height:200px; border-radius:50%; margin:-106px auto 0;
     display:flex; align-items:center; justify-content:center;
     font-family:'Fraunces', serif; font-weight:600; font-size:2.5rem;
     background: color-mix(in srgb, var(--tint) 13%, var(--bg-raised)); color:var(--tint);
@@ -579,7 +579,7 @@
   @media (max-width:480px){
     .pp-inner{ padding:0 22px 26px; }
     .pp-band{ margin:0 -22px; height:112px; }
-    .pp-photo{ width:136px; height:136px; font-size:2.1rem; margin-top:-74px; }
+    .pp-photo{ width:168px; height:168px; font-size:2.4rem; margin-top:-90px; }
   }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
@@ -1059,7 +1059,7 @@
   var CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-  function photoStyle(p){ return p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\')"' : ''; }
+  function photoStyle(p){ return p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\');background-size:cover;background-position:center;background-repeat:no-repeat"' : ''; }
   function cardHTML(p){
     var idx = PEOPLE.indexOf(p);
     var nm = p.pref ? esc(p.name) + ' <span class="pref">(' + esc(p.pref) + ')</span>' : esc(p.name);
@@ -1511,6 +1511,9 @@
     ppp.textContent = p.photo ? "" : p.i;
     ppp.classList.toggle("has-photo", !!p.photo);
     ppp.style.backgroundImage = p.photo ? "url('" + p.photo + "')" : "";
+    ppp.style.backgroundSize = p.photo ? "cover" : "";
+    ppp.style.backgroundPosition = p.photo ? "center" : "";
+    ppp.style.backgroundRepeat = p.photo ? "no-repeat" : "";
     q(".pp-dept .dot").style.background = g.color;
     q(".pp-dept-name").textContent = g.label;
     q(".pp-name").textContent = p.name;
