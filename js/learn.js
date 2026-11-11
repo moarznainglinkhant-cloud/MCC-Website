@@ -193,20 +193,25 @@ var MCC_TRANSLIT = (function () {
     return b;
   }
 
-  /* One tracing pad. strokes: [[ [x,y], … ], …] in order. view: {x,y,w,h}. */
+  /* One writing pad. strokes: hidden centre-lines [[ [x,y], … ], …] in writing order (drive the "watch" demo).
+     view: {x,y,w,h}. o.shapes: the letter outlines [{d,x,y}].
+     "Your turn" is free writing: the visitor's own line is drawn as they write, green where it is inside the
+     letter, red where it strays outside, checked live against the letter shape. Done = most of the letter
+     covered and most of the line inside it. */
+  var GOOD = "#2F8F5B", BAD = "#C2412F";
+  var NEED_COVER = 0.82, NEED_INSIDE = 0.8;
   function Pad(host, strokes, view, o) {
     o = o || {};
-    var L = strokes, k = 0, prog = 0, mode = "idle", raf = 0, timer = 0, drag = false, dead = false;
+    var L = strokes, mode = "idle", raf = 0, timer = 0, dead = false;
     var speed = o.speed || 20, gap = o.gap || 420;
     host.innerHTML = "";
     var seal = document.createElement("div"); seal.className = "lb-seal"; seal.textContent = "✓"; host.appendChild(seal);
-    var svg = el("svg", { viewBox: [view.x, view.y, view.w, view.h].join(" "), role: "img", "aria-label": o.label || "Tracing pad" });
+    var svg = el("svg", { viewBox: [view.x, view.y, view.w, view.h].join(" "), role: "img", "aria-label": o.label || "Writing pad" });
     if (o.px) { svg.style.width = view.w * o.px + "px"; svg.style.height = view.h * o.px + "px"; }
     host.appendChild(svg);
     [D.BOT || 0, D.TOP].forEach(function (y) { svg.appendChild(el("line", { "class": "lb-rule", x1: view.x + 5, x2: view.x + view.w - 5, y1: y, y2: y })); });
     var pts = function (s) { return s.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); };
-    // What you see is the real letter (Padauk Book outline). The hidden strokes paint a mask over it, so the ink
-    // fills the letter in writing order; when the last stroke is done the mask comes off and the letter is whole.
+    // The demo: the real letter (Padauk Book outline) under a mask that the hidden strokes paint, so it fills in writing order.
     var shapes = o.shapes || [], mid = "lbm" + (++padN);
     var mask = el("mask", { id: mid, maskUnits: "userSpaceOnUse", x: view.x, y: view.y, width: view.w, height: view.h });
     var defs = el("defs", {}); defs.appendChild(mask); svg.appendChild(defs);
@@ -217,7 +222,7 @@ var MCC_TRANSLIT = (function () {
     });
     svg.appendChild(ghost); svg.appendChild(inkG);
     var inks = L.map(function () { var p = el("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": MW, "stroke-linecap": "round", "stroke-linejoin": "round" }); mask.appendChild(p); return p; });
-    var hint = el("g", { "class": "lb-hint" }); svg.appendChild(hint);
+    var mine = el("g", { "class": "lb-mine", "stroke-width": D.W * 0.55 }); svg.appendChild(mine);   // the visitor's own writing
     var pen = el("circle", { "class": "lb-pen", r: 1.7, opacity: 0 }); svg.appendChild(pen);
 
     function setInk(i, pr) {
@@ -228,32 +233,21 @@ var MCC_TRANSLIT = (function () {
       return a[a.length - 1];
     }
     function full(i) { inks[i].setAttribute("points", pts(L[i].length > 1 ? L[i] : [L[i][0], L[i][0]])); }
-    function clear() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.setAttribute("mask", "url(#" + mid + ")"); host.classList.remove("is-done"); }
+    function clearDemo() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.setAttribute("mask", "url(#" + mid + ")"); }
     function whole() { inkG.removeAttribute("mask"); }
-    function follow(i) {
-      if (!o.scroller || !L[i]) return;
-      var x = (L[i][0][0] - view.x) * (o.px || 1) - o.scroller.clientWidth * 0.35;
-      try { o.scroller.scrollTo({ left: Math.max(0, x), behavior: reduced ? "auto" : "smooth" }); } catch (e) { o.scroller.scrollLeft = Math.max(0, x); }
-    }
-    function showHint(i) {
-      hint.innerHTML = "";
-      if (i == null) { hint.style.opacity = 0; return; }
-      hint.style.opacity = 1;
-      var s = L[i], a = s[0], j = Math.min(6, s.length - 1), b = s[j], c = s[Math.max(0, j - 2)];
-      hint.appendChild(el("circle", { "class": "lb-pulse", cx: a[0], cy: a[1], r: 3.2 }));
-      hint.appendChild(el("circle", { "class": "lb-dot", cx: a[0], cy: a[1], r: 3.2 }));
-      if (L.length < 10) { var t = el("text", { x: a[0], y: a[1] + 0.2 }); t.textContent = i + 1; hint.appendChild(t); }
-      if (j > 2) hint.appendChild(el("path", { d: "M-2.2,-2.2 L0,0 L-2.2,2.2", transform: "translate(" + b[0] + " " + b[1] + ") rotate(" + (Math.atan2(b[1] - c[1], b[0] - c[0]) * 180 / Math.PI) + ")" }));
-    }
     function say(h) { if (o.status) o.status.innerHTML = h; }
-    function count(i) { return "<b>Stroke " + (i + 1) + " of " + L.length + "</b>"; }
     function stop() { cancelAnimationFrame(raf); clearTimeout(timer); pen.setAttribute("opacity", 0); }
+    function follow(x) {
+      if (!o.scroller) return;
+      var left = (x - view.x) * (o.px || 1) - o.scroller.clientWidth * 0.35;
+      try { o.scroller.scrollTo({ left: Math.max(0, left), behavior: reduced ? "auto" : "smooth" }); } catch (e) { o.scroller.scrollLeft = Math.max(0, left); }
+    }
 
     function watch() {
-      stop(); clear(); showHint(null); mode = "watch"; host.classList.remove("is-tracing");
+      stop(); clearDemo(); clearMine(); mode = "watch"; host.classList.remove("is-writing", "is-done");
       var i = 0, t0 = 0;
       say("Watch the pen. <b>" + L.length + " stroke" + (L.length > 1 ? "s" : "") + "</b>.");
-      follow(0);
+      follow(L[0][0][0]);
       function step(now) {
         if (dead) return;
         if (!t0) t0 = now;
@@ -261,44 +255,112 @@ var MCC_TRANSLIT = (function () {
         pen.setAttribute("cx", tip[0]); pen.setAttribute("cy", tip[1]); pen.setAttribute("opacity", 1);
         if (pr >= s.length - 1) {
           full(i); i++; t0 = 0;
-          if (i >= L.length) { pen.setAttribute("opacity", 0); whole(); timer = setTimeout(trace, 900); return; }
-          follow(i);
+          if (i >= L.length) { pen.setAttribute("opacity", 0); whole(); timer = setTimeout(write, 1100); return; }
+          follow(L[i][0][0]);
           timer = setTimeout(function () { raf = requestAnimationFrame(step); }, gap); return;
         }
         raf = requestAnimationFrame(step);
       }
       timer = setTimeout(function () { raf = requestAnimationFrame(step); }, 350);
     }
-    function trace() {
-      stop(); clear(); mode = "trace"; k = 0; prog = 0; host.classList.add("is-tracing"); showHint(0); follow(0);
-      say("Your turn. Start at the red dot. " + count(0));
+
+    /* ---- free writing, checked against the letter shape ---- */
+    var K = 4, cw = Math.ceil(view.w * K), ch = Math.ceil(view.h * K);
+    var hit = null, letterIdx = null, cov = null, covCtx = null;
+    function canvas() { var c = document.createElement("canvas"); c.width = cw; c.height = ch; return c; }
+    function buildHit() {                       // pixel maps of the letter: "inside" (with a little give) and the letter itself
+      var c = canvas(), x = c.getContext("2d");
+      x.setTransform(K, 0, 0, K, -view.x * K, -view.y * K);
+      x.lineWidth = 2.4; x.lineJoin = "round"; x.fillStyle = x.strokeStyle = "#000";
+      shapes.forEach(function (sh) { var p = new Path2D(sh.d); x.save(); x.translate(sh.x, sh.y); x.fill(p); x.stroke(p); x.restore(); });
+      hit = x.getImageData(0, 0, cw, ch).data;
+      x.setTransform(1, 0, 0, 1, 0, 0); x.clearRect(0, 0, cw, ch); x.setTransform(K, 0, 0, K, -view.x * K, -view.y * K);
+      shapes.forEach(function (sh) { x.save(); x.translate(sh.x, sh.y); x.fill(new Path2D(sh.d)); x.restore(); });
+      var d = x.getImageData(0, 0, cw, ch).data, idx = [];
+      for (var yy = 0; yy < ch; yy += 2) for (var xx = 0; xx < cw; xx += 2) if (d[(yy * cw + xx) * 4 + 3] > 128) idx.push(yy * cw + xx);
+      letterIdx = idx;
+      cov = canvas(); covCtx = cov.getContext("2d");
+      covCtx.setTransform(K, 0, 0, K, -view.x * K, -view.y * K);
+      covCtx.lineWidth = D.W * 1.7; covCtx.lineCap = covCtx.lineJoin = "round"; covCtx.strokeStyle = "#000";
+    }
+    function inside(p) {
+      var xx = Math.round((p[0] - view.x) * K), yy = Math.round((p[1] - view.y) * K);
+      if (xx < 0 || yy < 0 || xx >= cw || yy >= ch) return false;
+      return hit[(yy * cw + xx) * 4 + 3] > 128;
+    }
+    var lenIn = 0, lenOut = 0, cur = null, last = null, lastIn = true, run = null, dirty = 0;
+    function clearMine() {
+      mine.innerHTML = ""; lenIn = lenOut = 0; cur = null;
+      if (covCtx) { covCtx.save(); covCtx.setTransform(1, 0, 0, 1, 0, 0); covCtx.clearRect(0, 0, cw, ch); covCtx.restore(); }
+      host.classList.remove("is-done");
+    }
+    function covered() {
+      var d = covCtx.getImageData(0, 0, cw, ch).data, n = 0;
+      for (var i = 0; i < letterIdx.length; i++) if (d[letterIdx[i] * 4 + 3] > 128) n++;
+      return letterIdx.length ? n / letterIdx.length : 0;
+    }
+    function score() {
+      var c = covered(), tot = lenIn + lenOut, ins = tot ? lenIn / tot : 1;
+      return { cover: c, inside: ins };
+    }
+    function pct(v) { return Math.round(v * 100) + "%"; }
+    function report(final) {
+      var s = score();
+      if (s.cover >= NEED_COVER && s.inside >= NEED_INSIDE) {
+        mode = "done"; host.classList.remove("is-writing"); host.classList.add("is-done");
+        say((o.doneText || "Done. You wrote it.") + " <b>" + pct(s.inside) + "</b> of your line was inside the letter.");
+        if (o.onDone) o.onDone();
+        return;
+      }
+      var h = "Inside the letter <b>" + pct(s.inside) + "</b> · Letter covered <b>" + pct(s.cover) + "</b>";
+      if (final && s.cover >= NEED_COVER) h += ". Too much went outside: clear and try again.";
+      say(h);
+    }
+    function write() {
+      stop(); clearDemo(); if (!hit) buildHit(); clearMine();
+      mode = "write"; host.classList.add("is-writing");
+      say("Your turn. Write it yourself: <b style=\"color:" + GOOD + "\">green</b> is inside the letter, <b style=\"color:" + BAD + "\">red</b> is outside.");
+      follow(L[0][0][0]);
     }
     function local(e) { var m = svg.getScreenCTM().inverse(); return [m.a * e.clientX + m.c * e.clientY + m.e, m.b * e.clientX + m.d * e.clientY + m.f]; }
-    function move(e) {
-      if (mode !== "trace" || !drag) return;
-      var p = local(e), s = L[k], i = Math.floor(prog), j, f = 0;
-      var d = function (q) { return Math.hypot(p[0] - q[0], p[1] - q[1]); };
-      if (i === 0 && prog === 0 && d(s[0]) > TOL * 1.2) return;                       // must begin at the dot
-      for (j = i + 1; j <= Math.min(i + 5, s.length - 1); j++) if (d(s[j]) < TOL) i = j;
-      if (i < s.length - 1) {
-        var a = s[i], b = s[i + 1], vx = b[0] - a[0], vy = b[1] - a[1], t = ((p[0] - a[0]) * vx + (p[1] - a[1]) * vy) / (vx * vx + vy * vy || 1);
-        if (d(a) < TOL * 1.3) f = Math.max(0, Math.min(0.99, t));
-      }
-      if (i + f > prog) { prog = i + f; setInk(k, prog); }
-      if (prog > 0.5) hint.style.opacity = 0;
-      if (prog >= s.length - 2.2 || s.length < 4) {
-        full(k); k++; prog = 0; drag = false;
-        if (k >= L.length) {
-          mode = "done"; whole(); host.classList.remove("is-tracing"); host.classList.add("is-done"); showHint(null);
-          say(o.doneText || "Done. You wrote it."); if (o.onDone) o.onDone();
-        } else { showHint(k); follow(k); say("Good. " + count(k)); }
-      }
+    function newRun(p, good) {
+      run = { el: el("polyline", { fill: "none", stroke: good ? GOOD : BAD, "stroke-linecap": "round", "stroke-linejoin": "round" }), pts: [p] };
+      mine.appendChild(run.el);
     }
-    svg.addEventListener("pointerdown", function (e) { if (mode !== "trace") return; drag = true; try { svg.setPointerCapture(e.pointerId); } catch (x) {} move(e); e.preventDefault(); });
-    svg.addEventListener("pointermove", move);
-    ["pointerup", "pointercancel"].forEach(function (n) { svg.addEventListener(n, function () { drag = false; }); });
-    if (reduced || o.start === "trace") trace(); else watch();
-    return { watch: watch, trace: trace, kill: function () { dead = true; stop(); } };
+    function addPoint(p) {
+      var good = inside(p);
+      if (!last) { newRun(p, good); run.el.setAttribute("points", pts([p, p])); last = p; lastIn = good; covCtx.beginPath(); covCtx.moveTo(p[0], p[1]); covCtx.lineTo(p[0] + 0.01, p[1]); covCtx.stroke(); return; }
+      var dl = Math.hypot(p[0] - last[0], p[1] - last[1]);
+      if (dl < 0.35) return;
+      if (good) lenIn += dl; else lenOut += dl;
+      if (good !== lastIn) newRun(last, good);
+      run.pts.push(p); run.el.setAttribute("points", pts(run.pts));
+      covCtx.beginPath(); covCtx.moveTo(last[0], last[1]); covCtx.lineTo(p[0], p[1]); covCtx.stroke();
+      last = p; lastIn = good;
+      if (o.scroller) {                        // long names: keep the pen in view
+        var sx = (p[0] - view.x) * (o.px || 1) - o.scroller.scrollLeft;
+        if (sx > o.scroller.clientWidth * 0.85) o.scroller.scrollLeft += o.scroller.clientWidth * 0.3;
+      }
+      if (!dirty) dirty = setTimeout(function () { dirty = 0; if (mode === "write") report(false); }, 180);
+    }
+    var drawing = false;
+    svg.addEventListener("pointerdown", function (e) {
+      if (mode === "watch") { stop(); write(); }
+      if (mode !== "write") return;
+      drawing = true; last = null; try { svg.setPointerCapture(e.pointerId); } catch (x) {}
+      addPoint(local(e)); e.preventDefault();
+    });
+    svg.addEventListener("pointermove", function (e) {
+      if (!drawing) return;
+      var list = e.getCoalescedEvents ? e.getCoalescedEvents() : [e];
+      (list.length ? list : [e]).forEach(function (ev) { addPoint(local(ev)); });
+    });
+    ["pointerup", "pointercancel"].forEach(function (n) { svg.addEventListener(n, function () {
+      if (!drawing) return; drawing = false; last = null;
+      clearTimeout(dirty); dirty = 0; if (mode === "write") report(true);
+    }); });
+    if (reduced) write(); else watch();
+    return { watch: watch, write: write, clear: function () { if (mode === "watch") stop(); write(); }, kill: function () { dead = true; stop(); clearTimeout(dirty); } };
   }
 
   /* ---------- alphabet chart + letter pad ---------- */
@@ -338,6 +400,17 @@ var MCC_TRANSLIT = (function () {
     if (scroll && window.matchMedia("(max-width: 860px)").matches) $("lb-side").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }
   $("lb-watch").addEventListener("click", function () { if (pad) pad.watch(); });
+  $("lb-clear").addEventListener("click", function () { if (pad) pad.clear(); });
+  /* "Hide the letter": write from memory; the letter shows again once you've written it. Remembered. */
+  var noGuide = false; try { noGuide = localStorage.getItem("mcc_noguide") === "1"; } catch (e) {}
+  function guide() {
+    ["lb-pad", "lb-name-pad"].forEach(function (id) { $(id).classList.toggle("no-guide", noGuide); });
+    ["lb-guide", "lb-name-guide"].forEach(function (id) { var b = $(id); b.textContent = noGuide ? "Show the letter" : "Hide the letter"; b.setAttribute("aria-pressed", noGuide ? "true" : "false"); });
+  }
+  ["lb-guide", "lb-name-guide"].forEach(function (id) { $(id).addEventListener("click", function () {
+    noGuide = !noGuide; try { localStorage.setItem("mcc_noguide", noGuide ? "1" : "0"); } catch (e) {} guide();
+  }); });
+  guide();
   $("lb-next").addEventListener("click", function () { open((current + 1) % LETTERS.length, false); });
   open(0, false);
 
@@ -379,7 +452,7 @@ var MCC_TRANSLIT = (function () {
   }
   $("lb-name-form").addEventListener("submit", function (e) { e.preventDefault(); writeName($("lb-name-input").value); });
   $("lb-name-watch").addEventListener("click", function () { if (namePad) namePad.watch(); });
-  $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.trace(); });
+  $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (namePad && !$("lb-name-out").hidden) writeName($("lb-name-input").value); }, 250); });
 })();
