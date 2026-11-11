@@ -418,8 +418,8 @@
   .bento-sec{ padding-block: clamp(24px,4vw,48px) clamp(56px,8vw,96px); }
   /* Desktop: Events 2x2, Gallery a tall column between News and Instagram. Narrower screens keep it a two-column box (see media queries). */
   #explore .wrap{ container-type:inline-size; }
-  .bento{ display:grid; gap:16px; grid-template-columns:repeat(4, minmax(0,1fr)); grid-auto-rows:220px;
-          grid-template-areas:"ev ev ab ab" "ev ev ga ne" "fa fa ga ig"; }
+  .bento{ display:grid; gap:16px; grid-template-columns:repeat(4, minmax(0,1fr)); grid-template-rows:220px 220px 220px auto;
+          grid-template-areas:"ev ev ab ab" "ev ev ga ne" "le le ga ig" "fa fa fa fa"; }
   .tile{
     position:relative; overflow:hidden; border-radius:24px; padding:24px;
     background:var(--bg-raised); border:1px solid var(--line); color:var(--ink); text-decoration:none;
@@ -501,6 +501,13 @@
 
   .t-ig{ grid-area:ig; background:var(--red); border-color:transparent; color:#fff; isolation:isolate; }
   .t-news{ grid-area:ne; }
+  /* Learn Burmese tile: a pen writes a letter, holds, fades, then writes the next (js/site.js initBentoLearn). */
+  .t-learn{ grid-area:le; }
+  .t-learn .t-pen{ position:absolute; top:14px; right:10px; bottom:14px; width:min(42%, 250px); pointer-events:none; }
+  .t-learn .t-pen svg{ display:block; width:100%; height:100%; transition:opacity .6s ease; }
+  .t-learn .t-pen .rule{ stroke:var(--line); stroke-width:.4; stroke-dasharray:1.6 1.8; }
+  .t-learn .t-pen .ink{ fill:none; stroke:var(--navy); stroke-width:5.6; stroke-linecap:round; stroke-linejoin:round; }
+  .t-learn .t-pen .tip{ fill:var(--red); }
   .t-ig .t-kicker{ color:rgba(255,255,255,0.75); }
   .t-ig svg.big{ position:absolute; top:22px; right:22px; width:44px; height:44px; opacity:0.9; transition:transform .7s cubic-bezier(.22,1,.36,1); }
   .t-ig:hover svg.big{ transform:rotate(-10deg) scale(1.08); }
@@ -528,12 +535,12 @@
 
   @media (max-width:980px){
     /* two columns that stay a box: Events square on top, team, then a tall Gallery beside News and Instagram, then the fact */
-    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:"ev ev" "ev ev" "ab ab" "ga ne" "ga ig" "fa fa";
-            grid-template-rows:220px 220px auto 220px 220px auto; grid-auto-rows:auto; }
+    .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:"ev ev" "ev ev" "ab ab" "ga ne" "ga ig" "le le" "fa fa";
+            grid-template-rows:220px 220px auto 220px 220px 190px auto; grid-auto-rows:auto; }
     .t-about{ min-height:150px; }
   }
   @media (max-width:560px){
-    .bento{ --sq:calc((100cqw - 12px) / 2); gap:12px; grid-template-rows:var(--sq) var(--sq) auto var(--sq) var(--sq) auto; }
+    .bento{ --sq:calc((100cqw - 12px) / 2); gap:12px; grid-template-rows:var(--sq) var(--sq) auto var(--sq) var(--sq) 150px auto; }
     .tile{ border-radius:20px; padding:16px; }
     .t-big{ font-size:clamp(1.7rem, 8.5cqw, 2.2rem); }
     .t-title{ font-size:1.08rem; }
@@ -622,9 +629,9 @@
   }
   .btn-footer.exec{ border-color:var(--gold); color:var(--gold); }
   .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
-  /* The nav has 7 items: tighter spacing, and fold into the menu button below 1120px so it never wraps. */
-  nav.links{ gap:clamp(12px,1.7vw,30px); }
-  @media (max-width:1120px){
+  /* The nav has 8 items: tighter spacing, and fold into the menu button below 1200px so it never wraps. */
+  nav.links{ gap:clamp(12px,1.5vw,30px); }
+  @media (max-width:1200px){
     nav.links{ display:none; }
     .menu-btn{ display:flex; }
   }
@@ -748,6 +755,7 @@
       <a href="events.html" data-i18n="label_all_events">Events</a>
       <a href="about.html" data-i18n="label_about">About</a>
       <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
+      <a href="learn.html" data-i18n="label_learn">Learn</a>
       <a href="newsletter.html#subscribe" class="nav-cta celebrate" data-i18n="label_join_newsletter_nav">Join Newsletter</a>
       <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
       <div class="lang-toggle" role="group" aria-label="Language">
@@ -763,6 +771,7 @@
     <a href="events.html" data-i18n="label_all_events">Events</a>
     <a href="about.html" data-i18n="label_about">About</a>
     <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
+    <a href="learn.html" data-i18n="label_learn">Learn</a>
     <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
     <div class="lang-toggle" role="group" aria-label="Language">
       <span class="lang-toggle-slider" aria-hidden="true"></span>
@@ -885,6 +894,12 @@
           <div class="t-sheets" aria-hidden="true"><i></i><i></i><i></i></div>
           <span class="t-kicker" data-i18n="bento_news_kicker">Newsletter</span>
           <span class="t-link"><span data-i18n="bento_news_link">Read</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
+        </a>
+        <a class="tile t-learn reveal" href="learn.html">
+          <div class="t-pen" id="js-bento-learn" aria-hidden="true"></div>
+          <span class="t-kicker" data-i18n="bento_learn_kicker">Learn Burmese</span>
+          <div class="t-title" data-i18n="bento_learn_title">Write your first letter</div>
+          <span class="t-link"><span data-i18n="bento_learn_link">Start tracing</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
         </a>
         <div class="tile t-fact reveal">
           <span class="t-kicker" data-i18n="bento_fact_kicker">Did you know?</span>

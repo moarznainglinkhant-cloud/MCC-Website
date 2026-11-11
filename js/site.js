@@ -70,6 +70,7 @@ const I18N = {
     label_all_events: "Events",
     label_about: "About",
     label_gallery: "Gallery",
+    label_learn: "Learn",
     label_newsletter: "Newsletter",
     label_connect: "Connect",
     label_join_newsletter_nav: "Join Newsletter",
@@ -139,6 +140,9 @@ const I18N = {
     bento_gallery_title: "Moments from our events",
     bento_news_kicker: "Newsletter",
     bento_news_link: "Read",
+    bento_learn_kicker: "Learn Burmese",
+    bento_learn_title: "Write your first letter",
+    bento_learn_link: "Start tracing",
     bento_fact_kicker: "Did you know?",
     bento_fact_btn: "Another one",
 
@@ -160,6 +164,7 @@ const I18N = {
     label_all_events: "အခမ်းအနားများ",
     label_about: "အကြောင်း",
     label_gallery: "ဓာတ်ပုံပြခန်း",
+    label_learn: "သင်ယူရန်",
     label_newsletter: "သတင်းလွှာ",
     label_connect: "ဆက်သွယ်ရန်",
     label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
@@ -229,6 +234,9 @@ const I18N = {
     bento_gallery_title: "ကျွန်ုပ်တို့ ပွဲများမှ အမှတ်တရများ",
     bento_news_kicker: "သတင်းလွှာ",
     bento_news_link: "ဖတ်ရန်",
+    bento_learn_kicker: "မြန်မာစာ သင်ယူရန်",
+    bento_learn_title: "ပထမဆုံး စာလုံးကို ရေးကြည့်ပါ",
+    bento_learn_link: "စတင်ရန်",
     bento_fact_kicker: "သင်သိပါသလား?",
     bento_fact_btn: "နောက်တစ်ခု",
 
@@ -2276,7 +2284,7 @@ function renderBento(past) {
     }
     initBentoPosters(box);
   }
-  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); initBentoFact(); renderBentoGallery(); initBentoIg(); }
+  if (!BENTO.loaded) { BENTO.loaded = true; loadBentoTeam(); initBentoFact(); renderBentoGallery(); initBentoIg(); initBentoLearn(); }
 }
 
 function renderBentoText() {
@@ -2495,6 +2503,60 @@ function renderBentoGallery() {
 // Mouse/trackpad: warm embers trail the cursor and float up as they fade, over a faint glow that follows it.
 // Touch (phones): the original effect — a tap sends out a warm glow, a ripple and a burst of sparks from
 // the finger, then the tile settles back to plain red (so it isn't left lit after visiting Instagram).
+// Learn tile: a pen writes one Burmese letter stroke by stroke, holds, fades out, then writes the next.
+// Runs only while the tile is on screen; with reduced motion it just shows the first letter.
+// Strokes are centre-lines ("x,y x,y …", baseline at y=0); the full set lives in js/learn-data.js.
+const BENTO_LEARN = [["က","17.6,-5.4 15.9,-7.2 14.5,-9.3 13.3,-11.4 12.3,-13.7 11.5,-16.1 10.8,-18.5 10.4,-20.9 10.2,-23.4 10,-25.9 10.1,-28.3 10.4,-30.8 10.9,-33.2 11.5,-35.6 12.4,-38 13.6,-40.2 14.9,-42.2 16.6,-44.1 18.3,-45.9 20.3,-47.3 22.5,-48.6 24.8,-49.5 27.2,-50.2 29.6,-50.6 32.1,-50.8 34.6,-50.8 37.1,-50.6 39.5,-50.1 41.9,-49.4 44.1,-48.3 46.2,-47 48.1,-45.4 49.9,-43.7 51.4,-41.7 52.9,-39.7 54.8,-38.2 55.2,-35.8 55.5,-33.3 55.5,-30.8 55.7,-28.3 55.9,-25.8 55.7,-23.4 55.5,-20.9 55.1,-18.4 54.5,-16 53.7,-13.7 52.7,-11.4 51.5,-9.2 50.1,-7.2 48.4,-5.4","55.5,-38.7 57.8,-39.7 59.7,-41.2 61.3,-43.1 63.1,-44.9 65,-46.5 67.1,-47.8 69.3,-49 71.6,-49.8 74,-50.4 76.5,-50.7 79,-50.9 81.4,-50.7 83.9,-50.5 86.3,-50 88.7,-49.2 91,-48.2 93,-46.8 95,-45.3 96.7,-43.4 98.1,-41.4 99.3,-39.3 100.3,-37 101,-34.6 101.5,-32.2 101.9,-29.7 102.1,-27.2 101.9,-24.8 101.7,-22.3 101.2,-19.8 100.6,-17.4 99.8,-15.1 98.7,-12.9 97.3,-10.8 95.6,-9 93.8,-7.3 91.7,-5.9 89.5,-4.8 87.2,-3.9 84.7,-3.4 82.3,-3.1 79.8,-3.1 77.3,-3.1 74.8,-3.4 72.4,-3.9"],["မ","18.1,-53.1 17.9,-50.6 17.1,-48.3 15.6,-46.3 14.3,-44.2 13.1,-42 12.1,-39.7 11.3,-37.4 10.8,-34.9 10.3,-32.5 10.1,-30 10,-27.5 10.2,-25 10.5,-22.6 11.1,-20.1 12.2,-18 13.9,-16.2 14.5,-13.8 15.3,-11.5 16.9,-9.6 18.7,-7.9 20.7,-6.4 22.9,-5.3 25.2,-4.3 27.6,-3.7 30.1,-3.3 32.6,-3.1 35.1,-3.1 37.5,-3.3 40,-3.8 42.4,-4.4 44.7,-5.4 46.8,-6.6 48.8,-8.1 50.6,-9.8 52.1,-11.9 52.8,-14.2 53.5,-16.6","49,-49 50.6,-47.1 52,-45.1 53.3,-43 54.5,-40.8 55.4,-38.5 56,-36.1 56.5,-33.7 56.8,-31.2 57,-28.8 56.9,-26.3 56.7,-23.8 56.3,-21.4 55.7,-19 54.1,-17.2","14.1,-17.4 16.2,-18.6 18.5,-19.6 20.6,-21 22.7,-22.2 25,-23.2 27.4,-23.8 29.8,-24.3 32.3,-24.5 34.8,-24.5 37.3,-24.3 39.7,-23.9 42.1,-23.2 44.4,-22.2 46.6,-21.1 48.7,-19.6 50.9,-18.5 53.1,-17.4"],["ဝ","20.7,-6.2 18.7,-7.6 16.8,-9.4 15.1,-11.2 13.6,-13.2 12.5,-15.4 11.5,-17.7 10.8,-20.2 10.4,-22.6 10.1,-25.1 10,-27.6 10.3,-30.1 10.6,-32.6 11.2,-35 12,-37.4 13.1,-39.7 14.4,-41.8 16,-43.8 17.8,-45.5 19.8,-47 21.9,-48.3 24.2,-49.3 26.6,-50.1 29.1,-50.6 31.6,-50.8 34.1,-51 36.6,-50.7 39,-50.4 41.5,-49.8 43.9,-49 46.1,-47.8 48.2,-46.5 50.1,-44.9 51.8,-43 53.2,-40.9 54.4,-38.8 55.4,-36.4 56.1,-34 56.6,-31.6 56.9,-29.1 57,-26.6 56.8,-24.1 56.5,-21.6 55.9,-19.1 55.2,-16.7 54.2,-14.5 52.8,-12.3 51.3,-10.3 49.6,-8.5 47.6,-7 45.5,-5.7 43.2,-4.7 40.8,-3.9 38.3,-3.4 35.8,-3.1 33.3,-3.1 30.8,-3.1 28.3,-3.4 25.9,-4 23.5,-4.8 21.2,-5.8"],["လ","39,-3.9 36.6,-3.4 34.1,-3.1 31.6,-3.1 29.1,-3.1 26.6,-3.5 24.2,-4.1 21.9,-5 19.7,-6.2 17.7,-7.7 15.9,-9.4 14.4,-11.4 13.1,-13.5 12,-15.8 11.2,-18.2 10.6,-20.6 10.2,-23.1 10,-25.6 10,-28.1 10.3,-30.6 10.7,-33 11.3,-35.5 12.1,-37.8 13.1,-40.1 14.5,-42.2 16.1,-44.2 17.8,-45.9 19.8,-47.5 22,-48.7 24.3,-49.7 26.7,-50.3 29.2,-50.7 31.7,-50.9 34.1,-50.8 36.6,-50.5 39.1,-49.9 41.4,-49 43.5,-47.7 45.5,-46.2 47.3,-44.5 48.9,-42.5 50.4,-40.5 51.6,-38.3 52.7,-36.1 53.8,-33.8 54.7,-31.5 55.5,-29.1 56.2,-26.7 57,-24.3 57.8,-22 58.7,-19.7 59.7,-17.4 60.8,-15.1 62.1,-13 63.6,-10.9 65.2,-9.1 67.1,-7.4 69.1,-5.9 71.3,-4.8 73.7,-4 76.1,-3.4 78.6,-3.1 81.1,-3.1 83.6,-3.3 86.1,-3.6 88.5,-4.3 90.8,-5.3 92.9,-6.6 94.9,-8.1 96.6,-10 98,-12 99.4,-14.1 100.4,-16.4 101.2,-18.8 101.7,-21.2 102.1,-23.7 102.2,-26.2 102.2,-28.7 102,-31.2 101.6,-33.6 101,-36.1 100.2,-38.4 99.1,-40.7 97.7,-42.8 96.2,-44.7 94.3,-46.4 92.3,-47.9 90.1,-49.1 87.8,-50 85.3,-50.5 82.8,-50.8 80.3,-51 77.9,-50.7 75.4,-50.5 72.9,-50.2"],["အ","12.4,-40.3 12.8,-42.7 13.7,-45.1 15.3,-46.9 17.4,-48.3 19.7,-49.3 22.1,-50 24.5,-50.6 27,-50.9 29.5,-51 32,-51 34.5,-51 36.9,-50.6 39.4,-50.3 41.8,-49.6 44.1,-48.7 46.2,-47.3 47.9,-45.5 49.4,-43.6 49.2,-41.1 48.9,-38.6 48.2,-36.2 46.9,-34.1 45.1,-32.4 42.9,-31.2 41,-29.6 40.6,-27.3 42.6,-25.9 44.9,-24.9 46.9,-23.5 48.7,-21.7 49.9,-19.5 50.5,-17.1 50.7,-14.6 50.4,-12.2 49.5,-9.8 48.1,-7.8 46.1,-6.2 44,-5 41.6,-4.2 39.2,-3.7 36.7,-3.2 34.2,-3.1 31.7,-2.9 29.2,-2.9 26.8,-3.1 24.3,-3.3 21.8,-3.8 19.5,-4.6 17.2,-5.6 15.1,-6.9 13.1,-8.5 11.4,-10.3 9.9,-12.4","50,-44.4 52.4,-45.1 54.7,-46.1 56.8,-47.4 59.1,-48.5 61.4,-49.4 63.8,-50.1 66.3,-50.5 68.8,-50.7 71.2,-51 73.7,-50.8 76.2,-50.6 78.7,-50.2 81.1,-49.5 83.4,-48.7 85.7,-47.5 87.7,-46.1 89.6,-44.5 91.3,-42.6 92.7,-40.6 93.9,-38.4 94.6,-36 95.1,-33.5 95.6,-31.1 96.2,-28.7 96.3,-26.2 96.1,-23.7 95.8,-21.2 95.3,-18.8 94.5,-16.4 93.5,-14.1 92.3,-12 90.8,-9.9 89.1,-8.1 87.1,-6.6 84.9,-5.4 82.6,-4.4 80.2,-3.7 77.8,-3.3 75.3,-3.1 72.8,-3.1 70.3,-3.4 68.1,-4.3 67.9,-6.8 68.2,-9.3 68.7,-11.7 69.3,-14.1 70.3,-16.4 71.5,-18.6 72.9,-20.7 74.5,-22.6 76.3,-24.3 78.4,-25.8 80.5,-27.1 82.8,-28.1 85.2,-28.9 87.6,-29.4 90.1,-29.7 92.6,-29.9 95,-30.5"]];
+function initBentoLearn() {
+  const box = document.getElementById("js-bento-learn");
+  if (!box || box.childElementCount) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+  const svg = mk("svg", { viewBox: "0 0 120 84", preserveAspectRatio: "xMidYMid meet" });
+  svg.append(mk("line", { class: "rule", x1: 8, x2: 112, y1: 17, y2: 17 }), mk("line", { class: "rule", x1: 8, x2: 112, y1: 65, y2: 65 }));
+  const g = mk("g", {}), tip = mk("circle", { class: "tip", r: 1.8, opacity: 0 });
+  svg.append(g, tip); box.appendChild(svg);
+  const letters = BENTO_LEARN.map(l => l.slice(1).map(s => s.split(" ").map(p => p.split(",").map(Number))));
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let li = 0, raf = 0, timer = 0, visible = false;
+  const pts = a => a.map(p => p.join(",")).join(" ");
+  function place(strokes) {            // centre the letter between the two ruled lines
+    let x0 = 1e9, x1 = -1e9; strokes.forEach(s => s.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); }));
+    g.setAttribute("transform", `translate(${60 - (x0 + x1) / 2} 67)`); g.innerHTML = "";
+    return strokes.map(() => { const p = mk("polyline", { class: "ink", points: "" }); g.appendChild(p); return p; });
+  }
+  function write() {
+    const strokes = letters[li], inks = place(strokes); svg.style.opacity = 1;
+    if (reduced) { strokes.forEach((s, i) => inks[i].setAttribute("points", pts(s))); return; }
+    let si = 0, t0 = 0;
+    function step(now) {
+      if (!t0) t0 = now;
+      const s = strokes[si], pr = Math.min(s.length - 1, (now - t0) / 1000 * 16), n = Math.floor(pr), f = pr - n, a = s.slice(0, n + 1);
+      if (f > 0 && n < s.length - 1) a.push([s[n][0] + (s[n + 1][0] - s[n][0]) * f, s[n][1] + (s[n + 1][1] - s[n][1]) * f]);
+      inks[si].setAttribute("points", pts(a.length > 1 ? a : [a[0], a[0]]));
+      const m = g.transform.baseVal[0].matrix, end = a[a.length - 1];
+      tip.setAttribute("cx", end[0] + m.e); tip.setAttribute("cy", end[1] + m.f); tip.setAttribute("opacity", 1);
+      if (pr >= s.length - 1) {
+        si++; t0 = 0;
+        if (si >= strokes.length) {
+          tip.setAttribute("opacity", 0);
+          timer = setTimeout(() => { svg.style.opacity = 0; timer = setTimeout(() => { li = (li + 1) % letters.length; if (visible) write(); }, 700); }, 1800);
+          return;
+        }
+        timer = setTimeout(() => { raf = requestAnimationFrame(step); }, 380); return;
+      }
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+  }
+  function stop() { cancelAnimationFrame(raf); clearTimeout(timer); }
+  if (reduced || !("IntersectionObserver" in window)) { write(); return; }
+  new IntersectionObserver(entries => {
+    visible = entries[0].isIntersecting; stop();
+    if (visible) write();
+  }, { threshold: 0.2 }).observe(box);
+}
+
 function initBentoIg() {
   const tile = document.querySelector(".t-ig");
   if (!tile || tile.querySelector(".ig-fx")) return;
