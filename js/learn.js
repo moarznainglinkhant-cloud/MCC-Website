@@ -172,7 +172,7 @@ var MCC_TRANSLIT = (function () {
     ["ယ","ya","ya pet let","ယပက်လက်"],["ရ","ya","ya gauk","ရကောက်"],["လ","la","la","လ"],["ဝ","wa","wa","ဝ"],["သ","tha","tha","သ"],
     ["ဟ","ha","ha","ဟ"],["ဠ","la","la gyi","ဠကြီး"],["အ","a","a","အ"]
   ];
-  var NS = "http://www.w3.org/2000/svg", SW = 5.6, TOL = 9;
+  var NS = "http://www.w3.org/2000/svg", MW = D.W * 1.5, TOL = 9, padN = 0;
   var CLUSTER = /[က-အဣ-ဪဿ][ါ-ှ]*/g;
   var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var $ = function (id) { return document.getElementById(id); };
@@ -181,6 +181,12 @@ var MCC_TRANSLIT = (function () {
   var cache = {};
   function glyph(g) { return cache[g] || (cache[g] = (D.G[g] || []).map(function (s) { return s.split(" ").map(function (p) { p = p.split(","); return [+p[0], +p[1]]; }); })); }
   function placed(g, dx, dy) { return glyph(g).map(function (s) { return s.map(function (p) { return [p[0] + dx, p[1] + dy]; }); }); }
+  function shapeOf(g, dx, dy) { return { d: D.O[g] || "", x: dx, y: dy }; }
+  function letterSvg(ch) {               // the letter as its outline, so the chart matches the pad (no web font needed)
+    var g = D.K[ch]; if (g == null) return ch;
+    var b = bounds(glyph(g)), x = b.x0 - 9, w = b.x1 - b.x0 + 18;
+    return '<svg class="lb-gsvg" viewBox="' + x + ' -58 ' + w + ' 104" style="aspect-ratio:' + (w / 104).toFixed(3) + '" aria-hidden="true"><path d="' + D.O[g] + '"/></svg>';
+  }
   function bounds(strokes) {
     var b = { x0: 1e9, y0: 1e9, x1: -1e9, y1: -1e9 };
     strokes.forEach(function (s) { s.forEach(function (p) { if (p[0] < b.x0) b.x0 = p[0]; if (p[0] > b.x1) b.x1 = p[0]; if (p[1] < b.y0) b.y0 = p[1]; if (p[1] > b.y1) b.y1 = p[1]; }); });
@@ -197,10 +203,20 @@ var MCC_TRANSLIT = (function () {
     var svg = el("svg", { viewBox: [view.x, view.y, view.w, view.h].join(" "), role: "img", "aria-label": o.label || "Tracing pad" });
     if (o.px) { svg.style.width = view.w * o.px + "px"; svg.style.height = view.h * o.px + "px"; }
     host.appendChild(svg);
-    [0, D.TOP].forEach(function (y) { svg.appendChild(el("line", { "class": "lb-rule", x1: view.x + 5, x2: view.x + view.w - 5, y1: y, y2: y })); });
+    [D.BOT || 0, D.TOP].forEach(function (y) { svg.appendChild(el("line", { "class": "lb-rule", x1: view.x + 5, x2: view.x + view.w - 5, y1: y, y2: y })); });
     var pts = function (s) { return s.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); };
-    L.forEach(function (s) { svg.appendChild(el("polyline", { "class": "lb-ghost", points: pts(s), "stroke-width": SW })); });
-    var inks = L.map(function () { var p = el("polyline", { "class": "lb-ink", points: "", "stroke-width": SW }); svg.appendChild(p); return p; });
+    // What you see is the real letter (Padauk Book outline). The hidden strokes paint a mask over it, so the ink
+    // fills the letter in writing order; when the last stroke is done the mask comes off and the letter is whole.
+    var shapes = o.shapes || [], mid = "lbm" + (++padN);
+    var mask = el("mask", { id: mid, maskUnits: "userSpaceOnUse", x: view.x, y: view.y, width: view.w, height: view.h });
+    var defs = el("defs", {}); defs.appendChild(mask); svg.appendChild(defs);
+    var ghost = el("g", { "class": "lb-ghost" }), inkG = el("g", { "class": "lb-ink", mask: "url(#" + mid + ")" });
+    shapes.forEach(function (sh) {
+      var t = "translate(" + sh.x + " " + sh.y + ")";
+      ghost.appendChild(el("path", { d: sh.d, transform: t })); inkG.appendChild(el("path", { d: sh.d, transform: t }));
+    });
+    svg.appendChild(ghost); svg.appendChild(inkG);
+    var inks = L.map(function () { var p = el("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": MW, "stroke-linecap": "round", "stroke-linejoin": "round" }); mask.appendChild(p); return p; });
     var hint = el("g", { "class": "lb-hint" }); svg.appendChild(hint);
     var pen = el("circle", { "class": "lb-pen", r: 1.7, opacity: 0 }); svg.appendChild(pen);
 
@@ -212,7 +228,8 @@ var MCC_TRANSLIT = (function () {
       return a[a.length - 1];
     }
     function full(i) { inks[i].setAttribute("points", pts(L[i].length > 1 ? L[i] : [L[i][0], L[i][0]])); }
-    function clear() { inks.forEach(function (p) { p.setAttribute("points", ""); }); host.classList.remove("is-done"); }
+    function clear() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.setAttribute("mask", "url(#" + mid + ")"); host.classList.remove("is-done"); }
+    function whole() { inkG.removeAttribute("mask"); }
     function follow(i) {
       if (!o.scroller || !L[i]) return;
       var x = (L[i][0][0] - view.x) * (o.px || 1) - o.scroller.clientWidth * 0.35;
@@ -244,7 +261,7 @@ var MCC_TRANSLIT = (function () {
         pen.setAttribute("cx", tip[0]); pen.setAttribute("cy", tip[1]); pen.setAttribute("opacity", 1);
         if (pr >= s.length - 1) {
           full(i); i++; t0 = 0;
-          if (i >= L.length) { pen.setAttribute("opacity", 0); timer = setTimeout(trace, 900); return; }
+          if (i >= L.length) { pen.setAttribute("opacity", 0); whole(); timer = setTimeout(trace, 900); return; }
           follow(i);
           timer = setTimeout(function () { raf = requestAnimationFrame(step); }, gap); return;
         }
@@ -272,7 +289,7 @@ var MCC_TRANSLIT = (function () {
       if (prog >= s.length - 2.2 || s.length < 4) {
         full(k); k++; prog = 0; drag = false;
         if (k >= L.length) {
-          mode = "done"; host.classList.remove("is-tracing"); host.classList.add("is-done"); showHint(null);
+          mode = "done"; whole(); host.classList.remove("is-tracing"); host.classList.add("is-done"); showHint(null);
           say(o.doneText || "Done. You wrote it."); if (o.onDone) o.onDone();
         } else { showHint(k); follow(k); say("Good. " + count(k)); }
       }
@@ -297,7 +314,7 @@ var MCC_TRANSLIT = (function () {
       b.type = "button"; b.className = "lb-cell" + (learned[l[0]] ? " is-learned" : "");
       if (i === current) b.setAttribute("aria-current", "true");
       b.setAttribute("aria-label", l[1] + ", " + l[2] + (learned[l[0]] ? ", done" : ""));
-      b.innerHTML = '<span class="lb-g" lang="my">' + l[0] + "</span><small>" + (learned[l[0]] ? "✓ " : "") + l[1] + "</small>";
+      b.innerHTML = '<span class="lb-g" lang="my">' + letterSvg(l[0]) + "</span><small>" + (learned[l[0]] ? "✓ " : "") + l[1] + "</small>";
       b.addEventListener("click", function () { open(i, true); });
       host.appendChild(b);
     });
@@ -307,10 +324,11 @@ var MCC_TRANSLIT = (function () {
   function open(i, scroll) {
     current = i; var l = LETTERS[i];
     if (pad) pad.kill();
-    $("lb-who").innerHTML = '<div class="lb-g" lang="my">' + l[0] + '</div><div><h3>' + l[1] + '</h3><small>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></small></div>";
-    var strokes = placed(D.K[l[0]], 0, 0), b = bounds(strokes), side = Math.max(86, Math.max(b.x1 - b.x0, b.y1 - b.y0) + 28);
-    var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, 0)) / 2 - side / 2, w: side, h: side };
+    $("lb-who").innerHTML = '<div class="lb-g" lang="my" role="img" aria-label="' + l[0] + '">' + letterSvg(l[0]) + '</div><div><h3>' + l[1] + '</h3><small>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></small></div>";
+    var strokes = placed(D.K[l[0]], 0, 0), b = bounds(strokes), side = Math.max(86, Math.max(b.x1 - b.x0, b.y1 - b.y0) + 32);
+    var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, D.BOT || 0)) / 2 - side / 2, w: side, h: side };
     pad = Pad($("lb-pad"), strokes, view, {
+      shapes: [shapeOf(D.K[l[0]], 0, 0)],
       status: $("lb-status"), label: "Tracing pad for the letter " + l[1],
       doneText: 'You wrote <b lang="my">' + l[0] + "</b>.",
       onDone: function () { learned[l[0]] = 1; saveLearned(); drawChart(); $("lb-next").classList.add("is-ready"); }
@@ -326,18 +344,18 @@ var MCC_TRANSLIT = (function () {
   /* ---------- write your name ---------- */
   var namePad = null;
   function layout(words) {
-    var x = 0, all = [], ok = true;
+    var x = 0, all = [], shapes = [], ok = true;
     words.forEach(function (w, wi) {
       if (wi) x += 16;
       (w.match(CLUSTER) || []).forEach(function (c) {
         var e = D.C[c];
         while (!e && c.length > 1) { c = c.slice(0, -1); e = D.C[c]; ok = false; }     // unknown mark: drop it, keep the letter
         if (!e) { ok = false; return; }
-        for (var i = 1; i < e.length; i += 3) all = all.concat(placed(e[i], x + e[i + 1], e[i + 2]));
+        for (var i = 1; i < e.length; i += 3) { all = all.concat(placed(e[i], x + e[i + 1], e[i + 2])); shapes.push(shapeOf(e[i], x + e[i + 1], e[i + 2])); }
         x += e[0];
       });
     });
-    return { strokes: all, width: x, ok: ok };
+    return { strokes: all, shapes: shapes, width: x, ok: ok };
   }
   function writeName(raw) {
     var words = MCC_TRANSLIT.name(raw), out = $("lb-name-out"), note = $("lb-name-note");
@@ -348,11 +366,11 @@ var MCC_TRANSLIT = (function () {
     out.hidden = false;
     $("lb-name-mm").textContent = words.join(" ");
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
-    view.h = Math.max(b.y1, 14) + 10 - view.y;
+    view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
     if (px < 2.3) px = 2.3;
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
-      status: $("lb-name-status"), px: px, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
+      shapes: lay.shapes, status: $("lb-name-status"), px: px, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
     });
     note.textContent = lay.ok
