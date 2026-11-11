@@ -290,6 +290,11 @@
   .lb-name-scroll{ overflow-x:auto; overflow-y:hidden; margin-top:6px; border-radius:20px; border:1px solid var(--line); background:var(--bg-raised); }
   .lb-name-scroll .lb-pad{ border:0; border-radius:0; background:none; width:max-content; min-width:100%; }
   .lb-name-scroll .lb-pad svg{ margin-inline:auto; }
+  .lb-reel{ padding-block:clamp(48px,7vw,88px); text-align:center; }
+  .lb-reel h2{ font-size:clamp(1.5rem,3.2vw,2.1rem); font-weight:600; line-height:1.25; max-width:24ch; margin:8px auto 26px; }
+  .lb-reel-embed{ max-width:400px; margin-inline:auto; }
+  .lb-reel-embed .instagram-media{ margin:0 auto !important; min-width:0 !important; width:100% !important; }
+  .lb-reel-embed .lb-reel-link{ display:block; padding:28px 16px; font-weight:600; color:var(--navy); }
   .lb-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:12px; min-height:1.4em; }
   @media (max-width:860px){
     .lb-grid{ grid-template-columns:1fr; }
@@ -530,7 +535,7 @@
     <div class="wrap">
       <span class="eyebrow">Learn Burmese</span>
       <h1>Write your first Burmese letters.</h1>
-      <p class="lb-lead">Burmese is built from circles. Pick a letter, watch the pen, then trace each stroke yourself. Almost every circle goes clockwise.</p>
+      <p class="lb-lead">Watch the pen, then trace each stroke yourself.</p>
     </div>
   </section>
 
@@ -560,7 +565,6 @@
     <div class="wrap">
       <span class="eyebrow">Your turn</span>
       <h2>Now write your own name.</h2>
-      <p class="lb-lead">Type your name. We'll spell it the way it sounds in Burmese, then you can trace it, start to finish, on one line.</p>
       <form id="lb-name-form" autocomplete="off">
         <input id="lb-name-input" type="text" maxlength="40" placeholder="Your name" aria-label="Your name" autocapitalize="words" spellcheck="false">
         <button type="submit" class="btn">Write it</button>
@@ -580,6 +584,19 @@
       <p class="lb-note" id="lb-name-note"></p>
     </div>
   </section>
+
+  <section class="lb-reel" id="reel">
+    <div class="wrap">
+      <span class="eyebrow">Didn't get it all?</span>
+      <h2>Don't worry, even our MCC'ers can't get it all.</h2>
+      <div class="lb-reel-embed">
+        <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DeJQNt7hyZm/" data-instgrm-version="14">
+          <a class="lb-reel-link" href="https://www.instagram.com/reel/DeJQNt7hyZm/" target="_blank" rel="noopener">Watch the reel on Instagram →</a>
+        </blockquote>
+      </div>
+    </div>
+  </section>
+  <script async src="https://www.instagram.com/embed.js"></script>
 
   <footer class="contact" id="connect">
     <div class="wrap">
