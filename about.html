@@ -320,7 +320,7 @@
   .cluster .person-card:hover .person-photo{
     background:var(--navy); color:var(--footer-ink);
     box-shadow: 0 0 0 5px var(--bg-raised), 0 0 0 8px var(--gold), 0 16px 28px rgba(28,36,64,0.2);
-    transform: translate3d(var(--px,0px), var(--py,0px), 0) scale(1.05);
+    transform: translate3d(var(--px,0px), var(--py,0px), 0) scale(.96);
   }
   .cluster .person-name{ font-size:1.04rem; margin-top:6px; }
   .cluster .person-title{ font-size:0.74rem; padding:4px 13px; }
@@ -463,6 +463,43 @@
   /* ---------- CARD → PANEL ---------- */
   .cluster .person-card{ cursor:pointer; }
   .cluster .person-card:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; }
+  /* ---------- Glide: on hover, link buttons travel out of the gold "+" along the photo's ring ----------
+     Mouse/trackpad only. Phones keep "tap the card" + the "View profile" label. */
+  @property --ang{ syntax:'<angle>'; inherits:false; initial-value:40deg; }
+  @property --sc{ syntax:'<number>'; inherits:false; initial-value:1; }
+  .cluster .person-photo{ position:relative; }
+  .cluster .person-photo::after{ /* navy-blue tint over photos on hover */
+    content:""; position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    background:rgba(46,74,150,.5); mix-blend-mode:multiply; opacity:0; transition: opacity .5s ease;
+  }
+  .cluster .person-photo:not(.has-photo)::after{ display:none; } /* initials already turn navy + cream */
+  .card-sat{ display:none; }
+  @media (hover:hover) and (pointer:fine){
+    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .person-photo.has-photo::after{ opacity:1; }
+    .wheel-sticky:not(.is-mobile) .card-sat{
+      --ang:40deg; --R:74px;
+      position:absolute; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:2;
+      display:flex; align-items:center; justify-content:center; color:var(--footer-ink); background:var(--navy);
+      box-shadow:0 0 0 2.5px var(--bg-raised), 0 6px 14px rgba(28,36,64,.25);
+      transform: rotate(var(--ang)) translate(var(--R)) rotate(calc(-1 * var(--ang))) scale(var(--sc));
+      opacity:0; pointer-events:none;
+      transition: --ang .75s cubic-bezier(.22,1,.36,1), opacity .3s ease, scale .2s ease;
+    }
+    .wheel-sticky:not(.is-mobile) .card-sat.plus{ background:var(--gold); --sc:.6; transition: opacity .3s ease, --sc .5s cubic-bezier(.3,1.5,.5,1), scale .2s ease; }
+    .wheel-sticky:not(.is-mobile) .card-sat svg{ width:16px; height:16px; margin:0; }
+    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat{ opacity:1; pointer-events:auto; --ang:var(--a); }
+    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat.plus{ --sc:1; }
+    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat:nth-child(1){ transition-delay:.12s; }
+    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat:nth-child(2){ transition-delay:.06s; }
+    .wheel-sticky:not(.is-mobile) .card-sat:hover{ scale:1.12; }
+    .card-sat .tip{
+      position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%); white-space:nowrap;
+      font-family:'Work Sans',sans-serif; font-size:.64rem; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:6px;
+      background:var(--navy); color:var(--footer-ink); opacity:0; pointer-events:none; transition: opacity .2s ease;
+    }
+    .card-sat:hover .tip{ opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce){ .card-sat{ transition: opacity .2s ease !important; } }
   /* "View profile" label at the bottom of each card (replaced the hover-only "+", which people missed) */
   .card-cta{
     display:inline-flex; align-items:center; gap:5px; margin-top:4px;
@@ -1190,11 +1227,24 @@
 
   function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
   function photoStyle(p){ return p.photo ? ' style="background-image:url(\'' + esc(p.photo) + '\');background-size:cover;background-position:center;background-repeat:no-repeat"' : ''; }
+  // Glide orbit buttons (desktop hover). Links are real links; the gold "+" opens the profile like the card does.
+  function orbitHTML(p){
+    var n = (p.linkedin ? 1 : 0) + (p.instagram ? 1 : 0) + (p.github ? 1 : 0);
+    var sats = [], k = 0, angs = n === 3 ? [-180, -138, -42] : n === 2 ? [-160, -20] : [-150]; // keep clear of the card's top edge
+    function link(url, icon, label){
+      sats.push('<a class="card-sat card-sat-link" href="' + esc(url) + '" target="_blank" rel="noopener" tabindex="-1" style="--a:' + angs[k++] + 'deg" aria-label="' + esc(label) + '"><span class="tip">' + esc(label) + '</span>' + icon + '</a>');
+    }
+    if (p.linkedin) link(p.linkedin, ICON_LINKEDIN, "LinkedIn");
+    if (p.instagram) link("https://www.instagram.com/" + encodeURIComponent(p.instagram) + "/", ICON_INSTAGRAM, "Instagram");
+    if (p.github) link(p.github.url, ICON_GITHUB, "GitHub");
+    sats.push('<span class="card-sat plus" style="--a:40deg" aria-hidden="true"><span class="tip">View profile</span>' + PLUS + '</span>');
+    return sats.join("");
+  }
   function cardHTML(p){
     var idx = PEOPLE.indexOf(p);
     var nm = p.pref ? esc(p.name) + ' <span class="pref">(' + esc(p.pref) + ')</span>' : esc(p.name);
     return '<div class="person-card" role="button" tabindex="-1" aria-haspopup="dialog" data-idx="' + idx + '">' +
-      '<span class="person-photo' + (p.photo ? ' has-photo' : '') + '" aria-hidden="true"' + photoStyle(p) + '>' + (p.photo ? '' : esc(p.i)) + '</span>' +
+      '<span class="person-photo' + (p.photo ? ' has-photo' : '') + '"' + photoStyle(p) + '>' + (p.photo ? '' : '<span class="ini" aria-hidden="true">' + esc(p.i) + '</span>') + orbitHTML(p) + '</span>' +
       '<span class="person-name">' + nm + '</span>' +
       '<span class="person-title">' + esc(p.title) + '</span>' +
       (p.line ? '<span class="person-line">' + esc(p.line) + '</span>' : '') +
@@ -1729,7 +1779,8 @@
     var fly = document.createElement("div");
     fly.className = "pp-fly";
     fly.setAttribute("aria-hidden", "true");
-    fly.textContent = src.textContent;
+    var ini = src.querySelector(".ini"); // initials only (the photo also holds the orbit buttons' labels)
+    fly.textContent = ini ? ini.textContent : (src.classList.contains("person-photo") ? "" : src.textContent);
     if (cs.backgroundImage && cs.backgroundImage !== "none") { fly.style.backgroundImage = cs.backgroundImage; fly.style.backgroundSize = "cover"; fly.style.backgroundPosition = "center"; fly.style.backgroundRepeat = "no-repeat"; }
     fly.style.cssText = "left:" + sr.left + "px;top:" + sr.top + "px;width:" + sr.width + "px;height:" + sr.height + "px;" +
       "background-color:" + cs.backgroundColor + ";color:" + cs.color + ";box-shadow:" + cs.boxShadow + ";font-size:" + cs.fontSize + ";";
@@ -1891,6 +1942,7 @@
   }
 
   wheel.addEventListener("click", function(ev){
+    if (ev.target.closest && ev.target.closest(".card-sat-link")) return; // orbit link: just follow it
     var card = ev.target.closest ? ev.target.closest(".person-card") : null;
     if (card) openPanel(card.getAttribute("data-idx"));
   });
