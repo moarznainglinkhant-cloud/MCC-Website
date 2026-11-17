@@ -998,6 +998,13 @@
       return { url: u.href, label: u.hostname.replace(/^www\./i, "") + (u.pathname.length > 1 ? u.pathname.replace(/\/$/, "") : "") };
     } catch (e) { return null; }
   }
+  // GitHub: accepts "username", "@username" or a github.com link. Returns {url, user} or null.
+  function githubLink(v){
+    v = (v || "").trim();
+    if (!v) return null;
+    var m = v.match(/github\.com\/([A-Za-z0-9-]+)/i) || v.match(/^@?([A-Za-z0-9-]+)$/);
+    return m ? { url: "https://github.com/" + m[1], user: m[1] } : null;
+  }
   // Fun fact text with optional links written as [words](https://link). Everything else stays plain text.
   function factHtml(t){
     // Own escaper: esc() lives inside a later function, so it isn't reachable from here.
@@ -1026,6 +1033,7 @@
     "naing lin khant": {
       linkedin: "https://www.linkedin.com/in/moarz-naing-lin-khant",
       website: "moarz.dev",
+      github: "moarznainglinkhant-cloud",
       fun_fact: "I watch an unhealthy amount of [ASOIAF](https://www.youtube.com/watch?v=qSy2uaJ7ecU) theory videos."
     }
   };
@@ -1053,6 +1061,7 @@
         linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"]) || ex.linkedin),
         instagram: instagramHandle(cell(row, ["instagram", "instagram_handle"])),
         website: websiteLink(cell(row, ["website", "portfolio", "site"]) || ex.website),
+        github: githubLink(cell(row, ["github", "github_url"]) || ex.github),
         fact: cell(row, ["fun_fact", "fact", "funfact"]) || ex.fun_fact || null,
         photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null
       });
@@ -1119,6 +1128,7 @@
   var SVG_OPEN = '<svg class="pp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
   var ICON_LINKEDIN = SVG_OPEN + '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 10.5V16.5"/><path d="M8 7.5v.01"/><path d="M12 16.5v-6"/><path d="M12 13.2c0-1.6 1-2.7 2.4-2.7S16.5 11.4 16.5 13v3.5"/></svg>';
   var ICON_INSTAGRAM = SVG_OPEN + '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.3 6.7v.01"/></svg>';
+  var ICON_GITHUB = SVG_OPEN + '<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>';
   var ICON_WEB = SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>';
   var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg>';
   var CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
@@ -1629,6 +1639,7 @@
     var links = [];
     if (p.linkedin) links.push('<a class="pp-link" href="' + esc(p.linkedin) + '" target="_blank" rel="noopener">' + ICON_LINKEDIN + 'LinkedIn' + ARROW + '</a>');
     if (p.instagram) links.push('<a class="pp-link" href="https://www.instagram.com/' + encodeURIComponent(p.instagram) + '/" target="_blank" rel="noopener">' + ICON_INSTAGRAM + '@' + esc(p.instagram) + ARROW + '</a>');
+    if (p.github) links.push('<a class="pp-link" href="' + esc(p.github.url) + '" target="_blank" rel="noopener">' + ICON_GITHUB + 'GitHub' + ARROW + '</a>');
     if (p.website) links.push('<a class="pp-link" href="' + esc(p.website.url) + '" target="_blank" rel="noopener">' + ICON_WEB + esc(p.website.label) + ARROW + '</a>');
     q(".pp-links").innerHTML = links.join("");
 
