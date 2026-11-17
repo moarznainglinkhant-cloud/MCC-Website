@@ -2328,6 +2328,14 @@ function initBentoPosters(box) {
   }).observe(box);
 }
 
+// Team photos, shared by the homepage "Meet the team" tile and about.html.
+// Key = full name in lower case; value = image path. A `photo` column in the Team tab also works.
+var MCC_TEAM_PHOTOS = { "naing lin khant": "images/team/moarz.jpg" };
+function teamPhoto(r) {
+  const col = (r.photo || r.photo_url || r.image || "").trim();
+  return col || MCC_TEAM_PHOTOS[(r.name || "").trim().toLowerCase()] || "";
+}
+
 async function loadBentoTeam() {
   const faces = document.getElementById("js-bento-faces");
   if (!faces) return;
@@ -2342,8 +2350,17 @@ async function loadBentoTeam() {
     const nm = ((r.preferred_name || "").trim() || r.name.trim()).split(/\s+/);
     return (nm[0][0] + (nm.length > 1 ? nm[nm.length - 1][0] : "")).toUpperCase();
   };
-  const show = rows.slice(0, 9);
-  faces.innerHTML = show.map((r, i) => `<span class="t-face" style="background:${BENTO_COLORS[i % BENTO_COLORS.length]}">${escapeHtml(initials(r))}</span>`).join("")
+  // Sheet order, but anyone with a photo always makes it onto the tile: they take the places of the
+  // last people without one, then everyone is put back in Sheet order.
+  const MAX = 9, withPhoto = rows.filter(teamPhoto).slice(0, MAX);
+  const pick = new Set(withPhoto.concat(rows.filter(r => !teamPhoto(r)).slice(0, MAX - withPhoto.length)));
+  const show = rows.filter(r => pick.has(r));
+  faces.innerHTML = show.map((r, i) => {
+    const ph = teamPhoto(r);
+    return ph
+      ? `<span class="t-face" style="background:${BENTO_COLORS[i % BENTO_COLORS.length]} url('${escapeHtml(ph)}') center/cover no-repeat" role="img" aria-label="${escapeHtml(((r.preferred_name || "").trim() || r.name.trim()))}"></span>`
+      : `<span class="t-face" style="background:${BENTO_COLORS[i % BENTO_COLORS.length]}">${escapeHtml(initials(r))}</span>`;
+  }).join("")
     + (rows.length > show.length ? `<span class="t-face" style="background:var(--bg-sunk);color:var(--ink)">+${rows.length - show.length}</span>` : "");
   renderBentoText();
 }

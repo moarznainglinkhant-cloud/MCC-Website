@@ -992,7 +992,7 @@
     return /^[A-Za-z0-9._]{1,30}$/.test(v) ? v : null;
   }
   // Team photos kept in images/team/. Key = full name (lower case). A `photo` column in the Team tab also works.
-  var TEAM_PHOTOS = { "naing lin khant": "images/team/moarz.jpg" };
+  var TEAM_PHOTOS = window.MCC_TEAM_PHOTOS || { "naing lin khant": "images/team/moarz.jpg" }; // list lives in js/site.js
   function initialsOf(s){
     var w = s.split(/\s+/).filter(Boolean);
     return w.slice(0, 2).map(function(x){ return x.charAt(0).toUpperCase(); }).join("");
