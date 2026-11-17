@@ -1000,6 +1000,8 @@
   }
   // Fun fact text with optional links written as [words](https://link). Everything else stays plain text.
   function factHtml(t){
+    // Own escaper: esc() lives inside a later function, so it isn't reachable from here.
+    var esc = function(x){ return String(x).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); };
     var out = "", re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, last = 0, m;
     while ((m = re.exec(t))){
       out += esc(t.slice(last, m.index)) + '<a href="' + esc(m[2]) + '" target="_blank" rel="noopener">' + esc(m[1]) + '</a>';
