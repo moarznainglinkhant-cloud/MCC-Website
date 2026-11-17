@@ -571,6 +571,8 @@
   }
   .pp-eyebrow{ display:block; font-size:0.66rem; font-weight:700; letter-spacing:0.18em; text-transform:uppercase; color:var(--ink-soft); }
   .pp-fact p{ margin-top:6px; font-size:0.95rem; line-height:1.5; }
+  .pp-fact a{ color:inherit; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:3px; text-decoration-thickness:2px; }
+  .pp-fact a:hover{ color:var(--red, #AE3628); }
   .pp-team{ margin-top:26px; padding-top:22px; border-top:1px solid var(--line); }
   .pp-team-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:14px; }
   .pp-mate{
@@ -983,6 +985,27 @@
       return u.href;
     } catch (err) { return null; }
   }
+  // Personal website / portfolio: accepts "moarz.dev" or a full link. Returns {url, label} or null.
+  function websiteLink(v){
+    v = (v || "").trim();
+    if (!v) return null;
+    if (!/^https?:\/\//i.test(v)) v = "https://" + v.replace(/^\/+/, "");
+    try {
+      var u = new URL(v);
+      if (!/^https?:$/.test(u.protocol)) return null;
+      return { url: u.href, label: u.hostname.replace(/^www\./i, "") + (u.pathname.length > 1 ? u.pathname.replace(/\/$/, "") : "") };
+    } catch (e) { return null; }
+  }
+  // Fun fact text with optional links written as [words](https://link). Everything else stays plain text.
+  function factHtml(t){
+    var out = "", re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, last = 0, m;
+    while ((m = re.exec(t))){
+      out += esc(t.slice(last, m.index)) + '<a href="' + esc(m[2]) + '" target="_blank" rel="noopener">' + esc(m[1]) + '</a>';
+      last = re.lastIndex;
+    }
+    return out + esc(t.slice(last));
+  }
+
   // Accepts "@handle", "handle", or an instagram.com link.
   function instagramHandle(v){
     v = (v || "").trim();
@@ -1015,6 +1038,7 @@
         line: line || null,
         linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"])),
         instagram: instagramHandle(cell(row, ["instagram", "instagram_handle"])),
+        website: websiteLink(cell(row, ["website", "portfolio", "site"])),
         fact: cell(row, ["fun_fact", "fact", "funfact"]) || null,
         photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null
       });
@@ -1586,11 +1610,12 @@
     var links = [];
     if (p.linkedin) links.push('<a class="pp-link" href="' + esc(p.linkedin) + '" target="_blank" rel="noopener">LinkedIn' + ARROW + '</a>');
     if (p.instagram) links.push('<a class="pp-link" href="https://www.instagram.com/' + encodeURIComponent(p.instagram) + '/" target="_blank" rel="noopener">@' + esc(p.instagram) + ARROW + '</a>');
+    if (p.website) links.push('<a class="pp-link" href="' + esc(p.website.url) + '" target="_blank" rel="noopener">' + esc(p.website.label) + ARROW + '</a>');
     q(".pp-links").innerHTML = links.join("");
 
     var fact = q(".pp-fact");
     fact.hidden = !p.fact;
-    fact.querySelector("p").textContent = p.fact || "";
+    fact.querySelector("p").innerHTML = p.fact ? factHtml(p.fact) : "";
 
     var mates = PEOPLE.filter(function(o){ return o.group === p.group && o !== p; });
     var team = q(".pp-team");
