@@ -519,30 +519,31 @@
       radial-gradient(120% 160% at 50% 0%, color-mix(in srgb, var(--tint) 34%, transparent) 0%, transparent 72%),
       color-mix(in srgb, var(--tint) 9%, var(--bg-raised));
   }
-  /* Terminal band (bg: "terminal" in TEAM_EXTRAS; animated by js/about-term.js) */
+  /* Terminal band (bg: "terminal" in TEAM_EXTRAS; animated by js/about-term.js).
+     Taller than the normal band; the commands fill the whole black area, behind the photo too. */
   .pp-band.term{
     position:relative; overflow:hidden; text-align:left; background:#0C0D10;
     font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
     font-size:11px; line-height:13px; color:#D3D7CF;
-    height:216px; /* taller than the normal band so the lines sit above the photo, not behind it */
+    height:216px;
   }
-  .term-bar{ position:absolute; top:12px; left:16px; display:flex; gap:6px; }
+  .term-bar{ position:absolute; top:12px; left:16px; display:flex; gap:6px; z-index:1; }
   .term-bar i{ width:9px; height:9px; border-radius:50%; display:block; }
   .term-bar i:nth-child(1){ background:#FF5F57; } .term-bar i:nth-child(2){ background:#FEBC2E; } .term-bar i:nth-child(3){ background:#28C840; }
   .term-screen{
-    position:absolute; left:18px; right:18px; top:32px; bottom:106px; overflow:hidden;
+    position:absolute; left:18px; right:18px; top:30px; bottom:8px; overflow:hidden;
     display:flex; flex-direction:column; justify-content:flex-end; white-space:pre;
   }
-  .term-line{ min-height:13px; overflow:hidden; text-overflow:clip; }
+  .term-line{ min-height:13px; overflow:hidden; }
   .term-cursor{ display:inline-block; width:6px; height:11px; margin-left:1px; vertical-align:-2px; background:#D3D7CF; animation: term-blink 1s steps(1) infinite; }
   @keyframes term-blink{ 50%{ opacity:0; } }
-  .pp-band.term::after{ /* faint scanlines + soft fade at the top */
+  .pp-band.term::after{ /* faint scanlines + soft fade under the window dots */
     content:""; position:absolute; inset:0; pointer-events:none;
     background: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px),
                 linear-gradient(180deg, #0C0D10 0, rgba(12,13,16,0) 34px);
   }
   @media (prefers-reduced-motion: reduce){ .term-cursor{ animation:none; } }
-  @media (max-width:480px){ .pp-band.term{ height:196px; } .term-screen{ bottom:90px; left:14px; right:14px; } }
+  @media (max-width:480px){ .pp-band.term{ height:196px; } .term-screen{ left:14px; right:14px; } }
   .pp-photo{
     position:relative; width:182px; height:182px; border-radius:50%; margin:-97px auto 0;
     display:flex; align-items:center; justify-content:center;
