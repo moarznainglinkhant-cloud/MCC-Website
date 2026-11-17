@@ -676,10 +676,12 @@
   </footer>
 </main>
 <script>
-// Newsletter sign-up: posts straight to the Kit page's own subscribe endpoint (it allows cross-site
-// requests and answers with JSON), so people subscribe without ever leaving this site.
+// Newsletter sign-up: posts to Kit's embeddable form "Website sign-up" (form 10200664). Kit forms
+// accept cross-site requests and answer with JSON, so people subscribe without leaving this site.
+// (The Kit profile page's own /posts endpoint now requires a Cloudflare Turnstile token, so it
+// can't be used from here.)
 (function(){
-  var KIT_SUBSCRIBE_URL = "https://uoft-mcc.kit.com/posts";
+  var KIT_SUBSCRIBE_URL = "https://app.kit.com/forms/10200664/subscriptions";
   var form = document.getElementById("nl-signup-form");
   if (!form) return;
   var box = document.getElementById("subscribe"),
@@ -700,10 +702,12 @@
       headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
       body: "email_address=" + encodeURIComponent(email)
     }).then(function(r){
-      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok && j.status !== "error", j: j }; });
+      return r.json().catch(function(){ return {}; }).then(function(j){ return { ok: r.ok && j.status === "success", j: j }; });
     }).then(function(res){
-      if (res.ok) { done(); }
-      else { say("That didn't go through. Please check the address and try again.", true); }
+      if (res.ok) { done(); return; }
+      var m = res.j && res.j.errors && res.j.errors.messages && res.j.errors.messages[0];
+      say(m ? m + "." : "That didn't go through. Please try a different email address.", true);
+      input.focus();
     }).catch(function(){
       say("Couldn't reach the sign-up service. Please try again in a moment.", true);
     }).then(function(){ btn.disabled = false; btn.textContent = "Subscribe"; });
