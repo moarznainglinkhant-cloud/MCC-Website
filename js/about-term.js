@@ -1,7 +1,7 @@
 // About page: animated terminal that fills a team member's profile card behind everything.
 // Used when a person has bg: "terminal" in TEAM_EXTRAS (about.html). Oh My Zsh "robbyrussell"
-// prompt colours on black. Each run opens with the "breach", then plays the other bits in a
-// shuffled order, clears, and starts again.
+// prompt colours on black. Each run opens with `cd ~/mcc-website`, then plays the other bits
+// in a shuffled order, clears, and starts again.
 (function () {
   var C = { green: "#8AE234", red: "#EF2929", cyan: "#34E2E2", blue: "#729FCF", yellow: "#FCE94F",
             magenta: "#AD7FA8", dim: "#7A7F87", text: "#D3D7CF" };
@@ -38,13 +38,7 @@
   function cmd(c, extra) { var o = { dir: P.dir, git: P.git, dirty: P.dirty, cmd: c }; for (var k in extra) o[k] = extra[k]; return o; }
 
   var OPENING = [
-    { dir: "~", cmd: "cd ~/mcc-website" },
-    cmd("./breach --target uoftmcc.ca"),
-    { out: [[C.dim, "[*] resolving uoftmcc.ca … 185.199.108.153"]] },
-    { out: [[C.dim, "[*] bypassing firewall …"]] },
-    { hex: 10 },
-    { bar: "decrypting" },
-    { out: [[C.green, "[+] ACCESS GRANTED", true]] }
+    { dir: "~", cmd: "cd ~/mcc-website" }
   ];
 
   var BITS = [
