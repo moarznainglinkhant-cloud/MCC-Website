@@ -572,8 +572,10 @@
   .pp-dept .dot{ width:8px; height:8px; border-radius:50%; }
   .pp-name{ font-size:clamp(1.7rem,4.6vw,2.2rem); line-height:1.1; margin:8px 0 4px; }
   .pp-pref{ color:var(--ink-soft); font-size:0.95rem; }
-  .pp-title{ margin-top:14px; font-size:0.76rem !important; padding:5px 14px !important; }
-  .pp-line{ margin-top:12px; color:var(--ink-soft); font-size:0.92rem; }
+  /* Name, "Goes by" and year/program read as one group; the role pill sits under it.
+     The pill is a block (display:table keeps it centred and shrink-wrapped) so no stray line-height gap. */
+  .pp-line{ margin-top:4px; color:var(--ink-soft); font-size:0.92rem; }
+  .pp-title{ display:table; margin:16px auto 0; font-size:0.76rem !important; padding:5px 14px !important; }
   .pp-links{ display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:20px; }
   .pp-links:empty{ display:none; }
   .pp-link{
