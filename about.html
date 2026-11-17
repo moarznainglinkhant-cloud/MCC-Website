@@ -463,6 +463,32 @@
   /* ---------- CARD → PANEL ---------- */
   .cluster .person-card{ cursor:pointer; }
   .cluster .person-card:focus-visible{ outline:2px solid var(--gold); outline-offset:4px; }
+  /* "View profile" label at the bottom of each card (replaced the hover-only "+", which people missed) */
+  .card-cta{
+    display:inline-flex; align-items:center; gap:5px; margin-top:4px;
+    font-size:0.7rem; font-weight:700; letter-spacing:0.02em; color:var(--ink-soft);
+    transition: color .2s ease, gap .2s ease;
+  }
+  .card-cta svg{ width:11px; height:11px; }
+  .cluster .person-card:hover .card-cta, .cluster .person-card:focus-visible .card-cta{ color:var(--navy); gap:8px; }
+  .wheel-sticky.is-mobile .card-cta{ font-size:0.64rem; margin-top:2px; }
+  /* One-time nudge: a pill + a soft gold pulse on one card, until the visitor opens a card once */
+  .card-hint{
+    position:absolute; left:50%; bottom:28px; z-index:6; transform:translateX(-50%);
+    display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
+    background:var(--navy); color:var(--footer-ink); font-size:0.8rem; font-weight:600; white-space:nowrap;
+    box-shadow:0 12px 30px rgba(28,36,64,0.22); pointer-events:none;
+    opacity:0; transition: opacity .5s ease;
+  }
+  .card-hint.show{ opacity:1; }
+  .wheel-sticky:has(.card-hint.show) .wheel-cue{ opacity:0 !important; visibility:hidden; } /* the pill takes the cue's spot */
+  .card-hint svg{ width:15px; height:15px; }
+  .cluster .person-card.card-nudge{ animation: card-nudge 1.8s ease-in-out 3; }
+  @keyframes card-nudge{
+    0%,100%{ box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 10px 30px rgba(28,36,64,0.06), 0 0 0 0 rgba(192,138,46,0); border-color:var(--line); }
+    50%{ box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 18px 40px rgba(28,36,64,0.12), 0 0 0 4px rgba(192,138,46,0.35); border-color:rgba(192,138,46,0.7); }
+  }
+  @media (prefers-reduced-motion: reduce){ .cluster .person-card.card-nudge{ animation:none; } }
   .card-more{
     position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
@@ -865,6 +891,7 @@
       </div>
       <nav class="wheel-index" id="wheelIndex" aria-label="Jump to a department"></nav>
       <div class="wheel-cue" id="wheelCue" aria-hidden="true"><span>Scroll</span><i></i></div>
+      <div class="card-hint" id="cardHint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.6L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></svg>Tap a card to meet them</div>
       <div class="wheel-close" id="wheelClose">
         <h2 data-i18n="about_close_h">There's always a seat for you at our table.</h2>
         <div class="wheel-close-cta">
@@ -1157,6 +1184,7 @@
   var ICON_INSTAGRAM = SVG_OPEN + '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.3 6.7v.01"/></svg>';
   var ICON_GITHUB = SVG_OPEN + '<path d="M9 19c-4.3 1.4-4.3-2.5-6-3m12 5v-3.5c0-1 .1-1.4-.5-2 2.8-.3 5.5-1.4 5.5-6a4.6 4.6 0 0 0-1.3-3.2 4.2 4.2 0 0 0-.1-3.2s-1.1-.3-3.5 1.3a12.3 12.3 0 0 0-6.2 0C6.5 2.8 5.4 3.1 5.4 3.1a4.2 4.2 0 0 0-.1 3.2A4.6 4.6 0 0 0 4 9.5c0 4.6 2.7 5.7 5.5 6-.6.6-.6 1.2-.5 2V21"/></svg>';
   var ICON_WEB = SVG_OPEN + '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg>';
+  var ARROW_R = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
   var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg>';
   var CROSS = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
 
@@ -1166,11 +1194,11 @@
     var idx = PEOPLE.indexOf(p);
     var nm = p.pref ? esc(p.name) + ' <span class="pref">(' + esc(p.pref) + ')</span>' : esc(p.name);
     return '<div class="person-card" role="button" tabindex="-1" aria-haspopup="dialog" data-idx="' + idx + '">' +
-      '<span class="card-more" aria-hidden="true">' + PLUS + '</span>' +
       '<span class="person-photo' + (p.photo ? ' has-photo' : '') + '" aria-hidden="true"' + photoStyle(p) + '>' + (p.photo ? '' : esc(p.i)) + '</span>' +
       '<span class="person-name">' + nm + '</span>' +
       '<span class="person-title">' + esc(p.title) + '</span>' +
       (p.line ? '<span class="person-line">' + esc(p.line) + '</span>' : '') +
+      '<span class="card-cta" aria-hidden="true">View profile' + ARROW_R + '</span>' +
     '</div>';
   }
   function hexRgb(h){ var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
@@ -1723,8 +1751,53 @@
     return fr;
   }
 
+  // ---------- one-time "tap a card" nudge ----------
+  // Shows once per visit when the wheel comes into view, until the visitor has opened a card once
+  // (remembered in localStorage "mcc_cards_opened"). Fades only; the card pulse is a gold glow, no movement.
+  var cardHint = document.getElementById("cardHint"), hintTimer = null, hintShown = false;
+  function cardsOpenedBefore(){ try { return localStorage.getItem("mcc_cards_opened") === "1"; } catch (e) { return false; } }
+  function cardHintHide(){
+    if (cardHint) cardHint.classList.remove("show");
+    var n = document.querySelector(".card-nudge"); if (n) n.classList.remove("card-nudge");
+    clearTimeout(hintTimer);
+  }
+  function cardHintDone(){ cardHintHide(); try { localStorage.setItem("mcc_cards_opened", "1"); } catch (e) {} }
+  function cardHintShow(){
+    if (hintShown || cardsOpenedBefore() || panelOpen) return;
+    // the most visible card in the current department
+    var best = null, bestOp = 0.6;
+    Array.prototype.forEach.call(document.querySelectorAll(".cluster .person-card"), function(c){
+      var r = c.getBoundingClientRect(), op = parseFloat(getComputedStyle(c).opacity) || 0;
+      if (r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth && op > bestOp){ best = c; bestOp = op; }
+    });
+    if (!best) return;
+    hintShown = true;
+    best.classList.add("card-nudge");
+    if (cardHint){
+      if (window.matchMedia && matchMedia("(hover: hover)").matches) cardHint.lastChild.data = "Click a card to meet them";
+      cardHint.classList.add("show");
+    }
+    hintTimer = setTimeout(cardHintHide, 7000);
+  }
+  if (cardHint && "IntersectionObserver" in window && !cardsOpenedBefore()){
+    var hintIO = new IntersectionObserver(function(entries){
+      if (!entries[0].isIntersecting || hintShown) return;
+      setTimeout(function(){
+        var r = stickyEl.getBoundingClientRect();
+        if (r.top < innerHeight * 0.25 && r.bottom > innerHeight * 0.75) cardHintShow(); else hintShown = false;
+      }, 1400);
+    }, { threshold: [0.75] });
+    hintIO.observe(stickyEl);
+    addEventListener("scroll", function(){ // hide once they leave the wheel
+      if (!cardHint.classList.contains("show")) return;
+      var r = stickyEl.getBoundingClientRect();
+      if (r.bottom < innerHeight * 0.5 || r.top > innerHeight * 0.5) cardHintHide();
+    }, { passive: true });
+  }
+
   function openPanel(idx){
     if (panelOpen || busy) return;
+    cardHintDone();
     var card = cardByIdx[idx];
     resetTilt(card);
     lastFocus = document.activeElement;
