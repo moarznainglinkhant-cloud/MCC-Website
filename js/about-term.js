@@ -99,7 +99,8 @@
       var d = document.createElement("div");
       d.className = "term-line";
       screen.appendChild(d);
-      while (screen.children.length > MAX_LINES) screen.removeChild(screen.firstChild);
+      // Fill from the top; once the window is full, scroll by dropping the oldest line.
+      while (screen.firstChild !== d && (screen.scrollHeight > screen.clientHeight || screen.children.length > MAX_LINES)) screen.removeChild(screen.firstChild);
       return d;
     }
     function cursor(line) {
