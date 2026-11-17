@@ -1016,6 +1016,15 @@
   }
   // Team photos kept in images/team/. Key = full name (lower case). A `photo` column in the Team tab also works.
   var TEAM_PHOTOS = window.MCC_TEAM_PHOTOS || { "naing lin khant": "images/team/moarz.jpg" }; // list lives in js/site.js
+  // Extra card details kept here (used when that person's Sheet cell is empty). Key = full name, lower case.
+  // fun_fact links are written as [words](https://link).
+  var TEAM_EXTRAS = {
+    "naing lin khant": {
+      linkedin: "https://www.linkedin.com/in/moarz-naing-lin-khant",
+      website: "moarz.dev",
+      fun_fact: "I watch an unhealthy amount of [ASOIAF](https://www.youtube.com/watch?v=qSy2uaJ7ecU) theory videos."
+    }
+  };
   function initialsOf(s){
     var w = s.split(/\s+/).filter(Boolean);
     return w.slice(0, 2).map(function(x){ return x.charAt(0).toUpperCase(); }).join("");
@@ -1029,6 +1038,7 @@
       if (!name) return;
       var pref = cell(row, ["preferred_name", "preferred", "pref", "goes_by"]) || null;
       if (pref && pref.toLowerCase() === name.toLowerCase()) pref = null;
+      var ex = TEAM_EXTRAS[name.toLowerCase()] || {};
       var line = [yearText(cell(row, ["year", "student_year"])), cell(row, ["program", "major"])].filter(Boolean).join(" \u00b7 ");
       list.push({
         i: initialsOf(pref || name),
@@ -1036,10 +1046,10 @@
         title: cell(row, ["title", "role", "position"]) || "Member",
         group: deptKey(cell(row, ["department", "group", "team"])),
         line: line || null,
-        linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"])),
+        linkedin: linkedinUrl(cell(row, ["linkedin", "linkedin_url"]) || ex.linkedin),
         instagram: instagramHandle(cell(row, ["instagram", "instagram_handle"])),
-        website: websiteLink(cell(row, ["website", "portfolio", "site"])),
-        fact: cell(row, ["fun_fact", "fact", "funfact"]) || null,
+        website: websiteLink(cell(row, ["website", "portfolio", "site"]) || ex.website),
+        fact: cell(row, ["fun_fact", "fact", "funfact"]) || ex.fun_fact || null,
         photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null
       });
     });
