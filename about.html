@@ -590,6 +590,8 @@
   .pp-link svg{ width:14px; height:14px; }
   .pp-link svg.pp-ico{ width:16px; height:16px; margin-left:-2px; }
   .pp-link svg:not(.pp-ico){ width:12px; height:12px; opacity:.7; }
+  .pp-link.icon{ width:42px; height:42px; padding:0; justify-content:center; gap:0; }
+  .pp-link.icon svg.pp-ico{ width:19px; height:19px; margin:0; }
   .pp-fact{
     margin-top:22px; padding:16px 18px; border-radius:16px; text-align:left;
     background: color-mix(in srgb, var(--tint) 7%, var(--bg-raised));
@@ -1669,9 +1671,11 @@
     line.hidden = !p.line;
 
     var links = [];
-    if (p.linkedin) links.push('<a class="pp-link" href="' + esc(p.linkedin) + '" target="_blank" rel="noopener">' + ICON_LINKEDIN + 'LinkedIn' + ARROW + '</a>');
-    if (p.instagram) links.push('<a class="pp-link" href="https://www.instagram.com/' + encodeURIComponent(p.instagram) + '/" target="_blank" rel="noopener">' + ICON_INSTAGRAM + '@' + esc(p.instagram) + ARROW + '</a>');
-    if (p.github) links.push('<a class="pp-link" href="' + esc(p.github.url) + '" target="_blank" rel="noopener">' + ICON_GITHUB + 'GitHub' + ARROW + '</a>');
+    // LinkedIn / Instagram / GitHub are round icon-only buttons (name in the tooltip + screen-reader label).
+    function iconLink(url, icon, label){ return '<a class="pp-link icon" href="' + esc(url) + '" target="_blank" rel="noopener" aria-label="' + esc(label) + '" title="' + esc(label) + '">' + icon + '</a>'; }
+    if (p.linkedin) links.push(iconLink(p.linkedin, ICON_LINKEDIN, "LinkedIn"));
+    if (p.instagram) links.push(iconLink("https://www.instagram.com/" + encodeURIComponent(p.instagram) + "/", ICON_INSTAGRAM, "Instagram @" + p.instagram));
+    if (p.github) links.push(iconLink(p.github.url, ICON_GITHUB, "GitHub"));
     if (p.website) links.push('<a class="pp-link" href="' + esc(p.website.url) + '" target="_blank" rel="noopener">' + ICON_WEB + esc(p.website.label) + ARROW + '</a>');
     q(".pp-links").innerHTML = links.join("");
 
