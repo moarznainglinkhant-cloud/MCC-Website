@@ -263,6 +263,24 @@
     padding-bottom:clamp(36px,6vw,56px); border-bottom:1px solid rgba(246,241,228,0.16);
   }
   @media (max-width:760px){ .contact-top{ grid-template-columns: 1fr; } }
+
+  /* Footer map preview: wide screens only; the iframe is created by initFooterMap() in site.js */
+  .footer-map{ display:none; }
+  @media (min-width:1000px){
+    .footer-map{ display:block; margin-top:38px; max-width:520px; }
+    .footer-map .fm-frame{
+      position:relative; aspect-ratio:16/8; border-radius:18px; overflow:hidden;
+      border:1px solid rgba(246,241,228,0.2); background:rgba(246,241,228,0.06);
+    }
+    .footer-map iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; filter:saturate(.8) contrast(.96); }
+    .footer-map .fm-open{
+      display:inline-flex; align-items:center; gap:8px; margin-top:12px;
+      color:var(--footer-ink-soft); font-size:0.82rem; text-decoration:none;
+      transition:color .18s ease;
+    }
+    .footer-map .fm-open:hover{ color:var(--footer-ink); }
+    .footer-map .fm-open svg{ width:14px; height:14px; flex:none; }
+  }
   .contact-intro h2{ color:var(--footer-ink); font-size:clamp(2.1rem,4.4vw,3.2rem); margin-bottom:16px; }
   .contact-intro p{ color:var(--footer-ink-soft); max-width:42ch; font-size:1rem; }
   .contact-intro .cta-row{ display:flex; flex-wrap:wrap; gap:14px; margin-top:26px; }
@@ -493,6 +511,10 @@
             <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
             <a class="btn-footer ghost celebrate" href="newsletter.html#subscribe" data-i18n="label_join_newsletter_footer">Join the Newsletter</a>
             <a class="btn-footer exec" href="login.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec login</a>
+          </div>
+          <div class="footer-map" id="footerMap" data-q="21 Sussex Ave, Toronto, ON M5S 1J6">
+            <div class="fm-frame"></div>
+            <a class="fm-open" href="https://www.google.com/maps/search/?api=1&amp;query=21+Sussex+Ave%2C+Toronto%2C+ON+M5S+1J6" target="_blank" rel="noopener"><span data-i18n="footer_map_open">Open in Google Maps</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></a>
           </div>
         </div>
         <div class="contact-links">

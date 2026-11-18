@@ -108,6 +108,7 @@ const I18N = {
     fun_fact_back: "Back Home",
 
     footer_analytics: "This site uses Google Analytics to understand visitor traffic.",
+    footer_map_open: "Open in Google Maps",
 
     events_eyebrow: "MCC Calendar",
     events_h1: "Every gathering, in one place.",
@@ -202,6 +203,7 @@ const I18N = {
     fun_fact_back: "ပင်မစာမျက်နှာသို့",
 
     footer_analytics: "ဤဝဘ်ဆိုက်သည် ဧည့်သည်များ၏ အသုံးပြုမှုကို နားလည်ရန် Google Analytics ကို အသုံးပြုပါသည်။",
+    footer_map_open: "Google Maps တွင် ဖွင့်ရန်",
 
     events_eyebrow: "MCC ပြက္ခဒိန်",
     events_h1: "စုစည်းပွဲအားလုံး တစ်နေရာတည်းတွင်။",
@@ -1997,6 +1999,28 @@ function initFunFact() {
   }
 }
 
+function initFooterMap() {
+  // Wide screens only: the iframe is created (and its tiles downloaded) only when the screen is >= 1000px.
+  var box = document.getElementById("footerMap");
+  if (!box || !window.matchMedia) return;
+  var frame = box.querySelector(".fm-frame");
+  var mq = window.matchMedia("(min-width: 1000px)");
+  function sync() {
+    if (mq.matches && !frame.firstChild) {
+      var f = document.createElement("iframe");
+      f.src = "https://www.google.com/maps?q=" + encodeURIComponent(box.getAttribute("data-q")) + "&z=16&output=embed";
+      f.title = "Map of 21 Sussex Ave, Toronto";
+      f.loading = "lazy";
+      f.referrerPolicy = "no-referrer-when-downgrade";
+      f.setAttribute("allowfullscreen", "");
+      frame.appendChild(f);
+    }
+  }
+  sync();
+  if (mq.addEventListener) mq.addEventListener("change", sync);
+  else if (mq.addListener) mq.addListener(sync);
+}
+
 function initEmailCopy() {
   const buttons = document.querySelectorAll(".js-email-copy");
   if (!buttons.length) return;
@@ -3055,6 +3079,7 @@ document.addEventListener("DOMContentLoaded", initNavShadow);
 document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
+document.addEventListener("DOMContentLoaded", initFooterMap);
 document.addEventListener("DOMContentLoaded", initFunFact);
 document.addEventListener("DOMContentLoaded", initEventTilt);
 document.addEventListener("DOMContentLoaded", initRegisterButtons);
