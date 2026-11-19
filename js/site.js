@@ -752,6 +752,55 @@ function alertRegistrationDown(btn) {
   btn.textContent = "Try again";
 }
 
+/* ---------- ASK MCC HOOKS ----------
+   The Ask MCC chat (js/ask-mcc.js) offers next steps under its answers: an event card with
+   Register / Add to calendar, a newsletter box, "Ask the exec team". It never does these itself:
+   it calls these hooks, so the chat reuses this site's own registration window, calendar links,
+   newsletter form and Supabase connection. Each returns quickly and never throws at the chat. */
+const KIT_SUBSCRIBE_URL = "https://app.kit.com/forms/10200664/subscriptions";   // same form as newsletter.html
+window.MCCSite = {
+  register(ev) {
+    const full = { ...ev, id: registrationId(ev) };
+    if (!full.id) return Promise.resolve();
+    REG_EVENTS[full.id] = full;
+    return loadRegistration()
+      .then(() => window.MCCRegister.open(full))
+      .catch(err => { console.error("Couldn't load registration:", err); location.href = "events.html"; });
+  },
+  calendar(ev) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(String(ev.date || ""))) return null;
+    return calendarLinks({ ...ev, date: String(ev.date) });
+  },
+  newsletter(email) {
+    return fetch(KIT_SUBSCRIBE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+      body: "email_address=" + encodeURIComponent(email),
+    }).then(r => r.json().catch(() => ({})).then(j => {
+      if (r.ok && j.status === "success") return { ok: true };
+      const m = j && j.errors && j.errors.messages && j.errors.messages[0];
+      return { ok: false, message: m ? m + "." : "" };
+    })).catch(() => ({ ok: false, message: "Couldn't reach the sign-up service. Please try again in a moment." }));
+  },
+  // Sends the question to the exec portal's Questions inbox (supabase/ask-mcc-questions.sql).
+  askTeam({ question, email, context, session }) {
+    return loadScriptOnce("js/exec-config.js", () => !!window.MCC_EXEC_CONFIG).then(() => {
+      const cfg = window.MCC_EXEC_CONFIG || {};
+      if (!cfg.url || !cfg.key) return { ok: false };
+      return fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/rpc/ask_exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": cfg.key },
+        body: JSON.stringify({ p_question: question, p_email: email || null,
+                               p_context: (context || "").slice(0, 2000), p_session: session || null }),
+      }).then(r => r.ok ? { ok: true } : r.json().catch(() => ({})).then(j => {
+        const m = String((j && j.message) || "");
+        // the database's own messages are written for visitors ("Please enter a valid email")
+        return { ok: false, message: /^(Please|Too many|You have)/.test(m) ? m + "." : "" };
+      }));
+    }).catch(() => ({ ok: false }));
+  },
+};
+
 /* ---------- ADD TO CALENDAR + MAP LINK (next event) ---------- */
 // Online events have nothing to map.
 function mapUrl(location) {

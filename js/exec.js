@@ -1397,6 +1397,119 @@
       $("reg-csv").addEventListener("click", regCsv);
     }
 
+    // ----- Questions (sent from the Ask MCC chat when it couldn't answer) -----
+    // Replies go out from the exec's own mail app (mailto:), so no email service is needed.
+    // "Teach Ask MCC" puts the Q&A in the public view ask_answers_public, which the bot reads.
+    var qs = [], qShow = "open", qInit = false;
+
+    function loadQuestions() {
+      return sb.from("ask_questions")
+        .select("id, question, email, context, status, answer, teach, answered_at, created_at")
+        .order("created_at", { ascending: false })
+        .limit(300)
+        .then(function (r) {
+          if (r.error) { $("q-panel").hidden = true; $("q-missing").hidden = false; return; }
+          $("q-panel").hidden = false; $("q-missing").hidden = true;
+          qs = r.data || [];
+          renderQuestions();
+          stamp("questions");
+        });
+    }
+
+    function replyLink(q, answer) {
+      var who = (me && me.name) ? me.name : "The MCC team";
+      var body = "Hi,\n\nThanks for asking Ask MCC:\n\n> " + q.question + "\n\n" + answer +
+        "\n\n" + who + "\nMyanmar Culture Club, University of Toronto\nhttps://uoftmcc.ca";
+      return "mailto:" + encodeURIComponent(q.email) + "?subject=" + encodeURIComponent("Your question to MCC") +
+        "&body=" + encodeURIComponent(body);
+    }
+
+    function saveQuestion(q, patch, btn) {
+      if (btn) btn.disabled = true;
+      return sb.from("ask_questions").update(patch).eq("id", q.id).then(function (r) {
+        if (btn) btn.disabled = false;
+        if (r.error) { setMsg($("q-msg"), "Couldn't save that. Try again.", "error"); return false; }
+        Object.keys(patch).forEach(function (k) { q[k] = patch[k]; });
+        renderQuestions();
+        return true;
+      });
+    }
+
+    function renderQuestions() {
+      var counts = { open: 0, answered: 0, dismissed: 0 };
+      qs.forEach(function (q) { counts[q.status] = (counts[q.status] || 0) + 1; });
+      Object.keys(counts).forEach(function (k) { var b = $("q-n-" + k); if (b) b.textContent = counts[k]; });
+      document.querySelectorAll(".q-filter").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-q") === qShow)); });
+      var list = $("q-list"), rows = qs.filter(function (q) { return q.status === qShow; });
+      list.textContent = "";
+      $("q-empty").hidden = rows.length > 0;
+      rows.forEach(function (q) {
+        var li = el("li", "q-item");
+        li.appendChild(el("p", "q-text", q.question));
+        li.appendChild(el("p", "meta", regDate(q.created_at) + " \u00b7 " +
+          (q.email ? "reply to " + q.email : "no email left (your answer only teaches Ask MCC)")));
+        if (q.context) {
+          var d = el("details", "q-ctx");
+          d.appendChild(el("summary", null, "What Ask MCC said"));
+          d.appendChild(el("p", null, q.context));
+          li.appendChild(d);
+        }
+        if (q.status === "answered") {
+          li.appendChild(el("p", "q-answer", q.answer || ""));
+          var tags = el("p", "meta", (q.teach ? "Ask MCC knows this answer" : "Not taught to Ask MCC") +
+            (q.answered_at ? " \u00b7 answered " + regDate(q.answered_at) : ""));
+          li.appendChild(tags);
+          var row0 = el("div", "q-row");
+          var tg = el("button", "btn ghost", q.teach ? "Stop teaching it" : "Teach Ask MCC");
+          tg.type = "button";
+          tg.addEventListener("click", function () { saveQuestion(q, { teach: !q.teach }, tg); });
+          row0.appendChild(tg);
+          if (q.email) {
+            var again = el("a", "btn ghost", "Email again");
+            again.href = replyLink(q, q.answer || "");
+            row0.appendChild(again);
+          }
+          li.appendChild(row0);
+        } else {
+          var ta = el("textarea", "q-input");
+          ta.rows = 3; ta.maxLength = 2000; ta.placeholder = "Your answer\u2026";
+          ta.setAttribute("aria-label", "Your answer to: " + q.question);
+          ta.value = q.answer || "";
+          li.appendChild(ta);
+          var row = el("div", "q-row");
+          var send = el("button", "btn", q.email ? "Reply by email" : "Save answer");
+          send.type = "button";
+          var lab = el("label", "q-teach"), box = el("input");
+          box.type = "checkbox"; box.checked = true;
+          lab.appendChild(box); lab.appendChild(document.createTextNode(" Teach Ask MCC this answer"));
+          send.addEventListener("click", function () {
+            var answer = ta.value.trim();
+            if (!answer) { setMsg($("q-msg"), "Write an answer first.", "error"); ta.focus(); return; }
+            // Open the mail app first, inside the click (browsers block it later), then save.
+            if (q.email) window.location.href = replyLink(q, answer);
+            saveQuestion(q, { answer: answer, teach: box.checked, status: "answered",
+                              answered_by: me && me.id, answered_at: new Date().toISOString() }, send)
+              .then(function (ok) { if (ok) setMsg($("q-msg"), box.checked ? "Answered. Ask MCC will know this within 6 hours." : "Answered."); });
+          });
+          row.appendChild(send); row.appendChild(lab);
+          var dis = el("button", "q-dismiss", q.status === "dismissed" ? "Move back to waiting" : "Dismiss");
+          dis.type = "button";
+          dis.addEventListener("click", function () { saveQuestion(q, { status: q.status === "dismissed" ? "open" : "dismissed" }, dis); });
+          row.appendChild(dis);
+          li.appendChild(row);
+        }
+        list.appendChild(li);
+      });
+    }
+
+    function initQuestions() {
+      if (qInit) return;
+      qInit = true;
+      document.querySelectorAll(".q-filter").forEach(function (b) {
+        b.addEventListener("click", function () { qShow = b.getAttribute("data-q"); renderQuestions(); });
+      });
+    }
+
     function loadNewsletters() {
       return sb.from("newsletters")
         .select("id, name, status, edit_link, publish_link, updated_at")
@@ -1558,8 +1671,8 @@
     }
 
     // ----- App shell: views, routing, lazy loading -----
-    var VIEWS = ["home", "todo", "meet", "newsletters", "registrations", "account"];
-    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", registrations: "Registrations", account: "Account" };
+    var VIEWS = ["home", "todo", "meet", "newsletters", "registrations", "questions", "account"];
+    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", registrations: "Registrations", questions: "Questions", account: "Account" };
     var locked = false;       // true until a new exec has chosen their own password
     var appStarted = false, viewNow = null, welcomed = false;
     var loadedAt = {};        // view key -> ms timestamp of last data load
@@ -1621,6 +1734,9 @@
       } else if (name === "registrations") {
         initRegistrations();
         if (!fresh("registrations", 10)) loadRegistrations();
+      } else if (name === "questions") {
+        initQuestions();
+        if (!fresh("questions", 10)) loadQuestions();
       }
     }
 

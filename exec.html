@@ -67,6 +67,10 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 3v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-3z"/><path d="M14.5 6v12" stroke-dasharray="2 2.2"/></svg>
         <span><span class="lbl-long">Registrations</span><span class="lbl-short">RSVPs</span></span>
       </a>
+      <a class="nav-item" href="#questions" data-view="questions">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M10 9.3a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4"/><path d="M12 14.4v.1"/></svg>
+        <span><span class="lbl-long">Questions</span><span class="lbl-short">Q&amp;A</span></span>
+      </a>
       <a class="nav-item" href="#account" data-view="account">
         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
         <span>Account</span>
@@ -394,6 +398,25 @@
           <p class="meta" id="reg-empty" hidden>No registrations for this event yet.</p>
         </section>
         <p class="meta" id="reg-missing" hidden>Registrations aren't set up yet — run <code>supabase/members-2-registration.sql</code> in the Supabase SQL editor.</p>
+      </section>
+
+      <!-- ===================== QUESTIONS (from Ask MCC) ===================== -->
+      <section class="view wide" id="view-questions" data-view="questions" hidden aria-labelledby="q-h1">
+        <div class="view-head">
+          <h1 id="q-h1" tabindex="-1">Questions</h1>
+          <p class="panel-sub">When Ask MCC can't answer, visitors can send the question to you. Reply by email, and tick "Teach Ask MCC" so the bot answers it next time (it picks up new answers within 6 hours).</p>
+          <p class="msg" id="q-msg" role="status" aria-live="polite"></p>
+        </div>
+        <section class="panel" id="q-panel" aria-label="Questions from Ask MCC">
+          <div class="q-bar" role="group" aria-label="Show">
+            <button type="button" class="q-filter" data-q="open" aria-pressed="true">Waiting <b id="q-n-open">0</b></button>
+            <button type="button" class="q-filter" data-q="answered" aria-pressed="false">Answered <b id="q-n-answered">0</b></button>
+            <button type="button" class="q-filter" data-q="dismissed" aria-pressed="false">Dismissed <b id="q-n-dismissed">0</b></button>
+          </div>
+          <ol class="q-list" id="q-list"></ol>
+          <p class="meta" id="q-empty" hidden>Nothing here. Ask MCC is keeping up!</p>
+        </section>
+        <p class="meta" id="q-missing" hidden>Questions aren't set up yet — run <code>supabase/ask-mcc-questions.sql</code> in the Supabase SQL editor.</p>
       </section>
 
       <section class="view" id="view-account" data-view="account" hidden aria-labelledby="account-h1">

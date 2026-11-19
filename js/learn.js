@@ -412,7 +412,17 @@ var MCC_TRANSLIT = (function () {
   }); });
   guide();
   $("lb-next").addEventListener("click", function () { open((current + 1) % LETTERS.length, false); });
-  open(0, false);
+  // Deep link: learn.html#write-ka (Latin name) or #write-က opens that letter (Ask MCC links here).
+  function fromHash() {
+    var m = /^#write-(.+)$/.exec(location.hash || ""); if (!m) return -1;
+    var key = decodeURIComponent(m[1]).toLowerCase();
+    for (var i = 0; i < LETTERS.length; i++) if (LETTERS[i][0] === key || LETTERS[i][1] === key) return i;
+    return -1;
+  }
+  var linked = fromHash();
+  open(linked < 0 ? 0 : linked, false);
+  if (linked >= 0) setTimeout(function () { $("lb-side").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); }, 300);
+  window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0) open(i, true); });
 
   /* ---------- write your name ---------- */
   var namePad = null;

@@ -923,3 +923,24 @@ body.app{ display:block; min-height:100vh; min-height:100dvh; }
 }
 .hero > *{ justify-self:start; }
 .app .reg-bar input#reg-search{ height:44px; min-height:44px; padding:0 14px; box-sizing:border-box; }
+
+/* ---------- Questions (from Ask MCC) ---------- */
+.q-bar{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.q-filter{ font:inherit; font-size:.9rem; padding:7px 14px; border-radius:999px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; }
+.q-filter b{ font-weight:700; margin-left:4px; color:var(--ink-soft); }
+.q-filter[aria-pressed="true"]{ background:var(--navy); border-color:var(--navy); color:var(--footer-ink); }
+.q-filter[aria-pressed="true"] b{ color:var(--gold); }
+.q-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; }
+.q-item{ padding:16px 0; border-top:1px solid var(--line); }
+.q-item:first-child{ border-top:0; padding-top:4px; }
+.q-text{ font-family:'Fraunces', serif; font-size:1.12rem; line-height:1.35; margin:0 0 4px; }
+.q-ctx{ margin:8px 0 0; font-size:.88rem; color:var(--ink-soft); }
+.q-ctx summary{ cursor:pointer; }
+.q-ctx p{ margin:6px 0 0; padding:8px 12px; border-left:3px solid var(--line); white-space:pre-line; }
+.q-input{ width:100%; margin-top:10px; padding:11px 13px; font:inherit; color:var(--ink); resize:vertical; min-height:76px; background:#fff; border:1px solid var(--line); border-radius:10px; }
+.q-input:focus-visible{ outline:2px solid var(--gold); outline-offset:1px; border-color:var(--gold); }
+.q-row{ display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:10px; }
+.q-row .btn{ padding:10px 20px; text-decoration:none; }
+.q-teach{ display:inline-flex; align-items:center; gap:6px; font-size:.9rem; color:var(--ink-soft); }
+.q-dismiss{ margin-left:auto; background:none; border:0; font:inherit; font-size:.9rem; color:var(--ink-soft); text-decoration:underline; cursor:pointer; }
+.q-answer{ margin:10px 0 4px; padding:10px 14px; background:var(--bg-sunk); border-radius:10px; white-space:pre-line; }
