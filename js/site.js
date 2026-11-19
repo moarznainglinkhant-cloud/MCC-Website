@@ -2712,7 +2712,7 @@ function inkOwners(strokes, K) {
 // Same, one stroke at a time (cached), so long names can work each stroke out just before it is written.
 function inkOwnerFn(strokes, K) {
   if (!strokes || strokes.length < 2) return null;
-  K = K || 4; const R = 6, C = 6, SLACK = 0.45, HALF = 4, segs = [], grid = new Map(), dist = new Float64Array(strokes.length);
+  K = K || 4; const R = 6, C = 6, SLACK = 0.45, HALF = 3.4, segs = [], grid = new Map(), dist = new Float64Array(strokes.length);
   strokes.forEach((s, i) => {
     if (s.length === 1) segs.push([i, s[0][0], s[0][1], s[0][0], s[0][1]]);
     for (let k = 0; k + 1 < s.length; k++) segs.push([i, s[k][0], s[k][1], s[k + 1][0], s[k + 1][1]]);
@@ -2751,11 +2751,18 @@ function inkOwnerFn(strokes, K) {
         if (solo) { const o = (yy * W + xx) * 4; px[o] = px[o + 1] = px[o + 2] = px[o + 3] = 255; continue; }
         dist.fill(Infinity);
         for (const n of list) { const g = segs[n], d = d2(g, x, y); if (d < dist[g[0]]) dist[g[0]] = d; }
-        // an earlier stroke keeps its full ink width at a join; past that, the nearest stroke owns the point
+        // an earlier stroke owns its own line width (ink is 6.5 units wide, so 3.4 either side of the centre-line)
+        // and nothing more, so a finished circle never sprouts the start of the next one; past that, nearest wins
         let first = -1, near = Infinity;
         for (let k = 0; k < strokes.length; k++) { if (first < 0 && dist[k] <= HALF * HALF) first = k; if (dist[k] < near) near = dist[k]; }
-        const ok = first >= 0 ? first === i
-                              : dist[i] <= R * R && Math.sqrt(dist[i]) <= Math.sqrt(near) + SLACK;
+        let ok = first >= 0 ? first === i : dist[i] <= R * R && dist[i] <= near;
+        if (!ok && first < 0 && dist[i] <= R * R) {          // seam overlap goes to the LATER stroke only
+          ok = Math.sqrt(dist[i]) <= Math.sqrt(near) + SLACK;
+          if (ok) { let nk = -1; for (let k = 0; k < strokes.length; k++) if (dist[k] === near) nk = k; ok = nk < i; }
+        }
+        if (!ok && first >= 0 && first < i && dist[i] <= R * R && Math.sqrt(dist[first]) > HALF - SLACK) {  // thin overlap just outside the earlier line, for the later stroke
+          ok = true; for (let k = 0; k < strokes.length; k++) if (k !== first && dist[k] < dist[i]) ok = false;
+        }
         if (ok) { const o = (yy * W + xx) * 4; px[o] = px[o + 1] = px[o + 2] = px[o + 3] = 255; }
       }
     }
