@@ -691,10 +691,22 @@ function renderFeaturedEvent(ev) {
    navy wall: this month (Toronto time), past days greyed out, today in red, and our best event as
    the calendar's picture. It swings in gently when it comes into view, then "next event coming
    soon" is written and circled. Scrolling past nudges it; a mouse passing over sways it a little.
-   Change the picture here: */
-const WCAL_ART = { photo: "images/events/thingyan-festival.jpg", name: "Thingyan Festival", pos: "center 62%" };
+   The picture is a slow slideshow of these events (cross-fades every WCAL_EVERY ms, starting at a
+   random one; pauses when the card is off screen). Edit the list here — pos = which part of the
+   poster shows in the frame: */
+const WCAL_ART = [
+  { photo: "images/events/home-away-from-home.jpg", name: "Home Away From Home", pos: "center 40%" },
+  { photo: "images/events/toronto-ready.jpg", name: "Toronto Ready", pos: "center 40%" },
+  { photo: "images/events/thingyan-festival.jpg", name: "Thingyan Festival", pos: "center 62%" },
+  { photo: "images/events/sea-of-love.jpg", name: "Sea of Love", pos: "center 40%" },
+  { photo: "images/events/origami-workshop.jpg", name: "Origami Workshop", pos: "center 40%" },
+  { photo: "images/events/condo-party.jpg", name: "New Year's Condo Party", pos: "center 40%" },
+  { photo: "images/events/burmese-language-workshop.jpg", name: "Burmese Language Workshop", pos: "center 40%" },
+  { photo: "images/events/back-to-school-picnic.jpg", name: "Back to School Picnic", pos: "center 40%" },
+];
+const WCAL_EVERY = 6000;
 
-const WCAL = { el: null, ro: null, io: null, a: 0, v: 0, raf: 0, last: 0, lastY: 0 };
+const WCAL = { el: null, ro: null, io: null, a: 0, v: 0, raf: 0, last: 0, lastY: 0, i: 0, timer: 0, seen: false };
 
 function wallCalendarHTML() {
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "numeric", day: "numeric" })
@@ -704,13 +716,15 @@ function wallCalendarHTML() {
   let g = "SMTWTFS".split("").map(h => `<div class="h">${h}</div>`).join("") + "<div></div>".repeat(first);
   for (let d = 1; d <= days; d++) g += `<div class="d${d < D ? " past" : ""}${d === D ? " today" : ""}">${d}</div>`;
   const month = new Date(Y, M, 1).toLocaleString("en", { month: "long" });
+  WCAL.i = Math.floor(Math.random() * WCAL_ART.length);
+  const art = WCAL_ART[WCAL.i];
   return `<div class="wcal-fit"><div class="wcal-hang">
     <span class="wcal-nail" aria-hidden="true"></span>
     <svg class="wcal-wire" viewBox="0 0 420 36" preserveAspectRatio="none" aria-hidden="true"><path d="M210 2 L170 35 M210 2 L250 35"/></svg>
     <div class="wcal-sway"><div class="wcal">
       <div class="wcal-bind"></div>
       <div class="wcal-page">
-        <figure class="wcal-art"><div class="frame"><img src="${safeUrl(WCAL_ART.photo)}" alt="${escapeHtml(WCAL_ART.name)} poster" style="object-position:${WCAL_ART.pos}" decoding="async"></div><figcaption>${escapeHtml(WCAL_ART.name)}</figcaption></figure>
+        <figure class="wcal-art"><div class="frame"><img class="on" src="${safeUrl(art.photo)}" alt="${escapeHtml(art.name)} poster" style="object-position:${art.pos}" decoding="async"><img alt="" decoding="async"></div><figcaption>${escapeHtml(art.name)}</figcaption></figure>
         <div class="wcal-side">
           <div class="wcal-head"><span class="wcal-m">${month}</span><span class="wcal-y">${Y}</span></div>
           <div class="wcal-grid" aria-label="${month} ${Y}">${g}</div>
@@ -746,6 +760,7 @@ function renderWallCalendar(visual) {
   WCAL.ro.observe(visual);
 
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  wcalSlideshow(visual, reduce);
   const len = ring.getTotalLength() + 1;
   ring.style.strokeDasharray = len;
   ring.style.strokeDashoffset = reduce ? 0 : len;
@@ -774,8 +789,31 @@ function renderWallCalendar(visual) {
   });
 }
 
+// Cross-fade the calendar's picture to the next event every WCAL_EVERY ms while the card is on screen.
+function wcalSlideshow(visual, reduce) {
+  clearInterval(WCAL.timer);
+  WCAL.seen = false;
+  if (reduce || WCAL_ART.length < 2) return;
+  new IntersectionObserver(es => { WCAL.seen = es[0].isIntersecting; }).observe(visual);
+  const imgs = visual.querySelectorAll(".wcal-art img"), cap = visual.querySelector(".wcal-art figcaption");
+  const preload = i => { const im = new Image(); im.src = WCAL_ART[i].photo; return im; };
+  let next = (WCAL.i + 1) % WCAL_ART.length, ready = preload(next);
+  WCAL.timer = setInterval(() => {
+    if (!WCAL.seen || document.hidden || !visual.isConnected || !ready.complete) return;
+    const on = visual.querySelector(".wcal-art img.on"), off = on === imgs[0] ? imgs[1] : imgs[0];
+    const art = WCAL_ART[next];
+    off.src = art.photo; off.style.objectPosition = art.pos; off.alt = art.name + " poster";
+    on.alt = "";
+    off.classList.add("on"); on.classList.remove("on");
+    cap.classList.add("swap");
+    setTimeout(() => { cap.textContent = art.name; cap.classList.remove("swap"); }, 500);
+    WCAL.i = next; next = (next + 1) % WCAL_ART.length; ready = preload(next);
+  }, WCAL_EVERY);
+}
+
 function removeWallCalendar(visual) {
   if (!visual.classList.contains("is-cal")) return;
+  clearInterval(WCAL.timer);
   visual.classList.remove("is-cal");
   if (WCAL.ro) WCAL.ro.disconnect();
   if (WCAL.io) WCAL.io.disconnect();
