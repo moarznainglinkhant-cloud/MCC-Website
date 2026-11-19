@@ -550,9 +550,11 @@
 
 
   /* ---------- ASK PAGE ---------- */
-  .ask-section{ background:var(--bg-sunk); padding-block: clamp(28px,4vw,48px) clamp(48px,7vw,84px); }
-  .ask-wrap{ max-width:760px; margin-inline:auto; }
-  .ask-note{ max-width:760px; margin:14px auto 0; font-size:.85rem; color:var(--ink-soft); text-align:center; }
+  /* The chat (js/ask-mcc.js, page mode) draws the topics sidebar + card itself, on this page's own background. */
+  .ask-section{ padding-block: 0 clamp(64px,9vw,110px); }
+  /* Hold the card's space before the script mounts, so nothing jumps when it appears. */
+  .ask-wrap{ min-height:min(660px, calc(100svh - 140px)); }
+  @media (max-width:860px){ .ask-wrap{ min-height:calc(100svh - 110px); } }
 </style>
 <!-- Fetch a page as soon as the visitor shows intent (hover / press), so the click doesn't wait on the network. -->
 <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
@@ -608,7 +610,6 @@
   <section class="ask-section">
     <div class="wrap">
       <div class="ask-wrap" id="ask-mcc-page"></div>
-      <p class="ask-note">Ask MCC is an experimental assistant and can be wrong. For anything important, message <a href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">@mcc_uoft</a>.</p>
     </div>
   </section>
 
