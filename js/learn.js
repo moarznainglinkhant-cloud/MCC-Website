@@ -213,28 +213,56 @@ var MCC_TRANSLIT = (function () {
     var pts = function (s) { return s.map(function (p) { return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" "); };
     // The demo: the real letter (Padauk Book outline) under a mask that the hidden strokes paint, so it fills in writing order.
     var shapes = o.shapes || [], mid = "lbm" + (++padN);
-    var mask = el("mask", { id: mid, maskUnits: "userSpaceOnUse", x: view.x, y: view.y, width: view.w, height: view.h });
-    var defs = el("defs", {}); defs.appendChild(mask); svg.appendChild(defs);
-    var ghost = el("g", { "class": "lb-ghost" }), inkG = el("g", { "class": "lb-ink", mask: "url(#" + mid + ")" });
+    var defs = el("defs", {}); svg.appendChild(defs);
+    // Each stroke has its own brush mask and only shows its own part of the letter (MCCInkOwners in site.js),
+    // so the wide brush can't uncover strokes that haven't been written yet where strokes touch or cross.
+    var ghost = el("g", { "class": "lb-ghost" }), inkG = el("g", { "class": "lb-ink" }), demoG = el("g", { "class": "lb-ink" });
     shapes.forEach(function (sh) {
       var t = "translate(" + sh.x + " " + sh.y + ")";
       ghost.appendChild(el("path", { d: sh.d, transform: t })); inkG.appendChild(el("path", { d: sh.d, transform: t }));
     });
-    svg.appendChild(ghost); svg.appendChild(inkG);
-    var inks = L.map(function () { var p = el("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": MW, "stroke-linecap": "round", "stroke-linejoin": "round" }); mask.appendChild(p); return p; });
+    svg.appendChild(ghost); svg.appendChild(inkG); svg.appendChild(demoG);
+    var shapeBox = Array.prototype.map.call(ghost.childNodes, function (p, k) {
+      try { var b = p.getBBox(); if (b.width > 0) return { x0: b.x + shapes[k].x, y0: b.y + shapes[k].y, x1: b.x + b.width + shapes[k].x, y1: b.y + b.height + shapes[k].y }; } catch (e) {}
+      return null;
+    });
+    var own = window.MCCInkOwnerFn ? window.MCCInkOwnerFn(L, 4) : null, holders = [];
+    var area = { maskUnits: "userSpaceOnUse", x: view.x, y: view.y, width: view.w, height: view.h };
+    function maskEl(id) { var m = el("mask", area); m.setAttribute("id", id); defs.appendChild(m); return m; }
+    var inks = L.map(function (s, i) {
+      var p = el("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": MW, "stroke-linecap": "round", "stroke-linejoin": "round" });
+      maskEl(mid + "b" + i).appendChild(p);
+      var holder = el("g", {}), sb = bounds([s]); demoG.appendChild(holder); holders[i] = holder;
+      var gi = el("g", { mask: "url(#" + mid + "b" + i + ")" }); holder.appendChild(gi);
+      shapes.forEach(function (sh, k) {
+        var bb = shapeBox[k], m = 12;
+        if (bb && (bb.x1 < sb.x0 - m || bb.x0 > sb.x1 + m || bb.y1 < sb.y0 - m || bb.y0 > sb.y1 + m)) return;
+        gi.appendChild(el("path", { d: sh.d, transform: "translate(" + sh.x + " " + sh.y + ")" }));
+      });
+      return p;
+    });
     var mine = el("g", { "class": "lb-mine", "stroke-width": D.W * 0.55 }); svg.appendChild(mine);   // the visitor's own writing
     var pen = el("circle", { "class": "lb-pen", r: 1.7, opacity: 0 }); svg.appendChild(pen);
 
+    function ownPart(i) {               // this stroke shows only its own part of the letter; worked out the first time it's drawn
+      if (!own || holders[i].hasAttribute("data-own")) return;
+      holders[i].setAttribute("data-own", "");
+      var o = own(i); if (!o) return;
+      maskEl(mid + "o" + i).appendChild(el("image", { href: o.url, x: o.x, y: o.y, width: o.w, height: o.h, preserveAspectRatio: "none" }));
+      holders[i].setAttribute("mask", "url(#" + mid + "o" + i + ")");
+    }
     function setInk(i, pr) {
+      ownPart(i);
       var s = L[i], n = Math.floor(pr), f = pr - n, a = s.slice(0, n + 1);
       if (f > 0 && n < s.length - 1) { var p = s[n], q = s[n + 1]; a.push([p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f]); }
       if (a.length === 1) a.push(a[0]);
       inks[i].setAttribute("points", pr > 0 ? pts(a) : "");
       return a[a.length - 1];
     }
-    function full(i) { inks[i].setAttribute("points", pts(L[i].length > 1 ? L[i] : [L[i][0], L[i][0]])); }
-    function clearDemo() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.setAttribute("mask", "url(#" + mid + ")"); }
-    function whole() { inkG.removeAttribute("mask"); }
+    function full(i) { ownPart(i); inks[i].setAttribute("points", pts(L[i].length > 1 ? L[i] : [L[i][0], L[i][0]])); }
+    function clearDemo() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.style.display = "none"; demoG.style.display = ""; }
+    function whole() { inkG.style.display = ""; demoG.style.display = "none"; }
+    clearDemo();
     function say(h) { if (o.status) o.status.innerHTML = h; }
     function stop() { cancelAnimationFrame(raf); clearTimeout(timer); pen.setAttribute("opacity", 0); }
     function follow(x) {
