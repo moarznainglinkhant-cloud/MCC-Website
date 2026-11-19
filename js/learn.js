@@ -226,7 +226,7 @@ var MCC_TRANSLIT = (function () {
       try { var b = p.getBBox(); if (b.width > 0) return { x0: b.x + shapes[k].x, y0: b.y + shapes[k].y, x1: b.x + b.width + shapes[k].x, y1: b.y + b.height + shapes[k].y }; } catch (e) {}
       return null;
     });
-    var own = window.MCCInkOwnerFn ? window.MCCInkOwnerFn(L, 4) : null, holders = [];
+    var holders = [];
     var area = { maskUnits: "userSpaceOnUse", x: view.x, y: view.y, width: view.w, height: view.h };
     function maskEl(id) { var m = el("mask", area); m.setAttribute("id", id); defs.appendChild(m); return m; }
     var inks = L.map(function (s, i) {
@@ -244,12 +244,11 @@ var MCC_TRANSLIT = (function () {
     var mine = el("g", { "class": "lb-mine", "stroke-width": D.W * 0.55 }); svg.appendChild(mine);   // the visitor's own writing
     var pen = el("circle", { "class": "lb-pen", r: 1.7, opacity: 0 }); svg.appendChild(pen);
 
-    function ownPart(i) {               // this stroke shows only its own part of the letter; worked out the first time it's drawn
-      if (!own || holders[i].hasAttribute("data-own")) return;
+    function ownPart(i) {               // where strokes meet, this stroke shows only its own circle (set up the first time it's drawn)
+      if (!window.MCCInkOwnMask || holders[i].hasAttribute("data-own")) return;
       holders[i].setAttribute("data-own", "");
-      var o = own(i); if (!o) return;
-      maskEl(mid + "o" + i).appendChild(el("image", { href: o.url, x: o.x, y: o.y, width: o.w, height: o.h, preserveAspectRatio: "none" }));
-      holders[i].setAttribute("mask", "url(#" + mid + "o" + i + ")");
+      var m = el("mask", area); m.setAttribute("id", mid + "o" + i);
+      if (window.MCCInkOwnMask(m, L, i, area, D.W)) { defs.appendChild(m); holders[i].setAttribute("mask", "url(#" + mid + "o" + i + ")"); }
     }
     function setInk(i, pr) {
       ownPart(i);
