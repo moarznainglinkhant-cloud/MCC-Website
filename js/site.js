@@ -2263,18 +2263,15 @@ function initGreeting() {
   let ok = false;
   try { ok = build(); } catch (e) { ok = false; }
   if (!ok) { reveal(); letPhotosIn(); return; }
-  setTimeout(write, 250);
-  // Hover (or tap) to have it written again — once the current write has finished.
+  // Written once per visit to the site. Arriving from another MCC page (or Back/Forward) shows it
+  // already written — the inline script in index.html decides and sets "greet-still" on <html>.
+  if (html.classList.contains("greet-still")) { paint(99); reveal(); letPhotosIn(); }
+  else setTimeout(write, 250);
+  // Tap (or click) to have it written again — once the current write has finished.
+  // Not on hover, and not when it scrolls back into view.
   const again = () => { if (!GREET.raf) write(); };
-  svg.addEventListener("pointerenter", e => { if (e.pointerType === "mouse") again(); });
   svg.addEventListener("click", again);
   svg.style.cursor = "pointer";
-  let away = false;                                 // write it again when it comes back into view
-  new IntersectionObserver(entries => {
-    const e = entries[0];
-    if (!e.isIntersecting) { away = true; paint(-1); }
-    else if (away) { away = false; write(); }
-  }, { threshold: 0 }).observe(svg);
 }
 
 // ---------- Next Event card (homepage + events page) tilts gently toward the cursor ----------

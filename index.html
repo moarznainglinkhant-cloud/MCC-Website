@@ -812,7 +812,17 @@
             // Hide the greeting until js/site.js writes it in (it un-hides itself after 3s if anything goes wrong).
             (function(){try{
               if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-              var h=document.documentElement; h.classList.add('greet-pending','hero-wait','hero-intro');
+              var h=document.documentElement;
+              // Only write it on a real visit (arriving from outside the site, or a reload).
+              // Coming here from another MCC page, or with Back/Forward, shows it already written.
+              var still=false;
+              try{
+                var n=performance.getEntriesByType('navigation')[0], ty=n&&n.type;
+                if (ty==='back_forward') still=true;
+                else if (ty!=='reload' && document.referrer) still=new URL(document.referrer).origin===location.origin;
+              }catch(e){}
+              if (still){ h.classList.add('greet-still'); return; }
+              h.classList.add('greet-pending','hero-wait','hero-intro');
               setTimeout(function(){ h.classList.remove('greet-pending','hero-wait'); }, 3000);
               setTimeout(function(){ h.classList.remove('hold-a','hold-b','hold-c'); }, 4500);
               setTimeout(function(){ h.classList.remove('hero-intro'); }, 5000);
