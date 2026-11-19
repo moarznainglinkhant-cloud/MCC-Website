@@ -47,7 +47,7 @@
     [ cmd("neofetch"), { out: [
         [C.cyan, "moarz", true], [C.dim, "-----"],
         [C.text, "Name:     Naing Lin Khant"],
-        [C.text, "Role:     Website Coordinator, MCC"],
+        [C.text, "Role:     Full-Stack & AI Developer, MCC"],
         [C.text, "Program:  Computer Science, 2nd year"],
         [C.text, "Uni:      University of Toronto"],
         [C.text, "Site:     uoftmcc.ca"]
