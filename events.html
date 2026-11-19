@@ -279,7 +279,7 @@
   /* ---------- Empty Next Event: the calendar fills the left panel (js/site.js renderWallCalendar) ---------- */
   .event-visual.is-cal{ display:block; background:var(--bg-raised); border-right:1px solid var(--line); }
   .event-visual.is-cal::before{ content:""; position:absolute; left:0; right:0; top:0; z-index:1; height:var(--bh,26px);
-    background:linear-gradient(180deg,#BE4434,#AE3628 60%,#9A2F23); }
+    background:var(--red); }
   .event-visual.is-cal::after{ content:""; position:absolute; left:50%; z-index:2; top:calc(var(--bh,26px) * .32); width:calc(var(--bh,26px) * .62); height:calc(var(--bh,26px) * .3);
     transform:translateX(-50%); border-radius:99px; background:rgba(0,0,0,.42); }
   @media (max-width:820px){ .event-visual.is-cal{ border-right:0; border-bottom:1px solid var(--line); } }
