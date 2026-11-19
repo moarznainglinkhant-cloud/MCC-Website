@@ -542,3 +542,36 @@ var MCC_TRANSLIT = (function () {
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (namePad && !$("lb-name-out").hidden) writeName($("lb-name-input").value); }, 250); });
 })();
+
+/* "Say it out loud": the sentence box and chips ask Ask MCC's inline phrase card
+   (<div data-ask-mcc="phrase">, mounted by js/ask-mcc.js). data-q is set too, so a phrase asked
+   before the widget script has loaded is answered once it mounts. */
+(function () {
+  var form = document.getElementById("lb-say-form"), input = document.getElementById("lb-say-input");
+  var desk = document.getElementById("lb-ask-desk"), chips = document.getElementById("lb-say-chips");
+  if (!form || !desk) return;
+  function ask(q) {
+    q = (q || "").trim();
+    if (!q) { input.focus(); return; }
+    desk.dataset.q = q;
+    desk.dispatchEvent(new CustomEvent("askmcc:ask", { detail: { q: q } }));
+    // On phones the card sits under the box: bring it into view.
+    if (window.matchMedia("(max-width:860px)").matches) desk.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  form.addEventListener("submit", function (e) { e.preventDefault(); ask(input.value); input.blur(); });
+  chips.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    input.value = b.textContent; ask(b.textContent);
+  });
+  // The gold highlighter under "Ask MCC" draws itself in once, when it comes into view.
+  var mark = document.getElementById("lb-ask-mark");
+  if (mark) {
+    if (!("IntersectionObserver" in window)) mark.classList.add("is-in");
+    else {
+      var io = new IntersectionObserver(function (es) {
+        if (es.some(function (x) { return x.isIntersecting; })) { mark.classList.add("is-in"); io.disconnect(); }
+      }, { threshold: 1 });
+      io.observe(mark);
+    }
+  }
+})();

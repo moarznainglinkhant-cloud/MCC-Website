@@ -286,7 +286,18 @@
   .lb-bar .btn{ padding:10px 18px; font-size:0.74rem; }
   .lb-bar .btn.is-ready{ box-shadow:0 0 0 3px rgba(192,138,46,.35); }
 
-  .lb-name{ background:var(--bg-sunk); padding-block:clamp(48px,7vw,88px); }
+  .lb-name{ background:var(--bg-sunk); padding-block:clamp(56px,7vw,96px); }
+  /* Same two columns as the alphabet above: words left, a pad on the right (an example until they write). */
+  .lb-name-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:center; }
+  .lb-name-out{ grid-column:1/-1; }
+  .lb-name-grid:has(.lb-name-out:not([hidden])) .lb-name-preview{ display:none; }
+  .lb-name-grid:has(.lb-name-out:not([hidden])) .lb-name-copy{ grid-column:1/-1; }
+  .lb-name-preview{ position:relative; aspect-ratio:16/10; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px;
+    display:flex; align-items:center; justify-content:center; overflow:hidden; }
+  .lb-name-preview .lb-pv-rule{ position:absolute; left:6%; right:6%; border-top:1px dashed var(--line); }
+  .lb-name-preview .lb-pv-ghost{ font-family:'Yinmar','Noto Sans Myanmar',serif; font-size:clamp(3.6rem,8vw,5.4rem); line-height:1; color:#E3D9C2; }
+  .lb-name-preview .lb-pv-cap{ position:absolute; bottom:14px; left:0; right:0; text-align:center; font-size:0.82rem; color:var(--ink-soft); }
+  .lb-name-preview .lb-pv-cap b{ color:var(--ink); font-weight:600; }
   .lb-name h2{ font-size:clamp(1.6rem,3.6vw,2.3rem); font-weight:600; margin-block:8px 10px; }
   .lb-name p.lb-lead{ max-width:54ch; }
   .lb-name form{ display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
@@ -301,17 +312,55 @@
   .lb-name-scroll{ overflow-x:auto; overflow-y:hidden; margin-top:6px; border-radius:20px; border:1px solid var(--line); background:var(--bg-raised); }
   .lb-name-scroll .lb-pad{ border:0; border-radius:0; background:none; width:max-content; min-width:100%; }
   .lb-name-scroll .lb-pad svg{ margin-inline:auto; }
-  .lb-reel{ padding-block:clamp(48px,7vw,88px); text-align:center; }
-  .lb-reel h2{ font-size:clamp(1.5rem,3.2vw,2.1rem); font-weight:600; line-height:1.25; max-width:24ch; margin:8px auto 26px; }
-  .lb-reel-embed{ max-width:540px; margin-inline:auto; }
-  .lb-reel-embed .instagram-media{ background:#fff; border:0; border-radius:3px; box-shadow:0 0 1px 0 rgba(0,0,0,.5),0 1px 10px 0 rgba(0,0,0,.15); margin:1px auto; max-width:540px; min-width:326px; padding:0; width:calc(100% - 2px); }
+  /* ---------- SAY IT OUT LOUD: Ask MCC's phrase card, set into the page ---------- */
+  .lb-say{ padding-block:clamp(60px,8vw,104px) clamp(56px,7vw,96px); }
+  .lb-say-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:center; }
+  .lb-say h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:10px 14px; }
+  .lb-say .lb-lead{ max-width:46ch; }
+  /* "Ask MCC" reads as its own tool: lantern + name, with a hand-drawn gold highlighter stroke drawn in once. */
+  .ask-mark{ position:relative; z-index:0; white-space:nowrap; font-weight:600; color:var(--ink); padding-inline:.14em .2em; }
+  .ask-mark::before{
+    content:""; position:absolute; z-index:-1; left:-.06em; right:-.08em; top:.18em; bottom:.02em;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E%3Cpath d='M5 11C44 6 118 8 196 5c2 7 1 17-1 26-58 3-128 5-191 6-2-9-2-18 1-26z' fill='%23C08A2E' fill-opacity='.26'/%3E%3Cpath d='M9 15c52-4 120-5 183-6 1 6 1 12 0 17-60 3-122 4-182 5-1-6-2-11-1-16z' fill='%23C08A2E' fill-opacity='.14'/%3E%3C/svg%3E") no-repeat center / 100% 100%;
+    clip-path:inset(0 100% 0 0); transition:clip-path .95s cubic-bezier(.65,0,.25,1) .3s;
+  }
+  .ask-mark.is-in::before{ clip-path:inset(0 0 0 0); }
+  .ask-mark svg{ width:.78em; height:1.04em; vertical-align:-.14em; margin-right:.22em; }
+  .lb-say-form{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(1.35rem,2.8vw,1.9rem); line-height:1.5; margin-top:26px; }
+  .lb-say-form input{ font:inherit; color:var(--red); background:transparent; border:0; border-bottom:2px solid var(--red); border-radius:0;
+    width:7.4em; max-width:100%; padding:0 .1em; outline:none; }
+  .lb-say-form input::placeholder{ color:rgba(174,54,40,.42); }
+  .lb-say-form input:focus-visible{ border-bottom-color:var(--gold); }
+  .lb-say-end{ white-space:nowrap; }
+  .lb-say-go{ width:42px; height:42px; border-radius:50%; border:0; padding:0; background:var(--red); color:#fff; cursor:pointer;
+    display:inline-grid; place-items:center; vertical-align:middle; margin-left:6px; transition:background .2s ease; }
+  .lb-say-go:hover{ background:var(--red-ink); }
+  .lb-say-go svg{ width:18px; height:18px; }
+  .lb-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .lb-chips button{ font:500 0.88rem 'Work Sans',sans-serif; padding:7px 14px; border-radius:999px; border:1px solid var(--line);
+    background:var(--bg-raised); color:var(--ink); cursor:pointer; transition:border-color .15s ease, color .15s ease; }
+  .lb-chips button:hover{ border-color:var(--red); color:var(--red-ink); }
+  .lb-ask-desk{ min-height:380px; }
+  .lb-ask-desk.is-mounted{ min-height:0; }
+  .lb-desk-fallback{ display:block; padding:24px; border:1px solid var(--line); border-radius:22px; background:var(--bg-raised); font-weight:600; color:var(--navy); }
+
+  /* The reel: a quiet last row under the phrase card. */
+  .lb-reel{ display:grid; grid-template-columns:minmax(0,340px) minmax(0,1fr); gap:clamp(24px,4vw,48px); align-items:center;
+    border-top:1px solid var(--line); margin-top:clamp(56px,7vw,88px); padding-top:clamp(40px,5vw,56px); }
+  .lb-reel h3{ font-size:clamp(1.3rem,2.4vw,1.6rem); font-weight:600; line-height:1.25; margin-top:8px; max-width:22ch; }
+  .lb-reel-embed{ max-width:340px; width:100%; }
+  .lb-reel-embed .instagram-media{ background:#fff; border:0; border-radius:14px; overflow:hidden; box-shadow:0 1px 0 rgba(28,36,64,.05),0 18px 40px -22px rgba(28,36,64,.28); margin:1px auto; max-width:340px; min-width:326px; padding:0; width:calc(100% - 2px); }
   .lb-reel-embed .lb-reel-link{ display:block; padding:28px 16px; font-weight:600; color:var(--navy); }
   .lb-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:12px; min-height:1.4em; }
   @media (max-width:860px){
-    .lb-grid{ grid-template-columns:1fr; }
+    .lb-grid, .lb-name-grid, .lb-say-grid{ grid-template-columns:1fr; }
+    .lb-name-preview{ width:100%; max-width:440px; }
+    .lb-reel{ grid-template-columns:1fr; }
+    .lb-reel-copy{ order:-1; }
+    .lb-reel-embed{ margin-inline:auto; }
     .lb-side{ position:static; order:-1; width:100%; max-width:440px; margin-inline:auto; }
   }
-  @media (prefers-reduced-motion: reduce){ .lb-pulse{ animation:none; } }
+  @media (prefers-reduced-motion: reduce){ .lb-pulse{ animation:none; } .ask-mark::before{ transition:none; clip-path:none; } }
 
   .btn{
     display:inline-flex; align-items:center; gap:8px;
@@ -591,13 +640,22 @@
   </section>
 
   <section class="lb-name" id="name">
-    <div class="wrap">
-      <span class="eyebrow">Your turn</span>
-      <h2>Now write your own name.</h2>
-      <form id="lb-name-form" autocomplete="off">
-        <input id="lb-name-input" type="text" maxlength="40" placeholder="Your name" aria-label="Your name" autocapitalize="words" spellcheck="false">
-        <button type="submit" class="btn">Write it</button>
-      </form>
+    <div class="wrap lb-name-grid">
+      <div class="lb-name-copy">
+        <span class="eyebrow">Your turn</span>
+        <h2>Now write your own name.</h2>
+        <p class="lb-lead">Type it in English. We'll spell it the Burmese way, then you write it.</p>
+        <form id="lb-name-form" autocomplete="off">
+          <input id="lb-name-input" type="text" maxlength="40" placeholder="Your name" aria-label="Your name" autocapitalize="words" spellcheck="false">
+          <button type="submit" class="btn">Write it</button>
+        </form>
+        <p class="lb-note" id="lb-name-note"></p>
+      </div>
+      <div class="lb-name-preview" aria-hidden="true">
+        <span class="lb-pv-rule" style="top:28%"></span><span class="lb-pv-rule" style="top:70%"></span>
+        <span class="lb-pv-ghost" lang="my">ဆာရာ</span>
+        <span class="lb-pv-cap">e.g. <b>Sarah</b> → <span lang="my">ဆာရာ</span></span>
+      </div>
       <div class="lb-name-out" id="lb-name-out" hidden>
         <div class="lb-name-line">
           <div class="lb-name-mm" id="lb-name-mm" lang="my"></div>
@@ -613,18 +671,40 @@
           </div>
         </div>
       </div>
-      <p class="lb-note" id="lb-name-note"></p>
     </div>
   </section>
 
-  <section class="lb-reel" id="reel">
+  <section class="lb-say" id="say">
     <div class="wrap">
-      <span class="eyebrow">Didn't get it all?</span>
-      <h2>Don't worry, even our MCC'ers can't get it all.</h2>
-      <div class="lb-reel-embed">
-        <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DeJQNt7hyZm/" data-instgrm-version="14">
-          <a class="lb-reel-link" href="https://www.instagram.com/reel/DeJQNt7hyZm/" target="_blank" rel="noopener">Watch the reel on Instagram →</a>
-        </blockquote>
+      <div class="lb-say-grid">
+        <div>
+          <span class="eyebrow">Say it out loud</span>
+          <h2>Now hear how it sounds.</h2>
+          <p class="lb-lead"><span class="ask-mark" id="lb-ask-mark"><svg viewBox="14 2 36 60" aria-hidden="true"><line x1="32" y1="2" x2="32" y2="14" stroke="#C08A2E" stroke-width="3"/><rect x="24" y="13" width="16" height="4" rx="1" fill="#C08A2E"/><ellipse cx="32" cy="33" rx="15" ry="16" fill="#AE3628"/><path d="M32 17v32M24 19c-4 9-4 19 0 28M40 19c4 9 4 19 0 28" stroke="#7A2418" stroke-width="1.6" fill="none"/><rect x="24" y="48" width="16" height="4" rx="1" fill="#C08A2E"/><path d="M29 52l-2 8M32 52v9M35 52l2 8" stroke="#C08A2E" stroke-width="2"/></svg>Ask MCC</span>, the club's own assistant, turns a short phrase into Burmese, shows how it sounds syllable by syllable, and reads it aloud.</p>
+          <form class="lb-say-form" id="lb-say-form" autocomplete="off">
+            How do I say <input id="lb-say-input" type="text" maxlength="60" placeholder="thank you" aria-label="A word or phrase in English" enterkeyhint="go" spellcheck="false"> <span class="lb-say-end">in Burmese?<button type="submit" class="lb-say-go" aria-label="Ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
+          </form>
+          <div class="lb-chips" id="lb-say-chips">
+            <button type="button">thank you</button>
+            <button type="button">how are you?</button>
+            <button type="button">have you eaten?</button>
+            <button type="button">delicious</button>
+            <button type="button">good luck</button>
+          </div>
+        </div>
+        <div class="lb-ask-desk" id="lb-ask-desk" data-ask-mcc="phrase"><a class="lb-desk-fallback" href="ask.html">Open Ask MCC →</a></div>
+      </div>
+
+      <div class="lb-reel" id="reel">
+        <div class="lb-reel-embed">
+          <blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DeJQNt7hyZm/" data-instgrm-version="14">
+            <a class="lb-reel-link" href="https://www.instagram.com/reel/DeJQNt7hyZm/" target="_blank" rel="noopener">Watch the reel on Instagram →</a>
+          </blockquote>
+        </div>
+        <div class="lb-reel-copy">
+          <span class="eyebrow">Didn't get it all?</span>
+          <h3>Don't worry, even our MCC'ers can't get it all.</h3>
+        </div>
       </div>
     </div>
   </section>
