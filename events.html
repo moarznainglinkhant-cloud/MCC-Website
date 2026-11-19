@@ -43,7 +43,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Caveat:wght@700&display=swap">
 <style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
 <style>
 
@@ -275,6 +275,49 @@
     .event-card{ grid-template-columns:1fr; }
     .event-visual{ min-height:0; aspect-ratio: 4 / 3; }
   }
+
+  /* ---------- Empty Next Event: wall calendar on a navy wall (js/site.js renderWallCalendar) ---------- */
+  .event-visual.is-cal{ display:block;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)'/%3E%3C/svg%3E"),
+      linear-gradient(180deg,#1A2140,#0F1326); }
+  .wcal-fit{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) scale(var(--k,1)); }
+  .wcal-hang{ position:relative; width:420px; padding-top:38px; transform-origin:50% 5px; }
+  .wcal-sway{ transform-origin:50% -33px; }
+  .wcal-nail{ position:absolute; left:50%; top:0; width:11px; height:11px; margin-left:-5.5px; border-radius:50%; z-index:3;
+    background:radial-gradient(circle at 35% 30%, #F2EEE6, #8E8A82 55%, #4D4A45); box-shadow:1px 2px 2px rgba(0,0,0,.4); }
+  .wcal-wire{ position:absolute; left:0; top:4px; width:100%; height:36px; z-index:2; overflow:visible; }
+  .wcal-wire path{ fill:none; stroke:#A7A194; stroke-width:1.6; }
+  .wcal{ position:relative; filter:drop-shadow(0 16px 22px rgba(0,0,0,.5)) drop-shadow(0 2px 4px rgba(0,0,0,.4)); }
+  .wcal-bind{ position:relative; height:20px; background:linear-gradient(180deg,#BE4434,#AE3628 60%,#9A2F23); border-radius:10px 10px 0 0; }
+  .wcal-bind::after{ content:""; position:absolute; left:50%; top:6px; width:14px; height:7px; margin-left:-7px; border-radius:4px; background:rgba(0,0,0,.5); }
+  .wcal-page{ display:grid; grid-template-columns:39% 1fr; gap:14px; height:298px; padding:14px 14px 12px; background:var(--bg-raised); border-radius:0 0 12px 12px; }
+  .wcal-art{ display:flex; flex-direction:column; min-height:0; margin:0; }
+  .wcal-art .frame{ flex:1; min-height:0; overflow:hidden; margin:-12px -12px -6px -12px;
+    /* soft edges on all four sides (like Word's "Soft Edge Rectangle") */
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 14px,#000 calc(100% - 14px),transparent),linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+    -webkit-mask-composite:source-in;
+    mask-image:linear-gradient(to right,transparent,#000 14px,#000 calc(100% - 14px),transparent),linear-gradient(to bottom,transparent,#000 14px,#000 calc(100% - 14px),transparent);
+    mask-composite:intersect; }
+  #js-event-visual .wcal-art img{ width:100%; height:100%; object-fit:cover; display:block; view-transition-name:none; transition:transform 6s cubic-bezier(.2,.7,.3,1); }
+  .wcal-hang:hover .wcal-art img{ transform:scale(1.045); }
+  .wcal-art figcaption{ font-family:'Fraunces',serif; font-style:italic; font-size:.66rem; color:var(--ink-soft); text-align:left; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .wcal-side{ display:flex; flex-direction:column; min-width:0; }
+  .wcal-head{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 0 8px; }
+  .wcal-m{ position:relative; top:9px; font:700 .95rem 'Work Sans',sans-serif; letter-spacing:.24em; text-transform:uppercase; line-height:1; color:var(--red); }
+  .wcal-y{ font-family:'Fraunces',serif; font-weight:700; font-size:1.35rem; line-height:1; color:var(--ink); }
+  .wcal-grid{ display:grid; grid-template-columns:repeat(7,1fr); text-align:center; }
+  .wcal-grid .h{ font:700 .74rem 'Work Sans',sans-serif; color:var(--ink); padding:2px 0 5px; margin-bottom:3px; border-bottom:1.5px solid var(--ink); }
+  .wcal-grid .d{ position:relative; font:500 .9rem 'Work Sans',sans-serif; color:var(--ink); padding:4px 0; line-height:1.25; }
+  .wcal-grid .d.past{ color:rgba(28,36,64,.3); }
+  .wcal-grid .d.today{ font-weight:700; color:var(--red-ink); }
+  .wcal-grid .d.today::after{ content:""; position:absolute; left:50%; bottom:0; width:4px; height:4px; margin-left:-2px; border-radius:50%; background:var(--red); }
+  .wcal-note{ margin-top:16px; text-align:center; font-family:'Caveat',cursive; font-weight:700; font-size:1.4rem; line-height:1.1; white-space:nowrap; color:var(--red-ink); }
+  .wcal-note.myanmar{ font-family:'Noto Sans Myanmar',sans-serif; font-size:.9rem; font-weight:600; line-height:1.8; }
+  .wcal-ring{ display:inline-block; position:relative; }
+  .wcal-txt{ display:inline-block; }
+  .wcal-ring svg{ position:absolute; inset:-7px -13px; width:calc(100% + 26px); height:calc(100% + 14px); overflow:visible; }
+  .wcal-ring path{ fill:none; stroke:var(--red); stroke-width:1.6; stroke-linecap:round; opacity:.85; }
 
   /* Next Event card: gentle 3D tilt on hover, same as the homepage (js/site.js initEventTilt) */
   #next-event .event-card.tilt{ transform-style:preserve-3d; will-change:transform; transition:box-shadow .5s ease; }
