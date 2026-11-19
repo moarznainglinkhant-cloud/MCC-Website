@@ -662,7 +662,6 @@ function renderFeaturedEvent(ev) {
     // wherever it actually is.
     const pastHref = document.getElementById("js-past-gallery") ? "#past-events" : "events.html#past-events";
     body.innerHTML = `
-      <span class="event-tag ${mmClass}">${t("stay_tuned_tag")}</span>
       <h3 class="${mmClass}">${t("no_event_h3")}</h3>
       <p class="desc ${mmClass}">${t("no_event_p")}</p>
       <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>`;
