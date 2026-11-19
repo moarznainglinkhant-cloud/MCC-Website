@@ -686,11 +686,12 @@ function renderFeaturedEvent(ev) {
   `;
 }
 
-/* ---------- Empty Next Event: a wall calendar ----------
-   When nothing is coming up, the left half of the Next Event card shows a calendar hanging on a
-   navy wall: this month (Toronto time), past days greyed out, today in red, and our best event as
-   the calendar's picture. It swings in gently when it comes into view, then "next event coming
-   soon" is written and circled. Scrolling past nudges it; a mouse passing over sways it a little.
+/* ---------- Empty Next Event: a calendar ----------
+   When nothing is coming up, the left half of the Next Event card becomes a calendar page (red
+   strip across the top): this month (Toronto time), past days greyed out, today in red, and one of
+   our best events as the picture. When it comes into view, "next event coming soon" is written and
+   circled. The page keeps its designed layout (PAGE_W × PAGE_H at scale 1) and is scaled to the
+   panel's height; its width stretches to fill the panel (kept between WCAL_MIN_W and WCAL_MAX_W).
    The picture is a slow slideshow of these events (cross-fades every WCAL_EVERY ms, starting at a
    random one; pauses when the card is off screen). Edit the list here — pos = which part of the
    poster shows in the frame: */
@@ -705,8 +706,9 @@ const WCAL_ART = [
   { photo: "images/events/back-to-school-picnic.jpg", name: "Back to School Picnic", pos: "center 40%" },
 ];
 const WCAL_EVERY = 6000;
+const WCAL_BIND = 26, WCAL_PAGE_H = 298, WCAL_MIN_W = 360, WCAL_MAX_W = 540;   // design px at scale 1
 
-const WCAL = { el: null, ro: null, io: null, a: 0, v: 0, raf: 0, last: 0, lastY: 0, i: 0, timer: 0, seen: false };
+const WCAL = { el: null, ro: null, io: null, i: 0, timer: 0, seen: false };
 
 function wallCalendarHTML() {
   const p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Toronto", year: "numeric", month: "numeric", day: "numeric" })
@@ -748,14 +750,20 @@ function renderWallCalendar(visual) {
   visual.classList.add("is-cal");
   wallCalendarText(visual);
   WCAL.el = visual;
-  const fit = visual.querySelector(".wcal-fit"), hang = visual.querySelector(".wcal-hang"), sway = visual.querySelector(".wcal-sway");
+  const fit = visual.querySelector(".wcal-fit"), hang = visual.querySelector(".wcal-hang");
   const txt = visual.querySelector(".wcal-txt"), ring = visual.querySelector(".wcal-ring path");
 
-  // scale the calendar to fit the panel
+  // fill the panel: scale to its height, stretch the width (the red strip always spans the panel)
   if (WCAL.ro) WCAL.ro.disconnect();
   WCAL.ro = new ResizeObserver(() => {
-    const k = Math.min(1, (visual.clientHeight * 0.95) / hang.offsetHeight, (visual.clientWidth * 0.95) / hang.offsetWidth);
-    if (k > 0) fit.style.setProperty("--k", k.toFixed(3));
+    const W = visual.clientWidth, H = visual.clientHeight;
+    if (!W || !H) return;
+    let k = H / (WCAL_BIND + WCAL_PAGE_H), w = W / k;
+    if (w < WCAL_MIN_W) { w = WCAL_MIN_W; k = W / w; }
+    else if (w > WCAL_MAX_W) w = WCAL_MAX_W;
+    hang.style.width = w.toFixed(1) + "px";
+    fit.style.setProperty("--k", k.toFixed(4));
+    visual.style.setProperty("--bh", (WCAL_BIND * k).toFixed(2) + "px");
   });
   WCAL.ro.observe(visual);
 
@@ -772,21 +780,10 @@ function renderWallCalendar(visual) {
   WCAL.io = new IntersectionObserver(es => {
     if (!es[0].isIntersecting) return;
     WCAL.io.disconnect();
-    hang.animate([{ transform: "rotate(2deg)" }, { transform: "rotate(-1.1deg)" }, { transform: "rotate(.5deg)" }, { transform: "rotate(-.2deg)" }, { transform: "rotate(0deg)" }],
-      { duration: 1500, easing: "cubic-bezier(.37,0,.63,1)", fill: "both" });
-    txt.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 1500, delay: 900, easing: "steps(22, end)", fill: "forwards" });
-    ring.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 850, delay: 2450, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" });
+    txt.animate([{ clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0 0 0)" }], { duration: 1500, delay: 500, easing: "steps(22, end)", fill: "forwards" });
+    ring.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 850, delay: 2050, easing: "cubic-bezier(.45,0,.55,1)", fill: "forwards" });
   }, { threshold: 0.45 });
   WCAL.io.observe(visual);
-
-  // a mouse passing over sways it a little
-  let nudging = false;
-  hang.addEventListener("pointerenter", e => {
-    if (e.pointerType !== "mouse" || nudging) return;
-    nudging = true;
-    sway.animate([{ transform: "rotate(0)" }, { transform: "rotate(.8deg)" }, { transform: "rotate(-.6deg)" }, { transform: "rotate(.2deg)" }, { transform: "rotate(0)" }],
-      { duration: 1300, easing: "ease-in-out", composite: "add" }).onfinish = () => { nudging = false; };
-  });
 }
 
 // Cross-fade the calendar's picture to the next event every WCAL_EVERY ms while the card is on screen.
@@ -815,32 +812,12 @@ function removeWallCalendar(visual) {
   if (!visual.classList.contains("is-cal")) return;
   clearInterval(WCAL.timer);
   visual.classList.remove("is-cal");
+  visual.style.removeProperty("--bh");
   if (WCAL.ro) WCAL.ro.disconnect();
   if (WCAL.io) WCAL.io.disconnect();
   WCAL.el = null;
 }
 
-// Scrolling past makes it sway, then settle (a small spring).
-function wcalSwayFrame(now) {
-  WCAL.raf = 0;
-  const sway = WCAL.el && WCAL.el.querySelector(".wcal-sway");
-  if (!sway) { WCAL.a = WCAL.v = 0; WCAL.last = 0; return; }
-  const dt = WCAL.last ? Math.min(0.04, (now - WCAL.last) / 1000) : 0.016;
-  WCAL.last = now;
-  WCAL.v += (-30 * WCAL.a - 3.4 * WCAL.v) * dt;
-  WCAL.a += WCAL.v * dt;
-  if (Math.abs(WCAL.a) + Math.abs(WCAL.v) > 0.01) { sway.style.rotate = WCAL.a.toFixed(3) + "deg"; WCAL.raf = requestAnimationFrame(wcalSwayFrame); }
-  else { sway.style.rotate = ""; WCAL.a = WCAL.v = 0; WCAL.last = 0; }
-}
-window.addEventListener("scroll", () => {
-  const dy = window.scrollY - WCAL.lastY;
-  WCAL.lastY = window.scrollY;
-  if (!WCAL.el || (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
-  const r = WCAL.el.getBoundingClientRect();
-  if (r.bottom < 0 || r.top > window.innerHeight) return;
-  WCAL.v += Math.max(-10, Math.min(10, dy * 0.22));
-  if (!WCAL.raf) WCAL.raf = requestAnimationFrame(wcalSwayFrame);
-}, { passive: true });
 
 /* ---------- REGISTER BUTTONS ---------- */
 // In the Events sheet's "link" column:
