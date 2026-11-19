@@ -4,7 +4,7 @@ This folder is the whole website. It's plain HTML/CSS/JS — no build step,
 no framework, nothing to install. You can open `index.html` directly in a
 browser to preview it, or host the folder as-is.
 
-**Credits:** Designed & built by Naing Lin Khant (Moarz).
+**Credits:** Designed & engineered from scratch by Naing Lin Khant (Moarz).
 
 ```
 index.html              ← homepage
