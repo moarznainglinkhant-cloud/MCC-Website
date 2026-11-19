@@ -346,7 +346,7 @@ var MCC_TRANSLIT = (function () {
     function write() {
       stop(); clearDemo(); if (!hit) buildHit(); clearMine();
       mode = "write"; host.classList.add("is-writing");
-      say("Your turn. Write it yourself: <b style=\"color:" + GOOD + "\">green</b> is inside the letter, <b style=\"color:" + BAD + "\">red</b> is outside.");
+      say("");
       follow(L[0][0][0]);
     }
     function local(e) { var m = svg.getScreenCTM().inverse(); return [m.a * e.clientX + m.c * e.clientY + m.e, m.b * e.clientX + m.d * e.clientY + m.f]; }
@@ -514,7 +514,6 @@ var MCC_TRANSLIT = (function () {
     out.hidden = false;
     $("lb-name-mm").textContent = words.join(" ");
     nameText = words.join(" ");
-    $("lb-name-hear").hidden = !/^[\u1000-\u109f ]+$/.test(nameText) || nameText.length > 80;
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
@@ -529,14 +528,6 @@ var MCC_TRANSLIT = (function () {
   }
   $("lb-name-form").addEventListener("submit", function (e) { e.preventDefault(); writeName($("lb-name-input").value); });
   var nameText = "";
-  $("lb-name-hear").innerHTML = SPEAKER;
-  $("lb-name-hear").addEventListener("click", function () {
-    var btn = this, text = nameText;
-    if (!text || btn.classList.contains("is-busy")) return;
-    btn.classList.add("is-busy");
-    speakUrl(text).then(function (url) { btn.classList.remove("is-busy"); if (text === nameText) playUrl(url, btn); })
-      .catch(function () { btn.classList.remove("is-busy"); $("lb-name-note").textContent = "Sorry, the voice isn't available right now. Please try again later."; });
-  });
   $("lb-name-watch").addEventListener("click", function () { if (namePad) namePad.watch(); });
   $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;
@@ -563,15 +554,4 @@ var MCC_TRANSLIT = (function () {
     var b = e.target.closest("button"); if (!b) return;
     input.value = b.textContent; ask(b.textContent);
   });
-  // The gold highlighter under "Ask MCC" draws itself in once, when it comes into view.
-  var mark = document.getElementById("lb-ask-mark");
-  if (mark) {
-    if (!("IntersectionObserver" in window)) mark.classList.add("is-in");
-    else {
-      var io = new IntersectionObserver(function (es) {
-        if (es.some(function (x) { return x.isIntersecting; })) { mark.classList.add("is-in"); io.disconnect(); }
-      }, { threshold: 1 });
-      io.observe(mark);
-    }
-  }
 })();
