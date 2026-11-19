@@ -390,6 +390,36 @@ var MCC_TRANSLIT = (function () {
     return { watch: watch, write: write, clear: function () { if (mode === "watch") stop(); write(); }, kill: function () { dead = true; stop(); clearTimeout(dirty); } };
   }
 
+  /* ---------- hear it (Azure's Burmese voice, Nilar) ----------
+     Letters: audio/learn/<code point>.mp3, made once by tools/tts/letters.py (sound, then its name).
+     Names: the site's Supabase function `speak` makes the clip once and stores it (supabase/speech.sql).
+     A button only shows when its clip can play, so there's never a broken one. */
+  var SPEAK = { url: "https://teipvhyqtjwhjnqvfngi.supabase.co/functions/v1/speak", key: "sb_publishable_UmbrrMl_z3mDlBXdYe9Exg_ExHWMAK9" };
+  var SPEAKER = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>';
+  var player = new Audio(), playingBtn = null, spoken = {};
+  player.preload = "auto";
+  function stopPlaying() { if (playingBtn) playingBtn.classList.remove("is-playing"); playingBtn = null; }
+  player.addEventListener("ended", stopPlaying);
+  player.addEventListener("pause", stopPlaying);
+  function playUrl(url, btn) {
+    player.pause(); player.src = url; player.currentTime = 0;
+    var p = player.play();
+    playingBtn = btn; btn.classList.add("is-playing");
+    if (p && p.catch) p.catch(stopPlaying);
+  }
+  function speakUrl(text) {                  // -> Promise of a playable URL (cached for this visit)
+    if (spoken[text]) return spoken[text];
+    spoken[text] = fetch(SPEAK.url, { method: "POST", headers: { "Content-Type": "application/json", apikey: SPEAK.key }, body: JSON.stringify({ text: text }) })
+      .then(function (r) {
+        var type = r.headers.get("content-type") || "";
+        if (r.ok && type.indexOf("audio") === 0) return r.blob().then(function (b) { return URL.createObjectURL(b); });
+        return r.json().then(function (j) { if (!r.ok || !j.url) throw new Error(j.error || "no audio"); return j.url; });
+      });
+    spoken[text].catch(function () { delete spoken[text]; });
+    return spoken[text];
+  }
+  function letterClip(ch) { return "audio/learn/" + ch.charCodeAt(0).toString(16).padStart(4, "0") + ".mp3"; }
+
   /* ---------- alphabet chart + letter pad ---------- */
   var learned = {};
   try { (JSON.parse(localStorage.getItem("mcc_learned") || "[]") || []).forEach(function (c) { learned[c] = 1; }); } catch (e) {}
@@ -414,6 +444,14 @@ var MCC_TRANSLIT = (function () {
     current = i; var l = LETTERS[i];
     if (pad) pad.kill();
     $("lb-who").innerHTML = '<div class="lb-g" lang="my" role="img" aria-label="' + l[0] + '">' + letterSvg(l[0]) + '</div><div><h3>' + l[1] + '</h3><small>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></small></div>";
+    var hear = document.createElement("button"), clip = letterClip(l[0]);
+    hear.type = "button"; hear.className = "lb-hear"; hear.hidden = true; hear.innerHTML = SPEAKER;
+    hear.setAttribute("aria-label", "Hear " + l[1] + ", called " + l[2]);
+    hear.addEventListener("click", function () { playUrl(clip, hear); });
+    $("lb-who").appendChild(hear);
+    var probe = new Audio(); probe.preload = "metadata";     // show the button only if the clip exists
+    probe.addEventListener("loadedmetadata", function () { if (current === i) hear.hidden = false; }, { once: true });
+    probe.src = clip;
     var strokes = placed(D.K[l[0]], 0, 0), b = bounds(strokes), side = Math.max(86, Math.max(b.x1 - b.x0, b.y1 - b.y0) + 32);
     var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, D.BOT || 0)) / 2 - side / 2, w: side, h: side };
     pad = Pad($("lb-pad"), strokes, view, {
@@ -475,6 +513,8 @@ var MCC_TRANSLIT = (function () {
     if (!lay.strokes.length) { out.hidden = true; note.textContent = "Sorry, we can't draw that one yet."; return; }
     out.hidden = false;
     $("lb-name-mm").textContent = words.join(" ");
+    nameText = words.join(" ");
+    $("lb-name-hear").hidden = !/^[\u1000-\u109f ]+$/.test(nameText) || nameText.length > 80;
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
@@ -488,6 +528,15 @@ var MCC_TRANSLIT = (function () {
       : "Some marks in that spelling aren't in our stroke set yet, so they were left out.";
   }
   $("lb-name-form").addEventListener("submit", function (e) { e.preventDefault(); writeName($("lb-name-input").value); });
+  var nameText = "";
+  $("lb-name-hear").innerHTML = SPEAKER;
+  $("lb-name-hear").addEventListener("click", function () {
+    var btn = this, text = nameText;
+    if (!text || btn.classList.contains("is-busy")) return;
+    btn.classList.add("is-busy");
+    speakUrl(text).then(function (url) { btn.classList.remove("is-busy"); if (text === nameText) playUrl(url, btn); })
+      .catch(function () { btn.classList.remove("is-busy"); $("lb-name-note").textContent = "Sorry, the voice isn't available right now. Please try again later."; });
+  });
   $("lb-name-watch").addEventListener("click", function () { if (namePad) namePad.watch(); });
   $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;

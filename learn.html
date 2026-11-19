@@ -247,6 +247,17 @@
   .lb-who .lb-g{ font-size:2.5rem; line-height:1.5; }
   .lb-who h3{ font-size:1.4rem; font-weight:600; line-height:1.2; }
   .lb-who small{ font-size:0.8rem; color:var(--ink-soft); }
+  /* Hear it: a round speaker (Azure's Burmese voice). Hidden until its clip is known to exist. */
+  .lb-hear{ margin-left:auto; flex:none; width:46px; height:46px; border-radius:50%; border:0; padding:0; cursor:pointer;
+    background:var(--red); color:#fff; display:grid; place-items:center; transition:background .2s ease, box-shadow .2s ease; }
+  .lb-hear[hidden]{ display:none; }
+  .lb-hear svg{ width:20px; height:20px; }
+  .lb-hear:hover{ background:var(--red-ink); }
+  .lb-hear:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+  .lb-hear.is-playing{ box-shadow:0 0 0 6px rgba(174,54,40,.18); }
+  .lb-hear.is-busy{ opacity:.6; cursor:progress; }
+  .lb-name-line{ display:flex; align-items:center; gap:14px; }
+  .lb-name-line .lb-hear{ margin-left:0; }
 
   .lb-pad{ position:relative; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .lb-pad.square{ aspect-ratio:1; }
@@ -588,7 +599,10 @@
         <button type="submit" class="btn">Write it</button>
       </form>
       <div class="lb-name-out" id="lb-name-out" hidden>
-        <div class="lb-name-mm" id="lb-name-mm" lang="my"></div>
+        <div class="lb-name-line">
+          <div class="lb-name-mm" id="lb-name-mm" lang="my"></div>
+          <button type="button" class="lb-hear" id="lb-name-hear" aria-label="Hear your name in Burmese" hidden></button>
+        </div>
         <div class="lb-name-scroll" id="lb-name-scroll"><div class="lb-pad" id="lb-name-pad"></div></div>
         <div class="lb-bar">
           <div class="lb-status" id="lb-name-status" aria-live="polite"></div>
