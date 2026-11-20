@@ -2733,69 +2733,193 @@ function inkOwnMask(mask, strokes, i, area, W) {
 window.MCCInkOwnMask = inkOwnMask;
 
 const BENTO_LEARN = [["က","M14.9 1.7Q10.6 -2.1 8.1 -7.8Q5.5 -13.5 5.5 -20.2Q5.5 -27.2 8.6 -32.8Q11.7 -38.3 17 -41.5Q22.3 -44.6 28.9 -44.6Q35.4 -44.6 40.8 -41.5Q46.1 -38.3 49.2 -32.8Q52.3 -27.2 52.3 -20.2Q52.3 -13.5 49.8 -7.8Q47.2 -2.1 42.9 1.7L39.2 -3.7Q42.2 -6.4 44 -10.7Q45.8 -15 45.8 -20.2Q45.8 -25.4 43.6 -29.4Q41.3 -33.5 37.5 -35.8Q33.7 -38.2 28.9 -38.2Q24.1 -38.2 20.3 -35.8Q16.5 -33.5 14.3 -29.4Q12 -25.4 12 -20.2Q12 -15 13.8 -10.7Q15.5 -6.4 18.7 -3.7ZM69.1 1.7Q65.7 1.7 62.2 0.6L64.8 -5.6Q67.2 -4.9 69.3 -4.9Q73.8 -4.9 77.6 -7.1Q81.3 -9.4 83.6 -13.2Q85.9 -17 85.9 -21.7Q85.9 -27 83.3 -30.7Q80.7 -34.5 76.8 -36.5Q72.9 -38.5 69.1 -38.5Q64.8 -38.5 61 -36.3Q57.1 -34.2 54.7 -30.2Q52.2 -26.3 52.2 -21L47.9 -30.5Q49.8 -35.3 53.2 -38.5Q56.5 -41.8 60.7 -43.4Q64.8 -45 69.1 -45Q73.2 -45 77.3 -43.5Q81.4 -41.9 84.9 -38.9Q88.3 -35.9 90.3 -31.6Q92.4 -27.2 92.4 -21.7Q92.4 -15.2 89.2 -9.9Q86 -4.6 80.8 -1.5Q75.5 1.7 69.1 1.7Z","16.6,0.1 14.5,-3.3 13.3,-5 12.2,-6.7 11.2,-8.5 10.4,-10.3 9.7,-12.2 9.2,-14.2 8.8,-16.2 8.5,-18.2 8.4,-20.3 8.5,-22.3 8.8,-24.3 9.2,-26.3 9.9,-28.2 10.7,-30.1 11.8,-31.8 13,-33.5 14.3,-35 15.8,-36.4 17.4,-37.6 19.1,-38.7 20.9,-39.7 22.8,-40.4 24.8,-41 26.8,-41.4 28.8,-41.5 30.9,-41.4 32.9,-41.1 34.8,-40.5 36.7,-39.8 38.5,-38.9 40.3,-37.8 41.9,-36.6 43.4,-35.2 44.8,-33.7 46,-32.1 47.1,-30.4 47.9,-28.5 48.6,-26.6 49,-24.6 49.2,-22.6 49.3,-20.5 49.1,-18.5 48.8,-16.5 48.4,-14.5 47.8,-12.6 47.1,-10.7 46.3,-8.8 45.3,-7 44.3,-5.2 43.1,-3.6 41,-0.2","46.2,-25.3 50,-30.5 51,-32.2 52.2,-33.9 53.6,-35.4 55.1,-36.8 56.7,-38 58.4,-39.1 60.3,-40 62.2,-40.7 64.1,-41.2 66.1,-41.6 68.2,-41.7 70.2,-41.7 72.2,-41.4 74.2,-40.9 76.1,-40.3 78,-39.5 79.7,-38.5 81.4,-37.3 83,-36 84.4,-34.5 85.6,-32.9 86.6,-31.1 87.5,-29.3 88.1,-27.3 88.5,-25.4 88.7,-23.3 88.7,-21.3 88.6,-19.3 88.2,-17.3 87.7,-15.3 87,-13.4 86.1,-11.6 85,-9.8 83.8,-8.2 82.4,-6.8 80.8,-5.4 79.1,-4.3 77.3,-3.4 75.4,-2.6 73.4,-2.1 71.4,-1.9 69.4,-1.9 67.4,-2.1 62.4,-2.1"],["မ","M28.7 1.7Q22.3 1.7 16.9 -1.6Q11.6 -4.8 8.5 -10.4Q5.4 -16 5.4 -23.3Q5.4 -31.2 7.9 -36.2Q10.4 -41.2 14.7 -44.8L18.6 -39.5Q15.3 -36.3 13.6 -32.5Q11.9 -28.6 11.9 -23.6Q11.9 -20 13.2 -16.8Q16.7 -20.1 20.8 -21.4Q24.9 -22.8 28.7 -22.8Q32.6 -22.8 36.7 -21.5Q40.7 -20.2 44.2 -16.8Q45.5 -19.7 45.5 -23.6Q45.5 -28.6 43.8 -32.4Q42 -36.2 39 -39.5L42.8 -44.8Q47.2 -41.2 49.6 -36.2Q52.1 -31.2 52.1 -23.3Q52.1 -16 48.9 -10.4Q45.8 -4.8 40.5 -1.6Q35.3 1.7 28.7 1.7ZM28.7 -4.9Q36.7 -4.9 41.7 -11.2Q38.3 -14.5 34.8 -15.6Q31.3 -16.8 28.7 -16.8Q26.3 -16.8 22.8 -15.6Q19.3 -14.5 15.9 -11.1Q18.1 -8.2 21.4 -6.5Q24.8 -4.9 28.7 -4.9Z","15.1,-45.2 14.5,-43.3 14.2,-41.4 13.5,-39.5 12.6,-37.7 11.6,-36 10.6,-34.2 9.8,-32.4 9.2,-30.5 8.8,-28.5 8.5,-26.5 8.5,-24.5 8.6,-22.5 8.9,-20.5 9.4,-18.6 10,-16.6 10.6,-14.7 11.4,-12.9 12.3,-11.1 13.3,-9.4 14.6,-7.8 16,-6.4 17.6,-5.2 19.4,-4.2 21.2,-3.4 23.1,-2.7 25.1,-2.3 27.1,-2 29.1,-1.9 31.1,-2 33,-2.3 35,-2.8 36.9,-3.5 38.6,-4.5 40.3,-5.6 41.7,-7 43,-8.5 44,-10.3 44.8,-12.1","42,-44.7 42.9,-42.4 43.6,-40.5 44.4,-38.7 45.2,-36.8 46,-35 46.8,-33.1 47.4,-31.2 48,-29.2 48.4,-27.2 48.6,-25.2 48.7,-23.2 48.5,-21.2 48.1,-19.2 47.5,-17.3 46.6,-15.5 45.5,-13.8","7.8,-10.6 12.4,-13.6 14,-14.8 15.7,-15.9 17.5,-16.9 19.4,-17.8 21.3,-18.5 23.3,-19 25.3,-19.4 27.3,-19.6 29.4,-19.7 31.4,-19.5 33.4,-19.2 35.4,-18.7 37.4,-18 39.3,-17.2 41.1,-16.3 42.8,-15.2 44.5,-14 49.6,-10.9"],["ဝ","M28.3 1.7Q22.2 1.7 16.9 -1.5Q11.7 -4.7 8.5 -10Q5.4 -15.2 5.4 -21.7Q5.4 -28 8.4 -33.3Q11.5 -38.7 16.7 -41.8Q22 -45 28.2 -45Q34.6 -45 39.7 -41.8Q44.9 -38.7 48 -33.3Q51.2 -28 51.2 -21.7Q51.2 -15.2 48 -10Q44.9 -4.7 39.7 -1.5Q34.6 1.7 28.3 1.7ZM28.2 -4.9Q32.7 -4.9 36.4 -7.2Q40.1 -9.5 42.4 -13.3Q44.6 -17.1 44.6 -21.7Q44.6 -26.3 42.4 -30.1Q40.1 -33.9 36.4 -36.2Q32.7 -38.5 28.3 -38.5Q23.6 -38.5 19.9 -36.2Q16.2 -33.9 14.1 -30.1Q11.9 -26.3 11.9 -21.7Q11.9 -17.1 14.1 -13.3Q16.2 -9.5 19.9 -7.2Q23.6 -4.9 28.2 -4.9Z","18.2,-4.4 16.5,-5.5 14.9,-6.8 13.6,-8.3 12.3,-9.9 11.3,-11.7 10.4,-13.5 9.7,-15.4 9.2,-17.4 8.8,-19.4 8.6,-21.4 8.7,-23.4 8.9,-25.5 9.3,-27.4 9.9,-29.4 10.7,-31.2 11.7,-33 13,-34.6 14.4,-36.1 16,-37.4 17.6,-38.5 19.4,-39.5 21.3,-40.3 23.2,-40.9 25.2,-41.3 27.2,-41.6 29.3,-41.6 31.3,-41.5 33.3,-41.1 35.2,-40.5 37.1,-39.7 38.8,-38.6 40.4,-37.3 41.9,-35.9 43.2,-34.4 44.3,-32.7 45.3,-30.9 46.1,-29.1 46.8,-27.2 47.2,-25.2 47.5,-23.2 47.6,-21.1 47.4,-19.1 47.1,-17.1 46.6,-15.1 45.8,-13.2 44.9,-11.4 43.7,-9.8 42.4,-8.2 40.9,-6.8 39.3,-5.6 37.6,-4.5 35.8,-3.6 33.9,-2.9 31.9,-2.4 29.9,-2 27.9,-1.9 25.9,-2 23.9,-2.3 21.9,-2.7 20,-3.4 18.2,-4.4"],["လ","M27.8 1.7Q21.4 1.7 16.3 -1.5Q11.2 -4.7 8.3 -10Q5.4 -15.2 5.4 -21.7Q5.4 -28 8.3 -33.3Q11.2 -38.7 16.3 -41.8Q21.4 -45 27.8 -45Q34.3 -45 38.9 -41.8Q43.6 -38.6 46.5 -33.3Q49.4 -27.9 50.5 -21.7Q51.9 -14.3 56.1 -9.6Q60.3 -4.9 66.8 -4.9Q71.3 -4.9 74.8 -7.2Q78.3 -9.5 80.4 -13.3Q82.4 -17.1 82.4 -21.7Q82.4 -26.3 80.4 -30.1Q78.3 -33.9 74.8 -36.2Q71.3 -38.5 66.8 -38.5Q64.3 -38.5 61.9 -37.4L59.1 -43.3Q60.8 -44.2 62.8 -44.6Q64.7 -45 66.8 -45Q72.9 -45 78 -41.9Q83 -38.8 86 -33.5Q89 -28.2 89 -21.7Q89 -15.2 86 -10Q83.1 -4.7 78.1 -1.5Q73.1 1.7 66.8 1.7Q59.9 1.7 55.2 -1.6Q50.5 -4.9 47.8 -10.2Q45 -15.5 43.8 -21.7Q42.3 -29.3 38.2 -33.9Q34.1 -38.5 27.8 -38.5Q23.3 -38.5 19.7 -36.2Q16.1 -33.9 14 -30.1Q11.9 -26.3 11.9 -21.7Q11.9 -17.1 14 -13.2Q16.1 -9.4 19.7 -7.1Q23.3 -4.9 27.8 -4.9Q29.1 -4.9 30.3 -5.1Q31.4 -5.4 32.4 -5.9L35.3 -0.1Q33.9 0.7 31.9 1.2Q30 1.7 27.8 1.7Z","34.5,-2.5 30,-2.4 28,-2.1 26,-2 24,-2.2 22,-2.7 20.2,-3.4 18.4,-4.3 16.7,-5.4 15.1,-6.6 13.7,-8.1 12.5,-9.6 11.4,-11.3 10.4,-13.1 9.7,-15 9.1,-16.9 8.8,-18.9 8.5,-20.9 8.5,-22.9 8.7,-24.9 9,-26.9 9.5,-28.8 10.2,-30.7 11.1,-32.5 12.3,-34.2 13.6,-35.7 15,-37 16.7,-38.2 18.4,-39.2 20.3,-40 22.2,-40.7 24.1,-41.2 26.1,-41.4 28.1,-41.5 30.1,-41.5 32.1,-41.1 34,-40.6 35.9,-39.8 37.6,-38.7 39.1,-37.4 40.4,-35.9 41.7,-34.3 42.7,-32.6 43.7,-30.8 44.5,-29 45.3,-27.1 46,-25.3 46.7,-23.4 47.3,-21.4 47.8,-19.5 48.4,-17.6 49,-15.7 49.7,-13.8 50.5,-11.9 51.5,-10.2 52.7,-8.6 54,-7.1 55.5,-5.7 57.2,-4.6 58.9,-3.6 60.8,-2.8 62.7,-2.3 64.7,-2.1 66.7,-2 68.7,-2.2 70.7,-2.5 72.6,-3.1 74.5,-3.9 76.3,-4.8 78,-5.9 79.5,-7.1 80.9,-8.6 82.2,-10.1 83.2,-11.9 84.1,-13.7 84.7,-15.6 85.2,-17.5 85.4,-19.5 85.5,-21.5 85.4,-23.6 85.2,-25.5 84.7,-27.5 84.1,-29.4 83.3,-31.2 82.3,-33 81.1,-34.6 79.8,-36.2 78.3,-37.5 76.7,-38.7 75,-39.8 73.2,-40.7 71.3,-41.3 69.3,-41.7 67.3,-42 65.3,-41.9 63.3,-41.7 59.3,-41.7"],["အ","M62.7 1.8Q59.3 1.8 56.4 1Q53.6 0.2 51.7 -1Q51.9 -7.2 55 -12.4Q58.2 -17.6 63.4 -20.7Q68.6 -23.7 74.8 -23.7Q77.7 -23.7 80.8 -22.9L80.1 -16.3Q77.4 -17.1 74.9 -17.1Q69.2 -17.1 64.7 -13.6Q60.3 -10.2 58.8 -5.1Q60.7 -4.6 62.7 -4.6Q67.3 -4.6 71.1 -6.9Q74.9 -9.2 77.1 -13Q79.4 -16.8 79.4 -21.4Q79.4 -26 77.1 -29.8Q74.9 -33.7 70.9 -36Q67 -38.3 62 -38.3Q56.5 -38.3 52.2 -35.3Q47.9 -32.3 45.9 -27.9L39.9 -30.1Q41.7 -34.3 45 -37.6Q48.2 -40.9 52.6 -42.9Q56.9 -44.8 61.9 -44.8Q68.8 -44.8 74.2 -41.7Q79.6 -38.5 82.8 -33.2Q85.9 -27.8 85.9 -21.4Q85.9 -14.9 82.8 -9.7Q79.7 -4.5 74.4 -1.4Q69.1 1.8 62.7 1.8ZM26 1.7Q15.8 1.7 10.6 -2Q5.4 -5.7 5.4 -11.4L11.5 -13.7Q11.5 -8.8 15.4 -6.8Q19.3 -4.9 26 -4.9Q29.6 -4.9 32.9 -5.6Q36.1 -6.2 38.2 -7.9Q40.2 -9.5 40.2 -12.3Q40.2 -14.6 38 -16Q35.8 -17.4 32.8 -18Q29.8 -18.6 27.1 -18.7V-24.6Q29.8 -24.8 32.8 -25.3Q35.8 -25.9 38 -27.2Q40.2 -28.6 40.2 -31.1Q40.2 -33.8 38.2 -35.4Q36.1 -37 32.9 -37.7Q29.6 -38.5 26 -38.5Q19 -38.5 15.3 -36.3Q11.5 -34.1 11.5 -29.6L5.4 -31.9Q5.4 -37.6 10.6 -41.3Q15.9 -45 26 -45Q35.1 -45 40 -41.9Q45 -38.9 46.5 -34.5Q47.2 -30.3 45.5 -26.8Q43.8 -23.3 39.6 -21.7Q43 -20.5 44.8 -17.9Q46.7 -15.3 46.7 -12.3Q46.7 -7.4 43.8 -4.3Q41 -1.3 36.3 0.2Q31.6 1.7 26 1.7Z","6.5,-30.9 9,-34 9.9,-35.9 11.1,-37.4 12.7,-38.7 14.4,-39.7 16.3,-40.4 18.2,-40.9 20.2,-41.3 22.2,-41.6 24.1,-41.9 26.1,-42 28.1,-42 30.1,-41.8 32.1,-41.5 34.1,-41 35.9,-40.3 37.8,-39.4 39.5,-38.4 41,-37.1 42.2,-35.5 43,-33.7 43.2,-31.7 42.8,-29.8 42,-27.9 40.8,-26.3 39.3,-25 37.9,-23.6 35.9,-22.2 33.9,-21.8 31.9,-21.7 29.9,-21.7 31.9,-21.7 33.9,-21.7 35.9,-21.7 37.1,-21.8 38,-20.1 39.5,-18.8 40.9,-17.4 42.1,-15.8 42.8,-13.9 43,-11.9 42.8,-10 41.9,-8.1 40.7,-6.6 39.2,-5.3 37.5,-4.2 35.7,-3.4 33.8,-2.7 31.8,-2.3 29.9,-1.9 27.9,-1.8 25.9,-1.8 23.9,-1.9 21.9,-2.1 19.9,-2.4 17.9,-2.9 16,-3.4 14.1,-4.1 12.3,-5 10.8,-6.2 9.5,-7.7 8.6,-9.5 6.1,-12.6","39.7,-31.7 44.8,-34.8 46.5,-35.8 48.2,-36.9 50,-37.9 51.8,-38.8 53.6,-39.7 55.5,-40.4 57.5,-41 59.5,-41.4 61.5,-41.6 63.5,-41.5 65.5,-41.3 67.5,-41 69.5,-40.4 71.4,-39.6 73.1,-38.7 74.8,-37.5 76.3,-36.1 77.6,-34.6 78.8,-32.9 79.8,-31.2 80.6,-29.3 81.2,-27.4 81.7,-25.4 82,-23.4 82.1,-21.4 82,-19.3 81.8,-17.3 81.3,-15.3 80.7,-13.4 79.8,-11.6 78.8,-9.8 77.5,-8.2 76.1,-6.8 74.5,-5.5 72.9,-4.4 71.1,-3.4 69.2,-2.6 67.2,-2 65.3,-1.6 63.2,-1.4 61.2,-1.5 59.3,-2.1 57.6,-3.3 56.6,-5 56.4,-7 56.8,-9 57.6,-10.9 58.7,-12.6 59.9,-14.2 61.4,-15.6 63,-16.9 64.7,-17.9 66.5,-18.8 68.4,-19.4 70.4,-19.8 72.5,-20.1 74.5,-20.3 76.5,-20.5 78.5,-20.9 80.4,-21.6 82.1,-22.6 86.3,-24.2"]];  // [letter, Padauk Book outline (SIL OFL), hidden strokes...]
+// Learn Burmese tile = an Ask MCC chat. The question types itself, the lantern thinks, the reply streams in,
+// then three things the Learn page does are listed, and a pane previews each in turn: a letter written in ink,
+// a name spelled in Burmese, and a phrase "spoken" over a voice-note waveform. Hover a row to jump to it.
+const LC_LETTERS = [0, 1, 3, 4];                 // BENTO_LEARN entries used (က မ လ အ; ဝ looked like a loading spinner)
+const LC_ROMAN = ["ka", "ma", "la", "a"];
+const LC_NAMES = [["ဆာရာ", "Sarah"], ["ကီဗင်", "Kevin"], ["အမ်မာ", "Emma"], ["အောင်", "Aung"]];
+const LC_HELLO = [["မင်္", "min"], ["ဂ", "ga"], ["လာ", "la"], ["ပါ", "ba"]];
 function initBentoLearn() {
-  const box = document.getElementById("js-bento-learn");
-  if (!box || box.childElementCount) return;
+  const tile = document.getElementById("js-bento-learn");
+  if (!tile || tile.dataset.ready) return;
+  tile.dataset.ready = "1";
   const NS = "http://www.w3.org/2000/svg";
-  const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
-  const svg = mk("svg", { viewBox: "0 0 120 84", preserveAspectRatio: "xMidYMid meet" });
-  svg.append(mk("line", { class: "rule", x1: 8, x2: 112, y1: 20, y2: 20 }), mk("line", { class: "rule", x1: 8, x2: 112, y1: 66.4, y2: 66.4 }));
-  const defs = mk("defs", {}), mask = mk("mask", { id: "bento-learn-mask", maskUnits: "userSpaceOnUse", x: -40, y: -80, width: 240, height: 140 });
-  defs.appendChild(mask); svg.appendChild(defs);
-  const g = mk("g", {}), tip = mk("circle", { class: "tip", r: 1.8, opacity: 0 });
-  svg.append(g, tip); box.appendChild(svg);
-  const letters = BENTO_LEARN.map(l => l.slice(2).map(s => s.split(" ").map(p => p.split(",").map(Number))));
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let li = 0, raf = 0, timer = 0, visible = false;
-  const pts = a => a.map(p => p.join(",")).join(" ");
-  function place(strokes) {            // centre the letter between the two ruled lines
-    let x0 = 1e9, x1 = -1e9; strokes.forEach(s => s.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); }));
-    g.setAttribute("transform", `translate(${60 - (x0 + x1) / 2} 65)`); g.innerHTML = ""; defs.innerHTML = "";
-    // the real letter (Padauk Book), revealed by the hidden strokes painting a mask in writing order;
-    // each stroke only shows its own circle where strokes meet (inkOwnMask), so nothing appears ahead of the pen
-    const area = { maskUnits: "userSpaceOnUse", x: -40, y: -80, width: 240, height: 140 };
-    return strokes.map((s, i) => {
-      const bm = mk("mask", Object.assign({ id: "bento-learn-b" + i }, area));
-      const p = mk("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": 9.7, "stroke-linecap": "round", "stroke-linejoin": "round" });
-      bm.appendChild(p); defs.appendChild(bm);
-      let holder = g;
-      const om = mk("mask", Object.assign({ id: "bento-learn-o" + i }, area));
-      if (inkOwnMask(om, strokes, i, area, 6.48)) { defs.appendChild(om); holder = mk("g", { mask: "url(#bento-learn-o" + i + ")" }); g.appendChild(holder); }
-      holder.appendChild(mk("path", { class: "ink", d: BENTO_LEARN[li][1], mask: "url(#bento-learn-b" + i + ")" }));
-      return p;
+  const LANTERN = '<svg viewBox="14 8 36 48" width="18" height="24" aria-hidden="true"><circle class="lt-halo" cx="32" cy="33" r="27"/><g class="lt-body"><line x1="32" y1="2" x2="32" y2="14" stroke="#C08A2E" stroke-width="3"/><rect x="24" y="13" width="16" height="4" rx="1" fill="#C08A2E"/><ellipse cx="32" cy="33" rx="15" ry="16" fill="#AE3628"/><ellipse class="lt-glow" cx="32" cy="33" rx="8.5" ry="10.5"/><path class="lt-flame" d="M32 30c-3 4-3 8 0 9.5 3-1.5 3-5.5 0-9.5z"/><path d="M32 17v32M24 19c-4 9-4 19 0 28M40 19c4 9 4 19 0 28" stroke="#7A2418" stroke-width="1.6" fill="none"/><rect x="24" y="48" width="16" height="4" rx="1" fill="#C08A2E"/><path d="M29 52l-2 8M32 52v9M35 52l2 8" stroke="#C08A2E" stroke-width="2"/></g></svg>';
+  const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
+  const Q = "How do I learn Burmese?", INTRO = "You're in the right place to start!";
+  const ITEMS = [["learn.html#lb-chart", "Learn the 33 alphabets"], ["learn.html#name", "Write your name"], ["learn.html#say", "Say any phrase"]];
+  const kicker = typeof t === "function" ? t("bento_learn_kicker") : "Learn Burmese";
+
+  /* time: every wait/animation belongs to a "life" that can be stopped */
+  function lifeFor() {
+    const life = { alive: true, timers: [], rafs: [] };
+    life.wait = ms => new Promise((res, rej) => { life.timers.push(setTimeout(() => life.alive ? res() : rej("stop"), ms)); });
+    life.anim = (ms, fn) => new Promise((res, rej) => {
+      const t0 = performance.now();
+      const step = now => { if (!life.alive) return rej("stop"); const k = Math.max(0, Math.min(1, (now - t0) / ms)); fn(k); if (k < 1) life.rafs.push(requestAnimationFrame(step)); else res(); };
+      life.rafs.push(requestAnimationFrame(step));
     });
+    life.stop = () => { life.alive = false; life.timers.forEach(clearTimeout); life.rafs.forEach(cancelAnimationFrame); };
+    return life;
   }
-  function solid() { g.innerHTML = ""; g.appendChild(mk("path", { class: "ink", d: BENTO_LEARN[li][1] })); }
-  function write() {
-    const strokes = letters[li], inks = place(strokes); svg.style.opacity = 1;
-    if (reduced) { solid(); return; }
-    let si = 0, t0 = 0;
-    function step(now) {
-      if (!t0) t0 = now;
-      const s = strokes[si], pr = Math.min(s.length - 1, (now - t0) / 1000 * 16), n = Math.floor(pr), f = pr - n, a = s.slice(0, n + 1);
-      if (f > 0 && n < s.length - 1) a.push([s[n][0] + (s[n + 1][0] - s[n][0]) * f, s[n][1] + (s[n + 1][1] - s[n][1]) * f]);
-      inks[si].setAttribute("points", pts(a.length > 1 ? a : [a[0], a[0]]));
-      const m = g.transform.baseVal[0].matrix, end = a[a.length - 1];
-      tip.setAttribute("cx", end[0] + m.e); tip.setAttribute("cy", end[1] + m.f); tip.setAttribute("opacity", 1);
-      if (pr >= s.length - 1) {
-        si++; t0 = 0;
-        if (si >= strokes.length) {
-          tip.setAttribute("opacity", 0); solid();
-          timer = setTimeout(() => { svg.style.opacity = 0; timer = setTimeout(() => { li = (li + 1) % letters.length; if (visible) write(); }, 700); }, 1800);
-          return;
-        }
-        timer = setTimeout(() => { raf = requestAnimationFrame(step); }, 380); return;
+  const quiet = p => p.catch(e => { if (e !== "stop") console.error(e); });
+
+  /* a letter that writes itself: the Padauk outline revealed by its hidden strokes, in writing order */
+  function inkLetter(li) {
+    const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+    const uid = "lcl" + li + "-" + Math.random().toString(36).slice(2, 6);
+    const [, d, ...raw] = BENTO_LEARN[li], S = raw.map(s => s.split(" ").map(p => p.split(",").map(Number)));
+    let x0 = 1e9, x1 = -1e9; S.forEach(st => st.forEach(p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); }));
+    const svg = mk("svg", { class: "ink-l", viewBox: `${x0 - 8} -54 ${x1 - x0 + 16} 62`, "aria-hidden": "true" });
+    const defs = mk("defs", {}); svg.append(defs, mk("path", { class: "ghost", d }));
+    const lines = S.map((st, i) => {
+      const m = mk("mask", { id: uid + "-" + i, maskUnits: "userSpaceOnUse", x: -60, y: -90, width: 260, height: 140 });
+      const pl = mk("polyline", { points: "", fill: "none", stroke: "#fff", "stroke-width": 9.7, "stroke-linecap": "round", "stroke-linejoin": "round" });
+      m.appendChild(pl); defs.appendChild(m); svg.appendChild(mk("path", { class: "ink", d, mask: `url(#${uid}-${i})` })); return pl;
+    });
+    const tip = mk("circle", { class: "tip", r: 2.6, opacity: 0 }); svg.appendChild(tip);
+    svg.write = async life => {
+      for (let si = 0; si < S.length; si++) {
+        const st = S[si];
+        await life.anim(st.length / 18 * 1000, k => {
+          const pr = k * (st.length - 1), n = Math.floor(pr), f = pr - n, a = st.slice(0, n + 1);
+          if (n < st.length - 1) a.push([st[n][0] + (st[n + 1][0] - st[n][0]) * f, st[n][1] + (st[n + 1][1] - st[n][1]) * f]);
+          lines[si].setAttribute("points", (a.length > 1 ? a : [a[0], a[0]]).map(p => p.join(",")).join(" "));
+          const e = a[a.length - 1]; tip.setAttribute("cx", e[0]); tip.setAttribute("cy", e[1]); tip.setAttribute("opacity", 1);
+        });
+        await life.wait(200);
       }
-      raf = requestAnimationFrame(step);
-    }
-    raf = requestAnimationFrame(step);
+      tip.setAttribute("opacity", 0);
+    };
+    return svg;
   }
-  function stop() { cancelAnimationFrame(raf); clearTimeout(timer); }
-  if (reduced || !("IntersectionObserver" in window)) { write(); return; }
-  new IntersectionObserver(entries => {
-    visible = entries[0].isIntersecting; stop();
-    if (visible) write();
-  }, { threshold: 0.2 }).observe(box);
+
+  /* the three previews; dur() = how long the pane should stay on it */
+  function scenes() {
+    const letter = (() => {
+      let k = 0;
+      const lens = LC_LETTERS.map(i => BENTO_LEARN[i].slice(2).reduce((s, st) => s + st.split(" ").length / 18 * 1000 + 200, 0));
+      const el = document.createElement("div"); el.className = "scene off";
+      return { el, dur: () => lens[k] + 300, async play(life) {
+        if (el.busy) return; el.busy = true;
+        try {
+          el.innerHTML = ""; const svg = inkLetter(LC_LETTERS[k]); el.appendChild(svg);
+          const g = document.createElement("span"); g.className = "gl"; g.textContent = LC_ROMAN[k]; g.style.cssText = "opacity:0;transition:opacity .4s"; el.appendChild(g);
+          k = (k + 1) % LC_LETTERS.length;
+          await svg.write(life); g.style.opacity = 1;
+        } finally { el.busy = false; }
+      } };
+    })();
+    const name = (() => {
+      let k = 0;
+      const el = document.createElement("div"); el.className = "scene across off";
+      return { el, dur: () => 3200, async play(life) {
+        const [m, e] = LC_NAMES[k]; k = (k + 1) % LC_NAMES.length;
+        el.innerHTML = '<span class="gl">' + e + '</span><svg class="arw" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg><span class="mm big reveal-ink">' + m + "</span>";
+        await life.wait(250); el.querySelector(".reveal-ink").classList.add("on");
+      } };
+    })();
+    const say = (() => {
+      const el = document.createElement("div"); el.className = "scene off";
+      const N = 30, H = [];
+      for (let k = 0; k < N; k++) { const u = k / (N - 1) * LC_HELLO.length, f = u - Math.floor(u); H.push(Math.round(5 + 15 * Math.pow(Math.sin(Math.PI * Math.min(.999, f)), 1.2) * (.75 + .25 * Math.sin(k * 2.3)))); }
+      return { el, dur: () => 300 + LC_HELLO.length * 400 + 1500, async play(life) {
+        el.innerHTML = '<span class="mm big">' + LC_HELLO.map(h => "<span>" + h[0] + "</span>").join("") + '</span><span class="wave">' +
+          H.map(h => '<i style="height:' + h + 'px"></i>').join("") + '</span><span class="rom">' + LC_HELLO.map(h => "<span>" + h[1] + "</span>").join("") + "</span>";
+        const bars = [...el.querySelectorAll(".wave i")], wave = el.querySelector(".wave"), rom = [...el.querySelectorAll(".rom span")], sy = [...el.querySelectorAll(".big span")];
+        await life.wait(450); wave.classList.add("on");
+        await life.anim(400 * LC_HELLO.length, k => {
+          const pos = k * N, i = Math.min(LC_HELLO.length - 1, Math.floor(k * LC_HELLO.length));
+          bars.forEach((b, j) => { b.classList.toggle("p", j < pos); b.classList.toggle("a", k < 1 && j >= pos - 3 && j < pos + 1); });
+          sy.forEach((s, j) => s.className = k >= 1 ? "" : j === i ? "on" : j > i ? "dim" : "");
+          rom.forEach((s, j) => s.className = k >= 1 || j < i ? "was" : j === i ? "on" : "");
+        });
+        wave.classList.remove("on");
+      } };
+    })();
+    return [letter, name, say];
+  }
+
+  function build() {
+    tile.innerHTML =
+      '<div class="lc-top"><span class="t-kicker">' + kicker + '</span>' +
+      '<button class="lc-again" type="button" aria-label="Ask again"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>' +
+      '<div class="m-u fx"><span class="q"></span><span class="car"></span></div></div>' +
+      '<div class="m-b fx"><span class="lt">' + LANTERN + '</span><div class="bub"><div class="bub-hd"><span class="lt">' + LANTERN + '</span><p class="intro"></p></div>' +
+      '<div class="body"><div class="split"><ol>' +
+      ITEMS.map((it, i) => '<li><a class="row" href="' + it[0] + '"><span class="tx"><i>' + (i + 1) + '.</i> ' + it[1] + '</span>' + ARROW.replace("<svg ", '<svg class="go" ') + '<span class="prog"></span></a></li>').join("") +
+      '</ol><div class="stage" aria-hidden="true"></div></div></div></div></div>';
+  }
+
+  /* the pane: one row at a time, waits for each preview to finish */
+  function runPane(life) {
+    const rows = [...tile.querySelectorAll(".row")], stage = tile.querySelector(".stage"), sc = scenes();
+    sc.forEach(s => stage.appendChild(s.el));
+    let act = -1, forced = -1;
+    function show(r, ms) {
+      rows.forEach((row, j) => {
+        row.classList.toggle("act", j === r);
+        const p = row.querySelector(".prog"); p.style.animation = "none"; void p.offsetWidth; p.style.animation = "";
+        if (j === r && ms) p.style.animationDuration = ms + "ms";
+      });
+      sc.forEach((s, j) => s.el.classList.toggle("off", j !== r));
+      act = r; quiet(sc[r].play(life));
+    }
+    rows.forEach((row, r) => {
+      row.addEventListener("pointerenter", () => { forced = r; tile.classList.add("hold"); if (act !== r) show(r); });
+      row.addEventListener("pointerleave", () => { forced = -1; tile.classList.remove("hold"); });
+    });
+    return async () => {
+      let r = 0;
+      while (life.alive) {
+        if (forced < 0) { const ms = Math.max(3200, sc[r].dur() + 1400); show(r, ms); r = (r + 1) % rows.length; await life.wait(ms); }
+        else { r = (forced + 1) % rows.length; await life.wait(300); }
+      }
+    };
+  }
+
+  let life = null, pane = null, visible = false, played = false;
+  function startPane() { if (!visible || !played || pane) return; pane = lifeFor(); quiet(runPane(pane)()); }
+  function stopPane() { if (pane) pane.stop(); pane = null; }
+  async function play() {
+    if (life) life.stop(); stopPane(); played = false; build(); tile.classList.remove("done");
+    const $ = s => tile.querySelector(s);
+    const user = $(".m-u"), q = $(".q"), bot = $(".m-b"), lts = [...tile.querySelectorAll(".lt")], intro = $(".intro"), body = $(".body"), lis = [...tile.querySelectorAll("li")];
+    $(".lc-again").onclick = e => { e.preventDefault(); quiet(play()); };
+    if (reduced) {
+      q.textContent = Q; $(".car").remove(); intro.textContent = INTRO; [user, bot, body, ...lis].forEach(e => e.classList.add("in"));
+      tile.classList.add("done"); played = true; startPane(); return;
+    }
+    life = lifeFor(); const L = life;
+    await L.wait(250);
+    user.classList.add("in");
+    for (let i = 1; i <= Q.length; i++) { q.textContent = Q.slice(0, i); await L.wait(34 + (Q[i - 1] === " " ? 40 : 0)); }
+    await L.wait(260); $(".car").remove();
+    await L.wait(300);
+    bot.classList.add("in"); lts.forEach(l => l.classList.add("think"));
+    intro.innerHTML = '<span class="shim">Thinking…</span>';
+    await L.wait(1200);
+    lts.forEach(l => { l.classList.remove("think"); l.classList.add("lit"); }); intro.textContent = "";
+    for (const w of INTRO.split(" ")) { const s = document.createElement("span"); s.className = "w"; s.textContent = w + " "; intro.appendChild(s); await L.wait(60); }
+    await L.wait(150); body.classList.add("in");
+    for (const li of lis) { li.classList.add("in"); await L.wait(170); }
+    await L.wait(300);
+    tile.classList.add("done"); played = true; startPane();
+  }
+
+  // cursor light over the tile
+  tile.addEventListener("pointermove", e => { const r = tile.getBoundingClientRect(); tile.style.setProperty("--mx", (e.clientX - r.left) + "px"); tile.style.setProperty("--my", (e.clientY - r.top) + "px"); });
+  if ("ResizeObserver" in window) new ResizeObserver(() => tile.classList.toggle("narrow", tile.clientWidth < 440)).observe(tile);
+  else tile.classList.toggle("narrow", tile.clientWidth < 440);
+  build();
+  if (!("IntersectionObserver" in window)) { visible = true; quiet(play()); return; }
+  new IntersectionObserver(es => {
+    visible = es[0].isIntersecting;
+    if (visible && !played && !life) quiet(play());
+    if (visible) startPane(); else stopPane();
+  }, { threshold: 0.5 }).observe(tile);
 }
 
 function initBentoIg() {

@@ -552,13 +552,113 @@
 
   .t-ig{ grid-area:ig; background:var(--red); border-color:transparent; color:#fff; isolation:isolate; }
   .t-news{ grid-area:ne; }
-  /* Learn Burmese tile: a pen writes a letter, holds, fades, then writes the next (js/site.js initBentoLearn). */
+  /* Learn Burmese tile = an Ask MCC chat: "How do I learn Burmese?" → three things the Learn page does, each previewed in a pane (js/site.js initBentoLearn). */
   .t-learn{ grid-area:le; }
-  .t-learn .t-pen{ position:absolute; top:14px; right:10px; bottom:14px; width:min(42%, 250px); pointer-events:none; }
-  .t-learn .t-pen svg{ display:block; width:100%; height:100%; transition:opacity .6s ease; }
-  .t-learn .t-pen .rule{ stroke:var(--line); stroke-width:.4; stroke-dasharray:1.6 1.8; }
-  .t-learn .t-pen .ink{ fill:var(--navy); }
-  .t-learn .t-pen .tip{ fill:var(--red); }
+  .t-learn.lc{ padding:15px 18px; gap:9px; justify-content:flex-start; isolation:isolate; --mx:-999px; --my:-999px; }
+  .lc::after{ content:""; position:absolute; inset:0; z-index:-1; pointer-events:none; opacity:0; transition:opacity .4s ease;
+    background:radial-gradient(260px circle at var(--mx) var(--my), rgba(192,138,46,.08), transparent 70%); }
+  .lc:hover::after{ opacity:1; }
+  .lc-top{ display:flex; align-items:center; gap:10px; min-height:30px; }
+  .lc-top .t-kicker{ margin-right:auto; white-space:nowrap; }
+  .lc-again{ width:28px; height:28px; border-radius:50%; border:1px solid var(--line); background:var(--bg-raised); color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
+    cursor:pointer; opacity:0; transition:opacity .3s ease, transform .5s cubic-bezier(.22,1,.36,1), color .2s; }
+  .lc.done:hover .lc-again{ opacity:1; } .lc-again:hover{ color:var(--red); transform:rotate(-180deg); }
+  .lc-again svg{ width:13px; height:13px; }
+  .lc .m-u{ background:var(--navy); color:var(--bg); font-size:13px; line-height:1.3; padding:7px 12px; border-radius:14px 14px 4px 14px; white-space:nowrap; }
+  .lc .m-u .car{ display:inline-block; width:1.5px; height:13px; background:#F2B65A; vertical-align:-2px; margin-left:1px; animation:lc-blink 1s steps(1) infinite; }
+  @keyframes lc-blink{ 50%{ opacity:0 } }
+  .lc .m-b{ display:flex; gap:9px; align-items:flex-start; min-height:0; }
+  .lc .lt{ flex:none; width:26px; height:26px; border-radius:50%; background:var(--navy); display:flex; align-items:center; justify-content:center; margin-top:2px; position:relative; }
+  .lc .lt svg{ display:block; overflow:visible; }
+  .lc .lt::before{ content:""; position:absolute; inset:-6px; border-radius:50%; background:radial-gradient(circle, rgba(242,182,90,.55), transparent 70%); opacity:0; transition:opacity .6s ease; }
+  .lc .lt.think::before{ opacity:1; animation:lc-breathe 1.1s ease-in-out infinite; }
+  /* glass reply bubble */
+  .lc .bub{ flex:1; min-width:0; position:relative; border-radius:16px; padding:9px 10px 10px 12px;
+    background:linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.5)); backdrop-filter:blur(14px) saturate(1.3); -webkit-backdrop-filter:blur(14px) saturate(1.3);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 1px 2px rgba(28,36,64,.05), 0 10px 30px -8px rgba(28,36,64,.16); }
+  .lc .bub::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1px; pointer-events:none;
+    background:linear-gradient(135deg, rgba(192,138,46,.55), rgba(28,36,64,.08) 40%, rgba(28,36,64,.05) 70%, rgba(174,54,40,.35));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; }
+  .lc .bub-hd{ display:flex; align-items:center; gap:8px; }
+  .lc .bub-hd .lt{ display:none; }
+  .lc .intro{ margin:0; font-size:13px; line-height:1.35; min-height:18px; }
+  .lc .intro .w{ display:inline-block; white-space:pre; animation:lc-word .5s ease both; }
+  @keyframes lc-word{ from{ opacity:0; filter:blur(5px); } to{ opacity:1; filter:blur(0); } }
+  .lc .shim{ font-weight:500; background:linear-gradient(90deg, var(--ink-soft) 0%, var(--ink-soft) 35%, #E0A64A 50%, var(--ink-soft) 65%, var(--ink-soft) 100%);
+    background-size:250% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:lc-shim 1.3s linear infinite; }
+  @keyframes lc-shim{ from{ background-position:100% 0 } to{ background-position:-150% 0 } }
+  .lc .fx{ opacity:0; transition:opacity .45s ease, filter .45s ease; filter:blur(4px); } .lc .fx.in{ opacity:1; filter:none; }
+  /* list + preview pane: flat rows with hairlines, the active one fills its line as the preview plays */
+  .lc .body{ margin-top:7px; opacity:0; filter:blur(4px); transition:opacity .5s ease, filter .5s ease; }
+  .lc .body.in{ opacity:1; filter:none; }
+  .lc .split{ display:grid; grid-template-columns:minmax(0,1fr) 196px; }
+  .lc ol{ list-style:none; margin:0; padding:0 14px 0 0; display:flex; flex-direction:column; }
+  .lc li{ opacity:0; filter:blur(3px); transition:opacity .45s ease, filter .45s ease; }
+  .lc li.in{ opacity:1; filter:none; }
+  .lc li + li .row{ border-top:1px solid rgba(28,36,64,.10); }
+  .lc .row{ position:relative; display:flex; align-items:center; gap:12px; height:33px; padding:0 2px; color:inherit; text-decoration:none; }
+  .lc .row .tx{ font-size:13px; font-weight:600; white-space:nowrap; margin-right:auto; color:rgba(28,36,64,.55); transition:color .3s ease; }
+  .lc .row .tx i{ font-style:normal; color:rgba(174,54,40,.5); transition:color .3s ease; }
+  .lc .row.act .tx, .lc .row:hover .tx{ color:var(--ink); } .lc .row.act .tx{ font-weight:700; }
+  .lc .row.act .tx i, .lc .row:hover .tx i{ color:var(--red); }
+  .lc .row .go{ flex:none; width:13px; height:13px; color:var(--ink-soft); opacity:.4; transition:opacity .2s, transform .35s cubic-bezier(.22,1,.36,1); }
+  .lc .row:hover .go{ opacity:1; transform:translateX(3px); color:var(--red); }
+  .lc .prog{ position:absolute; left:0; right:0; bottom:-1px; height:1.5px; background:linear-gradient(90deg, var(--gold), var(--red)); transform-origin:left; transform:scaleX(0); opacity:0; }
+  .lc li:last-child .prog{ bottom:0; }
+  .lc .row.act .prog{ opacity:1; animation:lc-prog var(--dwell, 3.6s) linear forwards; }
+  .lc.hold .row.act .prog{ animation-play-state:paused; }
+  @keyframes lc-prog{ to{ transform:scaleX(1); } }
+  .lc .stage{ position:relative; overflow:hidden; display:grid; place-items:center; border-left:1px solid rgba(28,36,64,.10); }
+  .lc .scene{ grid-area:1/1; display:flex; flex-direction:column; align-items:center; gap:2px; transition:opacity .45s ease, filter .45s ease; }
+  .lc .scene.off{ opacity:0; filter:blur(5px); }
+  .lc .scene.across{ flex-direction:row; gap:10px; }
+  .lc .scene .arw{ width:15px; height:15px; color:var(--gold); }
+  .lc .mm{ font-family:'Noto Sans Myanmar',sans-serif; font-weight:600; line-height:1.8; white-space:nowrap; }
+  .lc .big{ font-size:26px; color:var(--navy); line-height:1.6; }
+  .lc .big span{ transition:color .15s ease; } .lc .big span.dim{ color:rgba(28,36,64,.28); } .lc .big span.on{ color:var(--red); }
+  .lc .gl{ font-size:11.5px; color:var(--ink-soft); white-space:nowrap; }
+  .lc .scene.across .gl{ font-size:13px; font-weight:600; color:var(--ink); }
+  .lc .stage svg.ink-l{ height:52px; width:auto; display:block; }
+  .ink-l .ghost{ fill:rgba(28,36,64,.08); } .ink-l .ink{ fill:var(--navy); } .ink-l .tip{ fill:var(--red); }
+  /* name: Burmese inked in left to right */
+  .lc .reveal-ink{ -webkit-mask-image:linear-gradient(90deg,#000 33%,transparent 48%); mask-image:linear-gradient(90deg,#000 33%,transparent 48%);
+    -webkit-mask-size:300% 100%; mask-size:300% 100%; -webkit-mask-position:100% 0; mask-position:100% 0; padding:0 2px; }
+  .lc .reveal-ink.on{ -webkit-mask-position:0 0; mask-position:0 0; transition:-webkit-mask-position 1.1s cubic-bezier(.45,0,.4,1), mask-position 1.1s cubic-bezier(.45,0,.4,1); }
+  /* say: voice-note waveform, playhead in step with the syllables */
+  .lc .wave{ display:flex; align-items:center; gap:2px; height:20px; margin-top:-2px; }
+  .lc .wave i{ width:2.5px; border-radius:2px; background:rgba(28,36,64,.18); transition:background .12s ease; transform-origin:center; }
+  .lc .wave i.p{ background:var(--red); }
+  .lc .wave.on i.a{ animation:lc-bar .45s ease-in-out infinite alternate; }
+  @keyframes lc-bar{ from{ transform:scaleY(.55) } to{ transform:scaleY(1.15) } }
+  .lc .rom{ display:flex; gap:12px; font-size:10.5px; font-weight:600; color:var(--ink-soft); margin-top:3px; }
+  .lc .rom span{ transition:color .15s ease, opacity .15s ease; opacity:.55; }
+  .lc .rom span.on{ color:var(--red); opacity:1; } .lc .rom span.was{ opacity:1; }
+  /* lantern (same drawing + moods as the Ask MCC widget) */
+  .lc .lt-body{ transform-origin:32px 8px; transform-box:view-box; }
+  .lc .lt-glow{ fill:#F2B65A; opacity:.28; transform-origin:32px 33px; transform-box:view-box; }
+  .lc .lt-flame{ fill:#FFE3A3; opacity:0; transform-origin:32px 40px; transform-box:view-box; }
+  .lc .lt-halo{ fill:#F2B65A; opacity:0; transform-origin:32px 33px; transform-box:view-box; }
+  .lc .lt.think .lt-body{ animation:lc-sway 2.2s ease-in-out infinite; }
+  .lc .lt.think .lt-glow{ animation:lc-breathe 1.1s ease-in-out infinite; }
+  .lc .lt.think .lt-flame{ opacity:1; animation:lc-flick .32s ease-in-out infinite alternate; }
+  .lc .lt.lit .lt-halo{ animation:lc-flare 1.4s ease-out forwards; }
+  .lc .lt.lit .lt-glow{ animation:lc-settle 1.6s ease-out forwards; }
+  .lc .lt.lit .lt-flame{ opacity:1; animation:lc-flick .6s ease-in-out infinite alternate; }
+  @keyframes lc-sway{ 0%,100%{transform:rotate(-4deg)} 50%{transform:rotate(4deg)} }
+  @keyframes lc-breathe{ 0%,100%{opacity:.45;transform:scale(.9)} 50%{opacity:.85;transform:scale(1.08)} }
+  @keyframes lc-flick{ from{transform:scale(.8,1.12)} to{transform:scale(1.1,.86)} }
+  @keyframes lc-flare{ 0%{opacity:.55;transform:scale(.75)} 100%{opacity:0;transform:scale(1.15)} }
+  @keyframes lc-settle{ 0%{opacity:.95;transform:scale(1.15)} 100%{opacity:.28;transform:scale(1)} }
+  /* narrow tile (phones): lantern inside the bubble, pane above the list */
+  .t-learn.lc.narrow{ padding:14px; }
+  .lc.narrow .m-b > .lt{ display:none; }
+  .lc.narrow .bub-hd .lt{ display:flex; width:22px; height:22px; margin:0; }
+  .lc.narrow .bub-hd .lt svg{ width:15px; height:20px; }
+  .lc.narrow .split{ grid-template-columns:1fr; }
+  .lc.narrow ol{ padding-right:0; }
+  .lc.narrow .row{ height:36px; }
+  .lc.narrow .stage{ order:-1; height:100px; border-left:0; border-bottom:1px solid rgba(28,36,64,.10); margin-bottom:2px; }
+  @media (prefers-reduced-motion: reduce){ .lc *, .lc *::before, .lc *::after{ animation:none !important; transition:none !important; } .lc .fx, .lc li, .lc .body{ opacity:1; filter:none; } }
   .t-ig .t-kicker{ color:rgba(255,255,255,0.75); }
   .t-ig svg.big{ position:absolute; top:22px; right:22px; width:44px; height:44px; opacity:0.9; transition:transform .7s cubic-bezier(.22,1,.36,1); }
   .t-ig:hover svg.big{ transform:rotate(-10deg) scale(1.08); }
@@ -587,11 +687,11 @@
   @media (max-width:980px){
     /* two columns that stay a box: Events square on top, team, then a tall Gallery beside News and Instagram, then the fact */
     .bento{ grid-template-columns:repeat(2, minmax(0,1fr)); grid-template-areas:"ev ev" "ev ev" "ab ab" "ga ne" "ga ig" "le le" "fa fa";
-            grid-template-rows:220px 220px auto 220px 220px 190px auto; grid-auto-rows:auto; }
+            grid-template-rows:220px 220px auto 220px 220px auto auto; grid-auto-rows:auto; }
     .t-about{ min-height:150px; }
   }
   @media (max-width:560px){
-    .bento{ --sq:calc((100cqw - 12px) / 2); gap:12px; grid-template-rows:var(--sq) var(--sq) auto var(--sq) var(--sq) 150px auto; }
+    .bento{ --sq:calc((100cqw - 12px) / 2); gap:12px; grid-template-rows:var(--sq) var(--sq) auto var(--sq) var(--sq) auto auto; }
     .tile{ border-radius:20px; padding:16px; }
     .t-big{ font-size:clamp(1.7rem, 8.5cqw, 2.2rem); }
     .t-title{ font-size:1.08rem; }
@@ -974,12 +1074,10 @@
           <span class="t-kicker" data-i18n="bento_news_kicker">Newsletter</span>
           <span class="t-link"><span data-i18n="bento_news_link">Read</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
         </a>
-        <a class="tile t-learn reveal" href="learn.html">
-          <div class="t-pen" id="js-bento-learn" aria-hidden="true"></div>
+        <div class="tile t-learn lc reveal" id="js-bento-learn" role="group" aria-label="Learn Burmese">
           <span class="t-kicker" data-i18n="bento_learn_kicker">Learn Burmese</span>
-          <div class="t-title" data-i18n="bento_learn_title">Write your first letter</div>
-          <span class="t-link"><span data-i18n="bento_learn_link">Start tracing</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg></span>
-        </a>
+          <a href="learn.html#lb-chart">Learn the 33 alphabets</a> · <a href="learn.html#name">Write your name</a> · <a href="learn.html#say">Say any phrase</a>
+        </div>
         <div class="tile t-fact reveal">
           <span class="t-kicker" data-i18n="bento_fact_kicker">Did you know?</span>
           <div class="t-fact-row" style="margin-top:10px">
