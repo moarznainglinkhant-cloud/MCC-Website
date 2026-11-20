@@ -43,7 +43,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Caveat:wght@700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Caveat:wght@600;700&display=swap">
 <style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
 <style>
 
@@ -455,6 +455,28 @@
   .wcal-art figcaption.swap{ opacity:0; }
   .wcal-hang:hover .wcal-art img{ transform:scale(1.045); }
   .wcal-art figcaption{ font-family:'Fraunces',serif; font-style:italic; font-size:.66rem; color:var(--ink-soft); text-align:left; margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  /* Poster as a taped photo of a past event (Nov 20, user approved): clean white-bordered print, tilted,
+     a strip of tape on top, the event name handwritten underneath. Overrides the soft-edge rules above. */
+  .wcal-page{ grid-template-columns:41% 1fr; gap:20px; }
+  .wcal-art{ position:relative; padding:12px 6px 0 4px; }
+  .wcal-art .frame{
+    -webkit-mask-image:none; mask-image:none;
+    flex:0 1 auto; height:78%; margin:0; border-radius:2px; background:#fff; border:5px solid #fff;
+    box-shadow:0 1px 1px rgba(28,36,64,.10), 0 8px 18px -6px rgba(28,36,64,.30);
+    transform:rotate(-2.2deg);
+  }
+  .wcal-art::before{
+    content:""; position:absolute; z-index:2; top:3px; left:50%; width:44%; height:20px;
+    transform:translateX(-50%) rotate(3deg);
+    background:linear-gradient(180deg, rgba(226,208,166,.82), rgba(214,194,148,.82));
+    box-shadow:0 1px 2px rgba(0,0,0,.08);
+    clip-path:polygon(0 8%, 4% 0, 9% 10%, 14% 2%, 86% 0, 91% 9%, 96% 1%, 100% 10%, 100% 92%, 95% 100%, 90% 90%, 85% 100%, 15% 98%, 10% 90%, 5% 100%, 0 92%);
+  }
+  .wcal-art figcaption{
+    font-family:'Caveat', cursive; font-style:normal; font-weight:600; font-size:1rem; line-height:1.1;
+    color:var(--ink-soft); text-align:center; margin:9px 0 0; transform:rotate(-2.2deg);
+    white-space:normal; overflow:visible; text-overflow:clip;
+  }
   .wcal-side{ display:flex; flex-direction:column; min-width:0; }
   .wcal-head{ display:flex; align-items:baseline; justify-content:space-between; margin:2px 0 8px; }
   .wcal-m{ position:relative; top:9px; font:700 .95rem 'Work Sans',sans-serif; letter-spacing:.24em; text-transform:uppercase; line-height:1; color:var(--red); }
