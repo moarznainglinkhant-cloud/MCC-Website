@@ -2300,7 +2300,31 @@ function initGreeting() {
   const letPhotosIn = () => {
     if (photosLetIn) return;
     photosLetIn = true;
-    ["a", "b", "c"].forEach((x, i) => setTimeout(() => html.classList.remove("hold-" + x), 900 + i * 350));
+    // Uneven tempo: the big photo early and slow, the two small ones together and quick (CSS sets the speeds).
+    [["a", 700], ["b", 1500], ["c", 1640]].forEach(([x, ms]) => setTimeout(() => html.classList.remove("hold-" + x), ms));
+    // The paragraph comes in one line at a time. It's split into lines just before it appears (so the
+    // web font has loaded and the line breaks are the real ones), then the plain text goes back.
+    const lede = html.classList.contains("hero-intro") && document.querySelector(".hero-copy .lede");
+    if (lede && !lede.classList.contains("myanmar")) setTimeout(() => {
+      try {
+        const text = lede.textContent;
+        lede.innerHTML = text.split(" ").map(w => `<span class="w">${escapeHtml(w)}</span>`).join(" ");
+        const lines = [];
+        lede.querySelectorAll(".w").forEach(w => {
+          const top = w.offsetTop;
+          if (!lines.length || Math.abs(lines[lines.length - 1].top - top) > 4) lines.push({ top, words: [] });
+          lines[lines.length - 1].words.push(w.textContent);
+        });
+        lede.innerHTML = lines.map(l => `<span class="ln">${escapeHtml(l.words.join(" "))}</span>`).join("");
+        lede.classList.add("split");
+        const spans = lede.querySelectorAll(".ln");
+        spans.forEach((ln, i) => setTimeout(() => ln.classList.add("in"), 50 + i * 110));
+        setTimeout(() => {
+          if (lede.querySelector(".ln")) lede.textContent = text;   // unless a language switch already rewrote it
+          lede.classList.remove("split");
+        }, 50 + spans.length * 110 + 900);
+      } catch (e) { lede.textContent = lede.textContent; lede.classList.remove("split"); }
+    }, 1700);
     setTimeout(() => html.classList.remove("hero-intro"), 5200);   // then hover goes back to its quick zoom
   };
   const NS = "http://www.w3.org/2000/svg";
