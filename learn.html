@@ -258,19 +258,19 @@
   .lc-big svg{ display:block; height:96px; width:auto; max-width:120px; fill:var(--navy); }
   .lc-who h3{ font-size:52px; font-weight:600; line-height:1; }
   .lc-who p{ font-size:16px; color:var(--ink-soft); margin-top:8px; }
-  .lc-seg{ --i:0; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; padding:5px; border-radius:999px; background:var(--bg-sunk); }
-  .lc-thumb{ position:absolute; top:5px; bottom:5px; left:5px; width:calc((100% - 18px) / 3); border-radius:999px; background:var(--bg-raised);
+  .lc-seg{ --i:0; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; padding:4px; border-radius:999px; background:var(--bg-sunk); }
+  .lc-thumb{ position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 16px) / 3); border-radius:999px; background:var(--bg-raised);
     box-shadow:0 1px 2px rgba(28,36,64,.10), 0 4px 12px -4px rgba(28,36,64,.18);
     transform:translateX(calc(var(--i) * (100% + 4px))); transition:transform .38s cubic-bezier(.32,.72,0,1); }
-  .lc-seg button{ position:relative; z-index:1; height:52px; border:0; border-radius:999px; background:transparent; cursor:pointer;
-    font:600 18px 'Work Sans',sans-serif; color:var(--ink-soft); transition:color .25s ease; white-space:nowrap; }
+  .lc-seg button{ position:relative; z-index:1; height:40px; border:0; border-radius:999px; background:transparent; cursor:pointer;
+    font:600 15px 'Work Sans',sans-serif; color:var(--ink-soft); transition:color .25s ease; white-space:nowrap; }
   .lc-seg button[aria-checked="true"]{ color:var(--navy); }
   .lc-seg button:focus{ outline:none; }
   .lc-seg button:focus-visible{ box-shadow:inset 0 0 0 2px rgba(28,36,64,.35); }
   .lc-stat{ display:flex; flex-direction:column; gap:12px; }
   .lc-stat-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
   .lc-stat-row span{ font-size:15px; color:var(--ink-soft); }
-  .lc-stat-row b{ font-family:'Fraunces',serif; font-weight:600; font-size:40px; line-height:1; }
+  .lc-stat-row b{ font-weight:600; font-size:20px; line-height:1; font-variant-numeric:tabular-nums; }
   .lc-bar{ height:8px; border-radius:99px; background:#ECE4D2; overflow:hidden; }
   .lc-bar i{ display:block; height:100%; width:0; background:var(--green); border-radius:99px; transition:width .2s ease; }
   .lc-foot{ margin-top:auto; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
@@ -279,9 +279,9 @@
   .lc-acts .btn.is-ready{ box-shadow:0 0 0 3px rgba(192,138,46,.35); }
   .lc-count{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; line-height:1; flex:none; }
   .lc-count small{ font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
-  .lc-count span{ font-family:'Fraunces',serif; white-space:nowrap; }
-  .lc-count b{ font-weight:600; font-size:48px; color:var(--navy); }
-  .lc-count em{ font-style:normal; font-weight:500; font-size:24px; color:var(--ink-soft); }
+  .lc-count span{ white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .lc-count b{ font-weight:600; font-size:28px; color:var(--navy); }
+  .lc-count em{ font-style:normal; font-weight:500; font-size:16px; color:var(--ink-soft); }
   /* All letters: side sheet (desktop) / bottom sheet (phone) */
   .lc-dlg{ border:0; padding:0; margin:0 0 0 auto; width:min(480px,100vw); max-width:none; height:100dvh; max-height:none; background:transparent; }
   .lc-dlg::backdrop{ background:rgba(28,36,64,.32); }
@@ -319,31 +319,31 @@
     .lc-big svg{ height:60px; max-width:84px; }
     .lc-who h3{ font-size:36px; }
     .lc-who p{ font-size:14px; margin-top:6px; }
-    .lc-seg button{ height:46px; font-size:16px; }
+    .lc-seg button{ height:38px; font-size:14px; }
     .lc-stat{ padding-inline:4px; gap:10px; }
-    .lc-stat-row b{ font-size:30px; }
+    .lc-stat-row b{ font-size:18px; }
     .lc-foot{ padding:0 4px 4px; margin-top:0; align-items:center; }
     .lc-acts{ flex-wrap:nowrap; gap:6px; }
     .lc-acts .btn{ padding:12px 16px; font-size:0.74rem; }
-    .lc-count b{ font-size:36px; }
-    .lc-count em{ font-size:18px; }
+    .lc-count b{ font-size:24px; }
+    .lc-count em{ font-size:14px; }
     .lc-count small{ font-size:11px; }
     .lc-dlg{ top:auto; bottom:0; margin:0; width:100vw; height:auto; max-height:88dvh; }
     .lc-dlg-in{ margin:0; height:auto; max-height:88dvh; border-radius:26px 26px 0 0; padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px)); }
     .lc-cell{ height:72px; }
   }
   @media (max-width:380px){
-    .lc-seg button{ font-size:15px; }
+    .lc-seg button{ font-size:13px; }
     .lc-acts .btn{ padding:11px 13px; font-size:0.7rem; }
-    .lc-count b{ font-size:28px; }
-    .lc-count em{ font-size:15px; }
+    .lc-count b{ font-size:22px; }
+    .lc-count em{ font-size:13px; }
   }
   /* Your name: same card language as the alphabet lesson */
   .lc-namecard{ min-width:0; display:flex; flex-direction:column; gap:20px; padding:24px; border-radius:32px; background:var(--bg-raised);
     box-shadow:0 1px 2px rgba(28,36,64,.06), 0 30px 60px -36px rgba(28,36,64,.3); }
   .lc-name-hd{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
   .lc-name-hd .lb-name-mm{ font-size:clamp(1.8rem,3.4vw,2.4rem); line-height:1.6; color:var(--navy); }
-  .lc-name-hd .lc-seg{ flex:0 1 440px; }
+  .lc-name-hd .lc-seg{ flex:0 1 380px; }
   .lc-namecard .lb-name-scroll{ margin-top:0; border:0; border-radius:22px; background:#F7F2E5; }
   .lc-namecard .lb-ghost{ fill:#E3D9C2; }
   .lc-name-ft{ display:flex; align-items:flex-end; gap:24px; }
@@ -357,7 +357,7 @@
     .lc-name-ft{ padding:0 4px 4px; align-items:center; }
     .lc-name-ft .lc-stat-row span{ white-space:nowrap; }
     .lc-name-ft .btn{ padding:12px 16px; font-size:0.74rem; }
-    .lc-name-ft .lc-stat-row b{ font-size:30px; }
+    .lc-name-ft .lc-stat-row b{ font-size:18px; }
   }
   .lb-pad{ position:relative; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .lb-pad.square{ aspect-ratio:1; }
