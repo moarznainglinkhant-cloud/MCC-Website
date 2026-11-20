@@ -421,9 +421,10 @@
   }
 
   /* ---------- Empty Next Event: the calendar fills the left panel (js/site.js renderWallCalendar) ---------- */
-  .event-visual.is-cal{ display:block; background:var(--bg-raised); border-right:1px solid var(--line); }
+  .event-visual.is-cal{ display:block; background:#fff; border-right:1px solid var(--line); }
+  /* red band along the top: removed Nov 20 (user trying the calendar without it) */
   .event-visual.is-cal::before{ content:""; position:absolute; left:0; right:0; top:0; z-index:1; height:var(--bh,26px);
-    background:var(--red); }
+    background:var(--red); display:none; }
   /* no upcoming event: the heading and text sit at the top of the card, not in the middle */
   .event-card:has(.event-visual.is-cal) .event-body{ justify-content:flex-start; }
   @media (max-width:820px){ .event-visual.is-cal{ border-right:0; border-bottom:1px solid var(--line); } }

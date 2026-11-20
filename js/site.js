@@ -93,8 +93,7 @@ const I18N = {
     stay_tuned_tag: "Stay tuned",
     no_event_h3: "New event coming soon",
     wcal_soon: "next event coming soon",
-    no_event_p: "Follow @mcc_uoft on Instagram to hear about it first. Until then, look back at everything we've hosted.",
-    follow_instagram: "Follow on Instagram",
+    no_event_p: "We're always planning something — keep checking back, and in the meantime take a look at everything we've hosted so far.",
     visit_all_previous: "Visit All Previous Events",
     rsvp: "RSVP",
 
@@ -190,8 +189,7 @@ const I18N = {
     stay_tuned_tag: "စောင့်ကြည့်ပါ",
     no_event_h3: "အခမ်းအနားအသစ် မကြာမီလာမည်",
     wcal_soon: "နောက်အခမ်းအနား မကြာမီလာမည်",
-    no_event_p: "အရင်ဆုံးသိရှိရန် Instagram တွင် @mcc_uoft ကို follow လုပ်ထားပါ။ ထိုအချိန်အထိ ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ပြန်ကြည့်နိုင်ပါသည်။",
-    follow_instagram: "Instagram တွင် Follow လုပ်ရန်",
+    no_event_p: "ကျွန်ုပ်တို့ အမြဲတမ်းစီစဉ်နေပါသည် — ဆက်လက်ကြည့်ရှုပေးပါ၊ ယခုအချိန်တွင် ကျွန်ုပ်တို့ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ကြည့်ရှုနိုင်ပါသည်။",
     visit_all_previous: "ယခင်အခမ်းအနားများအားလုံးကြည့်ရန်",
     rsvp: "စာရင်းသွင်းရန်",
 
@@ -668,10 +666,7 @@ function renderFeaturedEvent(ev) {
     body.innerHTML = `
       <h3 class="${mmClass}">${t("no_event_h3")}</h3>
       <p class="desc ${mmClass}">${t("no_event_p")}</p>
-      <div class="cta-row" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:22px">
-        <a class="btn ${mmClass}" href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">${t("follow_instagram")}</a>
-        <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>
-      </div>`;
+      <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>`;
     return;
   }
 
