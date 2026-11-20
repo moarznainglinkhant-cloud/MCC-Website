@@ -198,7 +198,7 @@ var MCC_TRANSLIT = (function () {
      "Your turn" is free writing: the visitor's own line is drawn as they write, green where it is inside the
      letter, red where it strays outside, checked live against the letter shape. Done = most of the letter
      covered and most of the line inside it. */
-  var GOOD = "#2F8F5B", BAD = "#C2412F";
+  var GOOD = "#4B7A3C", BAD = "#C2412F";
   var NEED_COVER = 0.82, NEED_INSIDE = 0.8;
   function Pad(host, strokes, view, o) {
     o = o || {};
@@ -271,7 +271,7 @@ var MCC_TRANSLIT = (function () {
     }
 
     function watch() {
-      stop(); clearDemo(); clearMine(); mode = "watch"; host.classList.remove("is-writing", "is-done");
+      stop(); clearDemo(); clearMine(); mode = "watch"; host.classList.remove("is-writing", "is-done"); if (o.onMode) o.onMode("watch");
       var i = 0, t0 = 0;
       say("Watch the pen. <b>" + L.length + " stroke" + (L.length > 1 ? "s" : "") + "</b>.");
       follow(L[0][0][0]);
@@ -320,6 +320,7 @@ var MCC_TRANSLIT = (function () {
       mine.innerHTML = ""; lenIn = lenOut = 0; cur = null;
       if (covCtx) { covCtx.save(); covCtx.setTransform(1, 0, 0, 1, 0, 0); covCtx.clearRect(0, 0, cw, ch); covCtx.restore(); }
       host.classList.remove("is-done");
+      if (o.onScore) o.onScore(0);
     }
     function covered() {
       var d = covCtx.getImageData(0, 0, cw, ch).data, n = 0;
@@ -333,6 +334,7 @@ var MCC_TRANSLIT = (function () {
     function pct(v) { return Math.round(v * 100) + "%"; }
     function report(final) {
       var s = score();
+      if (o.onScore) o.onScore(lenIn + lenOut ? s.inside : 0);
       if (s.cover >= NEED_COVER && s.inside >= NEED_INSIDE) {
         mode = "done"; host.classList.remove("is-writing"); host.classList.add("is-done");
         say((o.doneText || "Done. You wrote it.") + " <b>" + pct(s.inside) + "</b> of your line was inside the letter.");
@@ -345,7 +347,7 @@ var MCC_TRANSLIT = (function () {
     }
     function write() {
       stop(); clearDemo(); if (!hit) buildHit(); clearMine();
-      mode = "write"; host.classList.add("is-writing");
+      mode = "write"; host.classList.add("is-writing"); if (o.onMode) o.onMode("write");
       say("");
       follow(L[0][0][0]);
     }
@@ -425,25 +427,56 @@ var MCC_TRANSLIT = (function () {
   try { (JSON.parse(localStorage.getItem("mcc_learned") || "[]") || []).forEach(function (c) { learned[c] = 1; }); } catch (e) {}
   function saveLearned() { try { localStorage.setItem("mcc_learned", JSON.stringify(Object.keys(learned))); } catch (e) {} }
 
-  var current = 0, pad = null;
+  var current = 0, pad = null, mode = 0;
+  /* A letter drawn at one shared scale, cropped to its own width and centred on its own middle,
+     so every letter sits fully inside its tile at the same size. */
+  function tileSvg(ch) {
+    var g = D.K[ch]; if (g == null) return ch;
+    var b = bounds(glyph(g)), w = b.x1 - b.x0 + D.W * 2 + 4, my = (b.y0 + b.y1) / 2;
+    return '<svg viewBox="' + (b.x0 - D.W - 2).toFixed(1) + " " + (my - 50).toFixed(1) + " " + w.toFixed(1) + ' 100" aria-hidden="true"><path d="' + D.O[g] + '"/></svg>';
+  }
+  function tileLabel(l) { return l[1] + ", " + l[2] + (learned[l[0]] ? ", written" : ""); }
   function drawChart() {
-    var host = $("lb-chart"); host.innerHTML = "";
+    var host = $("lb-chart"), grid = $("lb-all-grid");
+    host.innerHTML = ""; grid.innerHTML = "";
     LETTERS.forEach(function (l, i) {
       var b = document.createElement("button");
-      b.type = "button"; b.className = "lb-cell" + (learned[l[0]] ? " is-learned" : "");
+      b.type = "button"; b.className = "lc-tile" + (learned[l[0]] ? " is-learned" : "");
       if (i === current) b.setAttribute("aria-current", "true");
-      b.setAttribute("aria-label", l[1] + ", " + l[2] + (learned[l[0]] ? ", done" : ""));
-      b.innerHTML = '<span class="lb-g" lang="my">' + letterSvg(l[0]) + "</span><small>" + (learned[l[0]] ? "✓ " : "") + l[1] + "</small>";
+      b.setAttribute("aria-label", tileLabel(l));
+      b.innerHTML = tileSvg(l[0]);
       b.addEventListener("click", function () { open(i, true); });
       host.appendChild(b);
+      var c = document.createElement("button");
+      c.type = "button"; c.className = "lc-cell" + (learned[l[0]] ? " is-learned" : "");
+      if (i === current) c.setAttribute("aria-current", "true");
+      c.setAttribute("aria-label", tileLabel(l));
+      c.innerHTML = tileSvg(l[0]) + "<small>" + l[1] + "</small>";
+      c.addEventListener("click", function () { $("lb-all-dlg").close(); open(i, true); });
+      grid.appendChild(c);
     });
-    var n = Object.keys(learned).length;
-    $("lb-progress").textContent = n ? n + " of 33 written" : "33 letters";
+    // Phones: the letters are one swipeable strip; keep the current one in view without moving the page.
+    var cur = host.children[current];
+    if (cur && host.scrollWidth > host.clientWidth + 2) {
+      var left = cur.offsetLeft - host.offsetLeft - host.clientWidth / 2 + cur.offsetWidth / 2;
+      try { host.scrollTo({ left: Math.max(0, left), behavior: reduced ? "auto" : "smooth" }); } catch (e) { host.scrollLeft = Math.max(0, left); }
+    }
+  }
+  /* Watch · Trace · Hide letter. The thumb slides to the chosen one. */
+  function setMode(m) {
+    mode = m;
+    var seg = $("lb-mode"); seg.style.setProperty("--i", m);
+    Array.prototype.forEach.call(seg.querySelectorAll("button"), function (b) { b.setAttribute("aria-checked", +b.getAttribute("data-m") === m ? "true" : "false"); });
+    $("lb-pad").classList.toggle("no-guide", m === 2);
+  }
+  function showScore(v) {
+    var p = Math.round((v || 0) * 100);
+    $("lb-inside").textContent = p + "%"; $("lb-inside-bar").style.width = p + "%";
   }
   function open(i, scroll) {
     current = i; var l = LETTERS[i];
     if (pad) pad.kill();
-    $("lb-who").innerHTML = '<div class="lb-g" lang="my" role="img" aria-label="' + l[0] + '">' + letterSvg(l[0]) + '</div><div><h3>' + l[1] + '</h3><small>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></small></div>";
+    $("lb-who").innerHTML = '<div class="lc-big" lang="my" role="img" aria-label="' + l[0] + '">' + tileSvg(l[0]) + '</div><div><h3>' + l[1] + '</h3><p>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></p></div>";
     var hear = document.createElement("button"), clip = letterClip(l[0]);
     hear.type = "button"; hear.className = "lb-hear"; hear.hidden = true; hear.innerHTML = SPEAKER;
     hear.setAttribute("aria-label", "Hear " + l[1] + ", called " + l[2]);
@@ -452,29 +485,47 @@ var MCC_TRANSLIT = (function () {
     var probe = new Audio(); probe.preload = "metadata";     // show the button only if the clip exists
     probe.addEventListener("loadedmetadata", function () { if (current === i) hear.hidden = false; }, { once: true });
     probe.src = clip;
+    $("lb-num").textContent = i + 1;
+    showScore(0); setMode(0);
     var strokes = placed(D.K[l[0]], 0, 0), b = bounds(strokes), side = Math.max(86, Math.max(b.x1 - b.x0, b.y1 - b.y0) + 32);
     var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, D.BOT || 0)) / 2 - side / 2, w: side, h: side };
     pad = Pad($("lb-pad"), strokes, view, {
       shapes: [shapeOf(D.K[l[0]], 0, 0)],
-      status: $("lb-status"), label: "Tracing pad for the letter " + l[1],
-      doneText: 'You wrote <b lang="my">' + l[0] + "</b>.",
+      label: "Writing pad for the letter " + l[1],
+      onMode: function (m) { if (m === "write" && mode === 0) setMode(1); },
+      onScore: showScore,
       onDone: function () { learned[l[0]] = 1; saveLearned(); drawChart(); $("lb-next").classList.add("is-ready"); }
     });
     $("lb-next").classList.remove("is-ready");
     drawChart();
     if (scroll && window.matchMedia("(max-width: 860px)").matches) $("lb-side").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }
-  $("lb-watch").addEventListener("click", function () { if (pad) pad.watch(); });
+  $("lb-mode").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !pad) return;
+    var m = +b.getAttribute("data-m");
+    setMode(m);
+    if (m === 0) pad.watch(); else pad.write();
+  });
+  $("lb-mode").addEventListener("keydown", function (e) {      // arrow keys move between the three, like any radio group
+    var d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!d) return; e.preventDefault();
+    var b = $("lb-mode").querySelectorAll("button")[(mode + d + 3) % 3]; b.focus(); b.click();
+  });
   $("lb-clear").addEventListener("click", function () { if (pad) pad.clear(); });
-  /* "Hide the letter": write from memory; the letter shows again once you've written it. Remembered. */
+  $("lb-all").addEventListener("click", function () {
+    var d = $("lb-all-dlg"); if (d.showModal) d.showModal(); else d.setAttribute("open", "");
+  });
+  $("lb-all-close").addEventListener("click", function () { $("lb-all-dlg").close(); });
+  $("lb-all-dlg").addEventListener("click", function (e) { if (e.target === this) this.close(); });
+  /* Name pad: "Hide the letter" writes from memory; remembered. */
   var noGuide = false; try { noGuide = localStorage.getItem("mcc_noguide") === "1"; } catch (e) {}
   function guide() {
-    ["lb-pad", "lb-name-pad"].forEach(function (id) { $(id).classList.toggle("no-guide", noGuide); });
-    ["lb-guide", "lb-name-guide"].forEach(function (id) { var b = $(id); b.textContent = noGuide ? "Show the letter" : "Hide the letter"; b.setAttribute("aria-pressed", noGuide ? "true" : "false"); });
+    $("lb-name-pad").classList.toggle("no-guide", noGuide);
+    var b = $("lb-name-guide"); b.textContent = noGuide ? "Show the letter" : "Hide the letter"; b.setAttribute("aria-pressed", noGuide ? "true" : "false");
   }
-  ["lb-guide", "lb-name-guide"].forEach(function (id) { $(id).addEventListener("click", function () {
+  $("lb-name-guide").addEventListener("click", function () {
     noGuide = !noGuide; try { localStorage.setItem("mcc_noguide", noGuide ? "1" : "0"); } catch (e) {} guide();
-  }); });
+  });
   guide();
   $("lb-next").addEventListener("click", function () { open((current + 1) % LETTERS.length, false); });
   // Deep link: learn.html#write-ka (Latin name) or #write-က opens that letter (Ask MCC links here).

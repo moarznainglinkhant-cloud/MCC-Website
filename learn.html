@@ -222,33 +222,9 @@
   .lb-lead{ font-family:'Fraunces',serif; font-size:clamp(1.02rem,1.6vw,1.18rem); color:var(--ink-soft); max-width:52ch; }
   [lang="my"]{ font-family:'Noto Sans Myanmar','Work Sans',sans-serif; }
 
-  .lb-main{ padding-block:clamp(18px,3vw,30px) clamp(52px,8vw,96px); }
-  .lb-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:start; }
-  .lb-chart-head{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px; }
-  .lb-chart-head h2{ font-size:1.25rem; font-weight:600; }
-  .lb-chart-head span{ font-size:0.72rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--ink-soft); }
-  .lb-chart{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:8px; }
-  .lb-cell{
-    aspect-ratio:1; padding:0; cursor:pointer; color:var(--ink);
-    background:var(--bg-raised); border:1px solid var(--line); border-radius:14px;
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
-    transition:background .2s ease, border-color .2s ease, box-shadow .2s ease;
-    -webkit-appearance:none; appearance:none; font:inherit;
-  }
-  .lb-cell .lb-g{ font-size:clamp(1.45rem,3.4vw,2.1rem); line-height:1.5; }
-  .lb-cell small{ font-size:0.66rem; font-weight:600; letter-spacing:0.06em; color:var(--ink-soft); }
-  .lb-cell:hover{ background:#fff; }
-  .lb-cell[aria-current="true"]{ border-color:var(--navy); box-shadow:inset 0 0 0 1px var(--navy); }
-  .lb-cell.is-learned{ background:var(--bg-sunk); }
-  .lb-cell.is-learned small{ color:#9A6B16; }
 
-  .lb-side{ position:sticky; top:86px; scroll-margin-top:80px; }
-  .lb-who{ display:flex; align-items:center; gap:16px; margin-bottom:12px; min-height:64px; }
-  .lb-who .lb-g{ font-size:2.5rem; line-height:1.5; }
-  .lb-who h3{ font-size:1.4rem; font-weight:600; line-height:1.2; }
-  .lb-who small{ font-size:0.8rem; color:var(--ink-soft); }
   /* Hear it: a round speaker (Azure's Burmese voice). Hidden until its clip is known to exist. */
-  .lb-hear{ margin-left:auto; flex:none; width:46px; height:46px; border-radius:50%; border:0; padding:0; cursor:pointer;
+  .lb-hear{ margin-left:auto; flex:none; width:48px; height:48px; border-radius:50%; border:0; padding:0; cursor:pointer;
     background:var(--red); color:#fff; display:grid; place-items:center; transition:background .2s ease, box-shadow .2s ease; }
   .lb-hear[hidden]{ display:none; }
   .lb-hear svg{ width:20px; height:20px; }
@@ -259,6 +235,109 @@
   .lb-name-line{ display:flex; align-items:center; gap:14px; }
   .lb-name-line .lb-hear{ margin-left:0; }
 
+
+  /* ---------- ALPHABET LESSON (letter tiles + one card: pad | letter, mode, score) ---------- */
+  .lb-main{ padding-block:clamp(18px,3vw,30px) clamp(52px,8vw,96px); }
+  .lc{ display:flex; flex-direction:column; gap:20px; }
+  .lc-top{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .lc-tiles{ display:grid; grid-template-columns:repeat(17,minmax(0,1fr)); gap:5px; scroll-margin-top:96px; }
+  .lc-tile{ min-width:0; height:64px; border-radius:12px; border:0; padding:0; background:var(--bg-sunk); color:var(--navy);
+    display:flex; align-items:center; justify-content:center; overflow:hidden; cursor:pointer; transition:background .2s ease; }
+  .lc-tile:hover{ background:#E6DDC8; }
+  .lc-tile svg{ display:block; height:44px; width:auto; max-width:84%; fill:currentColor; }
+  .lc-tile.is-learned{ background:var(--green); color:#fff; }
+  .lc-tile[aria-current="true"]{ background:var(--navy); color:var(--bg); }
+  .lc-tile:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .lc-card{ display:grid; grid-template-columns:minmax(0,520px) minmax(0,1fr); gap:clamp(28px,4vw,48px); padding:24px; border-radius:32px;
+    background:var(--bg-raised); box-shadow:0 1px 2px rgba(28,36,64,.06), 0 30px 60px -36px rgba(28,36,64,.3); scroll-margin-top:88px; }
+  .lc-card .lb-pad{ border:0; border-radius:22px; background:#F7F2E5; }
+  .lc-card .lb-ghost{ fill:#E3D9C2; }
+  .lc-panel{ display:flex; flex-direction:column; gap:36px; padding:8px 8px 4px 0; min-width:0; }
+  .lc-who{ display:flex; align-items:center; gap:20px; }
+  .lc-big{ flex:none; display:flex; align-items:center; height:104px; }
+  .lc-big svg{ display:block; height:96px; width:auto; max-width:120px; fill:var(--navy); }
+  .lc-who h3{ font-size:52px; font-weight:600; line-height:1; }
+  .lc-who p{ font-size:16px; color:var(--ink-soft); margin-top:8px; }
+  .lc-seg{ --i:0; position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px; padding:5px; border-radius:999px; background:var(--bg-sunk); }
+  .lc-thumb{ position:absolute; top:5px; bottom:5px; left:5px; width:calc((100% - 18px) / 3); border-radius:999px; background:var(--bg-raised);
+    box-shadow:0 1px 2px rgba(28,36,64,.10), 0 4px 12px -4px rgba(28,36,64,.18);
+    transform:translateX(calc(var(--i) * (100% + 4px))); transition:transform .38s cubic-bezier(.32,.72,0,1); }
+  .lc-seg button{ position:relative; z-index:1; height:52px; border:0; border-radius:999px; background:transparent; cursor:pointer;
+    font:600 18px 'Work Sans',sans-serif; color:var(--ink-soft); transition:color .25s ease; white-space:nowrap; }
+  .lc-seg button[aria-checked="true"]{ color:var(--navy); }
+  .lc-seg button:focus{ outline:none; }
+  .lc-seg button:focus-visible{ box-shadow:inset 0 0 0 2px rgba(28,36,64,.35); }
+  .lc-stat{ display:flex; flex-direction:column; gap:12px; }
+  .lc-stat-row{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .lc-stat-row span{ font-size:15px; color:var(--ink-soft); }
+  .lc-stat-row b{ font-family:'Fraunces',serif; font-weight:600; font-size:40px; line-height:1; }
+  .lc-bar{ height:8px; border-radius:99px; background:#ECE4D2; overflow:hidden; }
+  .lc-bar i{ display:block; height:100%; width:0; background:var(--green); border-radius:99px; transition:width .2s ease; }
+  .lc-foot{ margin-top:auto; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
+  .lc-acts{ display:flex; gap:8px; flex-wrap:wrap; }
+  .lc-acts .btn{ white-space:nowrap; }
+  .lc-acts .btn.is-ready{ box-shadow:0 0 0 3px rgba(192,138,46,.35); }
+  .lc-count{ display:flex; flex-direction:column; align-items:flex-end; gap:6px; line-height:1; flex:none; }
+  .lc-count small{ font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); }
+  .lc-count span{ font-family:'Fraunces',serif; white-space:nowrap; }
+  .lc-count b{ font-weight:600; font-size:48px; color:var(--navy); }
+  .lc-count em{ font-style:normal; font-weight:500; font-size:24px; color:var(--ink-soft); }
+  /* All letters: side sheet (desktop) / bottom sheet (phone) */
+  .lc-dlg{ border:0; padding:0; margin:0 0 0 auto; width:min(480px,100vw); max-width:none; height:100dvh; max-height:none; background:transparent; }
+  .lc-dlg::backdrop{ background:rgba(28,36,64,.32); }
+  .lc-dlg-in{ margin:16px; height:calc(100% - 32px); overflow:auto; background:var(--bg-raised); border-radius:28px; padding:22px; box-shadow:0 30px 80px -30px rgba(18,22,42,.5); }
+  .lc-dlg-hd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .lc-dlg-hd h2{ font-size:24px; font-weight:600; }
+  .lc-x{ width:44px; height:44px; border-radius:50%; border:0; background:transparent; cursor:pointer; color:var(--navy); display:grid; place-items:center; }
+  .lc-x:hover{ background:var(--bg-sunk); }
+  .lc-x svg{ width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; }
+  .lc-grid{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:4px; }
+  .lc-cell{ font-family:'Work Sans',sans-serif; position:relative; height:84px; border:0; border-radius:14px; background:transparent; cursor:pointer; color:var(--navy);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:0; }
+  .lc-cell svg{ display:block; height:34px; width:auto; max-width:80%; fill:currentColor; }
+  .lc-cell small{ font-size:12px; font-weight:600; color:var(--ink-soft); }
+  .lc-cell:hover{ background:var(--bg-sunk); }
+  .lc-cell.is-learned::after{ content:""; position:absolute; top:9px; right:9px; width:6px; height:6px; border-radius:50%; background:var(--green); }
+  .lc-cell[aria-current="true"]{ background:var(--navy); color:var(--bg); }
+  .lc-cell[aria-current="true"] small{ color:rgba(246,241,228,.75); }
+  @media (max-width:1100px){
+    .lc-card{ grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+    .lc-who h3{ font-size:44px; }
+    .lc-big svg{ height:80px; }
+  }
+  @media (max-width:860px){
+    /* Phones: the 33 letters become one swipeable strip; the card stacks letter, pad, mode, score, actions. */
+    .lc{ gap:14px; }
+    .lc-tiles{ display:flex; gap:5px; overflow-x:auto; scroll-snap-type:x proximity; scrollbar-width:none; margin-inline:calc(-1 * clamp(18px,4vw,56px)); padding-inline:clamp(18px,4vw,56px); scroll-padding-inline:clamp(18px,4vw,56px); }
+    .lc-tiles::-webkit-scrollbar{ display:none; }
+    .lc-tile{ flex:none; width:52px; height:58px; scroll-snap-align:start; }
+    .lc-tile svg{ height:40px; }
+    .lc-card{ display:flex; flex-direction:column; gap:18px; padding:14px; border-radius:26px; }
+    .lc-panel{ display:contents; }
+    .lc-who{ order:-1; gap:14px; padding:6px 4px 0; }
+    .lc-big{ height:64px; }
+    .lc-big svg{ height:60px; max-width:84px; }
+    .lc-who h3{ font-size:36px; }
+    .lc-who p{ font-size:14px; margin-top:6px; }
+    .lc-seg button{ height:46px; font-size:16px; }
+    .lc-stat{ padding-inline:4px; gap:10px; }
+    .lc-stat-row b{ font-size:30px; }
+    .lc-foot{ padding:0 4px 4px; margin-top:0; align-items:center; }
+    .lc-acts{ flex-wrap:nowrap; gap:6px; }
+    .lc-acts .btn{ padding:12px 16px; font-size:0.74rem; }
+    .lc-count b{ font-size:36px; }
+    .lc-count em{ font-size:18px; }
+    .lc-count small{ font-size:11px; }
+    .lc-dlg{ top:auto; bottom:0; margin:0; width:100vw; height:auto; max-height:88dvh; }
+    .lc-dlg-in{ margin:0; height:auto; max-height:88dvh; border-radius:26px 26px 0 0; padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px)); }
+    .lc-cell{ height:72px; }
+  }
+  @media (max-width:380px){
+    .lc-seg button{ font-size:15px; }
+    .lc-acts .btn{ padding:11px 13px; font-size:0.7rem; }
+    .lc-count b{ font-size:28px; }
+    .lc-count em{ font-size:15px; }
+  }
   .lb-pad{ position:relative; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .lb-pad.square{ aspect-ratio:1; }
   .lb-pad svg{ display:block; width:100%; height:100%; }
@@ -365,13 +444,12 @@
   .reel-views svg{ width:12px; height:12px; fill:#fff; }
   .lb-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:12px; min-height:1.4em; }
   @media (max-width:860px){
-    .lb-grid, .lb-name-grid, .lb-say-grid{ grid-template-columns:1fr; }
+    .lb-name-grid, .lb-say-grid{ grid-template-columns:1fr; }
     .lb-name-preview{ width:100%; max-width:440px; }
     .lb-reel{ grid-template-columns:1fr; }
     .lb-reel-copy{ order:-1; }
     .lb-reels{ justify-content:center; width:100%; }
     .reel-card{ flex:1 1 0; width:auto; max-width:220px; }
-    .lb-side{ position:static; order:-1; width:100%; max-width:440px; margin-inline:auto; }
   }
   @media (prefers-reduced-motion: reduce){ .lb-pulse{ animation:none; } }
 
@@ -631,25 +709,42 @@
   </section>
 
   <section class="lb-main">
-    <div class="wrap lb-grid">
-      <div>
-        <div class="lb-chart-head"><h2>The alphabet</h2><span id="lb-progress">33 letters</span></div>
-        <div class="lb-chart" id="lb-chart"></div>
+    <div class="wrap lc">
+      <div class="lc-top">
+        <span class="eyebrow">The alphabet</span>
+        <button type="button" class="btn ghost" id="lb-all" aria-haspopup="dialog">All letters</button>
       </div>
-      <div class="lb-side" id="lb-side">
-        <div class="lb-who" id="lb-who"></div>
+      <div class="lc-tiles" id="lb-chart" role="group" aria-label="The 33 letters"></div>
+      <div class="lc-card" id="lb-side">
         <div class="lb-pad square" id="lb-pad"></div>
-        <div class="lb-bar">
-          <div class="lb-status" id="lb-status" aria-live="polite"></div>
-          <div class="lb-actions">
-            <button type="button" class="btn ghost" id="lb-watch">Watch again</button>
-            <button type="button" class="btn ghost" id="lb-clear">Clear</button>
-            <button type="button" class="btn ghost" id="lb-guide" aria-pressed="false">Hide the letter</button>
-            <button type="button" class="btn" id="lb-next">Next letter</button>
+        <div class="lc-panel">
+          <div class="lc-who" id="lb-who"></div>
+          <div class="lc-seg" id="lb-mode" role="radiogroup" aria-label="Mode">
+            <span class="lc-thumb" aria-hidden="true"></span>
+            <button type="button" role="radio" aria-checked="true" data-m="0">Watch</button>
+            <button type="button" role="radio" aria-checked="false" data-m="1">Trace</button>
+            <button type="button" role="radio" aria-checked="false" data-m="2">Hide letter</button>
+          </div>
+          <div class="lc-stat" aria-live="polite">
+            <div class="lc-stat-row"><span>Inside the letter</span><b id="lb-inside">0%</b></div>
+            <div class="lc-bar"><i id="lb-inside-bar"></i></div>
+          </div>
+          <div class="lc-foot">
+            <div class="lc-acts">
+              <button type="button" class="btn" id="lb-next">Next letter</button>
+              <button type="button" class="btn ghost" id="lb-clear">Clear</button>
+            </div>
+            <div class="lc-count"><small>Letter</small><span><b id="lb-num">1</b><em> / 33</em></span></div>
           </div>
         </div>
       </div>
     </div>
+    <dialog class="lc-dlg" id="lb-all-dlg" aria-labelledby="lb-all-title">
+      <div class="lc-dlg-in">
+        <div class="lc-dlg-hd"><h2 id="lb-all-title">All 33 letters</h2><button type="button" class="lc-x" id="lb-all-close" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="lc-grid" id="lb-all-grid"></div>
+      </div>
+    </dialog>
   </section>
 
   <section class="lb-name" id="name">
