@@ -91,9 +91,10 @@ const I18N = {
     register_now: "Register Now",
     add_to_calendar: "Add to calendar",
     stay_tuned_tag: "Stay tuned",
-    no_event_h3: "New event not available right now",
+    no_event_h3: "New event coming soon",
     wcal_soon: "next event coming soon",
-    no_event_p: "We're always planning something — keep checking back, and in the meantime take a look at everything we've hosted so far.",
+    no_event_p: "Follow @mcc_uoft on Instagram to hear about it first. Until then, look back at everything we've hosted.",
+    follow_instagram: "Follow on Instagram",
     visit_all_previous: "Visit All Previous Events",
     rsvp: "RSVP",
 
@@ -187,9 +188,10 @@ const I18N = {
     register_now: "အခုပင်စာရင်းသွင်းပါ",
     add_to_calendar: "ပြက္ခဒိန်ထဲ ထည့်ရန်",
     stay_tuned_tag: "စောင့်ကြည့်ပါ",
-    no_event_h3: "လက်ရှိတွင် အခမ်းအနားအသစ်မရှိသေးပါ",
+    no_event_h3: "အခမ်းအနားအသစ် မကြာမီလာမည်",
     wcal_soon: "နောက်အခမ်းအနား မကြာမီလာမည်",
-    no_event_p: "ကျွန်ုပ်တို့ အမြဲတမ်းစီစဉ်နေပါသည် — ဆက်လက်ကြည့်ရှုပေးပါ၊ ယခုအချိန်တွင် ကျွန်ုပ်တို့ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ကြည့်ရှုနိုင်ပါသည်။",
+    no_event_p: "အရင်ဆုံးသိရှိရန် Instagram တွင် @mcc_uoft ကို follow လုပ်ထားပါ။ ထိုအချိန်အထိ ယခင်ကျင်းပခဲ့သော အခမ်းအနားများကို ပြန်ကြည့်နိုင်ပါသည်။",
+    follow_instagram: "Instagram တွင် Follow လုပ်ရန်",
     visit_all_previous: "ယခင်အခမ်းအနားများအားလုံးကြည့်ရန်",
     rsvp: "စာရင်းသွင်းရန်",
 
@@ -301,7 +303,7 @@ function initLangToggle() {
 }
 
 // TESTING SWITCH — normally, when there's no upcoming event, the "Next
-// Event" spot shows a "New event not available right now" message. Flip
+// Event" spot shows a "New event coming soon" message. Flip
 // this to true to instead show your most recent past event in that spot
 // (so you can preview/test how the "Next Event" card looks with real
 // content, without needing an actual upcoming event in the sheet). It
@@ -666,7 +668,10 @@ function renderFeaturedEvent(ev) {
     body.innerHTML = `
       <h3 class="${mmClass}">${t("no_event_h3")}</h3>
       <p class="desc ${mmClass}">${t("no_event_p")}</p>
-      <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>`;
+      <div class="cta-row" style="display:flex;flex-wrap:wrap;gap:14px;margin-top:22px">
+        <a class="btn ${mmClass}" href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">${t("follow_instagram")}</a>
+        <a class="btn ghost ${mmClass}" href="${pastHref}">${t("visit_all_previous")}</a>
+      </div>`;
     return;
   }
 
@@ -2432,7 +2437,7 @@ const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "",
 // poster filename, ignoring capitals). The count ("22 events since 2022") still includes every event.
 const BENTO_POSTERS_HIDE = ["multicultural-bazaar", "mcc-mixer"];            // never shown in the tile
 const BENTO_POSTERS_FIRST = ["sea of love", "thingyan", "general meeting", "home away from home"]; // shown first
-const BENTO_COLORS = ["#AE3628", "#C08A2E", "#4B7A3C", "#1C2440", "#8C2A1F"];
+const BENTO_COLORS = ["#AE3628", "#86601E", "#4B7A3C", "#1C2440", "#8C2A1F"];
 
 function renderBento(past) {
   const root = document.getElementById("js-bento");

@@ -56,6 +56,7 @@
     --red:#AE3628;
     --red-ink:#8C2A1F;
     --gold:#C08A2E;
+    --gold-ink:#86601E; /* gold dark enough for text on cream (4.6:1) */
     --green:#4B7A3C;
     --navy:#1C2440;
     --navy-deep:#12162A;
@@ -143,15 +144,15 @@
   }
   .brand-name small{
     display:block; font-family:'Work Sans',sans-serif; font-weight:600;
-    font-size:0.62rem; letter-spacing:0.14em; color:var(--ink-soft); text-transform:uppercase;
+    font-size:0.7rem; letter-spacing:0.14em; color:var(--ink-soft); text-transform:uppercase;
   }
   nav.links{ display:flex; align-items:center; gap:clamp(18px,3vw,34px); }
   nav.links a{
     font-size:0.82rem; font-weight:600; letter-spacing:0.03em;
-    text-decoration:none; color:var(--ink); position:relative; padding-block:4px;
+    text-decoration:none; color:var(--ink); position:relative; padding-block:12px; margin-block:-6px; /* ~44px tap area without a taller header */
   }
   nav.links a::after{
-    content:''; position:absolute; left:0; right:0; bottom:-2px; height:2px;
+    content:''; position:absolute; left:0; right:0; bottom:6px; height:2px;
     background:var(--red); transform:scaleX(0); transform-origin:left;
     transition:transform .25s ease;
   }
@@ -159,12 +160,14 @@
   nav.links a.current::after{ transform:scaleX(1); background:var(--gold); }
   .nav-cta{
     background:var(--navy); color:var(--footer-ink) !important;
-    padding:9px 18px; border-radius:999px; font-size:0.78rem !important;
+    padding:12px 18px; border-radius:999px; font-size:0.78rem !important;
   }
+  nav.links a.nav-cta{ padding:12px 18px; }
   .nav-cta::after{ display:none; }
   .lang-toggle{
     position:relative;
-    display:flex; align-items:center;
+    /* two equal columns so the 50%-wide slider always fits whichever label is wider */
+    display:grid; grid-template-columns:1fr 1fr; align-items:center;
     border:1px solid var(--line); border-radius:999px; padding:3px;
   }
   .lang-toggle-slider{
@@ -178,8 +181,8 @@
   .lang-toggle button{
     position:relative; z-index:1;
     border:none; background:none; cursor:pointer;
-    font-family:'Work Sans', 'Noto Sans Myanmar', sans-serif; font-size:0.7rem; font-weight:700; letter-spacing:0.04em;
-    color:var(--ink-soft); padding:5px 11px; border-radius:999px;
+    font-family:'Work Sans', 'Noto Sans Myanmar', sans-serif; font-size:0.78rem; font-weight:700; letter-spacing:0.04em;
+    color:var(--ink-soft); padding:8px 13px; min-height:34px; line-height:1.2; border-radius:999px;
     flex:1 1 0; text-align:center;
     transition: color .18s ease;
   }
@@ -320,13 +323,6 @@
       border:1px solid rgba(246,241,228,0.2); background:rgba(246,241,228,0.06);
     }
     .footer-map iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; filter:saturate(.8) contrast(.96); }
-    .footer-map .fm-open{
-      display:inline-flex; align-items:center; gap:8px; margin-top:12px;
-      color:var(--footer-ink-soft); font-size:0.82rem; text-decoration:none;
-      transition:color .18s ease;
-    }
-    .footer-map .fm-open:hover{ color:var(--footer-ink); }
-    .footer-map .fm-open svg{ width:14px; height:14px; flex:none; }
   }
   .contact-intro h2{ color:var(--footer-ink); font-size:clamp(2.1rem,4.4vw,3.2rem); margin-bottom:16px; }
   .contact-intro p{ color:var(--footer-ink-soft); max-width:42ch; font-size:1rem; }
@@ -371,7 +367,7 @@
   /* Exec login: outlined gold pill in the nav, a gold-edged button in the footer */
   nav.links a.nav-exec{
     display:inline-flex; align-items:center; gap:7px;
-    padding:8px 16px; border-radius:999px; border:1.5px solid var(--gold);
+    padding:11px 16px; border-radius:999px; border:1.5px solid var(--gold);
     color:var(--ink); font-size:0.78rem; font-weight:700; letter-spacing:0.03em;
     transition: background .18s ease, color .18s ease, border-color .18s ease;
   }
@@ -382,7 +378,7 @@
     display:inline-flex; align-items:center; align-self:flex-start; gap:8px;
     padding:10px 18px; border-radius:999px; border:1.5px solid var(--gold);
   }
-  .btn-footer.exec{ border-color:var(--gold); color:var(--gold); }
+  .btn-footer.exec{ border-color:var(--gold); color:var(--gold-ink); }
   .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
   /* The nav has 8 items: tighter spacing, and fold into the menu button below 1200px so it never wraps. */
   nav.links{ gap:clamp(12px,1.5vw,30px); }
@@ -474,6 +470,7 @@
 
   /* ---------- POLISH (shared across pages) ---------- */
   ::selection{ background:rgba(192,138,46,0.28); color:var(--ink); }
+  .contact a[href*="Portfolio-"]{ display:inline-block; padding-block:12px; margin-block:-12px; }
   a:focus-visible, button:focus-visible, [role="button"]:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
 
   /* The sticky nav picks up a soft shadow once the page scrolls under it. */
@@ -571,7 +568,7 @@
       <div class="lang-toggle" role="group" aria-label="Language">
         <span class="lang-toggle-slider" aria-hidden="true"></span>
         <button type="button" data-lang="en">EN</button>
-        <button type="button" data-lang="mm">မမ</button>
+        <button type="button" data-lang="mm">မြန်မာ</button>
       </div>
     </nav>
     <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-panel"><span></span></button>
@@ -586,7 +583,7 @@
     <div class="lang-toggle" role="group" aria-label="Language">
       <span class="lang-toggle-slider" aria-hidden="true"></span>
       <button type="button" data-lang="en">EN</button>
-      <button type="button" data-lang="mm">မမ</button>
+      <button type="button" data-lang="mm">မြန်မာ</button>
     </div>
   </div>
 </header>
@@ -652,7 +649,6 @@
           </div>
           <div class="footer-map" id="footerMap" data-q="21 Sussex Ave, Toronto, ON M5S 1J6">
             <div class="fm-frame"></div>
-            <a class="fm-open" href="https://www.google.com/maps/search/?api=1&amp;query=21+Sussex+Ave%2C+Toronto%2C+ON+M5S+1J6" target="_blank" rel="noopener"><span data-i18n="footer_map_open">Open in Google Maps</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></a>
           </div>
         </div>
         <div class="contact-links">
