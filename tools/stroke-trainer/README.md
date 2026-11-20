@@ -17,7 +17,7 @@ batch can be checked or redone later.
 |---|---|---|---|
 | 1 (`1`) | Nov 20, 2026 | v4.0 | ဂ င ဎ ပ လ ဝ |
 | 2, part 1 (`2.1`) | Nov 20, 2026 | v4.1 | က ခ ဃ ဆ ဇ တ ထ န ဖ ဘ ယ သ |
-| 2, part 2 (`2.2`) | Nov 20, 2026 | v4.2 | စ ဈ |
+| 2, part 2 (`2.2`) | Nov 20, 2026 | v4.2 | စ ဈ ဓ |
 
 v4.2 reproduces every letter above exactly (checked with `replay.py --check`). v4.1 reproduces batches 1 and 2.1;
 v4.0 only batch 1 (it can't cut overlaps).
