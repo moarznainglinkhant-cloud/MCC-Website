@@ -1,0 +1,548 @@
+{
+ "about": "Which letters were made with which version of the MCC Stroke Trainer, and every choice Moarz made for each (the writing order: which piece, where the pen starts, direction). The bands in js/learn-bands.js are the trainer's output for these choices. To redo a batch (a newer trainer, or a different direction), see README.md.",
+ "trainer": "https://claude.ai/artifact/Y9K5RXHJi7bxJyQGfxsSNL",
+ "versions": {
+  "4.0": {
+   "file": "trainer-v4.0.html",
+   "artifact_version": "1795202290-ad1c",
+   "date": "2026-11-20",
+   "what": "Bands between the font's two borders. Each font shape is a piece; overlapping shapes are swept whole (both own the overlap)."
+  },
+  "4.1": {
+   "file": "trainer-v4.1.html",
+   "artifact_version": "1795203743-c23c",
+   "date": "2026-11-20",
+   "what": "Overlaps cut by click order: the piece clicked first keeps the overlap; a later piece is cut along the earlier one's border, and the cut becomes one of its ends."
+  },
+  "4.2": {
+   "file": "trainer-v4.2.html",
+   "artifact_version": "1795205271-34f0",
+   "date": "2026-11-20",
+   "what": "Fix for cuts that bulge away from the band (e.g. sa: the inner band meets the ring's inner border): the band first sweeps along the cut edge, so no sliver is left. Saves now include tool. Gives byte-identical bands to 4.1 for batches 1 and 2."
+  }
+ },
+ "batches": [
+  {
+   "id": "1",
+   "batch": 1,
+   "part": 1,
+   "date": "2026-11-20",
+   "tool": "4.0",
+   "same_output_in": [
+    "4.1",
+    "4.2"
+   ],
+   "letters": [
+    {
+     "ch": "ဂ",
+     "lat": "ga",
+     "g": 225,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         16.61,
+         -1.08
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "င",
+     "lat": "nga",
+     "g": 234,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         47.47,
+         -12.98
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဎ",
+     "lat": "dha",
+     "g": 288,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         11.16,
+         -41.39
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ပ",
+     "lat": "pa",
+     "g": 328,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         16.6,
+         -42.18
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "လ",
+     "lat": "la",
+     "g": 362,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         33.81,
+         -3.01
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဝ",
+     "lat": "wa",
+     "g": 368,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         29.1,
+         -2.23
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "2.1",
+   "batch": 2,
+   "part": 1,
+   "date": "2026-11-20",
+   "tool": "4.1",
+   "same_output_in": [
+    "4.2"
+   ],
+   "letters": [
+    {
+     "ch": "က",
+     "lat": "ka",
+     "g": 214,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         16.8,
+         -0.99
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         50.64,
+         -27.71
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ခ",
+     "lat": "kha",
+     "g": 222,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         9.74,
+         -30.53
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဃ",
+     "lat": "gha",
+     "g": 229,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         11.16,
+         -41.39
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         62.3,
+         -40.85
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဆ",
+     "lat": "hsa",
+     "g": 250,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         9.74,
+         -30.53
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         67.77,
+         -41.09
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဇ",
+     "lat": "za",
+     "g": 253,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         40.16,
+         -5.08
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "တ",
+     "lat": "ta",
+     "g": 298,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         28.41,
+         -2.44
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         50.16,
+         -27.79
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ထ",
+     "lat": "hta",
+     "g": 306,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         27.75,
+         -41.78
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         70.25,
+         -41.74
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "န",
+     "lat": "na",
+     "g": 319,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         36.18,
+         -38.5
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဖ",
+     "lat": "pha",
+     "g": 332,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         19.74,
+         -40.02
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဘ",
+     "lat": "bha",
+     "g": 338,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         7.94,
+         -29.69
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         48.07,
+         -27.75
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ယ",
+     "lat": "ya",
+     "g": 345,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         16.76,
+         -41.96
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         50.7,
+         -15.59
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "သ",
+     "lat": "tha",
+     "g": 372,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         7.94,
+         -29.69
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         60.99,
+         -40.86
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "2.2",
+   "batch": 2,
+   "part": 2,
+   "date": "2026-11-20",
+   "tool": "4.2",
+   "letters": [
+    {
+     "ch": "စ",
+     "lat": "sa",
+     "g": 247,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         15.75,
+         -37.04
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         20.18,
+         -35.86
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဈ",
+     "lat": "zha",
+     "g": 256,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 2,
+        "start": [
+         16.96,
+         -37.92
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         20.44,
+         -35.85
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         37.12,
+         -0.44
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  }
+ ]
+}
