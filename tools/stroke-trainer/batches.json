@@ -19,6 +19,12 @@
    "artifact_version": "1795205271-34f0",
    "date": "2026-11-20",
    "what": "Fix for cuts that bulge away from the band (e.g. sa: the inner band meets the ring's inner border): the band first sweeps along the cut edge, so no sliver is left. Saves now include tool. Gives byte-identical bands to 4.1 for batches 1 and 2."
+  },
+  "4.3": {
+   "file": "trainer-v4.3.html",
+   "artifact_version": "1795206776-8520",
+   "date": "2026-11-20",
+   "what": "Sharp corners of the borders are always kept in the sweep, and every end's edge is swept where it bulges away from the band, so a band fills the letter exactly (corners included). Letters drawn in one stroke whose sharp turns look like stroke ends start with those ends switched off (PRESET_IGN: ဋ ဌ ဍ ဠ)."
   }
  },
  "batches": [
@@ -564,6 +570,139 @@
         "start": [
          14.01,
          -13.69
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "3",
+   "batch": 3,
+   "part": 1,
+   "date": "2026-11-20",
+   "tool": "4.3",
+   "letters": [
+    {
+     "ch": "ဋ",
+     "lat": "ta",
+     "g": 269,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {
+       "0": [
+        [
+         43.8,
+         1
+        ],
+        [
+         47.5,
+         -13
+        ],
+        [
+         14.8,
+         16.7
+        ]
+       ]
+      },
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         47.43,
+         -30.26
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဌ",
+     "lat": "hta",
+     "g": 276,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {
+       "0": [
+        [
+         47.4,
+         -13
+        ]
+       ]
+      },
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         47.4,
+         -30.27
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဍ",
+     "lat": "da",
+     "g": 281,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {
+       "0": [
+        [
+         8.7,
+         -13.7
+        ],
+        [
+         12.1,
+         0.9
+        ]
+       ]
+      },
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         8.86,
+         -30.17
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ဠ",
+     "lat": "la",
+     "g": 382,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {
+       "0": [
+        [
+         47.4,
+         -13
+        ],
+        [
+         43.8,
+         1
+        ]
+       ]
+      },
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         47.41,
+         -30.27
         ],
         "dir": 1
        }
