@@ -338,6 +338,27 @@
     .lc-count b{ font-size:28px; }
     .lc-count em{ font-size:15px; }
   }
+  /* Your name: same card language as the alphabet lesson */
+  .lc-namecard{ min-width:0; display:flex; flex-direction:column; gap:20px; padding:24px; border-radius:32px; background:var(--bg-raised);
+    box-shadow:0 1px 2px rgba(28,36,64,.06), 0 30px 60px -36px rgba(28,36,64,.3); }
+  .lc-name-hd{ display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+  .lc-name-hd .lb-name-mm{ font-size:clamp(1.8rem,3.4vw,2.4rem); line-height:1.6; color:var(--navy); }
+  .lc-name-hd .lc-seg{ flex:0 1 440px; }
+  .lc-namecard .lb-name-scroll{ margin-top:0; border:0; border-radius:22px; background:#F7F2E5; }
+  .lc-namecard .lb-ghost{ fill:#E3D9C2; }
+  .lc-name-ft{ display:flex; align-items:flex-end; gap:24px; }
+  .lc-name-ft .lc-stat{ flex:1; }
+  .lb-name-preview{ border:0; border-radius:32px; box-shadow:0 1px 2px rgba(28,36,64,.06), 0 30px 60px -36px rgba(28,36,64,.3); }
+  @media (max-width:860px){
+    .lb-name-grid{ grid-template-columns:minmax(0,1fr); }
+    .lc-namecard{ padding:14px; border-radius:26px; gap:16px; }
+    .lc-name-hd{ padding:4px 4px 0; }
+    .lc-name-hd .lc-seg{ flex:1 1 100%; }
+    .lc-name-ft{ padding:0 4px 4px; align-items:center; }
+    .lc-name-ft .lc-stat-row span{ white-space:nowrap; }
+    .lc-name-ft .btn{ padding:12px 16px; font-size:0.74rem; }
+    .lc-name-ft .lc-stat-row b{ font-size:30px; }
+  }
   .lb-pad{ position:relative; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px; overflow:hidden; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
   .lb-pad.square{ aspect-ratio:1; }
   .lb-pad svg{ display:block; width:100%; height:100%; }
@@ -764,18 +785,23 @@
         <span class="lb-pv-ghost" lang="my">ဆာရာ</span>
         <span class="lb-pv-cap">e.g. <b>Sarah</b> → <span lang="my">ဆာရာ</span></span>
       </div>
-      <div class="lb-name-out" id="lb-name-out" hidden>
-        <div class="lb-name-line">
+      <div class="lb-name-out lc-namecard" id="lb-name-out" hidden>
+        <div class="lc-name-hd">
           <div class="lb-name-mm" id="lb-name-mm" lang="my"></div>
+          <div class="lc-seg" id="lb-name-mode" role="radiogroup" aria-label="Mode">
+            <span class="lc-thumb" aria-hidden="true"></span>
+            <button type="button" role="radio" aria-checked="true" data-m="0">Watch</button>
+            <button type="button" role="radio" aria-checked="false" data-m="1">Trace</button>
+            <button type="button" role="radio" aria-checked="false" data-m="2">Hide letter</button>
+          </div>
         </div>
         <div class="lb-name-scroll" id="lb-name-scroll"><div class="lb-pad" id="lb-name-pad"></div></div>
-        <div class="lb-bar">
-          <div class="lb-status" id="lb-name-status" aria-live="polite"></div>
-          <div class="lb-actions">
-            <button type="button" class="btn ghost" id="lb-name-watch">Watch again</button>
-            <button type="button" class="btn ghost" id="lb-name-retry">Clear</button>
-            <button type="button" class="btn ghost" id="lb-name-guide" aria-pressed="false">Hide the letter</button>
+        <div class="lc-name-ft">
+          <div class="lc-stat" aria-live="polite">
+            <div class="lc-stat-row"><span>Inside the letters</span><b id="lb-name-inside">0%</b></div>
+            <div class="lc-bar"><i id="lb-name-bar"></i></div>
           </div>
+          <button type="button" class="btn ghost" id="lb-name-retry">Clear</button>
         </div>
       </div>
     </div>

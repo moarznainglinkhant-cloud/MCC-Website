@@ -517,16 +517,6 @@ var MCC_TRANSLIT = (function () {
   });
   $("lb-all-close").addEventListener("click", function () { $("lb-all-dlg").close(); });
   $("lb-all-dlg").addEventListener("click", function (e) { if (e.target === this) this.close(); });
-  /* Name pad: "Hide the letter" writes from memory; remembered. */
-  var noGuide = false; try { noGuide = localStorage.getItem("mcc_noguide") === "1"; } catch (e) {}
-  function guide() {
-    $("lb-name-pad").classList.toggle("no-guide", noGuide);
-    var b = $("lb-name-guide"); b.textContent = noGuide ? "Show the letter" : "Hide the letter"; b.setAttribute("aria-pressed", noGuide ? "true" : "false");
-  }
-  $("lb-name-guide").addEventListener("click", function () {
-    noGuide = !noGuide; try { localStorage.setItem("mcc_noguide", noGuide ? "1" : "0"); } catch (e) {} guide();
-  });
-  guide();
   $("lb-next").addEventListener("click", function () { open((current + 1) % LETTERS.length, false); });
   // Deep link: learn.html#write-ka (Latin name) or #write-က opens that letter (Ask MCC links here).
   function fromHash() {
@@ -569,8 +559,9 @@ var MCC_TRANSLIT = (function () {
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
     if (px < 2.3) px = 2.3;
+    setNameMode(0); nameScore(0);
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
-      shapes: lay.shapes, status: $("lb-name-status"), px: px, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
+      shapes: lay.shapes, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
     });
     note.textContent = lay.ok
@@ -579,7 +570,20 @@ var MCC_TRANSLIT = (function () {
   }
   $("lb-name-form").addEventListener("submit", function (e) { e.preventDefault(); writeName($("lb-name-input").value); });
   var nameText = "";
-  $("lb-name-watch").addEventListener("click", function () { if (namePad) namePad.watch(); });
+  /* Watch · Trace · Hide letter for the name, same as the alphabet card. */
+  var nameMode = 0;
+  function setNameMode(m) {
+    nameMode = m;
+    var seg = $("lb-name-mode"); seg.style.setProperty("--i", m);
+    Array.prototype.forEach.call(seg.querySelectorAll("button"), function (b) { b.setAttribute("aria-checked", +b.getAttribute("data-m") === m ? "true" : "false"); });
+    $("lb-name-pad").classList.toggle("no-guide", m === 2);
+  }
+  function nameScore(v) { var p = Math.round((v || 0) * 100); $("lb-name-inside").textContent = p + "%"; $("lb-name-bar").style.width = p + "%"; }
+  $("lb-name-mode").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b || !namePad) return;
+    var m = +b.getAttribute("data-m"); setNameMode(m);
+    if (m === 0) namePad.watch(); else namePad.write();
+  });
   $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (namePad && !$("lb-name-out").hidden) writeName($("lb-name-input").value); }, 250); });
