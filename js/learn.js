@@ -198,6 +198,14 @@ var MCC_TRANSLIT = (function () {
      "Your turn" is free writing: the visitor's own line is drawn as they write, green where it is inside the
      letter, red where it strays outside, checked live against the letter shape. Done = most of the letter
      covered and most of the line inside it. */
+  /* FINAL animations (js/learn-bands.js, made by hand in the MCC Stroke Trainer). For a glyph listed there, the demo
+     fills the font's own outline band by band instead of using the brush. Do not replace these with generated strokes. */
+  var BANDS = window.MCC_BANDS || {}, BAND_SPEED = 45, BAND_GAP = 420;   // units a second; ms between bands (as in the trainer)
+  function bandsOf(g, dx, dy) {          // the final bands of one glyph, moved to (dx, dy); null when it has none yet
+    var r = BANDS[g]; if (!r) return null;
+    var pp = function (t) { return t.split(" ").map(function (q) { var v = q.split(","); return [+v[0] + dx, +v[1] + dy]; }); };
+    return r.bands.map(function (bd) { return { a: pp(bd.a), b: pp(bd.b) }; });
+  }
   var GOOD = "#4B7A3C", BAD = "#C2412F";
   var NEED_COVER = 0.82, NEED_INSIDE = 0.8;
   function Pad(host, strokes, view, o) {
@@ -243,6 +251,25 @@ var MCC_TRANSLIT = (function () {
     });
     var mine = el("g", { "class": "lb-mine", "stroke-width": D.W * 0.55 }); svg.appendChild(mine);   // the visitor's own writing
     var pen = el("circle", { "class": "lb-pen", r: 1.7, opacity: 0 }); svg.appendChild(pen);
+    // FINAL band animation: each band grows from its start along the font's two borders, front edge straight.
+    var BD = o.bands || null, bandEls = [];
+    if (BD) BD.forEach(function (bd) {
+      var m = [0], k; for (k = 1; k < bd.a.length; k++) {
+        var x0 = (bd.a[k - 1][0] + bd.b[k - 1][0]) / 2, y0 = (bd.a[k - 1][1] + bd.b[k - 1][1]) / 2, x1 = (bd.a[k][0] + bd.b[k][0]) / 2, y1 = (bd.a[k][1] + bd.b[k][1]) / 2;
+        m.push(m[k - 1] + Math.hypot(x1 - x0, y1 - y0));
+      }
+      bd.m = m; var pe = el("path", { d: "" }); demoG.appendChild(pe); bandEls.push(pe);
+    });
+    function setBand(j, dist) {             // show band j up to distance dist along it; returns the pen point (middle of the front)
+      var bd = BD[j], a = bd.a, b = bd.b, m = bd.m, n = a.length - 1, k = 0;
+      while (k < n && m[k + 1] <= dist) k++;
+      var f = k < n ? Math.max(0, Math.min(1, (dist - m[k]) / ((m[k + 1] - m[k]) || 1))) : 0;
+      var lp = function (p, q) { return [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f]; };
+      var fa = k < n ? lp(a[k], a[k + 1]) : a[n], fb = k < n ? lp(b[k], b[k + 1]) : b[n];
+      var side = a.slice(0, k + 1).concat([fa, fb]), back = b.slice(0, k + 1).reverse();
+      bandEls[j].setAttribute("d", "M" + side.concat(back).map(function (p) { return p[0].toFixed(2) + " " + p[1].toFixed(2); }).join("L") + "Z");
+      return [(fa[0] + fb[0]) / 2, (fa[1] + fb[1]) / 2];
+    }
 
     function ownPart(i) {               // where strokes meet, this stroke shows only its own circle (set up the first time it's drawn)
       if (!window.MCCInkOwnMask || holders[i].hasAttribute("data-own")) return;
@@ -259,7 +286,7 @@ var MCC_TRANSLIT = (function () {
       return a[a.length - 1];
     }
     function full(i) { ownPart(i); inks[i].setAttribute("points", pts(L[i].length > 1 ? L[i] : [L[i][0], L[i][0]])); }
-    function clearDemo() { inks.forEach(function (p) { p.setAttribute("points", ""); }); inkG.style.display = "none"; demoG.style.display = ""; }
+    function clearDemo() { inks.forEach(function (p) { p.setAttribute("points", ""); }); bandEls.forEach(function (p) { p.setAttribute("d", ""); }); inkG.style.display = "none"; demoG.style.display = ""; }
     function whole() { inkG.style.display = ""; demoG.style.display = "none"; }
     clearDemo();
     function say(h) { if (o.status) o.status.innerHTML = h; }
@@ -273,6 +300,25 @@ var MCC_TRANSLIT = (function () {
     function watch() {
       stop(); clearDemo(); clearMine(); mode = "watch"; host.classList.remove("is-writing", "is-done"); if (o.onMode) o.onMode("watch");
       var i = 0, t0 = 0;
+      if (BD) {                                   // FINAL hand-made animation
+        say("Watch the pen. <b>" + BD.length + " stroke" + (BD.length > 1 ? "s" : "") + "</b>.");
+        follow(BD[0].a[0][0]);
+        var bstep = function (now) {
+          if (dead) return;
+          if (!t0) t0 = now;
+          var bd = BD[i], tot = bd.m[bd.m.length - 1], dist = Math.min(tot, (now - t0) / 1000 * BAND_SPEED), tip = setBand(i, dist);
+          pen.setAttribute("cx", tip[0]); pen.setAttribute("cy", tip[1]); pen.setAttribute("opacity", 1);
+          if (dist >= tot) {
+            i++; t0 = 0;
+            if (i >= BD.length) { pen.setAttribute("opacity", 0); whole(); timer = setTimeout(write, 1100); return; }
+            follow(BD[i].a[0][0]);
+            timer = setTimeout(function () { raf = requestAnimationFrame(bstep); }, BAND_GAP); return;
+          }
+          raf = requestAnimationFrame(bstep);
+        };
+        timer = setTimeout(function () { raf = requestAnimationFrame(bstep); }, 350);
+        return;
+      }
       say("Watch the pen. <b>" + L.length + " stroke" + (L.length > 1 ? "s" : "") + "</b>.");
       follow(L[0][0][0]);
       function step(now) {
@@ -491,6 +537,7 @@ var MCC_TRANSLIT = (function () {
     var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, D.BOT || 0)) / 2 - side / 2, w: side, h: side };
     pad = Pad($("lb-pad"), strokes, view, {
       shapes: [shapeOf(D.K[l[0]], 0, 0)],
+      bands: bandsOf(D.K[l[0]], 0, 0),
       label: "Writing pad for the letter " + l[1],
       onMode: function (m) { if (m === "write" && mode === 0) setMode(1); },
       onScore: showScore,
@@ -533,18 +580,19 @@ var MCC_TRANSLIT = (function () {
   /* ---------- write your name ---------- */
   var namePad = null;
   function layout(words) {
-    var x = 0, all = [], shapes = [], ok = true;
+    var x = 0, all = [], shapes = [], ok = true, bands = [], allBands = true;
     words.forEach(function (w, wi) {
       if (wi) x += 16;
       (w.match(CLUSTER) || []).forEach(function (c) {
         var e = D.C[c];
         while (!e && c.length > 1) { c = c.slice(0, -1); e = D.C[c]; ok = false; }     // unknown mark: drop it, keep the letter
         if (!e) { ok = false; return; }
-        for (var i = 1; i < e.length; i += 3) { all = all.concat(placed(e[i], x + e[i + 1], e[i + 2])); shapes.push(shapeOf(e[i], x + e[i + 1], e[i + 2])); }
+        for (var i = 1; i < e.length; i += 3) { all = all.concat(placed(e[i], x + e[i + 1], e[i + 2])); shapes.push(shapeOf(e[i], x + e[i + 1], e[i + 2]));
+          var bb = bandsOf(e[i], x + e[i + 1], e[i + 2]); if (bb) bands = bands.concat(bb); else allBands = false; }
         x += e[0];
       });
     });
-    return { strokes: all, shapes: shapes, width: x, ok: ok };
+    return { strokes: all, shapes: shapes, width: x, ok: ok, bands: allBands && bands.length ? bands : null };
   }
   function writeName(raw) {
     var words = MCC_TRANSLIT.name(raw), out = $("lb-name-out"), note = $("lb-name-note");
@@ -561,7 +609,7 @@ var MCC_TRANSLIT = (function () {
     if (px < 2.3) px = 2.3;
     setNameMode(0); nameScore(0);
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
-      shapes: lay.shapes, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
+      shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
     });
     note.textContent = lay.ok

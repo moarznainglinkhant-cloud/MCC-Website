@@ -2790,6 +2790,19 @@ function initBentoLearn() {
   }
   const quiet = p => p.catch(e => { if (e !== "stop") console.error(e); });
 
+  /* FINAL animations (js/learn-bands.js, made by hand in the MCC Stroke Trainer): the bands of a letter, or null.
+     Each band = two matching borders a[k], b[k] plus m[k], the distance along its middle. Do not regenerate. */
+  function finalBands(ch) {
+    const B = window.MCC_BANDS; if (!B) return null;
+    const r = Object.values(B).find(v => v.ch === ch); if (!r) return null;
+    const pp = t => t.split(" ").map(q => q.split(",").map(Number));
+    return r.bands.map(bd => {
+      const a = pp(bd.a), b = pp(bd.b), m = [0];
+      for (let k = 1; k < a.length; k++) m.push(m[k - 1] + Math.hypot((a[k][0] + b[k][0] - a[k - 1][0] - b[k - 1][0]) / 2, (a[k][1] + b[k][1] - a[k - 1][1] - b[k - 1][1]) / 2));
+      return { a, b, m, len: m[m.length - 1] };
+    });
+  }
+  const BAND_SPEED = 45, BAND_GAP = 420;      // units a second; ms between bands (as in the trainer)
   /* a letter that writes itself: the Padauk outline revealed by its hidden strokes, in writing order */
   function inkLetter(li) {
     const mk = (n, a) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
@@ -2804,6 +2817,29 @@ function initBentoLearn() {
       m.appendChild(pl); defs.appendChild(m); svg.appendChild(mk("path", { class: "ink", d, mask: `url(#${uid}-${i})` })); return pl;
     });
     const tip = mk("circle", { class: "tip", r: 2.6, opacity: 0 }); svg.appendChild(tip);
+    const BD = finalBands(BENTO_LEARN[li][0]);
+    if (BD) {                                  // FINAL hand-made animation: fill the outline band by band, straight front edge
+      svg.querySelectorAll("path.ink").forEach(p => p.remove());
+      const els = BD.map(() => { const p = mk("path", { class: "ink", d: "" }); svg.insertBefore(p, tip); return p; });
+      svg.write = async life => {
+        for (let j = 0; j < BD.length; j++) {
+          const { a, b, m, len } = BD[j], n = a.length - 1;
+          await life.anim(len / BAND_SPEED * 1000, t => {
+            const dist = t * len; let k = 0; while (k < n && m[k + 1] <= dist) k++;
+            const f = k < n ? Math.max(0, Math.min(1, (dist - m[k]) / ((m[k + 1] - m[k]) || 1))) : 0;
+            const lp = (p, q) => [p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f];
+            const fa = k < n ? lp(a[k], a[k + 1]) : a[n], fb = k < n ? lp(b[k], b[k + 1]) : b[n];
+            const poly = a.slice(0, k + 1).concat([fa, fb], b.slice(0, k + 1).reverse());
+            els[j].setAttribute("d", "M" + poly.map(p => p[0].toFixed(2) + " " + p[1].toFixed(2)).join("L") + "Z");
+            tip.setAttribute("cx", (fa[0] + fb[0]) / 2); tip.setAttribute("cy", (fa[1] + fb[1]) / 2); tip.setAttribute("opacity", 1);
+          });
+          await life.wait(j < BD.length - 1 ? BAND_GAP : 200);
+        }
+        tip.setAttribute("opacity", 0);
+        els.forEach(p => p.remove()); svg.appendChild(mk("path", { class: "ink", d }));   // end on the plain outline
+      };
+      return svg;
+    }
     svg.write = async life => {
       for (let si = 0; si < S.length; si++) {
         const st = S[si];
@@ -2825,8 +2861,9 @@ function initBentoLearn() {
     const letter = (() => {
       let k = 0;
       const lens = LC_LETTERS.map(i => BENTO_LEARN[i].slice(2).reduce((s, st) => s + st.split(" ").length / 18 * 1000 + 200, 0));
+      const lenOf = i => { const bd = finalBands(BENTO_LEARN[i][0]); return bd ? bd.reduce((s, b, j) => s + b.len / BAND_SPEED * 1000 + (j < bd.length - 1 ? BAND_GAP : 200), 0) : lens[LC_LETTERS.indexOf(i)]; };
       const el = document.createElement("div"); el.className = "scene off";
-      return { el, dur: () => lens[k] + 300, async play(life) {
+      return { el, dur: () => lenOf(LC_LETTERS[k]) + 300, async play(life) {
         if (el.busy) return; el.busy = true;
         try {
           el.innerHTML = ""; const svg = inkLetter(LC_LETTERS[k]); el.appendChild(svg);
