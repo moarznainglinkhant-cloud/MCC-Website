@@ -43,6 +43,12 @@
    "artifact_version": "1795236826-65a9",
    "date": "2026-11-20",
    "what": "v4.5 plus, for ba only: the ring's two pointed tips preset as its ends; an end a cut shrank to a point is dropped; the top curve's two slivers beside the ring's tips go to the ring (the ring's inner edge carried on along its own curve up to the top curve's upper edge). Ring must be clicked first. (The live artifact at that version also holds an abandoned experimental ha cut, not used.)"
+  },
+  "4.7": {
+   "file": "trainer-v4.7.html",
+   "artifact_version": "1795237300-56f8",
+   "date": "2026-11-21",
+   "what": "v4.6 plus, for ha only: Moarz's cut drawn in Figma (from the junction corner down to the right circle's edge; the part along the left circle's own edge dropped, so no hairline sliver) and preset ends per piece: the left circle's two tips, the right circle's start along the cut and its tail."
   }
  },
  "batches": [
@@ -987,6 +993,50 @@
         "start": [
          14.7,
          -44.6
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "8",
+   "batch": 8,
+   "part": 1,
+   "date": "2026-11-21",
+   "tool": "4.7",
+   "issues": true,
+   "note": "Letters with issues: pushed on request; imperfect, may need redoing.",
+   "letters": [
+    {
+     "ch": "ဟ",
+     "lat": "ha",
+     "g": 378,
+     "choices": {
+      "divs": [
+       {
+        "t": "poly",
+        "h": "50.45,-35.20 50.36,-34.03 50.45,-33.76 50.54,-33.49 50.63,-33.22 50.71,-32.94 50.79,-32.66 50.86,-32.37 50.94,-32.08 51.01,-31.79 51.08,-31.49 51.15,-31.18 51.21,-30.88 51.28,-30.56 51.34,-30.25 51.39,-29.92 51.45,-29.60 51.50,-29.26 51.56,-28.92 51.60,-28.58 51.65,-28.23 51.70,-27.88 51.74,-27.52 51.78,-27.15 51.82,-26.78 51.86,-26.40 51.89,-26.02 51.92,-25.63 51.95,-25.23 51.98,-24.82 52.01,-24.41 52.04,-24.00 52.06,-23.57 52.08,-23.14 52.10,-22.70 52.13,-22.10"
+       }
+      ],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         14.7,
+         -44.8
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         52.1,
+         -22.7
         ],
         "dir": 1
        }
