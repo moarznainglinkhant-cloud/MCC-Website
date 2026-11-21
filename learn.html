@@ -317,6 +317,32 @@
   #lb-name-out.tp-rest .lc-name-tp .fl-spd{ pointer-events:none; }
   #lb-name-out:not(.tp-rest) .lc-name-tp .fl-play, #lb-name-out:not(.tp-rest) .lc-name-tp .fl-track,
   #lb-name-out:not(.tp-rest) .lc-name-tp .fl-head, #lb-name-out:not(.tp-rest) .lc-name-tp .fl-seg{ transition-duration:.15s; }   /* wake fast */
+  /* Alphabet bar: same rest / wake and mode fit as the name bar, but it keeps its own cream pill (the controller
+     the user likes). The pill is part of the chrome, so at rest it rests too: its fill fades out and only the slim
+     line + dimmed play are left on the page; awake it's exactly the old pill. In Trace the pill folds to "Watch again". */
+  #lb-chart .fl-tp{ max-width:1200px; transition:background-color .4s ease, max-width .45s cubic-bezier(.2,.8,.2,1), gap .45s cubic-bezier(.2,.8,.2,1); }
+  #lb-chart .fl-again{ transition:max-width .45s cubic-bezier(.2,.8,.2,1), opacity .25s, margin .45s cubic-bezier(.2,.8,.2,1); }
+  #lb-chart .fl-play, #lb-chart .fl-track{ transition:opacity .4s ease, flex-grow .45s cubic-bezier(.2,.8,.2,1); }
+  #lb-chart .fl-track{ flex-basis:0; min-width:0; }
+  #lb-chart .fl-seg{ transition:top .4s ease, height .4s ease; }
+  #lb-chart .fl-head{ transition:opacity .4s ease; }
+  #lb-chart .fl-time, #lb-chart .fl-spd{ max-width:170px; overflow:hidden; transition:max-width .45s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
+  #lb-chart.tp-rest .fl-tp{ background-color:rgba(255,253,248,0); }
+  #lb-chart.tp-rest .fl-play{ opacity:.5; }
+  #lb-chart.tp-rest .fl-track{ opacity:.55; }
+  #lb-chart.tp-rest .fl-seg{ top:17px; height:6px; }
+  #lb-chart.tp-rest .fl-head, #lb-chart.tp-rest .fl-time, #lb-chart.tp-rest .fl-spd{ opacity:0; }
+  #lb-chart.tp-rest .fl-spd{ pointer-events:none; }
+  #lb-chart:not(.tp-rest) .fl-tp, #lb-chart:not(.tp-rest) .fl-play, #lb-chart:not(.tp-rest) .fl-track,
+  #lb-chart:not(.tp-rest) .fl-head, #lb-chart:not(.tp-rest) .fl-seg{ transition-duration:.15s; }
+  #lb-chart.is-trace .fl-tp{ max-width:170px; gap:0; }
+  #lb-chart.is-trace .fl-spd{ padding:0; }
+  #lb-chart .fl-again{ flex:none; }
+  #lb-chart.is-trace .fl-again{ margin-left:12px; }
+  #lb-chart.is-trace .fl-track{ flex-grow:0; opacity:0; pointer-events:none; }
+  #lb-chart.is-trace .fl-time, #lb-chart.is-trace .fl-spd{ max-width:0; opacity:0; pointer-events:none; }
+  #lb-chart.is-trace .fl-again{ max-width:160px; opacity:1; transition-delay:0s, .15s; }
+  @media (prefers-reduced-motion:reduce){ #lb-chart .fl-tp, #lb-chart .fl-tp *{ transition:none !important; } }
   /* hover / scrub preview: the character under the pointer, drawn from its outline, just below the bar */
   .lc-name-peek{ position:absolute; top:calc(100% + 6px); left:0; z-index:5; width:64px; height:64px; margin-left:-32px; box-sizing:border-box; padding:9px; border-radius:16px; background:#FFFDF8;
     box-shadow:0 0 0 1px var(--line), 0 12px 28px -14px rgba(28,36,64,.45); opacity:0; transform:translateY(-4px); pointer-events:none; transition:opacity .15s ease, transform .15s ease, left .12s ease; }
@@ -963,6 +989,7 @@
           </div>
           <div class="fl-tp">
             <button type="button" class="fl-play" id="fl-play" aria-label="Play"></button>
+            <span class="lc-name-again fl-again" id="fl-again" aria-hidden="true">Watch again</span>
             <div class="fl-track" id="fl-track" aria-hidden="true"><div id="fl-segs"></div><div class="fl-head" id="fl-head"></div></div>
             <div class="fl-time" id="fl-time"></div>
             <div class="fl-spd" role="group" aria-label="Speed"><button type="button" id="fl-sp5">½×</button><button type="button" id="fl-sp1">1×</button></div>
