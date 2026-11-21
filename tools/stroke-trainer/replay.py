@@ -25,7 +25,7 @@ JS = """(letters) => {
   const out = {}, parse1 = s => s.trim().split(/\\s+/).map(p => p.split(",").map(Number));
   for (const L of letters) {
     const i = DATA.L.findIndex(l => l.g === L.g); open(i); const c = L.choices;
-    divs = (c.divs || []).map(x => ({ t: "line", h: typeof x.h === "string" ? parse1(x.h) : x.h }));
+    divs = (c.divs || []).map(x => ({ t: x.t || "line", h: typeof x.h === "string" ? parse1(x.h) : x.h }));
     caps = Object.fromEntries(Object.entries(c.caps || {}).map(([k, v]) => [k, typeof v === "string" ? parse1(v) : v]));
     ign = Object.fromEntries(Object.entries(c.ign || {}).map(([k, v]) => [k, typeof v === "string" ? parse1(v) : v]));
     rebuild();
