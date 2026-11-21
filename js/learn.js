@@ -772,7 +772,7 @@ var MCC_TRANSLIT = (function () {
     var lay = layout(words);
     if (!lay.strokes.length) { out.hidden = true; note.textContent = "Sorry, we can't draw that one yet."; return; }
     out.hidden = false;
-    $("lb-name-mm").textContent = words.join(" ");
+    $("lb-name-mm").textContent = raw.trim().replace(/\s+/g, " ");   // the name as they typed it (the pad shows the Burmese)
     nameText = words.join(" ");
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
