@@ -592,6 +592,9 @@
   .lb-say-end{ display:block; white-space:nowrap; }
   .lb-say-go{ width:42px; height:42px; border-radius:50%; border:0; padding:0; background:var(--red); color:#fff; cursor:pointer;
     display:inline-grid; place-items:center; vertical-align:middle; margin-left:6px; transition:background .2s ease; }
+  /* Room above line 2 (the 42px button is taller than the line), button centred on the capitals, a word-space-plus gap after "?". */
+  .lb-say-end{ margin-top:max(.4em,14px); }
+  .lb-say-go{ font-size:inherit; margin-left:.4em; position:relative; top:-.12em; }
   .lb-say-go:hover{ background:var(--red-ink); }
   .lb-say-go svg{ width:18px; height:18px; }
   .lb-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
