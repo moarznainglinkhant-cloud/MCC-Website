@@ -257,6 +257,11 @@
   .fl-ct.c0{ width:68px; height:68px; background:var(--navy); color:var(--bg); box-shadow:0 10px 24px -12px rgba(28,36,64,.6); }
   .fl-ct.c1{ width:52px; height:52px; opacity:.85; } .fl-ct.c2{ width:46px; height:46px; opacity:.5; } .fl-ct.c3{ width:40px; height:40px; opacity:.25; }
   .fl-ct:not(.c0):hover{ background:var(--bg-sunk); opacity:1; }
+  /* glide between letters (FLIP in drawCarousel): .is-flip turns transitions off while the start positions are set */
+  .fl-car#fl-car{ position:relative; }
+  #fl-car .fl-ct{ transition:transform .42s cubic-bezier(.2,.8,.2,1), opacity .32s ease, background-color .32s ease, color .32s ease, box-shadow .32s ease; will-change:transform; }
+  #fl-car.is-flip .fl-ct{ transition:none !important; }
+  @media (prefers-reduced-motion:reduce){ #fl-car .fl-ct{ transition:none; } }
   .fl-ct.is-learned::after{ content:""; position:absolute; bottom:-7px; left:50%; width:6px; height:6px; margin-left:-3px; border-radius:50%; background:var(--green); }
   .fl-ct:focus-visible, .fl-nav:focus-visible, .fl-st:focus-visible, .fl-play:focus-visible, .fl-spd button:focus-visible, .fl-track:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   .fl-allb{ justify-self:end; white-space:nowrap; }
