@@ -1034,3 +1034,18 @@ var MCC_TRANSLIT = (function () {
     input.value = b.textContent; fit(); ask(b.textContent);
   });
 })();
+
+/* Ask MCC bubble on phones: hidden while you are in the lesson, but not on the first screen.
+   #fl-askoff carries data-askmcc-avoid; it starts just below the fold at scroll 0 and runs to the end of the lesson. */
+(function () {
+  var m = document.getElementById("fl-askoff"), box = document.getElementById("lb-chart");
+  if (!m || !box) return;
+  function place() {
+    var top = box.getBoundingClientRect().top + window.scrollY;          // lesson's top on the page
+    m.style.top = Math.max(0, window.innerHeight + 1 - top) + "px";       // first pixel below the first screen
+  }
+  place();
+  window.addEventListener("resize", place);
+  window.addEventListener("load", place);
+  if (document.fonts) document.fonts.ready.then(place);
+})();
