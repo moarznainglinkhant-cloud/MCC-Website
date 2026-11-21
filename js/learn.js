@@ -820,7 +820,12 @@ var MCC_TRANSLIT = (function () {
     desk.dataset.q = q;
     desk.dispatchEvent(new CustomEvent("askmcc:ask", { detail: { q: q } }));
     // On phones the card sits under the box: bring it into view.
-    if (window.matchMedia("(max-width:860px)").matches) desk.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (window.matchMedia("(max-width:860px)").matches) {
+      // Keep the card's top clear of the sticky header (its height changes with the width).
+      var hdr = document.querySelector("header");
+      desk.style.scrollMarginTop = ((hdr && getComputedStyle(hdr).position === "sticky" ? hdr.offsetHeight : 0) + 12) + "px";
+      desk.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
   }
   // The underline hugs the text: as wide as the placeholder ("thank you") at least, growing with
   // longer phrases until the CSS max-width, after which the text scrolls inside the box.

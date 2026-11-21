@@ -392,6 +392,7 @@
   @media (max-width:760px){ .fl-ct.c3{ display:none; } }
   /* top bar: letter strip centred over the board, "The alphabet 1 / 33" next to All letters on the right */
   .fl-bar-r{ display:flex; align-items:center; justify-content:flex-end; gap:20px; min-width:0; }
+  @media (max-width:360px){ .fl-bar-r{ gap:12px; } .fl-bar-r .eyebrow{ min-width:0; white-space:normal; } } /* fits "All letters" on 320px phones */
   .fl-nm .fl-cnt-row{ display:none; margin-left:auto; white-space:nowrap; }
   @media (min-width:1101px){ .fl-nm .fl-cnt-row{ display:inline-block; } .fl-bar-r .eyebrow{ display:none; } }
   .fl-bar > .fl-car{ touch-action:pan-y; }
@@ -586,7 +587,8 @@
   .ask-pill svg{ width:.95em; height:1.25em; vertical-align:-.28em; margin-right:.4em; }
   .lb-say-form{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(1.35rem,2.8vw,1.9rem); line-height:1.5; margin-top:26px; }
   .lb-say-form input{ font:inherit; color:var(--red); background:transparent; border:0; border-bottom:2px solid var(--red); border-radius:0;
-    width:7.4em; max-width:min(11em,100%); padding:0 .1em; outline:none; }
+    width:7.4em; max-width:min(11em,100%); padding:0 .1em; outline:none;
+    padding-top:10px; margin-top:-10px; /* taller tap area, same layout and underline */ }
   .lb-say-form input::placeholder{ color:rgba(174,54,40,.42); }
   .lb-say-form input:focus-visible{ border-bottom-color:var(--gold); }
   .lb-say-end{ display:block; white-space:nowrap; }
@@ -597,7 +599,9 @@
   .lb-say-go{ font-size:inherit; margin-left:.4em; position:relative; top:-.12em; }
   .lb-say-go:hover{ background:var(--red-ink); }
   .lb-say-go svg{ width:18px; height:18px; }
-  .lb-chips{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .lb-chips{ display:flex; flex-wrap:wrap; gap:10px 8px; margin-top:18px; }
+  .lb-chips button{ position:relative; }
+  .lb-chips button::after{ content:""; position:absolute; inset:-5px 0; } /* 42px tap area; rows are 10px apart so neighbours don't overlap */
   .lb-chips button{ font:500 0.88rem 'Work Sans',sans-serif; padding:7px 14px; border-radius:999px; border:1px solid var(--line);
     background:var(--bg-raised); color:var(--ink); cursor:pointer; transition:border-color .15s ease, color .15s ease; }
   .lb-chips button:hover{ border-color:var(--red); color:var(--red-ink); }
