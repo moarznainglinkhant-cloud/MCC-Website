@@ -774,7 +774,7 @@ var MCC_TRANSLIT = (function () {
      inside a word are pulled 3.5 units closer. The space between words is unchanged. */
   var NAME_TIGHT = 3.5;
   function layout(words) {
-    var x = 0, all = [], shapes = [], ok = true, bands = [], allBands = true;
+    var x = 0, all = [], shapes = [], ok = true, bands = [], allBands = true, groups = [];   // groups: one per glyph {g, n bands}
     words.forEach(function (w, wi) {
       if (wi) x += 16;
       (w.match(CLUSTER) || []).forEach(function (c, ci) {
@@ -783,11 +783,11 @@ var MCC_TRANSLIT = (function () {
         while (!e && c.length > 1) { c = c.slice(0, -1); e = D.C[c]; ok = false; }     // unknown mark: drop it, keep the letter
         if (!e) { ok = false; return; }
         for (var i = 1; i < e.length; i += 3) { all = all.concat(placed(e[i], x + e[i + 1], e[i + 2])); shapes.push(shapeOf(e[i], x + e[i + 1], e[i + 2]));
-          var bb = bandsOf(e[i], x + e[i + 1], e[i + 2]) || synthBands(e[i], x + e[i + 1], e[i + 2]); bands = bands.concat(bb); }
+          var bb = bandsOf(e[i], x + e[i + 1], e[i + 2]) || synthBands(e[i], x + e[i + 1], e[i + 2]); bands = bands.concat(bb); groups.push({ g: e[i], n: bb.length }); }
         x += e[0];
       });
     });
-    return { strokes: all, shapes: shapes, width: x, ok: ok, bands: bands.length ? bands : null };
+    return { strokes: all, shapes: shapes, width: x, ok: ok, bands: bands.length ? bands : null, groups: groups };
   }
   function writeName(raw) {
     var words = MCC_TRANSLIT.name(raw), out = $("lb-name-out"), note = $("lb-name-note");
@@ -808,7 +808,7 @@ var MCC_TRANSLIT = (function () {
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
     // Desktop: never smaller than a traceable size; a longer name scrolls sideways (the pad follows the pen).
     if (window.matchMedia("(min-width:861px)").matches) px = Math.max(px, 1.6);
-    setNameMode(0); nameScore(0);
+    setNameMode(0); nameScore(0); nameGroups = lay.groups; nameTL = null;
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
       shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, onTime: drawNameTp, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
@@ -835,15 +835,17 @@ var MCC_TRANSLIT = (function () {
   }
   function nameScore(v) { var p = Math.round((v || 0) * 100), b = $("lb-name-inside"); b.textContent = p + "%"; b.setAttribute("aria-label", "Inside the letters: " + p + "%"); }
   /* The alphabet's playback bar for the name: one segment per stroke, red playhead, time, ½× / 1×. */
-  var nameTL = null, nameSpeed = 1;
+  var nameTL = null, nameSpeed = 1, nameGroups = null, nameSegs = [];
   function drawNameTp(t, TL, playing, speed) {
     if (TL !== nameTL) {
-      nameTL = TL;
-      $("lb-name-segs").innerHTML = TL ? TL.map(function (s, j) { return '<div class="fl-seg" style="left:' + (s.t0 / TL.T * 100) + "%;width:" + ((s.t1 - s.t0) / TL.T * 100) + '%"><i></i><span>' + (j + 1) + "</span></div>"; }).join("") : "";
+      nameTL = TL; nameSegs = [];
+      if (TL) { var k = 0; (nameGroups && nameGroups.reduce(function (a, g) { return a + g.n; }, 0) === TL.length ? nameGroups : TL.map(function () { return { g: null, n: 1 }; }))
+        .forEach(function (g) { if (!g.n) return; nameSegs.push({ g: g.g, t0: TL[k].t0, t1: TL[k + g.n - 1].t1 }); k += g.n; }); }
+      $("lb-name-segs").innerHTML = nameSegs.map(function (s, j) { return '<div class="fl-seg" style="left:' + (s.t0 / TL.T * 100) + "%;width:" + ((s.t1 - s.t0) / TL.T * 100) + '%"><i></i><span>' + (j + 1) + "</span></div>"; }).join("");
     }
     if (!TL) return;
     var segs = $("lb-name-segs").children;
-    TL.forEach(function (s, j) { segs[j].firstChild.style.width = Math.max(0, Math.min(1, (t - s.t0) / (s.t1 - s.t0))) * 100 + "%"; });
+    nameSegs.forEach(function (s, j) { segs[j].firstChild.style.width = Math.max(0, Math.min(1, (t - s.t0) / (s.t1 - s.t0))) * 100 + "%"; });
     $("lb-name-head").style.left = t / TL.T * 100 + "%";
     $("lb-name-time").textContent = t.toFixed(1) + "s / " + TL.T.toFixed(1) + "s";
     $("lb-name-play").innerHTML = playing ? PAUSE : PLAY; $("lb-name-play").setAttribute("aria-label", playing ? "Pause" : nameMode === 1 ? "Watch again" : "Play");
@@ -881,9 +883,24 @@ var MCC_TRANSLIT = (function () {
     var track = $("lb-name-track"), on = false;
     function f(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
     function go(e) { if (!namePad) return; if (nameMode !== 0) setNameMode(0); namePad.seek(f(e)); }
-    track.addEventListener("pointerdown", function (e) { on = true; try { track.setPointerCapture(e.pointerId); } catch (x) {} go(e); });
-    track.addEventListener("pointermove", function (e) { if (on) go(e); });
-    ["pointerup", "pointercancel"].forEach(function (ev) { track.addEventListener(ev, function () { on = false; }); });
+    /* Preview: the character under the pointer, below the bar (hover with a mouse, or while scrubbing). */
+    var tip = document.createElement("div"), NS = "http://www.w3.org/2000/svg", tsvg = document.createElementNS(NS, "svg"), tpath = document.createElementNS(NS, "path"), boxes = {};
+    tip.className = "lc-name-peek"; tip.setAttribute("aria-hidden", "true"); tsvg.appendChild(tpath); tip.appendChild(tsvg); track.appendChild(tip);
+    function peek(e) {
+      var TL = nameTL; if (!TL || !nameSegs.length || nameMode !== 0) return hide();
+      var f = Math.max(0, Math.min(1, f0(e))), t = f * TL.T, j = 0;
+      nameSegs.forEach(function (s, i) { if (t >= s.t0 - 0.21) j = i; });
+      var s = nameSegs[j], d = s.g != null && D.O[s.g]; if (!d) return hide();
+      if (tpath.getAttribute("d") !== d) { tpath.setAttribute("d", d); tip.classList.add("on"); if (!boxes[s.g]) { var b = tpath.getBBox(); boxes[s.g] = [b.x - 4, b.y - 4, b.width + 8, b.height + 8].join(" "); } tsvg.setAttribute("viewBox", boxes[s.g]); }
+      tip.style.left = ((s.t0 + s.t1) / 2 / TL.T * 100) + "%"; tip.classList.add("on");
+      Array.prototype.forEach.call($("lb-name-segs").children, function (el, i) { el.classList.toggle("is-peek", i === j); });
+    }
+    function hide() { tip.classList.remove("on"); Array.prototype.forEach.call($("lb-name-segs").children, function (el) { el.classList.remove("is-peek"); }); }
+    function f0(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
+    track.addEventListener("pointerdown", function (e) { on = true; try { track.setPointerCapture(e.pointerId); } catch (x) {} go(e); peek(e); });
+    track.addEventListener("pointermove", function (e) { if (on) go(e); if (on || e.pointerType === "mouse") peek(e); });
+    track.addEventListener("pointerleave", function () { if (!on) hide(); });
+    ["pointerup", "pointercancel"].forEach(function (ev) { track.addEventListener(ev, function (e) { on = false; if (e.pointerType !== "mouse") hide(); }); });
   })();
   function goName(m) { if (!namePad) return; setNameMode(m); if (m === 0) namePad.watch(); else namePad.write(); }
   $("lb-name-steps").addEventListener("click", function (e) {
