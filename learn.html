@@ -513,8 +513,10 @@
   .lc-name-hd .lc-name-ctl{ flex:0 1 420px; }   /* same Watch | Trace switch + Hide button as the alphabet */
   .lc-namecard .lb-name-scroll{ margin-top:0; border:0; border-radius:22px; background:#F7F2E5; }
   .lc-namecard .lb-ghost{ fill:#E3D9C2; }
-  .lc-name-ft{ display:flex; align-items:flex-end; gap:24px; }
-  .lc-name-note{ margin:-4px 4px 0; font-size:0.85rem; line-height:1.45; color:var(--ink-soft); }   /* the spelling note, right under the pad */
+  .lc-name-ft{ display:flex; align-items:center; gap:16px; }
+  .lc-name-tp{ flex:1; min-width:0; background:#F7F2E5; }   /* the alphabet's playback bar, on the card's cream */
+  .lc-name-pct{ font:600 20px 'Work Sans',sans-serif; font-variant-numeric:tabular-nums; color:var(--navy); min-width:3.1em; text-align:right; }
+  .lc-name-note{ grid-column:1/-1; margin:12px 4px 0; font-size:0.85rem; line-height:1.45; color:var(--ink-soft); }   /* the spelling note, under the card */
   .lc-name-note:empty{ display:none; }
   .lc-name-ft .lc-stat{ flex:1; }
   @media (max-width:860px){
@@ -570,6 +572,8 @@
   }
   .lb-name input:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   .lb-name-out{ margin-top:28px; }
+  .lb-name input::placeholder{ color:var(--ink-soft); opacity:1; }   /* the box's only instruction: full contrast */
+  @media (min-width:861px){ .lb-name-grid{ row-gap:0; } .lb-name-out{ margin-top:14px; } }   /* card sits right under the form */
   .lb-name-out[hidden]{ display:none; }
   .lb-name-mm{ font-size:clamp(1.5rem,3vw,2rem); line-height:1.9; }
   .lb-name-scroll{ overflow-x:auto; overflow-y:hidden; margin-top:6px; border-radius:20px; border:1px solid var(--line); background:var(--bg-raised); }
@@ -965,7 +969,7 @@
         </form>
         <p class="lb-note" id="lb-name-note"></p>
       </div>
-      <div class="lb-name-out lc-namecard" id="lb-name-out" hidden>
+      <div class="lb-name-out lc-namecard" id="lb-name-out" data-askmcc-avoid hidden>
         <div class="lc-name-hd">
           <div class="lb-name-mm" id="lb-name-mm"></div>
           <div class="fl-ctl lc-name-ctl">
@@ -974,15 +978,18 @@
           </div>
         </div>
         <div class="lb-name-scroll" id="lb-name-scroll"><div class="lb-pad" id="lb-name-pad"></div></div>
-        <p class="lc-name-note" id="lb-name-sound"></p>
         <div class="lc-name-ft">
-          <div class="lc-stat" aria-live="polite">
-            <div class="lc-stat-row"><span>Inside the letters</span><b id="lb-name-inside">0%</b></div>
-            <div class="lc-bar"><i id="lb-name-bar"></i></div>
+          <div class="fl-tp lc-name-tp">
+            <button type="button" class="fl-play" id="lb-name-play" aria-label="Play"></button>
+            <div class="fl-track" id="lb-name-track" aria-hidden="true"><div id="lb-name-segs"></div><div class="fl-head" id="lb-name-head"></div></div>
+            <div class="fl-time" id="lb-name-time"></div>
+            <div class="fl-spd" role="group" aria-label="Speed"><button type="button" id="lb-name-sp5">½×</button><button type="button" id="lb-name-sp1" class="is-on">1×</button></div>
           </div>
+          <b class="lc-name-pct" id="lb-name-inside" title="How much of your writing is inside the letters" aria-live="polite" aria-label="Inside the letters: 0%">0%</b>
           <button type="button" class="btn ghost" id="lb-name-retry">Clear</button>
         </div>
       </div>
+      <p class="lc-name-note" id="lb-name-sound"></p>
     </div>
   </section>
 

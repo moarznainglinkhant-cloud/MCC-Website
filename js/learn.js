@@ -305,33 +305,47 @@ var MCC_TRANSLIT = (function () {
     function whole() { inkG.style.display = ""; demoG.style.display = "none"; }
     clearDemo();
     function say(h) { if (o.status) o.status.innerHTML = h; }
-    function stop() { cancelAnimationFrame(raf); clearTimeout(timer); pen.setAttribute("opacity", 0); }
+    function stop() { cancelAnimationFrame(raf); raf = 0; clearTimeout(timer); pen.setAttribute("opacity", 0); wPlaying = false; }
+    /* FINAL bands on a timeline, for the playback bar: band j fills from TL[j].t0 to TL[j].t1 (seconds at 1×),
+       BAND_GAP apart. Play, pause, scrub and speed all go through renderAt(t). */
+    var TL = null, wt = 0, wPlaying = false, wSpeed = 1, wLast = 0, wBand = -1;
+    if (BD) {
+      var tt = 0;
+      TL = BD.map(function (bd) { var tot = bd.m[bd.m.length - 1], s = { t0: tt, t1: tt + tot / BAND_SPEED, tot: tot }; tt = s.t1 + BAND_GAP / 1000; return s; });
+      TL.T = Math.max(0.01, tt - BAND_GAP / 1000);
+    }
+    function renderAt(t) {
+      var tip = null, cur = -1;
+      TL.forEach(function (s, j) {
+        if (t <= s.t0) { bandEls[j].setAttribute("d", ""); return; }
+        var p = setBand(j, Math.min(s.tot, (t - s.t0) * BAND_SPEED));
+        if (t < s.t1) { tip = p; cur = j; }
+      });
+      if (tip) { pen.setAttribute("cx", tip[0]); pen.setAttribute("cy", tip[1]); pen.setAttribute("opacity", 1); } else pen.setAttribute("opacity", 0);
+      if (cur >= 0 && cur !== wBand) { wBand = cur; follow(BD[cur].a[0][0]); }
+      if (o.onTime) o.onTime(t, TL, wPlaying, wSpeed);
+    }
+    function wLoop(now) {
+      raf = 0; if (dead || !wPlaying) return;
+      var dt = Math.min(0.05, (now - (wLast || now)) / 1000); wLast = now;
+      wt += dt * wSpeed; if (wt >= TL.T) { wt = TL.T; wPlaying = false; }
+      renderAt(wt); if (wPlaying) raf = requestAnimationFrame(wLoop);
+    }
+    function wPlay() { if (wt >= TL.T - 0.01) { wt = 0; wBand = -1; } wPlaying = true; wLast = 0; cancelAnimationFrame(raf); raf = requestAnimationFrame(wLoop); renderAt(wt); }
+    function wPause() { cancelAnimationFrame(raf); raf = 0; wPlaying = false; renderAt(wt); }
     function follow(x) {
       if (!o.scroller) return;
       var left = (x - view.x) * (o.px || 1) - o.scroller.clientWidth * 0.35;
       try { o.scroller.scrollTo({ left: Math.max(0, left), behavior: reduced ? "auto" : "smooth" }); } catch (e) { o.scroller.scrollLeft = Math.max(0, left); }
     }
 
-    function watch() {
+    function watch(opt) {
+      opt = opt || {};
       stop(); clearDemo(); clearMine(); mode = "watch"; host.classList.remove("is-writing", "is-done"); if (o.onMode) o.onMode("watch");
       var i = 0, t0 = 0;
-      if (BD) {                                   // FINAL hand-made animation
-        say("Watch the pen. <b>" + BD.length + " stroke" + (BD.length > 1 ? "s" : "") + "</b>.");
-        follow(BD[0].a[0][0]);
-        var bstep = function (now) {
-          if (dead) return;
-          if (!t0) t0 = now;
-          var bd = BD[i], tot = bd.m[bd.m.length - 1], dist = Math.min(tot, (now - t0) / 1000 * BAND_SPEED), tip = setBand(i, dist);
-          pen.setAttribute("cx", tip[0]); pen.setAttribute("cy", tip[1]); pen.setAttribute("opacity", 1);
-          if (dist >= tot) {
-            i++; t0 = 0;
-            if (i >= BD.length) { pen.setAttribute("opacity", 0); whole(); timer = setTimeout(write, 1100); return; }
-            follow(BD[i].a[0][0]);
-            timer = setTimeout(function () { raf = requestAnimationFrame(bstep); }, BAND_GAP); return;
-          }
-          raf = requestAnimationFrame(bstep);
-        };
-        timer = setTimeout(function () { raf = requestAnimationFrame(bstep); }, 350);
+      if (BD) {                                   // FINAL hand-made animation, on the timeline (no auto switch to Trace at the end)
+        wt = (opt.at || 0) * TL.T; wBand = -1; renderAt(wt);
+        if (opt.play !== false) timer = setTimeout(wPlay, 350);
         return;
       }
       say("Watch the pen. <b>" + L.length + " stroke" + (L.length > 1 ? "s" : "") + "</b>.");
@@ -449,8 +463,13 @@ var MCC_TRANSLIT = (function () {
       if (!drawing) return; drawing = false; last = null;
       clearTimeout(dirty); dirty = 0; if (mode === "write") report(true);
     }); });
-    if (reduced) write(); else watch();
-    return { watch: watch, write: write, clear: function () { if (mode === "watch") stop(); write(); }, kill: function () { dead = true; stop(); clearTimeout(dirty); } };
+    if (reduced) { if (BD) watch({ play: false, at: 1 }); else write(); } else watch();
+    return { watch: watch, write: write, clear: function () { if (mode === "watch") stop(); write(); }, kill: function () { dead = true; stop(); clearTimeout(dirty); },
+      // playback bar (final bands only)
+      toggle: function () { if (!TL) return; if (mode !== "watch") watch(); else if (wPlaying) wPause(); else wPlay(); },
+      seek: function (f) { if (!TL) return; f = Math.max(0, Math.min(1, f)); if (mode !== "watch") watch({ play: false, at: f }); else { wPause(); wt = f * TL.T; renderAt(wt); } },
+      speed: function (v) { wSpeed = v; if (TL && mode === "watch") renderAt(wt); else if (o.onTime) o.onTime(0, TL, false, wSpeed); },
+      timeline: function () { return TL; } };
   }
 
   /* ---------- hear it (Azure's Burmese voice, Nilar) ----------
@@ -772,22 +791,30 @@ var MCC_TRANSLIT = (function () {
   function writeName(raw) {
     var words = MCC_TRANSLIT.name(raw), out = $("lb-name-out"), note = $("lb-name-note");
     if (namePad) { namePad.kill(); namePad = null; }
-    if (!words.length) { out.hidden = true; note.textContent = raw.trim() ? "Use letters A to Z (or Burmese script) and try again." : ""; return; }
+    var sound = $("lb-name-sound");
+    if (!words.length) {
+      out.hidden = true; sound.textContent = "";
+      note.textContent = raw.trim() ? "Use letters A to Z (or Burmese script) and try again." : "Type your name first.";
+      $("lb-name-input").focus(); return;
+    }
     var lay = layout(words);
-    if (!lay.strokes.length) { out.hidden = true; note.textContent = "Sorry, we can't draw that one yet."; return; }
+    if (!lay.strokes.length) { out.hidden = true; sound.textContent = ""; note.textContent = "Sorry, we can't draw that one yet."; return; }
     out.hidden = false;
     $("lb-name-mm").textContent = raw.trim().replace(/\s+/g, " ");   // the name as they typed it (the pad shows the Burmese)
     nameText = words.join(" ");
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
+    // Desktop: never smaller than a traceable size; a longer name scrolls sideways (the pad follows the pen).
+    if (window.matchMedia("(min-width:861px)").matches) px = Math.max(px, 1.6);
     setNameMode(0); nameScore(0);
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
-      shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
+      shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, onTime: drawNameTp, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
     });
+    namePad.speed(nameSpeed);
     note.textContent = "";
-    $("lb-name-sound").textContent = lay.ok
+    sound.textContent = lay.ok
       ? "Spelled by sound, so a Burmese speaker might spell it a little differently."
       : "Some marks in that spelling aren't in our stroke set yet, so they were left out.";
   }
@@ -802,8 +829,34 @@ var MCC_TRANSLIT = (function () {
     Array.prototype.forEach.call(seg.querySelectorAll("[data-mode]"), function (b) { b.setAttribute("aria-checked", (b.getAttribute("data-mode") === "trace" ? 1 : 0) === m ? "true" : "false"); });
     $("lb-name-hide").setAttribute("aria-pressed", nameHide ? "true" : "false");
     $("lb-name-pad").classList.toggle("no-guide", nameHide && m === 1);
+    if (m === 1 && nameTL) drawNameTp(0, nameTL, false, nameSpeed);   // tracing: the bar rests at the start
   }
-  function nameScore(v) { var p = Math.round((v || 0) * 100); $("lb-name-inside").textContent = p + "%"; $("lb-name-bar").style.width = p + "%"; }
+  function nameScore(v) { var p = Math.round((v || 0) * 100), b = $("lb-name-inside"); b.textContent = p + "%"; b.setAttribute("aria-label", "Inside the letters: " + p + "%"); }
+  /* The alphabet's playback bar for the name: one segment per stroke, red playhead, time, ½× / 1×. */
+  var nameTL = null, nameSpeed = 1;
+  function drawNameTp(t, TL, playing, speed) {
+    if (TL !== nameTL) {
+      nameTL = TL;
+      $("lb-name-segs").innerHTML = TL ? TL.map(function (s, j) { return '<div class="fl-seg" style="left:' + (s.t0 / TL.T * 100) + "%;width:" + ((s.t1 - s.t0) / TL.T * 100) + '%"><i></i><span>' + (j + 1) + "</span></div>"; }).join("") : "";
+    }
+    if (!TL) return;
+    var segs = $("lb-name-segs").children;
+    TL.forEach(function (s, j) { segs[j].firstChild.style.width = Math.max(0, Math.min(1, (t - s.t0) / (s.t1 - s.t0))) * 100 + "%"; });
+    $("lb-name-head").style.left = t / TL.T * 100 + "%";
+    $("lb-name-time").textContent = t.toFixed(1) + "s / " + TL.T.toFixed(1) + "s";
+    $("lb-name-play").innerHTML = playing ? PAUSE : PLAY; $("lb-name-play").setAttribute("aria-label", playing ? "Pause" : "Play");
+    $("lb-name-sp5").classList.toggle("is-on", speed === 0.5); $("lb-name-sp1").classList.toggle("is-on", speed === 1);
+  }
+  $("lb-name-play").addEventListener("click", function () { if (!namePad) return; if (nameMode !== 0) setNameMode(0); namePad.toggle(); });
+  [["lb-name-sp5", 0.5], ["lb-name-sp1", 1]].forEach(function (p) { $(p[0]).addEventListener("click", function () { nameSpeed = p[1]; if (namePad) namePad.speed(nameSpeed); }); });
+  (function () {
+    var track = $("lb-name-track"), on = false;
+    function f(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
+    function go(e) { if (!namePad) return; if (nameMode !== 0) setNameMode(0); namePad.seek(f(e)); }
+    track.addEventListener("pointerdown", function (e) { on = true; try { track.setPointerCapture(e.pointerId); } catch (x) {} go(e); });
+    track.addEventListener("pointermove", function (e) { if (on) go(e); });
+    ["pointerup", "pointercancel"].forEach(function (ev) { track.addEventListener(ev, function () { on = false; }); });
+  })();
   function goName(m) { if (!namePad) return; setNameMode(m); if (m === 0) namePad.watch(); else namePad.write(); }
   $("lb-name-steps").addEventListener("click", function (e) {
     var b = e.target.closest("[data-mode]"); if (b) goName(b.getAttribute("data-mode") === "trace" ? 1 : 0);
