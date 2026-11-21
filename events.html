@@ -469,8 +469,9 @@
   }
 
   /* live counter */
+  /* Sits right above the Ask MCC pill (fixed at right:20px, bottom:20px, ~48px tall) so the two never overlap. */
   .snake-dock{
-    position:fixed; right:clamp(16px,3vw,32px); bottom:clamp(16px,3vw,32px); z-index:40;
+    position:fixed; right:20px; bottom:84px; z-index:40;
     display:flex; align-items:center; gap:10px;
     opacity:0; transform:translateY(12px); pointer-events:none;
     transition:opacity .7s ease, transform .9s cubic-bezier(.22,1,.36,1);
