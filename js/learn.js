@@ -654,11 +654,12 @@ var MCC_TRANSLIT = (function () {
       var cc = cov[only], got = 0; for (var z = 0; z < cc.length; z++) got += cc[z];
       if (got / cc.length >= FL.SNAP) bandDone[only] = true;
     }
-    var sc = score();
-    if (!S.done && sc.ins >= FL.INSIDE && (S.hide ? sc.cov >= FL.COVER : bandDone.indexOf(false) < 0)) {
-      S.done = true; drawing = false; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel();
-    }
     drawBoard();
+  }
+  function isComplete() { var sc = score(); return sc.ins >= FL.INSIDE && (S.hide ? sc.cov >= FL.COVER : bandDone.indexOf(false) < 0); }
+  function finishStroke() {            // a letter counts as written only once the pen is lifted, never mid-stroke
+    if (!drawing) return; drawing = false;
+    if (!S.done && isComplete()) { S.done = true; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); drawBoard(); }
   }
   fpad.addEventListener("pointerdown", function (e) {
     if (S.done || !L().bands.length) return; e.preventDefault();
@@ -667,7 +668,7 @@ var MCC_TRANSLIT = (function () {
     drawing = true; inks.push({ pts: [], ins: [] }); addPt(e);
   });
   fpad.addEventListener("pointermove", function (e) { if (drawing) addPt(e); });
-  ["pointerup", "pointercancel"].forEach(function (ev) { fpad.addEventListener(ev, function () { drawing = false; }); });
+  ["pointerup", "pointercancel"].forEach(function (ev) { fpad.addEventListener(ev, finishStroke); });
   var scrubbing = false, track = $("fl-track");
   function trackF(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
   track.addEventListener("pointerdown", function (e) { scrubbing = true; try { track.setPointerCapture(e.pointerId); } catch (err) {} scrubTo(trackF(e)); });
