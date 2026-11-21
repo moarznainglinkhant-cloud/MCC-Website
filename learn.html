@@ -575,7 +575,8 @@
   /* ---------- SAY IT OUT LOUD: Ask MCC's phrase card, set into the page ---------- */
   .lb-say{ padding-block:clamp(60px,8vw,104px) clamp(56px,7vw,96px); }
   .lb-say-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:start; }
-  .lb-say h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:-0.15em 14px; }
+  .lb-say h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:0 14px; }
+  @supports (text-box:trim-start cap alphabetic){ .lb-say h2{ text-box:trim-start cap alphabetic; margin-top:0.04em; } }
   .lb-say .lb-lead{ max-width:46ch; }
   /* "Ask MCC" reads as its own tool: lantern + name, with a hand-drawn gold highlighter stroke drawn in once. */
   /* "Ask MCC" as its own tool: a small pill with the lantern, like the chat bubble's name tag. */
