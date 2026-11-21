@@ -239,6 +239,105 @@
   .lb-name-line .lb-hear{ margin-left:0; }
 
 
+  /* ---------- ALPHABET LESSON (focus): letter strip · board + playback · Watch → Trace → From memory ---------- */
+  .fl{ display:flex; flex-direction:column; gap:22px; scroll-margin-top:96px; }
+  .fl-bar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:12px; }
+  .fl-bar .eyebrow{ white-space:nowrap; }
+  .fl-cnt{ margin-left:10px; color:var(--ink-soft); letter-spacing:.08em; font-variant-numeric:tabular-nums; }
+  .fl-car{ display:flex; align-items:center; gap:6px; }
+  .fl-nav{ width:40px; height:40px; border-radius:50%; border:0; padding:0; background:transparent; color:var(--ink-soft); display:grid; place-items:center; cursor:pointer; flex:none; }
+  .fl-nav:hover{ background:var(--bg-sunk); color:var(--navy); }
+  .fl-nav svg{ width:18px; height:18px; }
+  .fl-ct{ position:relative; display:grid; place-items:center; border:0; padding:0; border-radius:14px; background:transparent; color:var(--navy); cursor:pointer;
+    transition:width .35s cubic-bezier(.32,.72,0,1), height .35s cubic-bezier(.32,.72,0,1), opacity .35s, background .2s; }
+  .fl-ct svg{ width:70%; height:70%; display:block; fill:currentColor; }
+  .fl-ct.c0{ width:68px; height:68px; background:var(--navy); color:var(--bg); box-shadow:0 10px 24px -12px rgba(28,36,64,.6); }
+  .fl-ct.c1{ width:52px; height:52px; opacity:.85; } .fl-ct.c2{ width:46px; height:46px; opacity:.5; } .fl-ct.c3{ width:40px; height:40px; opacity:.25; }
+  .fl-ct:not(.c0):hover{ background:var(--bg-sunk); opacity:1; }
+  .fl-ct.is-learned::after{ content:""; position:absolute; bottom:-7px; left:50%; width:6px; height:6px; margin-left:-3px; border-radius:50%; background:var(--green); }
+  .fl-ct:focus-visible, .fl-nav:focus-visible, .fl-st:focus-visible, .fl-play:focus-visible, .fl-spd button:focus-visible, .fl-track:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .fl-allb{ justify-self:end; white-space:nowrap; }
+  .fl-main{ display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:48px; align-items:stretch; }
+  .fl-left{ display:flex; flex-direction:column; gap:14px; min-width:0; }
+  .fl-board{ position:relative; width:100%; aspect-ratio:146/100; background:#FFFDF8; border-radius:28px; overflow:hidden;
+    box-shadow:0 1px 0 rgba(28,36,64,.04), 0 30px 70px -40px rgba(28,36,64,.5); user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; }
+  .fl-pad{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; cursor:crosshair; }
+  .fl-gl{ stroke:#DDD3BC; stroke-width:.3; fill:none; } .fl-gl.dash{ stroke-dasharray:1.4 1.4; stroke:#E8DFCC; } .fl-gl.faint{ stroke:#EEE7D7; } .fl-gl.base{ stroke:#CFC2A4; }
+  .fl-outline{ fill:#EDE5D3; transition:opacity .4s; } .fl-outline.is-hidden{ opacity:0; }
+  .fl-curb{ fill:#D4C6A6; }
+  .fl-guide{ fill:none; stroke:#AE3628; stroke-width:.7; stroke-dasharray:2 2.2; stroke-linecap:round; opacity:.85; }
+  .fl-covc{ fill:var(--green); opacity:.9; }
+  .fl-snap, .fl-demo{ fill:var(--navy); }
+  .fl-snapnew{ fill:var(--navy); animation:fl-in .5s cubic-bezier(.32,.72,0,1); }
+  @keyframes fl-in{ from{ opacity:0; } to{ opacity:1; } }
+  .fl-inkg, .fl-inkr{ fill:none; stroke-width:6.48; stroke-linecap:round; stroke-linejoin:round; } .fl-inkg{ stroke:var(--green); } .fl-inkr{ stroke:var(--red); opacity:.8; }
+  .fl-start{ position:absolute; width:28px; height:28px; margin:-14px 0 0 -14px; pointer-events:none; animation:fl-bob 1.4s ease-in-out infinite; }
+  .fl-start span{ position:absolute; inset:0; border-radius:50%; background:var(--red); color:#fff; font:700 14px/28px 'Work Sans',sans-serif; text-align:center; box-shadow:0 0 0 3px #FFFDF8; }
+  @keyframes fl-bob{ 50%{ transform:scale(1.12); } }
+  .fl-badge{ position:absolute; top:22px; right:22px; display:none; align-items:center; gap:8px; background:var(--green); color:#fff; border-radius:999px; padding:8px 16px 8px 10px; font-weight:700; font-size:14px; animation:fl-in .4s; }
+  .fl-badge.is-on{ display:flex; } .fl-badge svg{ width:20px; height:20px; }
+  .fl-tp{ display:flex; align-items:center; gap:16px; background:#FFFDF8; border-radius:18px; padding:10px 18px 10px 10px; }
+  .fl-play{ width:48px; height:48px; border-radius:50%; border:0; padding:0; background:var(--navy); color:var(--bg); display:grid; place-items:center; cursor:pointer; flex:none; }
+  .fl-play svg{ width:20px; height:20px; }
+  .fl-track{ position:relative; flex:1; height:44px; cursor:ew-resize; touch-action:none; }
+  .fl-seg{ position:absolute; top:12px; height:20px; border-radius:10px; background:#EEE6D3; overflow:hidden; }
+  .fl-seg i{ position:absolute; left:0; top:0; bottom:0; background:var(--navy); border-radius:10px; }
+  .fl-seg span{ position:absolute; left:10px; top:0; line-height:20px; font-size:11.5px; font-weight:700; color:#8C8470; }
+  .fl-head{ position:absolute; top:4px; bottom:4px; width:4px; margin-left:-2px; border-radius:2px; background:var(--red); pointer-events:none; }
+  .fl-time{ font-size:14px; color:var(--ink-soft); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .fl-spd{ display:flex; background:#EEE6D3; border-radius:999px; padding:3px; }
+  .fl-spd button{ border:0; background:transparent; padding:6px 12px; border-radius:999px; font:700 13px 'Work Sans',sans-serif; color:var(--ink-soft); cursor:pointer; }
+  .fl-spd button.is-on{ background:#FFFDF8; color:var(--navy); }
+  .fl-right{ display:flex; flex-direction:column; gap:28px; padding-top:8px; min-width:0; }
+  .fl-nm{ display:flex; align-items:center; gap:18px; }
+  .fl-nm .fl-g{ flex:none; display:block; fill:var(--navy); }
+  .fl-nmt{ flex:1; min-width:0; }
+  .fl-nmh{ display:flex; align-items:center; gap:14px; }
+  .fl-nm h3{ font-size:64px; font-weight:600; line-height:.95; letter-spacing:-.02em; }
+  .fl-nm .lb-hear{ margin-left:0; width:44px; height:44px; margin-top:6px; }
+  .fl-nm p{ font-size:16px; color:var(--ink-soft); margin-top:6px; white-space:nowrap; }
+  .fl-steps{ display:flex; flex-direction:column; gap:6px; }
+  .fl-st{ width:100%; display:flex; align-items:center; gap:14px; padding:12px 14px; border:0; border-radius:16px; background:transparent; text-align:left; cursor:pointer;
+    font:600 17px 'Work Sans',sans-serif; color:var(--ink-soft); transition:background .25s; }
+  .fl-st:hover{ background:var(--bg-sunk); }
+  .fl-st .n{ width:32px; height:32px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:14px; background:#E6DDC9; color:var(--ink-soft); flex:none; }
+  .fl-st .n svg{ width:16px; height:16px; }
+  .fl-st.is-on{ background:#FFFDF8; color:var(--navy); box-shadow:0 1px 3px rgba(28,36,64,.08); } .fl-st.is-on .n{ background:var(--navy); color:var(--bg); }
+  .fl-st.is-done{ color:var(--navy); } .fl-st.is-done .n{ background:var(--green); color:#fff; }
+  .fl-foot{ margin-top:auto; display:flex; align-items:center; gap:8px; }
+  .fl-foot .btn{ white-space:nowrap; padding-inline:16px; }
+  .fl-sp{ flex:1; }
+  .fl-nb{ gap:6px; }
+  .fl-foot #fl-prevb{ padding-left:12px; } .fl-foot #lb-next{ padding-right:14px; }
+  .fl-foot #lb-next.is-ready{ box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--gold); }
+  @media (max-width:1100px){
+    .fl-main{ grid-template-columns:minmax(0,1fr) 300px; gap:32px; } .fl-nm h3{ font-size:52px; }
+    .fl-bar{ grid-template-columns:1fr auto; row-gap:14px; }
+    .fl-bar .eyebrow{ grid-row:1; grid-column:1; } .fl-allb{ grid-row:1; grid-column:2; }
+    .fl-bar > .fl-car{ grid-row:2; grid-column:1 / -1; justify-self:center; }
+    .fl-foot{ gap:6px; } .fl-foot .btn{ padding-inline:13px; font-size:0.72rem; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; }
+  }
+  @media (max-width:900px){
+    .fl{ gap:18px; }
+    .fl-bar{ grid-template-columns:1fr auto; row-gap:14px; }
+    .fl-bar .eyebrow{ grid-row:1; grid-column:1; } .fl-allb{ grid-row:1; grid-column:2; }
+    .fl-bar > .fl-car{ grid-row:2; grid-column:1 / -1; justify-self:center; }
+    .fl-main{ grid-template-columns:minmax(0,1fr); gap:22px; max-width:820px; margin-inline:auto; width:100%; }
+    .fl-right{ padding:0; gap:20px; }
+    .fl-steps{ flex-direction:row; } .fl-st{ flex:1; justify-content:center; padding:10px; }
+    .fl-foot{ margin-top:0; }
+  }
+  @media (max-width:400px){ .fl-cnt{ margin-left:6px; } .fl-allb svg{ display:none; } .fl-st{ font-size:13px; } }
+  @media (max-width:760px){ .fl-ct.c3{ display:none; } .fl-nm .fl-g{ zoom:.8; } .fl-nm h3{ font-size:52px; } }
+  @media (max-width:560px){
+    .fl-ct.c2{ display:none; } .fl-ct.c0{ width:60px; height:60px; } .fl-ct.c1{ width:46px; height:46px; }
+    .fl-st{ flex-direction:column; gap:6px; padding:10px 4px; font-size:14px; }
+    .fl-tp{ gap:10px; padding:8px 12px 8px 8px; } .fl-time{ display:none; } .fl-play{ width:44px; height:44px; }
+    .fl-board{ border-radius:20px; }
+    .fl-allb{ padding:10px 14px; font-size:0.7rem; }
+    .fl-foot .btn{ padding-inline:13px; font-size:0.7rem; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; }
+  }
+
   /* ---------- ALPHABET LESSON (letter tiles + one card: pad | letter, mode, score) ---------- */
   .lb-main{ padding-block:clamp(18px,3vw,30px) clamp(52px,8vw,96px); }
   .lc{ display:flex; flex-direction:column; gap:20px; }
@@ -720,32 +819,44 @@
   </section>
 
   <section class="lb-main">
-    <div class="wrap lc">
-      <div class="lc-top">
-        <span class="eyebrow">The alphabet</span>
-        <button type="button" class="btn ghost" id="lb-all" aria-haspopup="dialog">All letters</button>
+    <div class="wrap fl" id="lb-chart">
+      <div class="fl-bar">
+        <span class="eyebrow">The alphabet <span class="fl-cnt"><span id="lb-num">1</span> / 33</span></span>
+        <nav class="fl-car" aria-label="Letters">
+          <button type="button" class="fl-nav" id="fl-prev" aria-label="Previous letter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <div class="fl-car" id="fl-car"></div>
+          <button type="button" class="fl-nav" id="fl-nextc" aria-label="Next letter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </nav>
+        <button type="button" class="btn ghost fl-allb" id="lb-all" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>All letters</button>
       </div>
-      <div class="lc-tiles" id="lb-chart" role="group" aria-label="The 33 letters"></div>
-      <div class="lc-card" id="lb-side">
-        <div class="lb-pad square" id="lb-pad"></div>
-        <div class="lc-panel">
-          <div class="lc-who" id="lb-who"></div>
-          <div class="lc-seg" id="lb-mode" role="radiogroup" aria-label="Mode">
-            <span class="lc-thumb" aria-hidden="true"></span>
-            <button type="button" role="radio" aria-checked="true" data-m="0">Watch</button>
-            <button type="button" role="radio" aria-checked="false" data-m="1">Trace</button>
-            <button type="button" role="radio" aria-checked="false" data-m="2">Hide letter</button>
+      <div class="fl-main">
+        <div class="fl-left">
+          <div class="fl-board" id="lb-side">
+            <svg class="fl-pad" id="fl-pad" role="img" aria-label="Writing pad">
+              <defs><marker id="fl-ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#AE3628"/></marker></defs>
+              <line class="fl-gl" data-y="-45"/><line class="fl-gl dash" data-y="-21.8"/><line class="fl-gl base" data-y="1.4"/><line class="fl-gl faint" data-y="44"/>
+              <path id="fl-outline" class="fl-outline"/><path id="fl-curb" class="fl-curb"/><path id="fl-covc" class="fl-covc"/>
+              <path id="fl-snap" class="fl-snap"/><path id="fl-snapnew" class="fl-snapnew"/><path id="fl-demo" class="fl-demo"/>
+              <path id="fl-guide" class="fl-guide" marker-end="url(#fl-ah)"/><path id="fl-inkg" class="fl-inkg"/><path id="fl-inkr" class="fl-inkr"/>
+            </svg>
+            <div id="fl-starts"></div>
+            <div class="fl-badge" id="fl-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11" fill="#fff" fill-opacity=".2"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Written</div>
           </div>
-          <div class="lc-stat" aria-live="polite">
-            <div class="lc-stat-row"><span>Inside the letter</span><b id="lb-inside">0%</b></div>
-            <div class="lc-bar"><i id="lb-inside-bar"></i></div>
+          <div class="fl-tp">
+            <button type="button" class="fl-play" id="fl-play" aria-label="Play"></button>
+            <div class="fl-track" id="fl-track" role="slider" aria-label="Writing timeline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div id="fl-segs"></div><div class="fl-head" id="fl-head"></div></div>
+            <div class="fl-time" id="fl-time"></div>
+            <div class="fl-spd" role="group" aria-label="Speed"><button type="button" id="fl-sp5">½×</button><button type="button" id="fl-sp1">1×</button></div>
           </div>
-          <div class="lc-foot">
-            <div class="lc-acts">
-              <button type="button" class="btn" id="lb-next">Next letter</button>
-              <button type="button" class="btn ghost" id="lb-clear">Clear</button>
-            </div>
-            <div class="lc-count"><small>Letter</small><span><b id="lb-num">1</b><em> / 33</em></span></div>
+        </div>
+        <div class="fl-right">
+          <div class="fl-nm" id="lb-who"></div>
+          <div class="fl-steps" id="fl-steps" role="group" aria-label="Steps"></div>
+          <div class="fl-foot">
+            <button type="button" class="btn ghost" id="lb-clear">Clear</button>
+            <span class="fl-sp"></span>
+            <button type="button" class="btn ghost fl-nb" id="fl-prevb"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>Previous</button>
+            <button type="button" class="btn fl-nb" id="lb-next">Next<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
         </div>
       </div>

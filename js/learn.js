@@ -473,98 +473,219 @@ var MCC_TRANSLIT = (function () {
   try { (JSON.parse(localStorage.getItem("mcc_learned") || "[]") || []).forEach(function (c) { learned[c] = 1; }); } catch (e) {}
   function saveLearned() { try { localStorage.setItem("mcc_learned", JSON.stringify(Object.keys(learned))); } catch (e) {} }
 
-  var current = 0, pad = null, mode = 0;
-  /* A letter drawn at one shared scale, cropped to its own width and centred on its own middle,
-     so every letter sits fully inside its tile at the same size. */
+  /* The alphabet lesson: one letter at a time. Watch (the final bands play; the playback bar scrubs them) →
+     Trace (one stroke at a time: the stroke's band is highlighted with a numbered start and a dashed path;
+     covering it snaps it to the clean shape) → From memory (no guide). Done = the letter is learned. */
+  var current = 0;
+  var FL = { VH: 100, VBW: 146, SPEED: 45, GAP: 0.42, SNAP: 0.86, COVER: 0.9, INSIDE: 0.8, R2: 5.2 * 5.2 };
+  var TICK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 12.5l4 4L18 8" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>';
+  var PAUSE = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5.5" y="4.5" width="4.5" height="15" rx="1.2" fill="currentColor"/><rect x="14" y="4.5" width="4.5" height="15" rx="1.2" fill="currentColor"/></svg>';
+  /* A letter drawn at one shared scale, cropped to its own width and centred on its own middle. */
   function tileSvg(ch) {
     var g = D.K[ch]; if (g == null) return ch;
     var b = bounds(glyph(g)), w = b.x1 - b.x0 + D.W * 2 + 4, my = (b.y0 + b.y1) / 2;
     return '<svg viewBox="' + (b.x0 - D.W - 2).toFixed(1) + " " + (my - 50).toFixed(1) + " " + w.toFixed(1) + ' 100" aria-hidden="true"><path d="' + D.O[g] + '"/></svg>';
   }
   function tileLabel(l) { return l[1] + ", " + l[2] + (learned[l[0]] ? ", written" : ""); }
-  function drawChart() {
-    var host = $("lb-chart"), grid = $("lb-all-grid");
-    host.innerHTML = ""; grid.innerHTML = "";
+  function flArea(a, b) { var p = a.concat(b.slice().reverse()), s = 0; for (var i = 0; i < p.length; i++) { var q = p[(i + 1) % p.length]; s += p[i][0] * q[1] - q[0] * p[i][1]; } return s; }
+  function flPoly(a, b, i0, i1) { var s = "M" + a[i0][0] + " " + a[i0][1], i; for (i = i0 + 1; i <= i1; i++) s += "L" + a[i][0] + " " + a[i][1]; for (i = i1; i >= i0; i--) s += "L" + b[i][0] + " " + b[i][1]; return s + "Z"; }
+  function pct(v) { return (Math.round(v * 1000) / 10) + "%"; }
+  var lessons = {};
+  function lessonOf(i) {                  // one letter's bands (made consistent in direction), timings and framing
+    if (lessons[i]) return lessons[i];
+    var ch = LETTERS[i][0], g = D.K[ch], x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+    var bands = (bandsOf(g, 0, 0) || []).map(function (bd) {
+      var a = bd.a, b = bd.b, n = Math.min(a.length, b.length); a = a.slice(0, n); b = b.slice(0, n);
+      if (flArea(a, b) < 0) { var t = a; a = b; b = t; }
+      var len = 0, mid = a.map(function (p, k) { var q = b[k];
+        [p, q].forEach(function (z) { if (z[0] < x0) x0 = z[0]; if (z[0] > x1) x1 = z[0]; if (z[1] < y0) y0 = z[1]; if (z[1] > y1) y1 = z[1]; });
+        return [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2]; });
+      for (var k = 1; k < n; k++) len += Math.hypot(mid[k][0] - mid[k - 1][0], mid[k][1] - mid[k - 1][1]);
+      return { a: a, b: b, n: n, mid: mid, len: len };
+    });
+    if (!bands.length) { var bb = bounds(glyph(g)); x0 = bb.x0; x1 = bb.x1; y0 = bb.y0; y1 = bb.y1; }
+    var t = 0, sched = bands.map(function (b) { var o = { t0: t, t1: t + b.len / FL.SPEED }; t = o.t1 + FL.GAP; return o; });
+    return (lessons[i] = { ch: ch, d: D.O[g] || "", bands: bands, sched: sched, T: Math.max(0.01, t - FL.GAP), cx: (x0 + x1) / 2,
+      vy: (y1 > 20 ? 0 : -21.8) - FL.VH / 2, box: [x0, y0, x1, y1], full: bands.map(function (b) { return flPoly(b.a, b.b, 0, b.n - 1); }) });
+  }
+
+  var S = { mode: "watch", t: 0, playing: false, speed: 1, done: false };
+  var cov = [], bandDone = [], inks = [], stopAt = null, drawing = false, lastSnap = -1, raf = 0, seen = false;
+  var fpad = $("fl-pad");
+  function L() { return lessonOf(current); }
+  function resetInk() { var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; }
+
+  function drawCarousel() {
+    var h = "";
+    for (var k = -4; k <= 4; k++) { var i = (current + k + LETTERS.length) % LETTERS.length, l = LETTERS[i];
+      h += '<button type="button" class="fl-ct c' + Math.min(3, Math.abs(k)) + (learned[l[0]] ? " is-learned" : "") + '" data-i="' + i + '" aria-label="' + tileLabel(l) + '"' + (k ? "" : ' aria-current="true"') + ">" + tileSvg(l[0]) + "</button>"; }
+    $("fl-car").innerHTML = h;
+    var grid = $("lb-all-grid"); grid.innerHTML = "";
     LETTERS.forEach(function (l, i) {
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "lc-tile" + (learned[l[0]] ? " is-learned" : "");
-      if (i === current) b.setAttribute("aria-current", "true");
-      b.setAttribute("aria-label", tileLabel(l));
-      b.innerHTML = tileSvg(l[0]);
-      b.addEventListener("click", function () { open(i, true); });
-      host.appendChild(b);
       var c = document.createElement("button");
       c.type = "button"; c.className = "lc-cell" + (learned[l[0]] ? " is-learned" : "");
       if (i === current) c.setAttribute("aria-current", "true");
       c.setAttribute("aria-label", tileLabel(l));
       c.innerHTML = tileSvg(l[0]) + "<small>" + l[1] + "</small>";
-      c.addEventListener("click", function () { $("lb-all-dlg").close(); open(i, true); });
+      c.addEventListener("click", function () { $("lb-all-dlg").close(); open(i); });
       grid.appendChild(c);
     });
-    // Phones: the letters are one swipeable strip; keep the current one in view without moving the page.
-    var cur = host.children[current];
-    if (cur && host.scrollWidth > host.clientWidth + 2) {
-      var left = cur.offsetLeft - host.offsetLeft - host.clientWidth / 2 + cur.offsetWidth / 2;
-      try { host.scrollTo({ left: Math.max(0, left), behavior: reduced ? "auto" : "smooth" }); } catch (e) { host.scrollLeft = Math.max(0, left); }
-    }
   }
-  /* Watch · Trace · Hide letter. The thumb slides to the chosen one. */
-  function setMode(m) {
-    mode = m;
-    var seg = $("lb-mode"); seg.style.setProperty("--i", m);
-    Array.prototype.forEach.call(seg.querySelectorAll("button"), function (b) { b.setAttribute("aria-checked", +b.getAttribute("data-m") === m ? "true" : "false"); });
-    $("lb-pad").classList.toggle("no-guide", m === 2);
-  }
-  function showScore(v) {
-    var p = Math.round((v || 0) * 100);
-    $("lb-inside").textContent = p + "%"; $("lb-inside-bar").style.width = p + "%";
-  }
-  function open(i, scroll) {
-    current = i; var l = LETTERS[i];
-    if (pad) pad.kill();
-    $("lb-who").innerHTML = '<div class="lc-big" lang="my" role="img" aria-label="' + l[0] + '">' + tileSvg(l[0]) + '</div><div><h3>' + l[1] + '</h3><p>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></p></div>";
-    var hear = document.createElement("button"), clip = letterClip(l[0]);
+  function drawWho() {
+    var l = LETTERS[current], ls = L(), bx = ls.box, gw = bx[2] - bx[0] + 2, gh = bx[3] - bx[1] + 2;
+    $("lb-who").innerHTML = '<svg class="fl-g" lang="my" role="img" aria-label="' + l[0] + '" viewBox="' + (bx[0] - 1) + " " + (bx[1] - 1) + " " + gw + " " + gh +
+      '" style="width:' + (gw * 1.15).toFixed(1) + "px;height:" + (gh * 1.15).toFixed(1) + 'px"><path d="' + ls.d + '"/></svg><div class="fl-nmt"><div class="fl-nmh"><h3>' + l[1] +
+      '</h3></div><p>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></p></div>";
+    var i = current, hear = document.createElement("button"), clip = letterClip(l[0]);
     hear.type = "button"; hear.className = "lb-hear"; hear.hidden = true; hear.innerHTML = SPEAKER;
     hear.setAttribute("aria-label", "Hear " + l[1] + ", called " + l[2]);
     hear.addEventListener("click", function () { playUrl(clip, hear); });
-    $("lb-who").appendChild(hear);
+    $("lb-who").querySelector(".fl-nmh").appendChild(hear);
     var probe = new Audio(); probe.preload = "metadata";     // show the button only if the clip exists
     probe.addEventListener("loadedmetadata", function () { if (current === i) hear.hidden = false; }, { once: true });
     probe.src = clip;
-    $("lb-num").textContent = i + 1;
-    showScore(0); setMode(0);
-    var strokes = placed(D.K[l[0]], 0, 0), b = bounds(strokes), side = Math.max(86, Math.max(b.x1 - b.x0, b.y1 - b.y0) + 32);
-    var view = { x: (b.x0 + b.x1) / 2 - side / 2, y: (Math.min(b.y0, D.TOP) + Math.max(b.y1, D.BOT || 0)) / 2 - side / 2, w: side, h: side };
-    pad = Pad($("lb-pad"), strokes, view, {
-      shapes: [shapeOf(D.K[l[0]], 0, 0)],
-      bands: bandsOf(D.K[l[0]], 0, 0),
-      label: "Writing pad for the letter " + l[1],
-      onMode: function (m) { if (m === "write" && mode === 0) setMode(1); },
-      onScore: showScore,
-      onDone: function () { learned[l[0]] = 1; saveLearned(); drawChart(); $("lb-next").classList.add("is-ready"); }
-    });
-    $("lb-next").classList.remove("is-ready");
-    drawChart();
-    if (scroll && window.matchMedia("(max-width: 860px)").matches) $("lb-side").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
   }
-  $("lb-mode").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b || !pad) return;
-    var m = +b.getAttribute("data-m");
-    setMode(m);
-    if (m === 0) pad.watch(); else pad.write();
+  function drawFrame() {
+    var l = L(), vbx = l.cx - FL.VBW / 2;
+    fpad.setAttribute("viewBox", vbx + " " + l.vy + " " + FL.VBW + " " + FL.VH);
+    fpad.setAttribute("aria-label", "Writing pad for the letter " + LETTERS[current][1]);
+    Array.prototype.forEach.call(fpad.querySelectorAll("line"), function (ln) { var y = ln.getAttribute("data-y");
+      ln.setAttribute("x1", vbx - 5); ln.setAttribute("x2", vbx + FL.VBW + 5); ln.setAttribute("y1", y); ln.setAttribute("y2", y); });
+    $("fl-outline").setAttribute("d", l.d);
+    $("fl-segs").innerHTML = l.sched.map(function (sc, j) { return '<div class="fl-seg" style="left:' + pct(sc.t0 / l.T) + ";width:" + pct((sc.t1 - sc.t0) / l.T) + '"><i></i><span>' + (j + 1) + "</span></div>"; }).join("");
+    $("lb-num").textContent = current + 1;
+  }
+  function drawSteps() {
+    var order = { watch: 0, trace: 1, hide: 2 }[S.mode];
+    $("fl-steps").innerHTML = [["watch", "Watch"], ["trace", "Trace"], ["hide", "From memory"]].map(function (m, k) {
+      var st = S.done || k < order ? "is-done" : k === order ? "is-on" : "";
+      return '<button type="button" class="fl-st ' + st + '" data-mode="' + m[0] + '"' + (st === "is-on" ? ' aria-current="step"' : "") + '><span class="n">' + (st === "is-done" ? TICK : k + 1) + "</span>" + m[1] + "</button>"; }).join("");
+    $("lb-next").classList.toggle("is-ready", S.done);
+    $("fl-badge").classList.toggle("is-on", S.done);
+    $("fl-outline").classList.toggle("is-hidden", S.mode === "hide" && !S.done);
+  }
+  function drawBoard() {
+    var l = L(), vbx = l.cx - FL.VBW / 2, watch = S.mode === "watch", trace = S.mode === "trace";
+    var demo = "";
+    if (watch) l.bands.forEach(function (b, j) { var sc = l.sched[j], k = S.t >= sc.t1 ? b.n : S.t <= sc.t0 ? 0 : Math.floor((S.t - sc.t0) / (sc.t1 - sc.t0) * b.n); if (k >= 2) demo += flPoly(b.a, b.b, 0, k - 1); });
+    if (watch && !l.bands.length) demo = l.d;
+    $("fl-demo").setAttribute("d", demo);
+    var jc = trace ? bandDone.indexOf(false) : -1, snap = "", snapNew = "";
+    if (S.done) snap = l.full.join(""); else if (trace) l.bands.forEach(function (b, j) { if (bandDone[j]) { if (j === lastSnap) snapNew = l.full[j]; else snap += l.full[j]; } });
+    $("fl-snap").setAttribute("d", snap); $("fl-snapnew").setAttribute("d", snapNew);
+    $("fl-curb").setAttribute("d", jc >= 0 ? l.full[jc] : "");
+    var cc = "", gd = "";
+    if (jc >= 0) {
+      var b = l.bands[jc], c = cov[jc], i = 0;
+      while (i < b.n) { if (!c[i]) { i++; continue; } var i0 = i; while (i < b.n && c[i]) i++; var i1 = Math.min(b.n - 1, i); if (i1 > i0) cc += flPoly(b.a, b.b, Math.max(0, i0 - 1), i1); }
+      var md = b.mid, e = Math.max(2, md.length - 4); gd = "M" + md[0][0] + " " + md[0][1]; for (var g = 2; g < e; g += 2) gd += "L" + md[g][0] + " " + md[g][1]; gd += "L" + md[e][0] + " " + md[e][1];
+    }
+    $("fl-covc").setAttribute("d", cc); $("fl-guide").setAttribute("d", gd);
+    var gi = "", ri = "";
+    if (!watch) inks.forEach(function (st) { for (var k = 0; k < st.pts.length; k++) { var p = st.pts[k], q = k ? st.pts[k - 1] : p, seg = "M" + q[0] + " " + q[1] + "L" + p[0] + " " + p[1]; if (st.ins[k]) gi += seg; else ri += seg; } });
+    $("fl-inkg").setAttribute("d", gi); $("fl-inkr").setAttribute("d", ri);
+    var sh = "";
+    if (jc >= 0) { var p0 = l.bands[jc].mid[0]; sh = '<div class="fl-start" style="left:' + pct((p0[0] - vbx) / FL.VBW) + ";top:" + pct((p0[1] - l.vy) / FL.VH) + '"><span>' + (jc + 1) + "</span></div>"; }
+    if ($("fl-starts").innerHTML !== sh) $("fl-starts").innerHTML = sh;
+  }
+  function drawTransport() {
+    var l = L(), t = S.mode === "watch" ? S.t : 0, segs = $("fl-segs").children;
+    $("fl-play").innerHTML = S.playing ? PAUSE : PLAY; $("fl-play").setAttribute("aria-label", S.playing ? "Pause" : "Play");
+    l.sched.forEach(function (sc, j) { if (segs[j]) segs[j].firstChild.style.width = pct(Math.max(0, Math.min(1, (t - sc.t0) / (sc.t1 - sc.t0)))); });
+    $("fl-head").style.left = pct(t / l.T);
+    $("fl-track").setAttribute("aria-valuenow", Math.round(t / l.T * 100));
+    $("fl-time").textContent = t.toFixed(1) + "s / " + l.T.toFixed(1) + "s";
+    $("fl-sp5").classList.toggle("is-on", S.speed === 0.5); $("fl-sp1").classList.toggle("is-on", S.speed === 1);
+  }
+  function loop(now) {
+    raf = 0; if (!S.playing) return;
+    var dt = Math.min(0.05, (now - (loop.last || now)) / 1000); loop.last = now;
+    var stop = stopAt != null ? stopAt : L().T; S.t += dt * S.speed;
+    if (S.t >= stop) { S.t = stop; S.playing = false; stopAt = null; }
+    drawBoard(); drawTransport();
+    if (S.playing) raf = requestAnimationFrame(loop);
+  }
+  function play() { S.playing = true; loop.last = 0; if (!raf) raf = requestAnimationFrame(loop); drawTransport(); }
+
+  function open(i) {
+    current = i; S.mode = "watch"; S.done = false; stopAt = null; resetInk();
+    drawFrame(); drawWho(); drawCarousel(); drawSteps();
+    if (reduced || !seen) { S.t = reduced ? L().T : 0; S.playing = false; drawBoard(); drawTransport(); } else { S.t = 0; play(); }
+  }
+  function setMode(m) {
+    resetInk(); stopAt = null; S.done = false; S.mode = m; S.t = 0; S.playing = false;
+    drawSteps(); drawBoard(); drawTransport();
+    if (m === "watch") play();
+  }
+  function togglePlay() {
+    if (S.playing) { S.playing = false; drawTransport(); return; }
+    stopAt = null;
+    if (S.mode !== "watch") { resetInk(); S.mode = "watch"; S.t = 0; S.done = false; drawSteps(); }
+    if (S.t >= L().T - 0.01) S.t = 0;
+    play();
+  }
+  function scrubTo(f) {
+    stopAt = null; if (S.mode !== "watch") { resetInk(); S.mode = "watch"; S.done = false; drawSteps(); }
+    S.playing = false; S.t = Math.max(0, Math.min(1, f)) * L().T; drawBoard(); drawTransport();
+  }
+  function score() { var c = 0, n = 0, a = 0, m = 0;
+    cov.forEach(function (arr) { for (var i = 0; i < arr.length; i++) { n++; c += arr[i]; } });
+    inks.forEach(function (s) { s.ins.forEach(function (v) { m++; if (v) a++; }); });
+    return { cov: n ? c / n : 0, ins: m ? a / m : 0 }; }
+  function addPt(e) {
+    var m = fpad.getScreenCTM(); if (!m) return;
+    var p = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()), s = inks[inks.length - 1], prev = s.pts[s.pts.length - 1];
+    if (prev && Math.hypot(p.x - prev[0], p.y - prev[1]) < 0.5) return;
+    var inside = true; try { inside = $("fl-outline").isPointInFill(new DOMPoint(p.x, p.y)); } catch (err) {}
+    s.pts.push([p.x, p.y]); s.ins.push(inside);
+    var l = L(), from = prev || [p.x, p.y], n = Math.max(1, Math.ceil(Math.hypot(p.x - from[0], p.y - from[1]) / 1.5)), only = S.mode === "trace" ? bandDone.indexOf(false) : -1;
+    for (var k = 0; k <= n; k++) { var x = from[0] + (p.x - from[0]) * k / n, y = from[1] + (p.y - from[1]) * k / n;
+      for (var j = 0; j < l.bands.length; j++) { if (only >= 0 && j !== only) continue;
+        var md = l.bands[j].mid, c = cov[j]; for (var q = 0; q < md.length; q++) { var dx = md[q][0] - x, dy = md[q][1] - y; if (dx * dx + dy * dy < FL.R2) c[q] = 1; } } }
+    if (S.mode === "trace" && only >= 0) {
+      var cc = cov[only], got = 0; for (var z = 0; z < cc.length; z++) got += cc[z];
+      if (got / cc.length >= FL.SNAP) { bandDone[only] = true; lastSnap = only; drawing = false; inks = [];
+        if (bandDone.indexOf(false) < 0) { var at = current; setTimeout(function () { if (S.mode === "trace" && current === at) setMode("hide"); }, 900); } }
+    } else if (S.mode === "hide" && !S.done) {
+      var sc = score();
+      if (sc.cov >= FL.COVER && sc.ins >= FL.INSIDE) { S.done = true; drawing = false; inks = []; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); }
+    }
+    drawBoard();
+  }
+  fpad.addEventListener("pointerdown", function (e) {
+    if (S.done || !L().bands.length) return; e.preventDefault();
+    try { fpad.setPointerCapture(e.pointerId); } catch (err) {}
+    if (S.mode === "watch") { resetInk(); S.mode = "trace"; S.playing = false; stopAt = null; drawSteps(); drawTransport(); }
+    drawing = true; inks.push({ pts: [], ins: [] }); addPt(e);
   });
-  $("lb-mode").addEventListener("keydown", function (e) {      // arrow keys move between the three, like any radio group
-    var d = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-    if (!d) return; e.preventDefault();
-    var b = $("lb-mode").querySelectorAll("button")[(mode + d + 3) % 3]; b.focus(); b.click();
+  fpad.addEventListener("pointermove", function (e) { if (drawing) addPt(e); });
+  ["pointerup", "pointercancel"].forEach(function (ev) { fpad.addEventListener(ev, function () { drawing = false; }); });
+  var scrubbing = false, track = $("fl-track");
+  function trackF(e) { var r = track.getBoundingClientRect(); return (e.clientX - r.left) / r.width; }
+  track.addEventListener("pointerdown", function (e) { scrubbing = true; try { track.setPointerCapture(e.pointerId); } catch (err) {} scrubTo(trackF(e)); });
+  track.addEventListener("pointermove", function (e) { if (scrubbing) scrubTo(trackF(e)); });
+  ["pointerup", "pointercancel"].forEach(function (ev) { track.addEventListener(ev, function () { scrubbing = false; }); });
+  track.addEventListener("keydown", function (e) {
+    var d = e.key === "ArrowRight" ? 0.05 : e.key === "ArrowLeft" ? -0.05 : 0; if (!d) return; e.preventDefault();
+    scrubTo((S.mode === "watch" ? S.t / L().T : 0) + d);
   });
-  $("lb-clear").addEventListener("click", function () { if (pad) pad.clear(); });
+  $("fl-play").addEventListener("click", togglePlay);
+  $("fl-sp5").addEventListener("click", function () { S.speed = 0.5; drawTransport(); });
+  $("fl-sp1").addEventListener("click", function () { S.speed = 1; drawTransport(); });
+  $("fl-steps").addEventListener("click", function (e) { var b = e.target.closest("[data-mode]"); if (b) setMode(b.getAttribute("data-mode")); });
+  $("fl-car").addEventListener("click", function (e) { var b = e.target.closest("[data-i]"); if (b) open(+b.getAttribute("data-i")); });
+  function step(d) { open((current + d + LETTERS.length) % LETTERS.length); }
+  $("fl-prev").addEventListener("click", function () { step(-1); });
+  $("fl-nextc").addEventListener("click", function () { step(1); });
+  $("fl-prevb").addEventListener("click", function () { step(-1); });
+  $("lb-next").addEventListener("click", function () { step(1); });
+  $("lb-clear").addEventListener("click", function () { setMode(S.mode === "watch" ? "trace" : S.mode); });
   $("lb-all").addEventListener("click", function () {
     var d = $("lb-all-dlg"); if (d.showModal) d.showModal(); else d.setAttribute("open", "");
   });
   $("lb-all-close").addEventListener("click", function () { $("lb-all-dlg").close(); });
   $("lb-all-dlg").addEventListener("click", function (e) { if (e.target === this) this.close(); });
-  $("lb-next").addEventListener("click", function () { open((current + 1) % LETTERS.length, false); });
   // Deep link: learn.html#write-ka (Latin name) or #write-က opens that letter (Ask MCC links here).
   function fromHash() {
     var m = /^#write-(.+)$/.exec(location.hash || ""); if (!m) return -1;
@@ -573,9 +694,15 @@ var MCC_TRANSLIT = (function () {
     return -1;
   }
   var linked = fromHash();
-  open(linked < 0 ? 0 : linked, false);
-  if (linked >= 0) setTimeout(function () { $("lb-side").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" }); }, 300);
-  window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0) open(i, true); });
+  open(linked < 0 ? 0 : linked);
+  // The first demo plays when the board comes into view.
+  function firstPlay() { if (seen) return; seen = true; if (!reduced && S.mode === "watch" && !S.playing && S.t === 0) play(); }
+  if ("IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) { if (es.some(function (x) { return x.isIntersecting; })) { io.disconnect(); firstPlay(); } }, { threshold: 0.4 });
+    io.observe($("lb-side"));
+  } else firstPlay();
+  if (linked >= 0) setTimeout(function () { $("lb-chart").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); }, 300);
+  window.addEventListener("hashchange", function () { var i = fromHash(); if (i >= 0) { open(i); $("lb-chart").scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); } });
 
   /* ---------- write your name ---------- */
   var namePad = null;
