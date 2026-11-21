@@ -269,6 +269,9 @@
   .fl-outline{ fill:#EDE5D3; transition:opacity .4s; } .fl-outline.is-hidden{ opacity:0; }
   .fl-curb{ fill:#D4C6A6; }
   .fl-guide{ fill:none; stroke:#AE3628; stroke-width:.7; stroke-dasharray:2 2.2; stroke-linecap:round; opacity:.85; }
+  /* pen down: the guide steps aside at once; it fades back in after the pen has been up a moment (learn.js GUIDE_WAIT) */
+  #fl-guide, #fl-starts{ transition:opacity .3s ease; }
+  .guide-off #fl-guide, .guide-off #fl-starts{ opacity:0; transition-duration:.1s; }
   .fl-covc{ fill:var(--green); opacity:.9; }
   .fl-snap, .fl-demo{ fill:var(--navy); }
   .fl-snapnew{ fill:var(--navy); animation:fl-in .5s cubic-bezier(.32,.72,0,1); }
