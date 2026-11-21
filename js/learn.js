@@ -750,11 +750,15 @@ var MCC_TRANSLIT = (function () {
 
   /* ---------- write your name ---------- */
   var namePad = null;
+  /* Padauk Book spaces its letters loosely (gap about 18% of a letter's height; Noto Sans Myanmar about 15%), so letters
+     inside a word are pulled 3.5 units closer. The space between words is unchanged. */
+  var NAME_TIGHT = 3.5;
   function layout(words) {
     var x = 0, all = [], shapes = [], ok = true, bands = [], allBands = true;
     words.forEach(function (w, wi) {
       if (wi) x += 16;
-      (w.match(CLUSTER) || []).forEach(function (c) {
+      (w.match(CLUSTER) || []).forEach(function (c, ci) {
+        if (ci) x -= NAME_TIGHT;
         var e = D.C[c];
         while (!e && c.length > 1) { c = c.slice(0, -1); e = D.C[c]; ok = false; }     // unknown mark: drop it, keep the letter
         if (!e) { ok = false; return; }
