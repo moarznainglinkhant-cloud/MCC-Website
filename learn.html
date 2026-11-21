@@ -354,7 +354,8 @@
   .fl-foot #fl-prevb{ padding-left:14px; } .fl-foot #lb-next{ padding-right:16px; }
   .fl-foot .btn svg{ width:16px; height:16px; }
   /* lesson right column: smaller board, tidier title row and buttons */
-  .fl-main{ grid-template-columns:minmax(0,560px) minmax(0,460px); gap:48px; justify-content:center; }
+  .fl-main{ grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:48px; }
+  @media (min-width:1500px){ .fl-main{ grid-template-columns:minmax(0,620px) minmax(0,1fr); } }
   .fl-right{ gap:24px; padding-top:0; }
   .fl-nm{ gap:20px; align-items:center; }
   .fl-nm .fl-g{ zoom:.5; box-sizing:content-box; padding:30px 22px; background:var(--bg-sunk); border-radius:28px; }
