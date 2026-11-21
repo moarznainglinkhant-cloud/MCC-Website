@@ -389,6 +389,8 @@
   @media (max-width:760px){ .fl-ct.c3{ display:none; } }
   /* top bar: letter strip centred over the board, "The alphabet 1 / 33" next to All letters on the right */
   .fl-bar-r{ display:flex; align-items:center; justify-content:flex-end; gap:20px; min-width:0; }
+  .fl-nm .fl-cnt-row{ display:none; margin-left:auto; white-space:nowrap; }
+  @media (min-width:1101px){ .fl-nm .fl-cnt-row{ display:inline-block; } .fl-bar-r .eyebrow{ display:none; } }
   .fl-bar > .fl-car{ touch-action:pan-y; }
   @media (min-width:1101px){ .fl-bar{ grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:48px; } .fl-bar > .fl-car{ justify-self:center; } }
   @media (min-width:1500px){ .fl-bar{ grid-template-columns:minmax(0,620px) minmax(0,1fr); } }

@@ -548,6 +548,8 @@ var MCC_TRANSLIT = (function () {
       speakUrl(say).then(function (u) { hear.classList.remove("is-busy"); if (current === i) playUrl(u, hear); }, function () { hear.classList.remove("is-busy"); });
     });
     $("lb-who").querySelector(".fl-nmh").appendChild(hear);
+    var cnt = document.createElement("span"); cnt.className = "eyebrow fl-cnt-row";   // "The alphabet 1 / 33", right-aligned on the same row as the letter name
+    cnt.innerHTML = 'The alphabet <span class="fl-cnt">' + (i + 1) + " / 33</span>"; $("lb-who").querySelector(".fl-nmh").appendChild(cnt);
     var probe = new Audio(); probe.preload = "metadata";     // a recorded clip, when there is one, wins
     probe.addEventListener("loadedmetadata", function () { hasClip = true; }, { once: true });
     probe.src = clip;
