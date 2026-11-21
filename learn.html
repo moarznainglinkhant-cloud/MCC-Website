@@ -514,6 +514,8 @@
   .lc-namecard .lb-name-scroll{ margin-top:0; border:0; border-radius:22px; background:#F7F2E5; }
   .lc-namecard .lb-ghost{ fill:#E3D9C2; }
   .lc-name-ft{ display:flex; align-items:flex-end; gap:24px; }
+  .lc-name-note{ margin:-4px 4px 0; font-size:0.85rem; line-height:1.45; color:var(--ink-soft); }   /* the spelling note, right under the pad */
+  .lc-name-note:empty{ display:none; }
   .lc-name-ft .lc-stat{ flex:1; }
   @media (max-width:860px){
     .lb-name-grid{ grid-template-columns:minmax(0,1fr); }
@@ -955,11 +957,10 @@
       <div class="lb-name-copy">
         <span class="eyebrow">Your turn</span>
         <h2>Your name, in Burmese</h2>
-        <p class="lb-lead">Type it in English. We'll spell it the Burmese way, then you write it.</p>
       </div>
       <div class="lb-name-side">
         <form id="lb-name-form" autocomplete="off">
-          <input id="lb-name-input" type="text" maxlength="40" placeholder="Your name" aria-label="Your name" autocapitalize="words" spellcheck="false">
+          <input id="lb-name-input" type="text" maxlength="40" placeholder="Type your name here" aria-label="Your name" autocapitalize="words" spellcheck="false">
           <button type="submit" class="btn">Write it</button>
         </form>
         <p class="lb-note" id="lb-name-note"></p>
@@ -973,6 +974,7 @@
           </div>
         </div>
         <div class="lb-name-scroll" id="lb-name-scroll"><div class="lb-pad" id="lb-name-pad"></div></div>
+        <p class="lc-name-note" id="lb-name-sound"></p>
         <div class="lc-name-ft">
           <div class="lc-stat" aria-live="polite">
             <div class="lc-stat-row"><span>Inside the letters</span><b id="lb-name-inside">0%</b></div>

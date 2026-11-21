@@ -786,7 +786,8 @@ var MCC_TRANSLIT = (function () {
       shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",
       doneText: "That's your name in Burmese."
     });
-    note.textContent = lay.ok
+    note.textContent = "";
+    $("lb-name-sound").textContent = lay.ok
       ? "Spelled by sound, so a Burmese speaker might spell it a little differently."
       : "Some marks in that spelling aren't in our stroke set yet, so they were left out.";
   }
