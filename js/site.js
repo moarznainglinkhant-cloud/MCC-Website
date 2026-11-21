@@ -2298,7 +2298,7 @@ function initGreetNote() {
   const strokes = [shaft, head, ul];
   // Points in the greeting's own units (its viewBox): just above the top of လာ, and the top of the word.
   const TARGET = { x: 207, y: -59 }, WORD_TOP = { x: 0, y: -93 };
-  const PENCIL = "#A39C8A";
+  const PENCIL = getComputedStyle(document.documentElement).getPropertyValue("--pencil").trim() || "#A39C8A";
   let state = "hidden";            // hidden → playing → done
 
   const pt = p => {
@@ -2318,7 +2318,15 @@ function initGreetNote() {
     const eb = box.querySelector(".eyebrow");
     const ebR = eb ? eb.getBoundingClientRect().right - box.getBoundingClientRect().left : 0;
     nx = Math.max(ebR + 14, Math.min(W - nw - 4, tgt.x + u * 0.5));
-    ny = pt(WORD_TOP).y - nh * 0.85;
+    // Two-column hero (desktop): the gap between "Welcome" and the word is tight, so the note's text sits
+    // on the "Welcome" line (its bottom on the eyebrow's baseline) — one row, the word clearly below.
+    // One column (phones, ≤820px, same breakpoint as the hero grid): it hangs just above the word.
+    const oneCol = window.matchMedia && matchMedia("(max-width:820px)").matches;
+    if (eb && !oneCol) {
+      const ebB = eb.getBoundingClientRect().bottom - box.getBoundingClientRect().top;
+      const inkB = ink.getBoundingClientRect().bottom - note.getBoundingClientRect().top;
+      ny = ebB - inkB + nh * 0.12;
+    } else ny = pt(WORD_TOP).y - nh * 0.85;
     s = { x: nx - 7, y: ny + nh * 0.5 };          // from beside "Learn", clear of the underline
     c1 = { x: s.x - (s.x - tgt.x) * 0.75, y: s.y - u * 0.01 };
     c2 = { x: tgt.x + u * 0.01, y: tgt.y - u * 0.1 };

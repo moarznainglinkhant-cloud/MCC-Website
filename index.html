@@ -53,7 +53,7 @@
     --bg-raised:#FDFAF2;
     --bg-sunk:#EEE6D3;
     --ink:#1C2440;
-    --ink-soft:#5F5A48;
+    --ink-soft:#5F5A48; --pencil:#A39C8A;
     --red:#AE3628;
     --red-ink:#8C2A1F;
     --gold:#C08A2E;
@@ -287,9 +287,9 @@
      greeting is written in, sketches it in pencil and then inks it over in red, once, after the greeting
      has finished. Otherwise (arriving from another MCC page, Back/Forward, reduced motion) it's simply there.
      Hidden in Burmese, where "learn to write Burmese" isn't the invitation. */
-  .greet-note{ --gn-size:clamp(1.1rem, 2vw, 1.45rem); position:absolute; left:0; top:0; z-index:3; visibility:hidden;
+  .greet-note{ --gn-size:clamp(1.1rem, 1.25vw, 1.2rem); position:absolute; left:0; top:0; z-index:3; visibility:hidden;
     font-family:'Gochi Hand', 'Segoe Print', cursive; font-weight:400; font-size:var(--gn-size); line-height:1.05; letter-spacing:.01em;
-    color:var(--red); text-decoration:none; white-space:nowrap; rotate:-3deg; transform-origin:left bottom;
+    color:var(--red); text-decoration:none; white-space:nowrap; rotate:-2deg; transform-origin:left bottom;
     padding:4px 6px; margin:-4px 0 0 -6px; border-radius:6px; -webkit-tap-highlight-color:transparent; }
   .greet-note .gn-text{ position:relative; display:inline-block; }
   .greet-note .gn-ul{ position:absolute; left:-1px; bottom:-5px; width:calc(100% + 2px); height:8px; overflow:visible; }
