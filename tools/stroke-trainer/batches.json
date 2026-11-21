@@ -37,6 +37,12 @@
    "artifact_version": "1795220415-4bd3",
    "date": "2026-11-20",
    "what": "Cuts given point by point (poly), move-only: ma's two cuts are the U's outer edge moved in by the stroke width, one per side, dragged into place. Arrows in the order view stop short of slanted ends (display only)."
+  },
+  "4.6": {
+   "file": "trainer-v4.6.html",
+   "artifact_version": "1795236826-65a9",
+   "date": "2026-11-20",
+   "what": "v4.5 plus, for ba only: the ring's two pointed tips preset as its ends; an end a cut shrank to a point is dropped; the top curve's two slivers beside the ring's tips go to the ring (the ring's inner edge carried on along its own curve up to the top curve's upper edge). Ring must be clicked first. (The live artifact at that version also holds an abandoned experimental ha cut, not used.)"
   }
  },
  "batches": [
@@ -942,6 +948,45 @@
         "start": [
          14.37,
          -14.42
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "7",
+   "batch": 7,
+   "part": 1,
+   "date": "2026-11-20",
+   "tool": "4.6",
+   "issues": true,
+   "note": "Letters with issues: pushed on request; imperfect, may need redoing.",
+   "letters": [
+    {
+     "ch": "ဗ",
+     "lat": "ba",
+     "g": 335,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         14.7,
+         -44.6
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         14.7,
+         -44.6
         ],
         "dir": 1
        }
