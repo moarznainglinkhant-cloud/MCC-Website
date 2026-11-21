@@ -353,6 +353,19 @@
   .fl-foot .btn{ height:46px; padding:0 20px; font-size:0.76rem; display:inline-flex; align-items:center; }
   .fl-foot #fl-prevb{ padding-left:14px; } .fl-foot #lb-next{ padding-right:16px; }
   .fl-foot .btn svg{ width:16px; height:16px; }
+  /* lesson right column: smaller board, tidier title row and buttons */
+  .fl-main{ grid-template-columns:minmax(0,640px) 360px; gap:56px; justify-content:center; }
+  .fl-right{ gap:24px; padding-top:0; }
+  .fl-nm{ gap:18px; align-items:flex-start; }
+  .fl-nm .fl-g{ zoom:.55; margin-top:8px; }
+  .fl-nm h3{ font-size:48px; }
+  .fl-nmh{ gap:12px; align-items:center; }
+  .fl-nm .lb-hear{ width:40px; height:40px; margin-top:0; } .fl-nm .lb-hear svg{ width:19px; height:19px; }
+  .fl-nm p{ font-size:15px; margin-top:4px; } .fl-nm p [lang="my"]{ font-size:17px; vertical-align:-1px; }
+  .fl-foot{ margin-top:auto; display:grid; grid-template-columns:auto minmax(0,1fr) minmax(0,1fr); gap:8px; }
+  .fl-foot .fl-sp{ display:none; }
+  .fl-foot .btn{ height:48px; justify-content:center; }
+  @media (max-width:1100px){ .fl-foot .btn{ padding-inline:12px; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:10px; } }
   @media (max-width:1100px){
     .fl-main{ grid-template-columns:minmax(0,1fr) 300px; gap:32px; } 
     .fl-bar{ grid-template-columns:1fr auto; row-gap:14px; }
