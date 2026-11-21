@@ -206,6 +206,19 @@ var MCC_TRANSLIT = (function () {
     var pp = function (t) { return t.split(" ").map(function (q) { var v = q.split(","); return [+v[0] + dx, +v[1] + dy]; }); };
     return r.bands.map(function (bd) { return { a: pp(bd.a), b: pp(bd.b) }; });
   }
+  /* Marks and vowel signs have no hand-made bands. For the name pad their fill is built from the stroke line
+     (a band a little wider than the ink, clipped to the font outline), so every part of a name fills the same way. */
+  function synthBands(g, dx, dy) {
+    var clip = { d: D.O[g] || "", x: dx, y: dy };
+    return placed(g, dx, dy).filter(function (s) { return s.length > 1; }).map(function (s) {
+      var h = D.W * 0.8, a = [], b = [];
+      s.forEach(function (p, k) {
+        var p0 = s[Math.max(0, k - 1)], p1 = s[Math.min(s.length - 1, k + 1)], tx = p1[0] - p0[0], ty = p1[1] - p0[1], l = Math.hypot(tx, ty) || 1, nx = -ty / l * h, ny = tx / l * h;
+        a.push([p[0] + nx, p[1] + ny]); b.push([p[0] - nx, p[1] - ny]);
+      });
+      return { a: a, b: b, clip: clip };
+    });
+  }
   var GOOD = "#4B7A3C", BAD = "#C2412F";
   var NEED_COVER = 0.82, NEED_INSIDE = 0.8;
   function Pad(host, strokes, view, o) {
@@ -258,7 +271,9 @@ var MCC_TRANSLIT = (function () {
         var x0 = (bd.a[k - 1][0] + bd.b[k - 1][0]) / 2, y0 = (bd.a[k - 1][1] + bd.b[k - 1][1]) / 2, x1 = (bd.a[k][0] + bd.b[k][0]) / 2, y1 = (bd.a[k][1] + bd.b[k][1]) / 2;
         m.push(m[k - 1] + Math.hypot(x1 - x0, y1 - y0));
       }
-      bd.m = m; var pe = el("path", { d: "" }); demoG.appendChild(pe); bandEls.push(pe);
+      bd.m = m; var pe = el("path", { d: "" });
+      if (bd.clip) { var cid = mid + "c" + bandEls.length, cp = el("clipPath", {}); cp.setAttribute("id", cid); cp.appendChild(el("path", { d: bd.clip.d, transform: "translate(" + bd.clip.x + " " + bd.clip.y + ")" })); defs.appendChild(cp); pe.setAttribute("clip-path", "url(#" + cid + ")"); }
+      demoG.appendChild(pe); bandEls.push(pe);
     });
     function setBand(j, dist) {             // show band j up to distance dist along it; returns the pen point (middle of the front)
       var bd = BD[j], a = bd.a, b = bd.b, m = bd.m, n = a.length - 1, k = 0;
@@ -744,11 +759,11 @@ var MCC_TRANSLIT = (function () {
         while (!e && c.length > 1) { c = c.slice(0, -1); e = D.C[c]; ok = false; }     // unknown mark: drop it, keep the letter
         if (!e) { ok = false; return; }
         for (var i = 1; i < e.length; i += 3) { all = all.concat(placed(e[i], x + e[i + 1], e[i + 2])); shapes.push(shapeOf(e[i], x + e[i + 1], e[i + 2]));
-          var bb = bandsOf(e[i], x + e[i + 1], e[i + 2]); if (bb) bands = bands.concat(bb); else allBands = false; }
+          var bb = bandsOf(e[i], x + e[i + 1], e[i + 2]) || synthBands(e[i], x + e[i + 1], e[i + 2]); bands = bands.concat(bb); }
         x += e[0];
       });
     });
-    return { strokes: all, shapes: shapes, width: x, ok: ok, bands: allBands && bands.length ? bands : null };
+    return { strokes: all, shapes: shapes, width: x, ok: ok, bands: bands.length ? bands : null };
   }
   function writeName(raw) {
     var words = MCC_TRANSLIT.name(raw), out = $("lb-name-out"), note = $("lb-name-note");
