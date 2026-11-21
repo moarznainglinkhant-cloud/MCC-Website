@@ -257,6 +257,11 @@
   .fl-ct.c0{ width:68px; height:68px; background:var(--navy); color:var(--bg); box-shadow:0 10px 24px -12px rgba(28,36,64,.6); }
   .fl-ct.c1{ width:52px; height:52px; opacity:.85; } .fl-ct.c2{ width:46px; height:46px; opacity:.5; } .fl-ct.c3{ width:40px; height:40px; opacity:.25; }
   .fl-ct:not(.c0):hover{ background:var(--bg-sunk); opacity:1; }
+  /* glide between letters (FLIP in drawCarousel): .is-flip turns transitions off while the start positions are set */
+  .fl-car#fl-car{ position:relative; }
+  #fl-car .fl-ct{ transition:transform .42s cubic-bezier(.2,.8,.2,1), opacity .32s ease, background-color .32s ease, color .32s ease, box-shadow .32s ease; will-change:transform; }
+  #fl-car.is-flip .fl-ct{ transition:none !important; }
+  @media (prefers-reduced-motion:reduce){ #fl-car .fl-ct{ transition:none; } }
   .fl-ct.is-learned::after{ content:""; position:absolute; bottom:-7px; left:50%; width:6px; height:6px; margin-left:-3px; border-radius:50%; background:var(--green); }
   .fl-ct:focus-visible, .fl-nav:focus-visible, .fl-st:focus-visible, .fl-play:focus-visible, .fl-spd button:focus-visible, .fl-track:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   .fl-allb{ justify-self:end; white-space:nowrap; }
@@ -893,10 +898,11 @@
 
   /* ---------- OPEN STROKE DATA (developer card) ---------- */
   @font-face{ font-family:'Courier Prime'; font-style:normal; font-weight:700; font-display:swap; src:url('fonts/CourierPrime-Bold.woff2') format('woff2'); }
-  .lb-open{ margin-top:clamp(48px,6vw,80px); background:var(--bg-raised); border:1px solid var(--line); border-radius:20px;
-    padding:clamp(22px,3.4vw,36px) clamp(20px,3.6vw,40px); box-shadow:var(--card-shadow); }
-  .lb-open h3{ font-size:clamp(1.5rem,3vw,2rem); font-weight:600; line-height:1.15; }
-  .lb-open-lead{ font-family:'Fraunces',serif; color:var(--ink-soft); font-size:clamp(1rem,1.5vw,1.1rem); line-height:1.55; max-width:52ch; margin:10px 0 20px; }
+  .lb-open{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:clamp(28px,4.5vw,64px); align-items:center;
+    border-top:1px solid var(--line); margin-top:clamp(56px,7vw,88px); padding-top:clamp(40px,5vw,56px); }
+  @media (max-width:860px){ .lb-open{ grid-template-columns:minmax(0,1fr); } }
+  .lb-open h3{ font-size:clamp(1.3rem,2.4vw,1.6rem); font-weight:600; line-height:1.25; max-width:22ch; }
+  .lb-open-lead{ font-family:'Fraunces',serif; color:var(--ink-soft); font-size:clamp(1rem,1.5vw,1.1rem); line-height:1.55; max-width:44ch; margin:10px 0 0; }
   .lb-term{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--navy); color:var(--footer-ink);
     border-radius:12px; padding:12px 12px 12px 16px; font-family:'Courier Prime','Courier New',monospace; font-weight:700; font-size:0.92rem; }
   .lb-term code{ font:inherit; overflow-x:auto; white-space:nowrap; scrollbar-width:none; }
@@ -1127,8 +1133,11 @@
       </div>
       <!-- Open stroke data. Repo link lives in data-repo below (one place): the button and the clone command read it. -->
       <div class="lb-open" id="open-data" data-repo="https://github.com/moarznainglinkhant-cloud/burmese-stroke-order">
-        <h3>Want the strokes? Take them.</h3>
+        <div class="lb-open-copy">
+          <h3>Want the strokes? Take them.</h3>
         <p class="lb-open-lead">The stroke order behind every letter on this page is free on GitHub. As far as we know, it's the first open stroke-order dataset for Burmese.</p>
+        </div>
+        <div class="lb-open-act">
         <div class="lb-term">
           <code><span class="lb-term-p" aria-hidden="true">$</span><span class="js-clone">git clone https://github.com/moarznainglinkhant-cloud/burmese-stroke-order</span></code>
           <button type="button" class="lb-copy js-clone-copy" aria-label="Copy the git clone command">Copy</button>
@@ -1145,6 +1154,7 @@
             <span>Traced letter by letter by<br><a href="https://moarznainglinkhant-cloud.github.io/Portfolio-/" target="_blank" rel="noopener">Naing Lin Khant (Moarz)</a></span>
           </div>
           <a class="btn js-repo" href="https://github.com/moarznainglinkhant-cloud/burmese-stroke-order" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5z"/></svg>View on GitHub</a>
+        </div>
         </div>
       </div>
       <script>(function(){
