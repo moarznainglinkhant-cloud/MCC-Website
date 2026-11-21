@@ -906,6 +906,8 @@
   .lb-open .eyebrow{ color:var(--gold-ink); }
   .lb-open h3{ font-size:clamp(1.5rem,3vw,2rem); font-weight:600; line-height:1.15; margin-top:8px; }
   .lb-open-lead{ font-family:'Work Sans',sans-serif; color:var(--ink-soft); font-size:clamp(0.95rem,1.4vw,1.04rem); line-height:1.55; max-width:52ch; margin:10px 0 20px; }
+  .lb-open-lead a{ color:var(--ink); font-weight:600; text-decoration:underline; text-underline-offset:2px; }
+  .lb-open-lead a:hover{ color:var(--red); }
   .lb-term{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--navy); color:var(--footer-ink);
     border-radius:12px; padding:12px 12px 12px 16px; font-family:'Courier Prime','Courier New',monospace; font-weight:700; font-size:0.92rem; }
   .lb-term code{ font:inherit; overflow-x:auto; white-space:nowrap; scrollbar-width:none; }
@@ -1137,7 +1139,7 @@
       <div class="lb-open" id="open-data" data-repo="https://github.com/moarznainglinkhant-cloud/burmese-stroke-order">
         <span class="eyebrow">Open source &middot; v1</span>
         <h3>Want the strokes? Take them.</h3>
-        <p class="lb-open-lead">The stroke order behind every letter on this page is free on GitHub. As far as we know, it's the first open stroke-order dataset for Burmese.</p>
+        <p class="lb-open-lead">The stroke order behind every letter on this page is free on <a href="https://github.com/moarznainglinkhant-cloud/burmese-stroke-order" target="_blank" rel="noopener">GitHub</a>. As far as we know, it's the first open stroke-order dataset for Burmese.</p>
         <div class="lb-term">
           <code><span class="lb-term-p" aria-hidden="true">$</span><span class="js-clone">git clone https://github.com/moarznainglinkhant-cloud/burmese-stroke-order</span></code>
           <button type="button" class="lb-copy js-clone-copy" aria-label="Copy the git clone command">Copy</button>
