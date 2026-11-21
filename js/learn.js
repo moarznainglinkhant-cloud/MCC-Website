@@ -686,6 +686,23 @@ var MCC_TRANSLIT = (function () {
   $("fl-hide").addEventListener("click", function () { S.hide = !S.hide; if (S.mode === "watch") setMode("trace"); else setMode("trace"); });
   $("fl-car").addEventListener("click", function (e) { var b = e.target.closest("[data-i]"); if (b) open(+b.getAttribute("data-i")); });
   function step(d) { open((current + d + LETTERS.length) % LETTERS.length); }
+  (function () {                       // swipe, drag or scroll sideways across the letter strip to move through the letters
+    var nav = $("fl-car").parentNode, x0 = null, acc = 0, moved = false, STEP = 46, wacc = 0, wt = 0;
+    nav.addEventListener("pointerdown", function (e) { if (e.button) return; x0 = e.clientX; acc = 0; moved = false; });
+    window.addEventListener("pointermove", function (e) {
+      if (x0 === null) return;
+      var dx = e.clientX - x0; if (Math.abs(dx) > 8) moved = true;
+      var d = dx - acc; if (Math.abs(d) >= STEP) { var n = Math.floor(Math.abs(d) / STEP), s = d > 0 ? -1 : 1; step(s * n); acc += -s * n * STEP; }
+    });
+    ["pointerup", "pointercancel"].forEach(function (ev) { window.addEventListener(ev, function () { x0 = null; }); });
+    nav.addEventListener("click", function (e) { if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; } }, true);
+    nav.addEventListener("wheel", function (e) {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;     // vertical scrolling still scrolls the page
+      e.preventDefault(); var now = Date.now(); wacc += e.deltaX;
+      if (now - wt < 150) { wacc = 0; return; }
+      if (Math.abs(wacc) >= 40) { step(wacc > 0 ? 1 : -1); wacc = 0; wt = now; }
+    }, { passive: false });
+  })();
   $("fl-prev").addEventListener("click", function () { step(-1); });
   $("fl-nextc").addEventListener("click", function () { step(1); });
   $("fl-prevb").addEventListener("click", function () { step(-1); });
