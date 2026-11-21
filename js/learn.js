@@ -305,7 +305,7 @@ var MCC_TRANSLIT = (function () {
     function whole() { inkG.style.display = ""; demoG.style.display = "none"; }
     clearDemo();
     function say(h) { if (o.status) o.status.innerHTML = h; }
-    function stop() { cancelAnimationFrame(raf); raf = 0; clearTimeout(timer); pen.setAttribute("opacity", 0); wPlaying = false; }
+    function stop() { clearTimeout(doneT); cancelAnimationFrame(raf); raf = 0; clearTimeout(timer); pen.setAttribute("opacity", 0); wPlaying = false; }
     /* FINAL bands on a timeline, for the playback bar: band j fills from TL[j].t0 to TL[j].t1 (seconds at 1×),
        BAND_GAP apart. Play, pause, scrub and speed all go through renderAt(t). */
     var TL = null, wt = 0, wPlaying = false, wSpeed = 1, wLast = 0, wBand = -1;
@@ -410,15 +410,23 @@ var MCC_TRANSLIT = (function () {
     function report(final) {
       var s = score();
       if (o.onScore) o.onScore(lenIn + lenOut ? s.inside : 0);
+      /* Done only once they've actually stopped: the pen is up AND stays up for DONE_WAIT. Covering enough
+         mid-stroke (or between strokes, with a dot or mark still to go) must never end it early. */
+      clearTimeout(doneT);
       if (s.cover >= NEED_COVER && s.inside >= NEED_INSIDE) {
-        mode = "done"; host.classList.remove("is-writing"); host.classList.add("is-done");
-        say((o.doneText || "Done. You wrote it.") + " <b>" + pct(s.inside) + "</b> of your line was inside the letter.");
-        if (o.onDone) o.onDone();
+        if (!final) return;
+        doneT = setTimeout(function () { if (mode !== "write" || drawing) return; finish(score()); }, DONE_WAIT);
         return;
       }
       var h = "Inside the letter <b>" + pct(s.inside) + "</b> · Letter covered <b>" + pct(s.cover) + "</b>";
       if (final && s.cover >= NEED_COVER) h += ". Too much went outside: clear and try again.";
       say(h);
+    }
+    var doneT = 0, DONE_WAIT = 1000;
+    function finish(s) {
+      mode = "done"; host.classList.remove("is-writing"); host.classList.add("is-done");
+      say((o.doneText || "Done. You wrote it.") + " <b>" + pct(s.inside) + "</b> of your line was inside the letter.");
+      if (o.onDone) o.onDone();
     }
     function write() {
       stop(); clearDemo(); if (!hit) buildHit(); clearMine();
@@ -449,6 +457,7 @@ var MCC_TRANSLIT = (function () {
     }
     var drawing = false;
     svg.addEventListener("pointerdown", function (e) {
+      clearTimeout(doneT);                     // pen down again: not finished yet
       if (mode === "watch") { stop(); write(); }
       if (mode !== "write") return;
       drawing = true; last = null; try { svg.setPointerCapture(e.pointerId); } catch (x) {}
