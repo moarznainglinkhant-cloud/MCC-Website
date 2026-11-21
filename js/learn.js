@@ -788,20 +788,26 @@ var MCC_TRANSLIT = (function () {
   }
   $("lb-name-form").addEventListener("submit", function (e) { e.preventDefault(); writeName($("lb-name-input").value); });
   var nameText = "";
-  /* Watch · Trace · Hide letter for the name, same as the alphabet card. */
-  var nameMode = 0;
+  /* Watch | Trace switch + Hide button, same as the alphabet card. nameMode: 0 = watch, 1 = trace.
+     Hide is its own toggle: pressing it goes to Trace, and the letters are hidden only while tracing. */
+  var nameMode = 0, nameHide = false;
   function setNameMode(m) {
     nameMode = m;
-    var seg = $("lb-name-mode"); seg.style.setProperty("--i", m);
-    Array.prototype.forEach.call(seg.querySelectorAll("button"), function (b) { b.setAttribute("aria-checked", +b.getAttribute("data-m") === m ? "true" : "false"); });
-    $("lb-name-pad").classList.toggle("no-guide", m === 2);
+    var seg = $("lb-name-steps"); seg.style.setProperty("--i", m);
+    Array.prototype.forEach.call(seg.querySelectorAll("[data-mode]"), function (b) { b.setAttribute("aria-checked", (b.getAttribute("data-mode") === "trace" ? 1 : 0) === m ? "true" : "false"); });
+    $("lb-name-hide").setAttribute("aria-pressed", nameHide ? "true" : "false");
+    $("lb-name-pad").classList.toggle("no-guide", nameHide && m === 1);
   }
   function nameScore(v) { var p = Math.round((v || 0) * 100); $("lb-name-inside").textContent = p + "%"; $("lb-name-bar").style.width = p + "%"; }
-  $("lb-name-mode").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b || !namePad) return;
-    var m = +b.getAttribute("data-m"); setNameMode(m);
-    if (m === 0) namePad.watch(); else namePad.write();
+  function goName(m) { if (!namePad) return; setNameMode(m); if (m === 0) namePad.watch(); else namePad.write(); }
+  $("lb-name-steps").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-mode]"); if (b) goName(b.getAttribute("data-mode") === "trace" ? 1 : 0);
   });
+  $("lb-name-steps").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; e.preventDefault();
+    goName(nameMode ? 0 : 1); $("lb-name-steps").querySelector('[aria-checked="true"]').focus();
+  });
+  $("lb-name-hide").addEventListener("click", function () { nameHide = !nameHide; goName(1); });
   $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (namePad && !$("lb-name-out").hidden) writeName($("lb-name-input").value); }, 250); });
