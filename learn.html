@@ -291,6 +291,14 @@
   .fl-spd{ display:flex; background:#EEE6D3; border-radius:999px; padding:3px; }
   .fl-spd button{ border:0; background:transparent; padding:6px 12px; border-radius:999px; font:700 13px 'Work Sans',sans-serif; color:var(--ink-soft); cursor:pointer; }
   .fl-spd button.is-on{ background:#FFFDF8; color:var(--navy); }
+  /* Name card only: a quiet bar. No box of its own, fills in tan (ink only moves in the pad), a thin neutral playhead,
+     and fades back while the demo plays. Full strength on hover, keyboard focus, pause or the end. */
+  .lc-name-tp.fl-tp{ background:transparent; padding:8px 0; transition:opacity .3s ease; }
+  .lc-name-tp.is-playing{ opacity:.4; }
+  .lc-name-tp.is-playing:hover, .lc-name-tp.is-playing:focus-within{ opacity:1; }
+  .lc-name-tp .fl-seg i{ background:#CDBF9F; }
+  .lc-name-tp .fl-head{ width:2px; margin-left:-1px; background:var(--ink-soft); }
+  @media (prefers-reduced-motion:reduce){ .lc-name-tp.fl-tp{ transition:none; } }
   .fl-right{ display:flex; flex-direction:column; gap:28px; padding-top:8px; min-width:0; }
   .fl-nm{ display:flex; align-items:center; gap:18px; }
   .fl-nm .fl-g{ flex:none; display:block; fill:var(--navy); }
@@ -514,7 +522,7 @@
   .lc-namecard .lb-name-scroll{ margin-top:0; border:0; border-radius:22px; background:#F7F2E5; }
   .lc-namecard .lb-ghost{ fill:#E3D9C2; }
   .lc-name-ft{ display:flex; align-items:center; gap:16px; }
-  .lc-name-tp{ flex:1; min-width:0; background:#F7F2E5; }   /* the alphabet's playback bar, on the card's cream */
+  .lc-name-tp{ flex:1; min-width:0; }   /* the alphabet's playback bar */
   .lc-name-pct{ font:600 20px 'Work Sans',sans-serif; font-variant-numeric:tabular-nums; color:var(--navy); min-width:3.1em; text-align:right; }
   .lc-name-note{ grid-column:1/-1; margin:12px 4px 0; font-size:0.85rem; line-height:1.45; color:var(--ink-soft); }   /* the spelling note, under the card */
   .lc-name-note:empty{ display:none; }

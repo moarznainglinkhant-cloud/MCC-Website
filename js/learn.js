@@ -845,6 +845,7 @@ var MCC_TRANSLIT = (function () {
     $("lb-name-head").style.left = t / TL.T * 100 + "%";
     $("lb-name-time").textContent = t.toFixed(1) + "s / " + TL.T.toFixed(1) + "s";
     $("lb-name-play").innerHTML = playing ? PAUSE : PLAY; $("lb-name-play").setAttribute("aria-label", playing ? "Pause" : "Play");
+    $("lb-name-play").parentNode.classList.toggle("is-playing", playing);
     $("lb-name-sp5").classList.toggle("is-on", speed === 0.5); $("lb-name-sp1").classList.toggle("is-on", speed === 1);
   }
   $("lb-name-play").addEventListener("click", function () { if (!namePad) return; if (nameMode !== 0) setNameMode(0); namePad.toggle(); });
