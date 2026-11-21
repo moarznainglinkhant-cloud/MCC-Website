@@ -571,7 +571,7 @@ var MCC_TRANSLIT = (function () {
   var fpad = $("fl-pad");
   function L() { return lessonOf(current); }
   function showScore(v) { var p = Math.round((v || 0) * 100); $("lb-inside").textContent = p + "%"; $("lb-inside-bar").style.width = p + "%"; }
-  function resetInk() { var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; showScore(0); }
+  function resetInk() { guideShow(); var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; showScore(0); }
 
   var carAt = null, carT = 0;
   function drawCarousel() {
@@ -668,13 +668,19 @@ var MCC_TRANSLIT = (function () {
     $("fl-badge").classList.toggle("is-on", S.done);
     $("fl-outline").classList.toggle("is-hidden", S.hide && S.mode === "trace" && !S.done);
   }
+  /* The trace guide (red dashes + start number) is for when the pen is up. It hides the moment the pen touches down,
+     and the stroke being written stays highlighted even once it's covered; the next stroke's guide only shows
+     after the pen has been lifted for a moment (GUIDE_WAIT), i.e. when they've stopped and could use the help. */
+  var gOff = false, gJ = -1, gT = 0, GUIDE_WAIT = 500;
+  function guideShow() { clearTimeout(gT); gOff = false; var b = $("lb-side"); if (b) b.classList.remove("guide-off"); }
+  function guideHide() { clearTimeout(gT); gOff = true; gJ = bandDone.indexOf(false); $("lb-side").classList.add("guide-off"); }
   function drawBoard() {
     var l = L(), vbx = l.cx - FL.VBW / 2, watch = S.mode === "watch", trace = S.mode === "trace" && !S.hide && !S.done;
     var demo = "";
     if (watch) l.bands.forEach(function (b, j) { var sc = l.sched[j], k = S.t >= sc.t1 ? b.n : S.t <= sc.t0 ? 0 : Math.floor((S.t - sc.t0) / (sc.t1 - sc.t0) * b.n); if (k >= 2) demo += flPoly(b.a, b.b, 0, k - 1); });
     if (watch && !l.bands.length) demo = l.d;
     $("fl-demo").setAttribute("d", demo);
-    var jc = trace ? bandDone.indexOf(false) : -1;
+    var jc = trace ? (gOff && gJ >= 0 ? gJ : bandDone.indexOf(false)) : -1;
     $("fl-curb").setAttribute("d", jc >= 0 ? l.full[jc] : "");
     var gd = "";
     if (jc >= 0) {
@@ -759,12 +765,14 @@ var MCC_TRANSLIT = (function () {
   function isComplete() { var sc = score(); return sc.ins >= FL.INSIDE && (S.hide ? sc.cov >= FL.COVER : bandDone.indexOf(false) < 0); }
   function finishStroke() {            // a letter counts as written only once the pen is lifted, never mid-stroke
     if (!drawing) return; drawing = false;
+    clearTimeout(gT); gT = setTimeout(function () { guideShow(); drawBoard(); }, GUIDE_WAIT);
     if (!S.done && isComplete()) { S.done = true; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); drawBoard(); }
   }
   fpad.addEventListener("pointerdown", function (e) {
     if (S.done || !L().bands.length) return; e.preventDefault();
     try { fpad.setPointerCapture(e.pointerId); } catch (err) {}
     if (S.mode === "watch") { resetInk(); S.mode = "trace"; S.playing = false; stopAt = null; drawSteps(); drawTransport(); }
+    guideHide();
     drawing = true; inks.push({ pts: [], ins: [] }); addPt(e);
   });
   fpad.addEventListener("pointermove", function (e) { if (drawing) addPt(e); });
