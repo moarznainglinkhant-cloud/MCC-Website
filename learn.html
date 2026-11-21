@@ -576,10 +576,10 @@
   .lb-say .lb-lead{ max-width:46ch; }
   /* "Ask MCC" reads as its own tool: lantern + name, with a hand-drawn gold highlighter stroke drawn in once. */
   /* "Ask MCC" as its own tool: a small pill with the lantern, like the chat bubble's name tag. */
-  .ask-pill{ display:inline-flex; align-items:center; gap:.4em; padding:.12em .7em .14em .45em; margin-right:.1em; vertical-align:.04em;
+  .ask-pill{ display:inline-block; white-space:nowrap; padding:.12em .7em .14em .45em; margin-right:.1em; vertical-align:baseline;
     border-radius:999px; background:var(--bg-raised); border:1px solid rgba(192,138,46,.55); box-shadow:0 1px 0 rgba(28,36,64,.05), 0 0 0 3px rgba(192,138,46,.10);
     font:600 0.9em/1.3 'Work Sans',sans-serif; letter-spacing:.01em; color:var(--ink); white-space:nowrap; }
-  .ask-pill svg{ width:.95em; height:1.25em; flex:none; }
+  .ask-pill svg{ width:.95em; height:1.25em; vertical-align:-.28em; margin-right:.4em; }
   .lb-say-form{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(1.35rem,2.8vw,1.9rem); line-height:1.5; margin-top:26px; }
   .lb-say-form input{ font:inherit; color:var(--red); background:transparent; border:0; border-bottom:2px solid var(--red); border-radius:0;
     width:7.4em; max-width:100%; padding:0 .1em; outline:none; }
@@ -1014,7 +1014,6 @@
         <div class="lb-reel-copy">
           <span class="eyebrow">Didn't get it all?</span>
           <h3>Don't worry, even our MCC'ers can't get it all.</h3>
-          <p>Can you recite all 33 letters? Watch our Burmese Alphabet Challenge.</p>
         </div>
       </div>
     </div>
