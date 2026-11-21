@@ -510,7 +510,7 @@ var MCC_TRANSLIT = (function () {
       vy: (y1 > 20 ? 0 : -21.8) - FL.VH / 2, box: [x0, y0, x1, y1], full: bands.map(function (b) { return flPoly(b.a, b.b, 0, b.n - 1); }) });
   }
 
-  var S = { mode: "watch", t: 0, playing: false, speed: 1, done: false };
+  var S = { mode: "watch", hide: false, t: 0, playing: false, speed: 1, done: false };
   var cov = [], bandDone = [], inks = [], stopAt = null, drawing = false, lastSnap = -1, raf = 0, seen = false;
   var fpad = $("fl-pad");
   function L() { return lessonOf(current); }
@@ -539,7 +539,7 @@ var MCC_TRANSLIT = (function () {
       '" style="width:' + (gw * 1.15).toFixed(1) + "px;height:" + (gh * 1.15).toFixed(1) + 'px"><path d="' + ls.d + '"/></svg><div class="fl-nmt"><div class="fl-nmh"><h3>' + l[1] +
       '</h3></div><p>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></p></div>";
     var i = current, hear = document.createElement("button"), clip = letterClip(l[0]);
-    var hasClip = false, say = l[3] === l[0] ? l[0] : l[0] + "၊ " + l[3];   // the sound, then its name (as tools/tts/letters.py)
+    var hasClip = false, say = l[3];   // just the letter's name, e.g. ကကြီး "ka gyi"
     hear.type = "button"; hear.className = "lb-hear"; hear.innerHTML = SPEAKER;
     hear.setAttribute("aria-label", "Hear " + l[1] + ", called " + l[2]);
     hear.addEventListener("click", function () {
@@ -562,17 +562,16 @@ var MCC_TRANSLIT = (function () {
     $("fl-segs").innerHTML = l.sched.map(function (sc, j) { return '<div class="fl-seg" style="left:' + pct(sc.t0 / l.T) + ";width:" + pct((sc.t1 - sc.t0) / l.T) + '"><i></i><span>' + (j + 1) + "</span></div>"; }).join("");
     $("lb-num").textContent = current + 1;
   }
-  function drawSteps() {
-    var order = { watch: 0, trace: 1, hide: 2 }[S.mode];
-    $("fl-steps").innerHTML = [["watch", "Watch"], ["trace", "Trace"], ["hide", "From memory"]].map(function (m, k) {
-      var st = S.done || k < order ? "is-done" : k === order ? "is-on" : "";
-      return '<button type="button" class="fl-st ' + st + '" data-mode="' + m[0] + '"' + (st === "is-on" ? ' aria-current="step"' : "") + '><span class="n">' + (st === "is-done" ? TICK : k + 1) + "</span>" + m[1] + "</button>"; }).join("");
+  function drawSteps() {                 // Watch | Trace, plus the Hide toggle
+    Array.prototype.forEach.call($("fl-steps").querySelectorAll("[data-mode]"), function (b) { b.setAttribute("aria-checked", b.getAttribute("data-mode") === S.mode ? "true" : "false"); });
+    $("fl-steps").style.setProperty("--i", S.mode === "watch" ? 0 : 1);
+    $("fl-hide").setAttribute("aria-pressed", S.hide ? "true" : "false");
     $("lb-next").classList.toggle("is-ready", S.done);
     $("fl-badge").classList.toggle("is-on", S.done);
-    $("fl-outline").classList.toggle("is-hidden", S.mode === "hide" && !S.done);
+    $("fl-outline").classList.toggle("is-hidden", S.hide && S.mode === "trace" && !S.done);
   }
   function drawBoard() {
-    var l = L(), vbx = l.cx - FL.VBW / 2, watch = S.mode === "watch", trace = S.mode === "trace";
+    var l = L(), vbx = l.cx - FL.VBW / 2, watch = S.mode === "watch", trace = S.mode === "trace" && !S.hide && !S.done;
     var demo = "";
     if (watch) l.bands.forEach(function (b, j) { var sc = l.sched[j], k = S.t >= sc.t1 ? b.n : S.t <= sc.t0 ? 0 : Math.floor((S.t - sc.t0) / (sc.t1 - sc.t0) * b.n); if (k >= 2) demo += flPoly(b.a, b.b, 0, k - 1); });
     if (watch && !l.bands.length) demo = l.d;
@@ -585,7 +584,12 @@ var MCC_TRANSLIT = (function () {
     }
     $("fl-guide").setAttribute("d", gd);
     var gi = "", ri = "";
-    if (!watch) inks.forEach(function (st) { for (var k = 0; k < st.pts.length; k++) { var p = st.pts[k], q = k ? st.pts[k - 1] : p, seg = "M" + q[0] + " " + q[1] + "L" + p[0] + " " + p[1]; if (st.ins[k]) gi += seg; else ri += seg; } });
+    if (!watch) inks.forEach(function (st) {
+      var k = 0, n = st.pts.length;
+      while (k < n) { var v = st.ins[k], q = k ? st.pts[k - 1] : st.pts[k], d = "M" + q[0] + " " + q[1];
+        while (k < n && st.ins[k] === v) { d += "L" + st.pts[k][0] + " " + st.pts[k][1]; k++; }
+        if (v) gi += d; else ri += d; }
+    });
     $("fl-inkg").setAttribute("d", gi); $("fl-inkr").setAttribute("d", ri);
     var sh = "";
     if (jc >= 0) { var p0 = l.bands[jc].mid[0]; sh = '<div class="fl-start" style="left:' + pct((p0[0] - vbx) / FL.VBW) + ";top:" + pct((p0[1] - l.vy) / FL.VH) + '"><span>' + (jc + 1) + "</span></div>"; }
@@ -642,17 +646,17 @@ var MCC_TRANSLIT = (function () {
     var inside = true; try { inside = $("fl-outline").isPointInFill(new DOMPoint(p.x, p.y)); } catch (err) {}
     s.pts.push([p.x, p.y]); s.ins.push(inside);
     showScore(score().ins);
-    var l = L(), from = prev || [p.x, p.y], n = Math.max(1, Math.ceil(Math.hypot(p.x - from[0], p.y - from[1]) / 1.5)), only = S.mode === "trace" ? bandDone.indexOf(false) : -1;
+    var l = L(), from = prev || [p.x, p.y], n = Math.max(1, Math.ceil(Math.hypot(p.x - from[0], p.y - from[1]) / 1.5)), only = !S.hide ? bandDone.indexOf(false) : -1;
     for (var k = 0; k <= n; k++) { var x = from[0] + (p.x - from[0]) * k / n, y = from[1] + (p.y - from[1]) * k / n;
       for (var j = 0; j < l.bands.length; j++) { if (only >= 0 && j !== only) continue;
         var md = l.bands[j].mid, c = cov[j]; for (var q = 0; q < md.length; q++) { var dx = md[q][0] - x, dy = md[q][1] - y; if (dx * dx + dy * dy < FL.R2) c[q] = 1; } } }
-    if (S.mode === "trace" && only >= 0) {
+    if (only >= 0) {                     // guided: the highlight moves on once this stroke is covered
       var cc = cov[only], got = 0; for (var z = 0; z < cc.length; z++) got += cc[z];
-      if (got / cc.length >= FL.SNAP) { bandDone[only] = true;
-        if (bandDone.indexOf(false) < 0) { var at = current; setTimeout(function () { if (S.mode === "trace" && current === at) setMode("hide"); }, 900); } }
-    } else if (S.mode === "hide" && !S.done) {
-      var sc = score();
-      if (sc.cov >= FL.COVER && sc.ins >= FL.INSIDE) { S.done = true; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); }
+      if (got / cc.length >= FL.SNAP) bandDone[only] = true;
+    }
+    var sc = score();
+    if (!S.done && sc.ins >= FL.INSIDE && (S.hide ? sc.cov >= FL.COVER : bandDone.indexOf(false) < 0)) {
+      S.done = true; drawing = false; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel();
     }
     drawBoard();
   }
@@ -669,21 +673,23 @@ var MCC_TRANSLIT = (function () {
   track.addEventListener("pointerdown", function (e) { scrubbing = true; try { track.setPointerCapture(e.pointerId); } catch (err) {} scrubTo(trackF(e)); });
   track.addEventListener("pointermove", function (e) { if (scrubbing) scrubTo(trackF(e)); });
   ["pointerup", "pointercancel"].forEach(function (ev) { track.addEventListener(ev, function () { scrubbing = false; }); });
-  track.addEventListener("keydown", function (e) {
-    var d = e.key === "ArrowRight" ? 0.05 : e.key === "ArrowLeft" ? -0.05 : 0; if (!d) return; e.preventDefault();
-    scrubTo((S.mode === "watch" ? S.t / L().T : 0) + d);
-  });
+
   $("fl-play").addEventListener("click", togglePlay);
   $("fl-sp5").addEventListener("click", function () { S.speed = 0.5; drawTransport(); });
   $("fl-sp1").addEventListener("click", function () { S.speed = 1; drawTransport(); });
   $("fl-steps").addEventListener("click", function (e) { var b = e.target.closest("[data-mode]"); if (b) setMode(b.getAttribute("data-mode")); });
+  $("fl-steps").addEventListener("keydown", function (e) {
+    var d = e.key === "ArrowRight" || e.key === "ArrowLeft"; if (!d) return; e.preventDefault();
+    setMode(S.mode === "watch" ? "trace" : "watch"); $("fl-steps").querySelector('[aria-checked="true"]').focus();
+  });
+  $("fl-hide").addEventListener("click", function () { S.hide = !S.hide; if (S.mode === "watch") setMode("trace"); else setMode("trace"); });
   $("fl-car").addEventListener("click", function (e) { var b = e.target.closest("[data-i]"); if (b) open(+b.getAttribute("data-i")); });
   function step(d) { open((current + d + LETTERS.length) % LETTERS.length); }
   $("fl-prev").addEventListener("click", function () { step(-1); });
   $("fl-nextc").addEventListener("click", function () { step(1); });
   $("fl-prevb").addEventListener("click", function () { step(-1); });
   $("lb-next").addEventListener("click", function () { step(1); });
-  $("lb-clear").addEventListener("click", function () { setMode(S.mode === "watch" ? "trace" : S.mode); });
+  $("lb-clear").addEventListener("click", function () { setMode("trace"); });
   $("lb-all").addEventListener("click", function () {
     var d = $("lb-all-dlg"); if (d.showModal) d.showModal(); else d.setAttribute("open", "");
   });

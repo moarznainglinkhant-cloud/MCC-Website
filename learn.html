@@ -311,12 +311,54 @@
   .fl-nb{ gap:6px; }
   .fl-foot #fl-prevb{ padding-left:12px; } .fl-foot #lb-next{ padding-right:14px; }
   .fl-foot #lb-next.is-ready{ box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--gold); }
+  /* compact */
+  .fl{ gap:16px; }
+  .fl-nav{ width:34px; height:34px; } .fl-nav svg{ width:16px; height:16px; }
+  .fl-car{ gap:4px; }
+  .fl-ct{ border-radius:11px; } .fl-ct.c0{ width:52px; height:52px; box-shadow:0 6px 16px -10px rgba(28,36,64,.6); }
+  .fl-ct.c1{ width:40px; height:40px; } .fl-ct.c2{ width:36px; height:36px; } .fl-ct.c3{ width:32px; height:32px; }
+  .fl-ct.is-learned::after{ content:none; } .fl-ct.is-learned:not(.c0){ color:var(--green); }
+  #lb-all-grid .lc-cell.is-learned::after{ content:none; } #lb-all-grid .lc-cell.is-learned:not([aria-current="true"]){ color:var(--green); }
+  .fl-allb{ padding:9px 14px; font-size:0.7rem; } .fl-allb svg{ width:14px; height:14px; }
+  .fl-main{ gap:36px; grid-template-columns:minmax(0,1fr) 300px; }
+  .fl-left{ gap:10px; }
+  .fl-board{ border-radius:20px; box-shadow:0 1px 0 rgba(28,36,64,.04), 0 18px 40px -30px rgba(28,36,64,.45); }
+  .fl-start{ width:22px; height:22px; margin:-11px 0 0 -11px; } .fl-start span{ font-size:11.5px; line-height:22px; box-shadow:0 0 0 2px #FFFDF8; }
+  .fl-inkr{ stroke:#C2412F; opacity:1; }
+  .fl-badge{ top:14px; right:14px; padding:5px 12px 5px 7px; font-size:12.5px; } .fl-badge svg{ width:16px; height:16px; }
+  .fl-tp{ gap:12px; padding:6px 14px 6px 6px; border-radius:14px; }
+  .fl-play{ width:36px; height:36px; } .fl-play svg{ width:15px; height:15px; }
+  .fl-track{ height:32px; } .fl-seg{ top:10px; height:12px; border-radius:6px; } .fl-seg i{ border-radius:6px; }
+  .fl-seg span{ display:none; }
+  .fl-head{ top:5px; bottom:5px; width:3px; margin-left:-1.5px; }
+  .fl-time{ font-size:13px; }
+  .fl-spd button{ padding:4px 10px; font-size:12px; }
+  .fl-right{ gap:22px; padding-top:4px; }
+  .fl-nm{ gap:14px; } .fl-nm .fl-g{ zoom:.72; }
+  .fl-nm h3{ font-size:44px; line-height:1; }
+  .fl-nmh{ gap:10px; } .fl-nm .lb-hear{ width:34px; height:34px; margin-top:4px; } .fl-nm .lb-hear svg{ width:16px; height:16px; }
+  .fl-nm p{ font-size:14px; margin-top:4px; }
+  .fl-ctl{ display:flex; gap:8px; }
+  .fl-mode{ --i:0; position:relative; flex:1; display:grid; grid-template-columns:1fr 1fr; padding:3px; border-radius:999px; background:var(--bg-sunk); }
+  .fl-thumb{ position:absolute; top:3px; bottom:3px; left:3px; width:calc(50% - 3px); border-radius:999px; background:#FFFDF8; box-shadow:0 1px 3px rgba(28,36,64,.12);
+    transform:translateX(calc(var(--i) * 100%)); transition:transform .32s cubic-bezier(.32,.72,0,1); }
+  .fl-mode button{ position:relative; z-index:1; height:32px; border:0; background:transparent; border-radius:999px; font:600 14px 'Work Sans',sans-serif; color:var(--ink-soft); cursor:pointer; }
+  .fl-mode button[aria-checked="true"]{ color:var(--navy); }
+  .fl-hide{ display:inline-flex; align-items:center; gap:6px; height:38px; padding:0 14px; border-radius:999px; border:1px solid var(--line); background:transparent; font:600 14px 'Work Sans',sans-serif; color:var(--ink-soft); cursor:pointer; }
+  .fl-hide svg{ width:16px; height:16px; }
+  .fl-hide:hover{ background:var(--bg-sunk); }
+  .fl-hide[aria-pressed="true"]{ background:var(--navy); border-color:var(--navy); color:var(--bg); }
+  .fl-mode button:focus-visible, .fl-hide:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .fl-stat{ gap:8px; } .fl-stat .lc-stat-row span{ font-size:14px; } .fl-stat .lc-stat-row b{ font-size:16px; } .fl-stat .lc-bar{ height:6px; }
+  .fl-foot{ gap:6px; margin-top:4px; }
+  .fl-foot .btn{ height:38px; padding:0 14px; font-size:0.7rem; display:inline-flex; align-items:center; }
+  .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; }
+  .fl-foot .btn svg{ width:14px; height:14px; }
   @media (max-width:1100px){
-    .fl-main{ grid-template-columns:minmax(0,1fr) 300px; gap:32px; } .fl-nm h3{ font-size:52px; }
+    .fl-main{ grid-template-columns:minmax(0,1fr) 300px; gap:32px; } 
     .fl-bar{ grid-template-columns:1fr auto; row-gap:14px; }
     .fl-bar .eyebrow{ grid-row:1; grid-column:1; } .fl-allb{ grid-row:1; grid-column:2; }
     .fl-bar > .fl-car{ grid-row:2; grid-column:1 / -1; justify-self:center; }
-    .fl-foot{ gap:6px; } .fl-foot .btn{ padding-inline:13px; font-size:0.72rem; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; }
   }
   @media (max-width:900px){
     .fl{ gap:18px; }
@@ -325,18 +367,13 @@
     .fl-bar > .fl-car{ grid-row:2; grid-column:1 / -1; justify-self:center; }
     .fl-main{ grid-template-columns:minmax(0,1fr); gap:22px; max-width:820px; margin-inline:auto; width:100%; }
     .fl-right{ padding:0; gap:20px; }
-    .fl-steps{ flex-direction:row; } .fl-st{ flex:1; justify-content:center; padding:10px; }
     .fl-foot{ margin-top:0; }
   }
-  @media (max-width:400px){ .fl-cnt{ margin-left:6px; } .fl-allb svg{ display:none; } .fl-st{ font-size:13px; } }
-  @media (max-width:760px){ .fl-ct.c3{ display:none; } .fl-nm .fl-g{ zoom:.8; } .fl-nm h3{ font-size:52px; } }
+  @media (max-width:400px){ .fl-cnt{ margin-left:6px; } .fl-allb svg{ display:none; } }
+  @media (max-width:760px){ .fl-ct.c3{ display:none; } }
   @media (max-width:560px){
-    .fl-ct.c2{ display:none; } .fl-ct.c0{ width:60px; height:60px; } .fl-ct.c1{ width:46px; height:46px; }
-    .fl-st{ flex-direction:column; gap:6px; padding:10px 4px; font-size:14px; }
-    .fl-tp{ gap:10px; padding:8px 12px 8px 8px; } .fl-time{ display:none; } .fl-play{ width:44px; height:44px; }
-    .fl-board{ border-radius:20px; }
-    .fl-allb{ padding:10px 14px; font-size:0.7rem; }
-    .fl-foot .btn{ padding-inline:13px; font-size:0.7rem; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; }
+    .fl-ct.c2{ display:none; }
+    .fl-time{ display:none; }
   }
 
   /* ---------- ALPHABET LESSON (letter tiles + one card: pad | letter, mode, score) ---------- */
@@ -845,14 +882,17 @@
           </div>
           <div class="fl-tp">
             <button type="button" class="fl-play" id="fl-play" aria-label="Play"></button>
-            <div class="fl-track" id="fl-track" role="slider" aria-label="Writing timeline" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><div id="fl-segs"></div><div class="fl-head" id="fl-head"></div></div>
+            <div class="fl-track" id="fl-track" aria-hidden="true"><div id="fl-segs"></div><div class="fl-head" id="fl-head"></div></div>
             <div class="fl-time" id="fl-time"></div>
             <div class="fl-spd" role="group" aria-label="Speed"><button type="button" id="fl-sp5">½×</button><button type="button" id="fl-sp1">1×</button></div>
           </div>
         </div>
         <div class="fl-right">
           <div class="fl-nm" id="lb-who"></div>
-          <div class="fl-steps" id="fl-steps" role="group" aria-label="Steps"></div>
+          <div class="fl-ctl">
+            <div class="fl-mode" id="fl-steps" role="radiogroup" aria-label="Mode"><span class="fl-thumb" aria-hidden="true"></span><button type="button" role="radio" aria-checked="true" data-mode="watch">Watch</button><button type="button" role="radio" aria-checked="false" data-mode="trace">Trace</button></div>
+            <button type="button" class="fl-hide" id="fl-hide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.5 10.5 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.6 3.7M6.6 6.6C4.6 8 3.4 9.9 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Hide</button>
+          </div>
           <div class="lc-stat fl-stat" aria-live="polite">
             <div class="lc-stat-row"><span>Inside the letter</span><b id="lb-inside">0%</b></div>
             <div class="lc-bar"><i id="lb-inside-bar"></i></div>
