@@ -387,6 +387,12 @@
   @media (max-width:400px){ .fl-cnt{ margin-left:6px; } .fl-allb svg{ display:none; } }
   @media (max-width:430px){ .fl-foot .btn{ padding:0 13px; font-size:0.7rem; height:42px; } .fl-foot #fl-prevb{ padding-left:10px; } .fl-foot #lb-next{ padding-right:11px; } .fl-hide{ padding:0 14px; } }
   @media (max-width:760px){ .fl-ct.c3{ display:none; } }
+  /* top bar: letter strip centred over the board, "The alphabet 1 / 33" next to All letters on the right */
+  .fl-bar-r{ display:flex; align-items:center; justify-content:flex-end; gap:20px; min-width:0; }
+  .fl-bar > .fl-car{ touch-action:pan-y; }
+  @media (min-width:1101px){ .fl-bar{ grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:48px; } .fl-bar > .fl-car{ justify-self:center; } }
+  @media (min-width:1500px){ .fl-bar{ grid-template-columns:minmax(0,620px) minmax(0,1fr); } }
+  @media (max-width:1100px){ .fl-bar{ grid-template-columns:minmax(0,1fr); } .fl-bar-r{ grid-row:1; justify-content:space-between; } .fl-bar > .fl-car{ grid-row:2; grid-column:1; } }
   @media (max-width:560px){
     .fl-ct.c2{ display:none; }
     .fl-time{ display:none; }
@@ -874,13 +880,15 @@
   <section class="lb-main">
     <div class="wrap fl" id="lb-chart">
       <div class="fl-bar">
-        <span class="eyebrow">The alphabet <span class="fl-cnt"><span id="lb-num">1</span> / 33</span></span>
         <nav class="fl-car" aria-label="Letters">
           <button type="button" class="fl-nav" id="fl-prev" aria-label="Previous letter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           <div class="fl-car" id="fl-car"></div>
           <button type="button" class="fl-nav" id="fl-nextc" aria-label="Next letter"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
         </nav>
-        <button type="button" class="btn ghost fl-allb" id="lb-all" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>All letters</button>
+        <div class="fl-bar-r">
+          <span class="eyebrow">The alphabet <span class="fl-cnt"><span id="lb-num">1</span> / 33</span></span>
+          <button type="button" class="btn ghost fl-allb" id="lb-all" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>All letters</button>
+        </div>
       </div>
       <div class="fl-main">
         <div class="fl-left">
