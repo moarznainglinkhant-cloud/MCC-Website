@@ -575,7 +575,7 @@
   /* ---------- SAY IT OUT LOUD: Ask MCC's phrase card, set into the page ---------- */
   .lb-say{ padding-block:clamp(60px,8vw,104px) clamp(56px,7vw,96px); }
   .lb-say-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:center; }
-  .lb-say h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:10px 14px; }
+  .lb-say h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:0 14px; }
   .lb-say .lb-lead{ max-width:46ch; }
   /* "Ask MCC" reads as its own tool: lantern + name, with a hand-drawn gold highlighter stroke drawn in once. */
   /* "Ask MCC" as its own tool: a small pill with the lantern, like the chat bubble's name tag. */
@@ -981,8 +981,7 @@
     <div class="wrap">
       <div class="lb-say-grid">
         <div>
-          <span class="eyebrow">Say it out loud</span>
-          <h2>Any phrase, in Burmese</h2>
+          <h2>Say it out loud</h2>
           <p class="lb-lead"><span class="ask-pill"><svg viewBox="14 2 36 60" aria-hidden="true"><line x1="32" y1="2" x2="32" y2="14" stroke="#C08A2E" stroke-width="3"/><rect x="24" y="13" width="16" height="4" rx="1" fill="#C08A2E"/><ellipse cx="32" cy="33" rx="15" ry="16" fill="#AE3628"/><path d="M32 17v32M24 19c-4 9-4 19 0 28M40 19c4 9 4 19 0 28" stroke="#7A2418" stroke-width="1.6" fill="none"/><rect x="24" y="48" width="16" height="4" rx="1" fill="#C08A2E"/><path d="M29 52l-2 8M32 52v9M35 52l2 8" stroke="#C08A2E" stroke-width="2"/></svg>Ask MCC</span> is the club's own AI agent. Ask it how to say anything in Burmese.</p>
           <form class="lb-say-form" id="lb-say-form" autocomplete="off">
             How do I say <input id="lb-say-input" type="text" maxlength="60" placeholder="thank you" aria-label="A word or phrase in English" enterkeyhint="go" spellcheck="false"> <span class="lb-say-end">in Burmese?<button type="submit" class="lb-say-go" aria-label="Ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
