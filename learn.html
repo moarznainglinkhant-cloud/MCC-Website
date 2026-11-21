@@ -894,9 +894,8 @@
   /* ---------- OPEN STROKE DATA (developer card) ---------- */
   @font-face{ font-family:'Courier Prime'; font-style:normal; font-weight:700; font-display:swap; src:url('fonts/CourierPrime-Bold.woff2') format('woff2'); }
   .lb-open{ margin-top:clamp(48px,6vw,80px); background:var(--bg-raised); border:1px solid var(--line); border-radius:20px;
-    padding:clamp(22px,3.4vw,36px) clamp(20px,3.6vw,40px); max-width:760px; box-shadow:var(--card-shadow); }
-  .lb-open .eyebrow{ color:var(--gold-ink); }
-  .lb-open h3{ font-size:clamp(1.5rem,3vw,2rem); font-weight:600; line-height:1.15; margin-top:8px; }
+    padding:clamp(22px,3.4vw,36px) clamp(20px,3.6vw,40px); box-shadow:var(--card-shadow); }
+  .lb-open h3{ font-size:clamp(1.5rem,3vw,2rem); font-weight:600; line-height:1.15; }
   .lb-open-lead{ font-family:'Fraunces',serif; color:var(--ink-soft); font-size:clamp(1rem,1.5vw,1.1rem); line-height:1.55; max-width:52ch; margin:10px 0 20px; }
   .lb-term{ display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--navy); color:var(--footer-ink);
     border-radius:12px; padding:12px 12px 12px 16px; font-family:'Courier Prime','Courier New',monospace; font-weight:700; font-size:0.92rem; }
@@ -1128,7 +1127,6 @@
       </div>
       <!-- Open stroke data. Repo link lives in data-repo below (one place): the button and the clone command read it. -->
       <div class="lb-open" id="open-data" data-repo="https://github.com/moarznainglinkhant-cloud/burmese-stroke-order">
-        <span class="eyebrow">Open source &middot; v1</span>
         <h3>Want the strokes? Take them.</h3>
         <p class="lb-open-lead">The stroke order behind every letter on this page is free on GitHub. As far as we know, it's the first open stroke-order dataset for Burmese.</p>
         <div class="lb-term">
