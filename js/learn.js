@@ -606,7 +606,6 @@ var MCC_TRANSLIT = (function () {
     var b = bounds(lay.strokes), view = { x: -12, y: Math.min(b.y0, D.TOP - 22) - 10, w: lay.width + 24, h: 0 };
     view.h = Math.max(b.y1 + 4, 14) + 10 - view.y;
     var scroller = $("lb-name-scroll"), px = Math.min(3.4, (scroller.clientWidth - 2) / view.w);
-    if (px < 2.3) px = 2.3;
     setNameMode(0); nameScore(0);
     namePad = Pad($("lb-name-pad"), lay.strokes, view, {
       shapes: lay.shapes, bands: lay.bands, px: px, onMode: function (m) { if (m === "write" && nameMode === 0) setNameMode(1); }, onScore: nameScore, scroller: scroller, speed: 30, gap: 240, label: "Tracing pad for your name",

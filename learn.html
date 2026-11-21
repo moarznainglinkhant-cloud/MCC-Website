@@ -351,7 +351,6 @@
   .lc-namecard .lb-ghost{ fill:#E3D9C2; }
   .lc-name-ft{ display:flex; align-items:flex-end; gap:24px; }
   .lc-name-ft .lc-stat{ flex:1; }
-  .lb-name-preview{ border:0; border-radius:32px; box-shadow:0 1px 2px rgba(28,36,64,.06), 0 30px 60px -36px rgba(28,36,64,.3); }
   @media (max-width:860px){
     .lb-name-grid{ grid-template-columns:minmax(0,1fr); }
     .lc-namecard{ padding:14px; border-radius:26px; gap:16px; }
@@ -391,19 +390,14 @@
 
   .lb-name{ background:var(--bg-sunk); padding-block:clamp(56px,7vw,96px); }
   /* Same two columns as the alphabet above: words left, a pad on the right (an example until they write). */
-  .lb-name-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:center; }
+  .lb-name-grid{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,440px); gap:clamp(24px,4.5vw,64px); align-items:end; }
   .lb-name-out{ grid-column:1/-1; }
-  .lb-name-grid:has(.lb-name-out:not([hidden])) .lb-name-preview{ display:none; }
-  .lb-name-grid:has(.lb-name-out:not([hidden])) .lb-name-copy{ grid-column:1/-1; }
-  .lb-name-preview{ position:relative; aspect-ratio:16/10; background:var(--bg-raised); border:1px solid var(--line); border-radius:20px;
-    display:flex; align-items:center; justify-content:center; overflow:hidden; }
-  .lb-name-preview .lb-pv-rule{ position:absolute; left:6%; right:6%; border-top:1px dashed var(--line); }
-  .lb-name-preview .lb-pv-ghost{ font-family:'Yinmar','Noto Sans Myanmar',serif; font-size:clamp(3.6rem,8vw,5.4rem); line-height:1; color:#E3D9C2; }
-  .lb-name-preview .lb-pv-cap{ position:absolute; bottom:14px; left:0; right:0; text-align:center; font-size:0.82rem; color:var(--ink-soft); }
-  .lb-name-preview .lb-pv-cap b{ color:var(--ink); font-weight:600; }
-  .lb-name h2{ font-size:clamp(1.6rem,3.6vw,2.3rem); font-weight:600; margin-block:8px 10px; }
+  .lb-name h2{ font-size:clamp(2rem,4.6vw,3.2rem); font-weight:600; line-height:1.1; margin-block:10px 14px; }
   .lb-name p.lb-lead{ max-width:54ch; }
   .lb-name form{ display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
+  .lb-name-side form{ margin-top:0; }
+  .lb-name-side input{ max-width:none; }
+  .lb-name-side .lb-note{ margin-top:10px; }
   .lb-name input{
     flex:1 1 220px; max-width:360px; font:inherit; font-size:1rem; padding:13px 18px; color:var(--ink);
     border:1px solid var(--line); border-radius:999px; background:var(--bg-raised);
@@ -469,7 +463,6 @@
   .lb-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:12px; min-height:1.4em; }
   @media (max-width:860px){
     .lb-name-grid, .lb-say-grid{ grid-template-columns:1fr; }
-    .lb-name-preview{ width:100%; max-width:440px; }
     .lb-reel{ grid-template-columns:1fr; }
     .lb-reel-copy{ order:-1; }
     .lb-reels{ justify-content:center; width:100%; }
@@ -771,16 +764,13 @@
         <span class="eyebrow">Your turn</span>
         <h2>Now write your own name.</h2>
         <p class="lb-lead">Type it in English. We'll spell it the Burmese way, then you write it.</p>
+      </div>
+      <div class="lb-name-side">
         <form id="lb-name-form" autocomplete="off">
           <input id="lb-name-input" type="text" maxlength="40" placeholder="Your name" aria-label="Your name" autocapitalize="words" spellcheck="false">
           <button type="submit" class="btn">Write it</button>
         </form>
         <p class="lb-note" id="lb-name-note"></p>
-      </div>
-      <div class="lb-name-preview" aria-hidden="true">
-        <span class="lb-pv-rule" style="top:28%"></span><span class="lb-pv-rule" style="top:70%"></span>
-        <span class="lb-pv-ghost" lang="my">ဆာရာ</span>
-        <span class="lb-pv-cap">e.g. <b>Sarah</b> → <span lang="my">ဆာရာ</span></span>
       </div>
       <div class="lb-name-out lc-namecard" id="lb-name-out" hidden>
         <div class="lc-name-hd">
