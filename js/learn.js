@@ -573,11 +573,51 @@ var MCC_TRANSLIT = (function () {
   function showScore(v) { var p = Math.round((v || 0) * 100); $("lb-inside").textContent = p + "%"; $("lb-inside-bar").style.width = p + "%"; }
   function resetInk() { var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; showScore(0); }
 
+  var carAt = null, carT = 0;
   function drawCarousel() {
-    var h = "";
-    for (var k = -4; k <= 4; k++) { var i = (current + k + LETTERS.length) % LETTERS.length, l = LETTERS[i];
-      h += '<button type="button" class="fl-ct c' + Math.min(3, Math.abs(k)) + (learned[l[0]] ? " is-learned" : "") + '" data-i="' + i + '" aria-label="' + tileLabel(l) + '"' + (k ? "" : ' aria-current="true"') + ">" + tileSvg(l[0]) + "</button>"; }
-    $("fl-car").innerHTML = h;
+    /* The tiles are kept (keyed by letter) and glide to their new place and size (FLIP): measure where each one is,
+       rebuild, then start each from where it was and let it slide home. Tiles coming in fade in from the side
+       they arrive from; tiles going out fade out where they were. */
+    var car = $("fl-car"), N = LETTERS.length, was = {}, from = {};
+    Array.prototype.forEach.call(car.children, function (b) {
+      if (b.classList.contains("fl-ct-out")) { b.remove(); return; }
+      var r = b.getBoundingClientRect(), cs = getComputedStyle(b);
+      was[b.getAttribute("data-i")] = b; from[b.getAttribute("data-i")] = { r: r, o: cs.opacity, bg: cs.backgroundColor, c: cs.color };
+    });
+    var dir = carAt == null ? 0 : ((current - carAt + N + N / 2) % N) - N / 2; carAt = current;
+    var animate = dir !== 0 && !reduced && car.children.length, cr = car.getBoundingClientRect(), keep = [];
+    car.classList.add("is-flip");
+    for (var k = -4; k <= 4; k++) { var i = (current + k + N) % N, l = LETTERS[i], b = was[i];
+      if (b) delete was[i]; else { b = document.createElement("button"); b.type = "button"; b.setAttribute("data-i", i); b.innerHTML = tileSvg(l[0]); }
+      b.className = "fl-ct c" + Math.min(3, Math.abs(k)) + (learned[l[0]] ? " is-learned" : "");
+      b.setAttribute("aria-label", tileLabel(l)); if (k) b.removeAttribute("aria-current"); else b.setAttribute("aria-current", "true");
+      car.appendChild(b); keep.push(b); }
+    var gone = Object.keys(was).map(function (i) { return was[i]; });
+    if (!animate) { gone.forEach(function (b) { b.remove(); }); car.classList.remove("is-flip"); }
+    else {
+      keep.forEach(function (b) {                        // moving into a slot hidden at this width: a copy fades out where it was
+        var f = from[b.getAttribute("data-i")]; if (!f || !f.r.width || b.getBoundingClientRect().width) return;
+        var g = b.cloneNode(true); g.removeAttribute("id"); was["ghost" + gone.length] = g; gone.push(g); from[g.getAttribute("data-i")] = f;
+      });
+      gone.forEach(function (b) {                        // leave in place, out of the flow, and fade
+        var f = from[b.getAttribute("data-i")].r; b.classList.add("fl-ct-out"); b.removeAttribute("aria-current"); b.setAttribute("aria-hidden", "true"); b.tabIndex = -1;
+        b.style.cssText = "position:absolute;left:" + (f.left - cr.left) + "px;top:" + (f.top - cr.top) + "px;width:" + f.width + "px;height:" + f.height + "px;margin:0;display:grid;opacity:" + from[b.getAttribute("data-i")].o + ";background-color:" + from[b.getAttribute("data-i")].bg + ";color:" + from[b.getAttribute("data-i")].c + ";pointer-events:none;";
+        car.appendChild(b);
+      });
+      keep.forEach(function (b) {
+        var f = from[b.getAttribute("data-i")], t = b.getBoundingClientRect();
+        if (!t.width) return;
+        if (f && f.r.width) {
+          b.style.transform = "translate(" + ((f.r.left + f.r.width / 2) - (t.left + t.width / 2)) + "px," + ((f.r.top + f.r.height / 2) - (t.top + t.height / 2)) + "px) scale(" + (f.r.width / t.width) + ")";
+          b.style.opacity = f.o; b.style.backgroundColor = f.bg; b.style.color = f.c;
+        } else { b.style.transform = "translateX(" + (dir > 0 ? 28 : -28) + "px) scale(.8)"; b.style.opacity = 0; }
+      });
+      car.getBoundingClientRect();                       // commit the start positions
+      car.classList.remove("is-flip");
+      keep.forEach(function (b) { b.style.transform = ""; b.style.opacity = ""; b.style.backgroundColor = ""; b.style.color = ""; });
+      gone.forEach(function (b) { b.style.opacity = 0; b.style.transform = "translateX(" + (dir > 0 ? -20 : 20) + "px) scale(.8)"; });
+      clearTimeout(carT); carT = setTimeout(function () { Array.prototype.forEach.call(car.querySelectorAll(".fl-ct-out"), function (b) { b.remove(); }); }, 420);
+    }
     var grid = $("lb-all-grid"); grid.innerHTML = "";
     LETTERS.forEach(function (l, i) {
       var c = document.createElement("button");
