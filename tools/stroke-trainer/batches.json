@@ -56,6 +56,13 @@
    "artifact_version": "1795288632-7eec",
    "date": "2026-11-21",
    "what": "Marks trainer: v4.0 loaded with the 33 non-consonant glyphs (vowel signs, medials, marks, short letter forms). Rings start on the vertical line through their centre (top or bottom), cut exactly along it; the quarter clicked sets the way round. Saved-dot grid bug fixed."
+  },
+  "marks-4.1": {
+   "file": "trainer-marks-v4.1.html",
+   "artifact": "https://claude.ai/artifact/GFHVW7uAfAHUWXNj6yrV3R",
+   "artifact_version": "1795299119-c46e",
+   "date": "2026-11-21",
+   "what": "marks-4.0 plus preset cuts (locked, no handles, kept by Clear). ျွ 443: the wa ring's outer edge across the join with ya pin's foot as one perfect circle through the two corners where the font's outer edge stops, centre on their bisector nearest the hole's centre. Cut type kept in drafts and saves."
   }
  },
  "batches": [
@@ -1796,6 +1803,106 @@
      "note": "Not saved in the trainer: built from the setup the user played (font-outline cut, start at the cut, end at the tail) and approved for the site.",
      "borrowed_from": 351,
      "tool": "4.4"
+    }
+   ]
+  },
+  {
+   "id": "10",
+   "batch": 10,
+   "part": 1,
+   "date": "2026-11-21",
+   "tool": "marks-4.1",
+   "issues": true,
+   "note": "The last marks. ဦ was saved with marks-4.0 (same output in 4.1). ျွ uses the preset circle cut; its exact points are stored here (the trainer's save rounds them to 0.01).",
+   "letters": [
+    {
+     "ch": "ဦ",
+     "lat": "u (letter)",
+     "g": 399,
+     "choices": {
+      "divs": [],
+      "caps": {},
+      "ign": {
+       "0": "8.21,-12.97"
+      },
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         8.26,
+         -30.26
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ေါ်",
+     "lat": "aw (tall + asat)",
+     "g": 407,
+     "choices": {
+      "divs": [
+       {
+        "t": "line",
+        "h": "10.00,-81.57 13.84,-74.18"
+       }
+      ],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 0,
+        "start": [
+         -16.7,
+         -70.03
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 1,
+        "start": [
+         11.93,
+         -77.88
+        ],
+        "dir": 1
+       }
+      ]
+     }
+    },
+    {
+     "ch": "ျွ",
+     "lat": "medial y + w",
+     "g": 443,
+     "choices": {
+      "divs": [
+       {
+        "t": "arc",
+        "h": "-6.3761,32.845 -8.1531,36.0099 -10.5439,38.7409",
+        "preset": true
+       }
+      ],
+      "caps": {},
+      "ign": {},
+      "order": [
+       {
+        "piece": 1,
+        "start": [
+         8.65,
+         -43.4
+        ],
+        "dir": 1
+       },
+       {
+        "piece": 0,
+        "start": [
+         -21.8,
+         39.75
+        ],
+        "dir": 1
+       }
+      ]
+     }
     }
    ]
   }
