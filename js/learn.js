@@ -830,6 +830,7 @@ var MCC_TRANSLIT = (function () {
     Array.prototype.forEach.call(seg.querySelectorAll("[data-mode]"), function (b) { b.setAttribute("aria-checked", (b.getAttribute("data-mode") === "trace" ? 1 : 0) === m ? "true" : "false"); });
     $("lb-name-hide").setAttribute("aria-pressed", nameHide ? "true" : "false");
     $("lb-name-pad").classList.toggle("no-guide", nameHide && m === 1);
+    $("lb-name-out").classList.toggle("is-trace", m === 1);
     if (m === 1 && nameTL) drawNameTp(0, nameTL, false, nameSpeed);   // tracing: the bar rests at the start
   }
   function nameScore(v) { var p = Math.round((v || 0) * 100), b = $("lb-name-inside"); b.textContent = p + "%"; b.setAttribute("aria-label", "Inside the letters: " + p + "%"); }
@@ -845,10 +846,35 @@ var MCC_TRANSLIT = (function () {
     TL.forEach(function (s, j) { segs[j].firstChild.style.width = Math.max(0, Math.min(1, (t - s.t0) / (s.t1 - s.t0))) * 100 + "%"; });
     $("lb-name-head").style.left = t / TL.T * 100 + "%";
     $("lb-name-time").textContent = t.toFixed(1) + "s / " + TL.T.toFixed(1) + "s";
-    $("lb-name-play").innerHTML = playing ? PAUSE : PLAY; $("lb-name-play").setAttribute("aria-label", playing ? "Pause" : "Play");
+    $("lb-name-play").innerHTML = playing ? PAUSE : PLAY; $("lb-name-play").setAttribute("aria-label", playing ? "Pause" : nameMode === 1 ? "Watch again" : "Play");
     $("lb-name-play").parentNode.classList.toggle("is-playing", playing);
+    tp.playing = !!playing; tpUpdate();
     $("lb-name-sp5").classList.toggle("is-on", speed === 0.5); $("lb-name-sp1").classList.toggle("is-on", speed === 1);
   }
+  /* Rest / wake for the bar (see the CSS): rests only while playing, after 1.6 s with no pointer movement on the card;
+     hovering the bar or keyboard focus in it keeps it awake; a tap on a resting bar only wakes it, for 3 s. */
+  var tp = { playing: false, awake: false, bar: false, focus: false, timer: 0 };
+  function tpUpdate() { $("lb-name-out").classList.toggle("tp-rest", tp.playing && !tp.awake && !tp.bar && !tp.focus); }
+  function tpWake(ms) { tp.awake = true; tpUpdate(); clearTimeout(tp.timer); tp.timer = setTimeout(function () { tp.awake = false; tpUpdate(); }, ms); }
+  (function () {
+    var card = $("lb-name-out"), ft = card.querySelector(".lc-name-ft");
+    card.addEventListener("pointermove", function (e) { if (e.pointerType === "mouse") tpWake(1600); });
+    card.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") tpWake(500); });
+    ft.addEventListener("pointerenter", function (e) { if (e.pointerType === "mouse") { tp.bar = true; tpUpdate(); } });
+    ft.addEventListener("pointerleave", function (e) { if (e.pointerType === "mouse") { tp.bar = false; tpWake(1600); } });
+    // touch: the first tap on a resting bar only wakes it (no seek, no pause), like a video player
+    var eat = false;
+    ft.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse") return;
+      if (card.classList.contains("tp-rest")) { eat = true; e.stopPropagation(); e.preventDefault(); }
+      tpWake(3000);
+    }, true);
+    ft.addEventListener("click", function (e) { if (eat) { eat = false; e.stopPropagation(); e.preventDefault(); } }, true);
+    ft.addEventListener("pointerup", function () { setTimeout(function () { eat = false; }, 400); }, true);
+    ft.addEventListener("focusin", function (e) { var v = true; try { v = e.target.matches(":focus-visible"); } catch (x) {} if (v) { tp.focus = true; tpUpdate(); } });
+    ft.addEventListener("focusout", function () { tp.focus = false; tpWake(1600); });
+    $("lb-name-again").addEventListener("click", function () { $("lb-name-play").click(); });
+  })();
   $("lb-name-play").addEventListener("click", function () { if (!namePad) return; if (nameMode !== 0) setNameMode(0); namePad.toggle(); });
   [["lb-name-sp5", 0.5], ["lb-name-sp1", 1]].forEach(function (p) { $(p[0]).addEventListener("click", function () { nameSpeed = p[1]; if (namePad) namePad.speed(nameSpeed); }); });
   (function () {

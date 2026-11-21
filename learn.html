@@ -291,14 +291,34 @@
   .fl-spd{ display:flex; background:#EEE6D3; border-radius:999px; padding:3px; }
   .fl-spd button{ border:0; background:transparent; padding:6px 12px; border-radius:999px; font:700 13px 'Work Sans',sans-serif; color:var(--ink-soft); cursor:pointer; }
   .fl-spd button.is-on{ background:#FFFDF8; color:var(--navy); }
-  /* Name card only: a quiet bar. No box of its own, fills in tan (ink only moves in the pad), a thin neutral playhead,
-     and fades back while the demo plays. Full strength on hover, keyboard focus, pause or the end. */
-  .lc-name-tp.fl-tp{ background:transparent; padding:8px 0; transition:opacity .3s ease; }
-  .lc-name-tp.is-playing{ opacity:.4; }
-  .lc-name-tp.is-playing:hover, .lc-name-tp.is-playing:focus-within{ opacity:1; }
-  .lc-name-tp .fl-seg i{ background:#CDBF9F; }
-  .lc-name-tp .fl-head{ width:2px; margin-left:-1px; background:var(--ink-soft); }
-  @media (prefers-reduced-motion:reduce){ .lc-name-tp.fl-tp{ transition:none; } }
+  /* Name card playback bar. Same colours as the alphabet player.
+     Fits the mode: Watch shows the player; Trace folds the track, time and speed away into the score + Clear,
+     and Play reads "Watch again". (Fixes phones too: the score + Clear used to squeeze the track to 0px.)
+     Rest / wake, like a video player's controls: while it plays and nobody is reaching for it, the bar rests
+     slim and dim (fill keeps moving; playhead, time and speed fade out). Pointer movement on the card, hovering
+     the bar, keyboard focus or a tap wakes it; paused, ended or tracing = always awake. In fast, out slow. */
+  .lc-name-tp.fl-tp{ background:transparent; padding:8px 0; }
+  .lc-name-tp .fl-head{ width:3px; margin-left:-1.5px; background:var(--red); transition:opacity .4s ease; }
+  .lc-name-tp .fl-track{ flex-basis:0; min-width:0; transition:flex-grow .45s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
+  .lc-name-tp .fl-time, .lc-name-tp .fl-spd{ max-width:170px; overflow:hidden; transition:max-width .45s cubic-bezier(.2,.8,.2,1), opacity .4s ease; }
+  .lc-name-tp .fl-play{ transition:opacity .4s ease; }
+  .lc-name-tp .fl-seg{ transition:top .4s ease, height .4s ease; }
+  .lc-name-ft .lc-name-pct, .lc-name-ft #lb-name-retry{ max-width:220px; overflow:hidden; white-space:nowrap; transition:max-width .45s cubic-bezier(.2,.8,.2,1), opacity .25s .12s, padding .45s, border-width .45s; }
+  #lb-name-out:not(.is-trace) .lc-name-ft{ gap:0; }
+  #lb-name-out:not(.is-trace) .lc-name-pct, #lb-name-out:not(.is-trace) #lb-name-retry{ max-width:0; min-width:0; opacity:0; padding-inline:0; border-width:0; pointer-events:none; transition-delay:0s; }
+  #lb-name-out.is-trace .lc-name-tp .fl-track{ flex-grow:0; opacity:0; pointer-events:none; }
+  #lb-name-out.is-trace .lc-name-tp .fl-time, #lb-name-out.is-trace .lc-name-tp .fl-spd{ max-width:0; opacity:0; pointer-events:none; }
+  .lc-name-again{ max-width:0; opacity:0; overflow:hidden; white-space:nowrap; font:600 15px 'Work Sans',sans-serif; color:var(--navy); margin-left:-4px; cursor:pointer; transition:max-width .45s cubic-bezier(.2,.8,.2,1), opacity .25s; }
+  #lb-name-out.is-trace .lc-name-again{ max-width:160px; opacity:1; transition-delay:0s, .15s; }
+  #lb-name-out.tp-rest .lc-name-tp .fl-play{ opacity:.5; }
+  #lb-name-out.tp-rest .lc-name-tp .fl-track{ opacity:.55; }
+  #lb-name-out.tp-rest .lc-name-tp .fl-seg{ top:17px; height:6px; }
+  #lb-name-out.tp-rest .lc-name-tp .fl-head, #lb-name-out.tp-rest .lc-name-tp .fl-time, #lb-name-out.tp-rest .lc-name-tp .fl-spd{ opacity:0; }
+  #lb-name-out.tp-rest .lc-name-tp .fl-spd{ pointer-events:none; }
+  #lb-name-out:not(.tp-rest) .lc-name-tp .fl-play, #lb-name-out:not(.tp-rest) .lc-name-tp .fl-track,
+  #lb-name-out:not(.tp-rest) .lc-name-tp .fl-head, #lb-name-out:not(.tp-rest) .lc-name-tp .fl-seg{ transition-duration:.15s; }   /* wake fast */
+  @media (max-width:560px){ .lc-name-again .lg{ display:none; } .lc-name-tp.fl-tp{ gap:10px; } }
+  @media (prefers-reduced-motion:reduce){ #lb-name-out .lc-name-ft *{ transition:none !important; } }
   .fl-right{ display:flex; flex-direction:column; gap:28px; padding-top:8px; min-width:0; }
   .fl-nm{ display:flex; align-items:center; gap:18px; }
   .fl-nm .fl-g{ flex:none; display:block; fill:var(--navy); }
@@ -993,6 +1013,7 @@
         <div class="lc-name-ft">
           <div class="fl-tp lc-name-tp">
             <button type="button" class="fl-play" id="lb-name-play" aria-label="Play"></button>
+            <span class="lc-name-again" id="lb-name-again" aria-hidden="true">Watch<span class="lg"> again</span></span>
             <div class="fl-track" id="lb-name-track" aria-hidden="true"><div id="lb-name-segs"></div><div class="fl-head" id="lb-name-head"></div></div>
             <div class="fl-time" id="lb-name-time"></div>
             <div class="fl-spd" role="group" aria-label="Speed"><button type="button" id="lb-name-sp5">½×</button><button type="button" id="lb-name-sp1" class="is-on">1×</button></div>
