@@ -2276,10 +2276,139 @@ let _dataLoaded = false;
 // back up to it, and when you hover over (or tap) it. Reduced motion: just the finished word.
 const GREET = { svg: null, raf: null };
 
+// ---------- Homepage: "Learn to write this" margin note beside the greeting ----------
+// A handwritten note (Gochi Hand) just above the word, on the "Welcome" line, with an arrow down to the
+// top of လာ, linking to the learn page. It's placed from the greeting's own outlines, so the arrow lands
+// on လာ at every screen size.
+// Animation ("Pencil, then ink", picked Nov 21): sketched in faint pencil — words, then arrow, then
+// underline — and then inked over in red. It plays once, straight after the greeting is written in,
+// and never again on that visit (tapping the greeting to rewrite it leaves the note alone). Wherever
+// the greeting shows up already written, so does the note.
+function initGreetNote() {
+  const none = { play() {}, show() {} };
+  const note = document.getElementById("js-greet-note");
+  const arrow = document.getElementById("js-greet-arrow");
+  const svg = document.getElementById("js-greet");
+  const box = note && note.parentElement;
+  if (!note || !arrow || !svg || !box) return none;
+  const ink = note.querySelector(".gn-ink");
+  const shaft = arrow.querySelector(".ga-shaft");
+  const head = arrow.querySelector(".ga-head");
+  const ul = note.querySelector(".gn-ul path");
+  const strokes = [shaft, head, ul];
+  // Points in the greeting's own units (its viewBox): just above the top of လာ, and the top of the word.
+  const TARGET = { x: 207, y: -59 }, WORD_TOP = { x: 0, y: -93 };
+  const PENCIL = "#A39C8A";
+  let state = "hidden";            // hidden → playing → done
+
+  const pt = p => {
+    const m = svg.getScreenCTM(), r = box.getBoundingClientRect();
+    const q = new DOMPoint(p.x, p.y).matrixTransform(m);
+    return { x: q.x - r.left, y: q.y - r.top };
+  };
+  const f = n => n.toFixed(1);
+
+  function place() {
+    if (!svg.getScreenCTM() || !svg.getBoundingClientRect().width) return false;
+    const W = box.clientWidth, nw = note.offsetWidth, nh = note.offsetHeight;
+    const tgt = pt(TARGET);
+    const u = pt({ x: 100, y: 0 }).x - pt({ x: 0, y: 0 }).x;   // px per 100 units
+    // Just above the word, at the right, on the "Welcome" line; a short hooked arrow drops onto လာ.
+    let nx, ny, s, c1, c2;
+    const eb = box.querySelector(".eyebrow");
+    const ebR = eb ? eb.getBoundingClientRect().right - box.getBoundingClientRect().left : 0;
+    nx = Math.max(ebR + 14, Math.min(W - nw - 4, tgt.x + u * 0.5));
+    ny = pt(WORD_TOP).y - nh * 0.85;
+    s = { x: nx - 7, y: ny + nh * 0.5 };          // from beside "Learn", clear of the underline
+    c1 = { x: s.x - (s.x - tgt.x) * 0.75, y: s.y - u * 0.01 };
+    c2 = { x: tgt.x + u * 0.01, y: tgt.y - u * 0.1 };
+    // The underline is drawn to the text's real width (a stretched viewBox would squash the pen line).
+    const tw = note.querySelector(".gn-text").offsetWidth, uls = ul.ownerSVGElement;
+    uls.setAttribute("viewBox", `0 0 ${f(tw + 2)} 8`);
+    uls.style.width = f(tw + 2) + "px";
+    ul.setAttribute("d", `M1 5.2C${f(tw * .18)} 2.6 ${f(tw * .41)} 6.6 ${f(tw * .63)} 4.1S${f(tw * .89)} 4.9 ${f(tw + 1)} 2.8`);
+    note.style.left = f(nx) + "px";
+    note.style.top = f(ny) + "px";
+    shaft.setAttribute("d", `M${f(s.x)} ${f(s.y)}C${f(c1.x)} ${f(c1.y)} ${f(c2.x)} ${f(c2.y)} ${f(tgt.x)} ${f(tgt.y)}`);
+    // Arrowhead: two flicks back along the curve's last direction, one a little shorter, as by hand.
+    let dx = tgt.x - c2.x, dy = tgt.y - c2.y; const dl = Math.hypot(dx, dy) || 1; dx /= dl; dy /= dl;
+    const L = Math.max(6, Math.min(10, u * 0.075)), side = (a, len) => {
+      const c = Math.cos(a), sn = Math.sin(a), bx = -dx, by = -dy;
+      return { x: tgt.x + len * (bx * c - by * sn), y: tgt.y + len * (bx * sn + by * c) };
+    };
+    const a = side(0.5, L), b = side(-0.5, L * 0.82);
+    head.setAttribute("d", `M${f(a.x)} ${f(a.y)}L${f(tgt.x)} ${f(tgt.y)}L${f(b.x)} ${f(b.y)}`);
+    arrow.style.setProperty("--gn-nx", f(dx * 3) + "px");   // hover: the arrow nudges toward လာ
+    arrow.style.setProperty("--gn-ny", f(dy * 3) + "px");
+    strokes.forEach(p => { const len = p.getTotalLength() + 1; p.dataset.len = len; p.style.strokeDasharray = `${len} ${len}`; });
+    return true;
+  }
+
+  const cancel = () => [note, ink, ...strokes].forEach(el => el.getAnimations().forEach(x => x.cancel()));
+  const finalLook = () => {
+    ink.style.clipPath = ""; ink.style.opacity = ""; ink.style.color = "";
+    strokes.forEach(p => { p.style.strokeDashoffset = "0"; p.style.stroke = ""; p.style.strokeWidth = ""; });
+  };
+  const reveal = () => { note.classList.add("is-placed"); arrow.classList.add("is-placed"); };
+
+  function show() {
+    if (state === "playing") return;
+    cancel();
+    if (!place()) return;
+    finalLook();
+    reveal();
+    state = "done";
+  }
+
+  function play() {
+    if (state !== "hidden") return;
+    if (!place()) { show(); return; }
+    state = "playing";
+    const RED = getComputedStyle(note).color;
+    const draw = (p, ms, delay, easing) => p.animate(
+      [{ strokeDashoffset: p.dataset.len }, { strokeDashoffset: 0 }],
+      { duration: ms, delay, easing: easing || "cubic-bezier(.45,.05,.35,1)", fill: "both" });
+    const anims = [];
+    // Pencil: the words, left to right, then the arrow, then the underline — faint and thin.
+    ink.style.color = PENCIL;
+    strokes.forEach(p => { p.style.stroke = PENCIL; p.style.strokeWidth = "1.2"; p.style.strokeDashoffset = p.dataset.len; });
+    anims.push(ink.animate([{ opacity: 0 }, { opacity: 0.85 }], { duration: 500, fill: "both" }));
+    anims.push(ink.animate([{ clipPath: "inset(-40% 100% -40% -6%)" }, { clipPath: "inset(-40% -6% -40% -6%)" }],
+      { duration: 520, easing: "cubic-bezier(.3,.1,.5,1)", fill: "both" }));
+    anims.push(draw(shaft, 340, 420));
+    anims.push(draw(head, 130, 760, "ease-out"));
+    anims.push(draw(ul, 240, 860));
+    // Ink: red floods over the pencil and the lines thicken.
+    anims.push(ink.animate([{ color: PENCIL, opacity: 0.85 }, { color: RED, opacity: 1 }], { duration: 600, delay: 1250, easing: "ease-out", fill: "forwards" }));
+    strokes.forEach(p => anims.push(p.animate([{ stroke: PENCIL, strokeWidth: 1.2 }, { stroke: RED, strokeWidth: 1.8 }],
+      { duration: 600, delay: 1250, easing: "ease-out", fill: "forwards" })));
+    reveal();
+    Promise.all(anims.map(x => x.finished)).then(() => { state = "done"; cancel(); finalLook(); }, () => {});
+  }
+
+  // Keep it on the word when the layout changes (resize, web fonts arriving). Mid-animation the
+  // strokes keep their lengths, so only re-place once it's settled.
+  let rq = 0;
+  const relayout = () => { if (state !== "done") return; cancelAnimationFrame(rq); rq = requestAnimationFrame(() => { place(); finalLook(); }); };
+  window.addEventListener("resize", relayout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(relayout);
+  // It's hidden in Burmese, so coming back to English it needs measuring again.
+  document.querySelectorAll(".lang-toggle button").forEach(b => b.addEventListener("click", () => setTimeout(relayout)));
+  // Hover: the underline is drawn again (the arrow's nudge is CSS).
+  note.addEventListener("pointerenter", e => {
+    if (state !== "done" || e.pointerType !== "mouse") return;
+    if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    ul.animate([{ strokeDashoffset: ul.dataset.len }, { strokeDashoffset: 0 }], { duration: 300, easing: "cubic-bezier(.45,.05,.35,1)" });
+  });
+
+  return { play, show };
+}
+
 function initGreeting() {
   const svg = document.getElementById("js-greet");
   if (!svg) return;
   const html = document.documentElement;
+  const note = initGreetNote();
   const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const reveal = () => html.classList.remove("greet-pending");
   // Opening order: words first. The page opens with "Welcome", the greeting starts writing almost at
@@ -2378,13 +2507,17 @@ function initGreeting() {
   const write = () => {
     reveal();
     letPhotosIn();
-    if (!GREET.sylls) return;
+    if (!GREET.sylls) { note.show(); return; }
     cancelAnimationFrame(GREET.raf);
+    const first = !GREET.wrote;   // the margin note follows the first write only
+    GREET.wrote = true;
+    let noted = !first;
     GREET.noise.setAttribute("seed", String(1 + Math.floor(Math.random() * 90)));  // a different spread each time
     const t0 = performance.now();
     const frame = now => {
       const t = (now - t0) / 1000;
       paint(t);
+      if (!noted && t >= 2.9) { noted = true; note.play(); }   // once the ink has settled
       GREET.raf = t < 3.4 ? requestAnimationFrame(frame) : null;
     };
     GREET.raf = requestAnimationFrame(frame);
@@ -2392,10 +2525,10 @@ function initGreeting() {
 
   let ok = false;
   try { ok = build(); } catch (e) { ok = false; }
-  if (!ok) { reveal(); letPhotosIn(); return; }
+  if (!ok) { reveal(); letPhotosIn(); note.show(); return; }
   // Written once per visit to the site. Arriving from another MCC page (or Back/Forward) shows it
   // already written — the inline script in index.html decides and sets "greet-still" on <html>.
-  if (html.classList.contains("greet-still")) { paint(99); reveal(); letPhotosIn(); }
+  if (html.classList.contains("greet-still")) { paint(99); reveal(); letPhotosIn(); note.show(); }
   else setTimeout(write, 250);
   // Tap (or click) to have it written again — once the current write has finished.
   // Not on hover, and not when it scrolls back into view.

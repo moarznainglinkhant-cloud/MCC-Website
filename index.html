@@ -44,6 +44,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&family=Caveat:wght@600;700&display=swap">
+<style>@font-face{font-family:'Gochi Hand';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/GochiHand-Regular.woff2') format('woff2');}</style>
 <style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
 <style>
 
@@ -281,6 +282,25 @@
   .hero-wait .collage .panel-a img, .hero-intro.hold-a .collage .panel-a img{ transform:scale(1.1); }
   .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
   .greet .greet-cover path{ fill:var(--bg); }
+  /* "Learn to write this": a handwritten note (Gochi Hand) just above the greeting, with an arrow down to the top
+     of လာ. js/site.js (initGreetNote) places it from the greeting's own outlines and, on a visit where the
+     greeting is written in, sketches it in pencil and then inks it over in red, once, after the greeting
+     has finished. Otherwise (arriving from another MCC page, Back/Forward, reduced motion) it's simply there.
+     Hidden in Burmese, where "learn to write Burmese" isn't the invitation. */
+  .greet-note{ --gn-size:clamp(1.1rem, 2vw, 1.45rem); position:absolute; left:0; top:0; z-index:3; visibility:hidden;
+    font-family:'Gochi Hand', 'Segoe Print', cursive; font-weight:400; font-size:var(--gn-size); line-height:1.05; letter-spacing:.01em;
+    color:var(--red); text-decoration:none; white-space:nowrap; rotate:-3deg; transform-origin:left bottom;
+    padding:4px 6px; margin:-4px 0 0 -6px; border-radius:6px; -webkit-tap-highlight-color:transparent; }
+  .greet-note .gn-text{ position:relative; display:inline-block; }
+  .greet-note .gn-ul{ position:absolute; left:-1px; bottom:-5px; width:calc(100% + 2px); height:8px; overflow:visible; }
+  .greet-arrow{ position:absolute; left:0; top:0; width:1px; height:1px; overflow:visible; pointer-events:none; z-index:3; visibility:hidden;
+    transition:translate .28s cubic-bezier(.2,.8,.2,1); }
+  .greet-note.is-placed, .greet-arrow.is-placed{ visibility:visible; }
+  .greet-arrow path, .greet-note .gn-ul path{ fill:none; stroke:var(--red); stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .greet-note:hover + .greet-arrow, .greet-note:focus-visible + .greet-arrow{ translate:var(--gn-nx, 0) var(--gn-ny, 0); }
+  .greet-note:focus-visible{ outline:2px solid var(--red); outline-offset:2px; }
+  html[data-lang="mm"] .greet-note, html[data-lang="mm"] .greet-arrow{ display:none; }
+  @media (prefers-reduced-motion: reduce){ .greet-arrow{ transition:none; } }
   .hero h1{
     font-size:clamp(2.5rem, 5.4vw, 4.4rem);
     font-weight:600; line-height:1.02; letter-spacing:-0.01em;
@@ -1011,6 +1031,8 @@
             }catch(e){}})();
           </script>
         </h1>
+        <a class="greet-note" id="js-greet-note" href="learn.html" aria-label="Learn to write မင်္ဂလာပါ"><span class="gn-text"><span class="gn-ink">Learn to write this</span><svg class="gn-ul" viewBox="0 0 100 8" aria-hidden="true"><path d="M1 5.2C18 2.6 41 6.6 63 4.1S89 4.9 99 2.8"/></svg></span></a>
+        <svg class="greet-arrow" id="js-greet-arrow" aria-hidden="true"><path class="ga-shaft"/><path class="ga-head"/></svg>
         <p class="lede" data-i18n="hero_lede">The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.</p>
         <div class="cta-row">
           <a class="btn" href="#event" data-i18n="hero_cta_next">See Our Next Event</a>
