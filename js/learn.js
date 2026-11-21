@@ -822,9 +822,30 @@ var MCC_TRANSLIT = (function () {
     // On phones the card sits under the box: bring it into view.
     if (window.matchMedia("(max-width:860px)").matches) desk.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+  // The underline hugs the text: as wide as the placeholder ("thank you") at least, growing with
+  // longer phrases until the CSS max-width, after which the text scrolls inside the box.
+  // A hidden copy of the text, styled like the input, so the width comes from real text rendering
+  // (Fraunces's optical sizing included), not an estimate.
+  var mirror = document.createElement("span");
+  mirror.setAttribute("aria-hidden", "true");
+  mirror.style.cssText = "position:absolute;visibility:hidden;white-space:pre;pointer-events:none;left:-9999px;top:0";
+  form.appendChild(mirror);
+  function fit() {
+    var cs = getComputedStyle(input);
+    ["fontFamily", "fontSize", "fontWeight", "fontStyle", "fontVariationSettings", "fontOpticalSizing", "letterSpacing"].forEach(function (k) { mirror.style[k] = cs[k]; });
+    var pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
+    mirror.textContent = input.placeholder; var w = mirror.getBoundingClientRect().width;
+    mirror.textContent = input.value; w = Math.max(w, mirror.getBoundingClientRect().width);
+    input.style.width = Math.ceil(w + pad + 4) + "px"; // +4: room for the caret
+  }
+  fit();
+  input.addEventListener("input", fit);
+  window.addEventListener("resize", fit);
+  if (document.fonts) document.fonts.ready.then(fit);
+
   form.addEventListener("submit", function (e) { e.preventDefault(); ask(input.value); input.blur(); });
   chips.addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
-    input.value = b.textContent; ask(b.textContent);
+    input.value = b.textContent; fit(); ask(b.textContent);
   });
 })();
