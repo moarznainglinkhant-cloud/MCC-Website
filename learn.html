@@ -307,6 +307,7 @@
   .fl-foot{ margin-top:auto; display:flex; align-items:center; gap:8px; }
   .fl-foot .btn{ white-space:nowrap; padding-inline:16px; }
   .fl-sp{ flex:1; }
+  .fl-stat{ padding-inline:4px; }
   .fl-nb{ gap:6px; }
   .fl-foot #fl-prevb{ padding-left:12px; } .fl-foot #lb-next{ padding-right:14px; }
   .fl-foot #lb-next.is-ready{ box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--gold); }
@@ -835,8 +836,8 @@
             <svg class="fl-pad" id="fl-pad" role="img" aria-label="Writing pad">
               <defs><marker id="fl-ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#AE3628"/></marker></defs>
               <line class="fl-gl" data-y="-45"/><line class="fl-gl dash" data-y="-21.8"/><line class="fl-gl base" data-y="1.4"/><line class="fl-gl faint" data-y="44"/>
-              <path id="fl-outline" class="fl-outline"/><path id="fl-curb" class="fl-curb"/><path id="fl-covc" class="fl-covc"/>
-              <path id="fl-snap" class="fl-snap"/><path id="fl-snapnew" class="fl-snapnew"/><path id="fl-demo" class="fl-demo"/>
+              <path id="fl-outline" class="fl-outline"/><path id="fl-curb" class="fl-curb"/>
+              <path id="fl-demo" class="fl-demo"/>
               <path id="fl-guide" class="fl-guide" marker-end="url(#fl-ah)"/><path id="fl-inkg" class="fl-inkg"/><path id="fl-inkr" class="fl-inkr"/>
             </svg>
             <div id="fl-starts"></div>
@@ -852,6 +853,10 @@
         <div class="fl-right">
           <div class="fl-nm" id="lb-who"></div>
           <div class="fl-steps" id="fl-steps" role="group" aria-label="Steps"></div>
+          <div class="lc-stat fl-stat" aria-live="polite">
+            <div class="lc-stat-row"><span>Inside the letter</span><b id="lb-inside">0%</b></div>
+            <div class="lc-bar"><i id="lb-inside-bar"></i></div>
+          </div>
           <div class="fl-foot">
             <button type="button" class="btn ghost" id="lb-clear">Clear</button>
             <span class="fl-sp"></span>

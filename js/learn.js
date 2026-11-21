@@ -514,7 +514,8 @@ var MCC_TRANSLIT = (function () {
   var cov = [], bandDone = [], inks = [], stopAt = null, drawing = false, lastSnap = -1, raf = 0, seen = false;
   var fpad = $("fl-pad");
   function L() { return lessonOf(current); }
-  function resetInk() { var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; }
+  function showScore(v) { var p = Math.round((v || 0) * 100); $("lb-inside").textContent = p + "%"; $("lb-inside-bar").style.width = p + "%"; }
+  function resetInk() { var l = L(); cov = l.bands.map(function (b) { return new Uint8Array(b.n); }); bandDone = l.bands.map(function () { return false; }); inks = []; lastSnap = -1; showScore(0); }
 
   function drawCarousel() {
     var h = "";
@@ -538,12 +539,17 @@ var MCC_TRANSLIT = (function () {
       '" style="width:' + (gw * 1.15).toFixed(1) + "px;height:" + (gh * 1.15).toFixed(1) + 'px"><path d="' + ls.d + '"/></svg><div class="fl-nmt"><div class="fl-nmh"><h3>' + l[1] +
       '</h3></div><p>called “' + l[2] + '” · <span lang="my">' + l[3] + "</span></p></div>";
     var i = current, hear = document.createElement("button"), clip = letterClip(l[0]);
-    hear.type = "button"; hear.className = "lb-hear"; hear.hidden = true; hear.innerHTML = SPEAKER;
+    var hasClip = false, say = l[3] === l[0] ? l[0] : l[0] + "၊ " + l[3];   // the sound, then its name (as tools/tts/letters.py)
+    hear.type = "button"; hear.className = "lb-hear"; hear.innerHTML = SPEAKER;
     hear.setAttribute("aria-label", "Hear " + l[1] + ", called " + l[2]);
-    hear.addEventListener("click", function () { playUrl(clip, hear); });
+    hear.addEventListener("click", function () {
+      if (hasClip) { playUrl(clip, hear); return; }
+      hear.classList.add("is-busy");
+      speakUrl(say).then(function (u) { hear.classList.remove("is-busy"); if (current === i) playUrl(u, hear); }, function () { hear.classList.remove("is-busy"); });
+    });
     $("lb-who").querySelector(".fl-nmh").appendChild(hear);
-    var probe = new Audio(); probe.preload = "metadata";     // show the button only if the clip exists
-    probe.addEventListener("loadedmetadata", function () { if (current === i) hear.hidden = false; }, { once: true });
+    var probe = new Audio(); probe.preload = "metadata";     // a recorded clip, when there is one, wins
+    probe.addEventListener("loadedmetadata", function () { hasClip = true; }, { once: true });
     probe.src = clip;
   }
   function drawFrame() {
@@ -571,17 +577,13 @@ var MCC_TRANSLIT = (function () {
     if (watch) l.bands.forEach(function (b, j) { var sc = l.sched[j], k = S.t >= sc.t1 ? b.n : S.t <= sc.t0 ? 0 : Math.floor((S.t - sc.t0) / (sc.t1 - sc.t0) * b.n); if (k >= 2) demo += flPoly(b.a, b.b, 0, k - 1); });
     if (watch && !l.bands.length) demo = l.d;
     $("fl-demo").setAttribute("d", demo);
-    var jc = trace ? bandDone.indexOf(false) : -1, snap = "", snapNew = "";
-    if (S.done) snap = l.full.join(""); else if (trace) l.bands.forEach(function (b, j) { if (bandDone[j]) { if (j === lastSnap) snapNew = l.full[j]; else snap += l.full[j]; } });
-    $("fl-snap").setAttribute("d", snap); $("fl-snapnew").setAttribute("d", snapNew);
+    var jc = trace ? bandDone.indexOf(false) : -1;
     $("fl-curb").setAttribute("d", jc >= 0 ? l.full[jc] : "");
-    var cc = "", gd = "";
+    var gd = "";
     if (jc >= 0) {
-      var b = l.bands[jc], c = cov[jc], i = 0;
-      while (i < b.n) { if (!c[i]) { i++; continue; } var i0 = i; while (i < b.n && c[i]) i++; var i1 = Math.min(b.n - 1, i); if (i1 > i0) cc += flPoly(b.a, b.b, Math.max(0, i0 - 1), i1); }
-      var md = b.mid, e = Math.max(2, md.length - 4); gd = "M" + md[0][0] + " " + md[0][1]; for (var g = 2; g < e; g += 2) gd += "L" + md[g][0] + " " + md[g][1]; gd += "L" + md[e][0] + " " + md[e][1];
+      var md = l.bands[jc].mid, e = Math.max(2, md.length - 4); gd = "M" + md[0][0] + " " + md[0][1]; for (var g = 2; g < e; g += 2) gd += "L" + md[g][0] + " " + md[g][1]; gd += "L" + md[e][0] + " " + md[e][1];
     }
-    $("fl-covc").setAttribute("d", cc); $("fl-guide").setAttribute("d", gd);
+    $("fl-guide").setAttribute("d", gd);
     var gi = "", ri = "";
     if (!watch) inks.forEach(function (st) { for (var k = 0; k < st.pts.length; k++) { var p = st.pts[k], q = k ? st.pts[k - 1] : p, seg = "M" + q[0] + " " + q[1] + "L" + p[0] + " " + p[1]; if (st.ins[k]) gi += seg; else ri += seg; } });
     $("fl-inkg").setAttribute("d", gi); $("fl-inkr").setAttribute("d", ri);
@@ -639,17 +641,18 @@ var MCC_TRANSLIT = (function () {
     if (prev && Math.hypot(p.x - prev[0], p.y - prev[1]) < 0.5) return;
     var inside = true; try { inside = $("fl-outline").isPointInFill(new DOMPoint(p.x, p.y)); } catch (err) {}
     s.pts.push([p.x, p.y]); s.ins.push(inside);
+    showScore(score().ins);
     var l = L(), from = prev || [p.x, p.y], n = Math.max(1, Math.ceil(Math.hypot(p.x - from[0], p.y - from[1]) / 1.5)), only = S.mode === "trace" ? bandDone.indexOf(false) : -1;
     for (var k = 0; k <= n; k++) { var x = from[0] + (p.x - from[0]) * k / n, y = from[1] + (p.y - from[1]) * k / n;
       for (var j = 0; j < l.bands.length; j++) { if (only >= 0 && j !== only) continue;
         var md = l.bands[j].mid, c = cov[j]; for (var q = 0; q < md.length; q++) { var dx = md[q][0] - x, dy = md[q][1] - y; if (dx * dx + dy * dy < FL.R2) c[q] = 1; } } }
     if (S.mode === "trace" && only >= 0) {
       var cc = cov[only], got = 0; for (var z = 0; z < cc.length; z++) got += cc[z];
-      if (got / cc.length >= FL.SNAP) { bandDone[only] = true; lastSnap = only; drawing = false; inks = [];
+      if (got / cc.length >= FL.SNAP) { bandDone[only] = true;
         if (bandDone.indexOf(false) < 0) { var at = current; setTimeout(function () { if (S.mode === "trace" && current === at) setMode("hide"); }, 900); } }
     } else if (S.mode === "hide" && !S.done) {
       var sc = score();
-      if (sc.cov >= FL.COVER && sc.ins >= FL.INSIDE) { S.done = true; drawing = false; inks = []; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); }
+      if (sc.cov >= FL.COVER && sc.ins >= FL.INSIDE) { S.done = true; learned[LETTERS[current][0]] = 1; saveLearned(); drawSteps(); drawCarousel(); }
     }
     drawBoard();
   }
