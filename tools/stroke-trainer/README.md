@@ -8,6 +8,8 @@ batch can be checked or redone later.
 | File | What it is |
 |---|---|
 | `trainer-v4.0.html` … `trainer-v4.5.html` | The trainer exactly as it was for each version (open in a browser; needs internet for one library). Saving only works in the live artifact. |
+| `trainer-marks-v4.0.html` | The marks trainer ([artifact](https://claude.ai/artifact/GFHVW7uAfAHUWXNj6yrV3R)): v4.0 with the 33 non-consonant glyphs; rings start on their vertical centre line. Has its own database. |
+| `u-399-bands.json` | ဦ (399), not on the site: ည's left half choices (batch 6: the ring/stem arc cut, the junction end off) replayed with v4.5 on ဦ. |
 | `batches.json` | Each batch: date, trainer version, letters (with glyph ids), and every choice made for each letter (cuts, moved or switched-off ends, writing order, where the pen starts, direction). |
 | `replay.py` | Runs a trainer version on the saved choices and prints the bands, or checks them against `js/learn-bands.js`. |
 
@@ -22,6 +24,8 @@ batch can be checked or redone later.
 | 4 (`4`) | Nov 20, 2026 | v4.4 | ဒ ရ |
 | 5 (`5`) | Nov 20, 2026 | v4.4 | အ |
 | 6 (`6`) | Nov 20, 2026 | v4.5 | ည ဏ မ — **letters with issues** (from batch 6 on, every letter is labelled this way; `issues: true` on the site) |
+| 9 (`9`) | Nov 21, 2026 | marks-4.0 | Marks, keyed by glyph id: ိ ီ း ့ ံ ် ေ ာ ါ ဲ ု ု ူ ူ ျ ွ ွှ ှ ှု ှူ, ြ in 6 widths, short န — **letters with issues** |
+| 9, part 2 (`9.2`) | Nov 21, 2026 | 4.5 / 4.4 | Short ည (265), short ရ (352, 358): the alphabet letter's choices (batch 6 ည, batch 4 ရ) replayed on the short outline — **letters with issues** |
 
 v4.2 reproduces every letter above exactly (checked with `replay.py --check`). v4.1 reproduces batches 1 and 2.1;
 v4.0 only batch 1 (it can't cut overlaps).
