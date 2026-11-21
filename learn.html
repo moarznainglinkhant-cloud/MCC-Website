@@ -358,6 +358,10 @@
   .fl-hide svg{ width:18px; height:18px; }
   .fl-hide:hover{ background:var(--bg-sunk); }
   .fl-hide[aria-pressed="true"]{ background:var(--navy); border-color:var(--navy); color:var(--bg); }
+  /* the eye: open when the letter shows; the slash (and a cut in the eye behind it) draws in when it's hidden */
+  .fl-hide .hd-slash, .fl-hide .hd-cut{ stroke-dasharray:1 2; stroke-dashoffset:1; transition:stroke-dashoffset .3s cubic-bezier(.32,.72,0,1); }
+  .fl-hide[aria-pressed="true"] .hd-slash, .fl-hide[aria-pressed="true"] .hd-cut{ stroke-dashoffset:0; }
+  @media (prefers-reduced-motion:reduce){ .fl-hide .hd-slash, .fl-hide .hd-cut{ transition:none; } }
   .fl-mode button:focus-visible, .fl-hide:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
   .fl-stat{ gap:10px; } .fl-stat .lc-stat-row span{ font-size:15px; } .fl-stat .lc-stat-row b{ font-size:20px; } .fl-stat .lc-bar{ height:8px; }
   .fl-foot{ gap:8px; margin-top:4px; }
@@ -941,7 +945,7 @@
           <div class="fl-nm" id="lb-who"></div>
           <div class="fl-ctl">
             <div class="fl-mode" id="fl-steps" role="radiogroup" aria-label="Mode"><span class="fl-thumb" aria-hidden="true"></span><button type="button" role="radio" aria-checked="true" data-mode="watch">Watch</button><button type="button" role="radio" aria-checked="false" data-mode="trace">Trace</button></div>
-            <button type="button" class="fl-hide" id="fl-hide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.5 10.5 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.6 3.7M6.6 6.6C4.6 8 3.4 9.9 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Hide</button>
+            <button type="button" class="fl-hide" id="fl-hide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="hm-fl-hide"><rect width="24" height="24" fill="#fff"/><path class="hd-cut" d="M4 4L20 20" pathLength="1" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/></mask></defs><g mask="url(#hm-fl-hide)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12C4.3 8.2 7.8 5.5 12 5.5s7.7 2.7 9.5 6.5c-1.8 3.8-5.3 6.5-9.5 6.5S4.3 15.8 2.5 12z"/><circle cx="12" cy="12" r="3"/></g><path class="hd-slash" d="M4 4L20 20" pathLength="1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Hide</button>
           </div>
           <div class="lc-stat fl-stat" aria-live="polite">
             <div class="lc-stat-row"><span>Inside the letter</span><b id="lb-inside">0%</b></div>
@@ -982,7 +986,7 @@
           <div class="lb-name-mm" id="lb-name-mm"></div>
           <div class="fl-ctl lc-name-ctl">
             <div class="fl-mode" id="lb-name-steps" role="radiogroup" aria-label="Mode"><span class="fl-thumb" aria-hidden="true"></span><button type="button" role="radio" aria-checked="true" data-mode="watch">Watch</button><button type="button" role="radio" aria-checked="false" data-mode="trace">Trace</button></div>
-            <button type="button" class="fl-hide" id="lb-name-hide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10.5 10.5 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.3 2.4-2.6 3.7M6.6 6.6C4.6 8 3.4 9.9 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.5 4.8-1.3M9.9 9.9a3 3 0 0 0 4.2 4.2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Hide</button>
+            <button type="button" class="fl-hide" id="lb-name-hide" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><defs><mask id="hm-lb-name-hide"><rect width="24" height="24" fill="#fff"/><path class="hd-cut" d="M4 4L20 20" pathLength="1" fill="none" stroke="#000" stroke-width="5" stroke-linecap="round"/></mask></defs><g mask="url(#hm-lb-name-hide)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12C4.3 8.2 7.8 5.5 12 5.5s7.7 2.7 9.5 6.5c-1.8 3.8-5.3 6.5-9.5 6.5S4.3 15.8 2.5 12z"/><circle cx="12" cy="12" r="3"/></g><path class="hd-slash" d="M4 4L20 20" pathLength="1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>Hide</button>
           </div>
         </div>
         <div class="lb-name-scroll" id="lb-name-scroll"><div class="lb-pad" id="lb-name-pad"></div></div>

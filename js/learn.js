@@ -719,7 +719,8 @@ var MCC_TRANSLIT = (function () {
     var d = e.key === "ArrowRight" || e.key === "ArrowLeft"; if (!d) return; e.preventDefault();
     setMode(S.mode === "watch" ? "trace" : "watch"); $("fl-steps").querySelector('[aria-checked="true"]').focus();
   });
-  $("fl-hide").addEventListener("click", function () { S.hide = !S.hide; if (S.mode === "watch") setMode("trace"); else setMode("trace"); });
+  // Hide only hides the guide: while tracing, the visitor's ink stays. From Watch it goes to Trace.
+  $("fl-hide").addEventListener("click", function () { S.hide = !S.hide; if (S.mode === "trace") { drawSteps(); drawBoard(); } else setMode("trace"); });
   $("fl-car").addEventListener("click", function (e) { var b = e.target.closest("[data-i]"); if (b) open(+b.getAttribute("data-i")); });
   function step(d) { open((current + d + LETTERS.length) % LETTERS.length); }
   (function () {                       // swipe, drag or scroll sideways across the letter strip to move through the letters
@@ -866,7 +867,7 @@ var MCC_TRANSLIT = (function () {
     if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return; e.preventDefault();
     goName(nameMode ? 0 : 1); $("lb-name-steps").querySelector('[aria-checked="true"]').focus();
   });
-  $("lb-name-hide").addEventListener("click", function () { nameHide = !nameHide; goName(1); });
+  $("lb-name-hide").addEventListener("click", function () { nameHide = !nameHide; if (nameMode === 1) setNameMode(1); else goName(1); });   // tracing: keep the ink
   $("lb-name-retry").addEventListener("click", function () { if (namePad) namePad.clear(); });
   var rt = 0;
   window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (namePad && !$("lb-name-out").hidden) writeName($("lb-name-input").value); }, 250); });
