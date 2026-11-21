@@ -215,10 +215,13 @@
 
   /* ---------- LEARN BURMESE ---------- */
   .lb-hero{ position:relative; overflow:clip; padding-block:clamp(44px,7vw,84px) clamp(20px,3vw,34px); }
+  @keyframes lb-watermark{ from{ opacity:0; } to{ opacity:0.07; } }
   .lb-hero .watermark{
-    position:absolute; right:-1%; top:-6%; z-index:0;
-    font-family:'Yinmar','Noto Sans Myanmar',serif; font-weight:400; line-height:1;
-    font-size:clamp(11rem,32vw,25rem); color:var(--ink); opacity:0.05; pointer-events:none;
+    position:absolute; right:-6px; top:-10px; z-index:0;
+    font-family:'Yinmar','Noto Sans Myanmar',serif; font-weight:400;
+    font-size:clamp(2.9rem,10vw,7.3rem); color:var(--ink); opacity:0.07;
+    white-space:nowrap; pointer-events:none;
+    animation:lb-watermark 1s 0s both ease-out;
   }
   .lb-hero .wrap{ position:relative; z-index:1; }
   .lb-hero h1{ font-weight:600; font-size:clamp(2.1rem,5.6vw,3.6rem); line-height:1.08; margin-block:10px 14px; max-width:16ch; }
@@ -871,10 +874,10 @@
 
 <main id="top">
   <section class="lb-hero">
-    <span class="watermark" aria-hidden="true">က</span>
+    <span class="watermark myanmar" aria-hidden="true">မြန်မာစာ</span>
     <div class="wrap">
       <span class="eyebrow">Learn Burmese</span>
-      <h1>Write your first Burmese letters.</h1>
+      <h1>Write your first letter</h1>
     </div>
   </section>
 
@@ -942,7 +945,7 @@
     <div class="wrap lb-name-grid">
       <div class="lb-name-copy">
         <span class="eyebrow">Your turn</span>
-        <h2>Now write your own name.</h2>
+        <h2>Your name, in Burmese</h2>
         <p class="lb-lead">Type it in English. We'll spell it the Burmese way, then you write it.</p>
       </div>
       <div class="lb-name-side">
@@ -979,7 +982,7 @@
       <div class="lb-say-grid">
         <div>
           <span class="eyebrow">Say it out loud</span>
-          <h2>Now hear how it sounds.</h2>
+          <h2>Any phrase, in Burmese</h2>
           <p class="lb-lead"><span class="ask-pill"><svg viewBox="14 2 36 60" aria-hidden="true"><line x1="32" y1="2" x2="32" y2="14" stroke="#C08A2E" stroke-width="3"/><rect x="24" y="13" width="16" height="4" rx="1" fill="#C08A2E"/><ellipse cx="32" cy="33" rx="15" ry="16" fill="#AE3628"/><path d="M32 17v32M24 19c-4 9-4 19 0 28M40 19c4 9 4 19 0 28" stroke="#7A2418" stroke-width="1.6" fill="none"/><rect x="24" y="48" width="16" height="4" rx="1" fill="#C08A2E"/><path d="M29 52l-2 8M32 52v9M35 52l2 8" stroke="#C08A2E" stroke-width="2"/></svg>Ask MCC</span> is the club's own AI agent. Ask it how to say anything in Burmese.</p>
           <form class="lb-say-form" id="lb-say-form" autocomplete="off">
             How do I say <input id="lb-say-input" type="text" maxlength="60" placeholder="thank you" aria-label="A word or phrase in English" enterkeyhint="go" spellcheck="false"> <span class="lb-say-end">in Burmese?<button type="submit" class="lb-say-go" aria-label="Ask"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button></span>
