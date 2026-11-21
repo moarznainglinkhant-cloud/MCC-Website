@@ -586,11 +586,11 @@
   .ask-pill svg{ width:.95em; height:1.25em; vertical-align:-.28em; margin-right:.4em; }
   .lb-say-form{ font-family:'Fraunces',serif; font-weight:600; font-size:clamp(1.35rem,2.8vw,1.9rem); line-height:1.5; margin-top:26px; }
   .lb-say-form input{ font:inherit; color:var(--red); background:transparent; border:0; border-bottom:2px solid var(--red); border-radius:0;
-    width:7.4em; max-width:min(7.4em,100%); padding:0 .1em; outline:none; transition:width .12s ease-out; }
+    width:7.4em; max-width:min(11em,100%); padding:0 .1em; outline:none; transition:width .12s ease-out; }
   @media (prefers-reduced-motion:reduce){ .lb-say-form input{ transition:none; } }
   .lb-say-form input::placeholder{ color:rgba(174,54,40,.42); }
   .lb-say-form input:focus-visible{ border-bottom-color:var(--gold); }
-  .lb-say-end{ white-space:nowrap; }
+  .lb-say-end{ display:block; white-space:nowrap; }
   .lb-say-go{ width:42px; height:42px; border-radius:50%; border:0; padding:0; background:var(--red); color:#fff; cursor:pointer;
     display:inline-grid; place-items:center; vertical-align:middle; margin-left:6px; transition:background .2s ease; }
   .lb-say-go:hover{ background:var(--red-ink); }
@@ -627,7 +627,7 @@
   .reel-views svg{ width:12px; height:12px; fill:#fff; }
   .lb-note{ font-size:0.8rem; color:var(--ink-soft); margin-top:12px; min-height:1.4em; }
   @media (max-width:860px){
-    .lb-name-grid, .lb-say-grid{ grid-template-columns:1fr; }
+    .lb-name-grid, .lb-say-grid{ grid-template-columns:minmax(0,1fr); }
     .lb-say-grid > div:first-child{ padding-top:0; }
     .lb-reel{ grid-template-columns:1fr; }
     .lb-reel-copy{ order:-1; }

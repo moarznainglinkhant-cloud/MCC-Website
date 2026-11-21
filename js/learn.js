@@ -836,7 +836,17 @@ var MCC_TRANSLIT = (function () {
     var pad = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + parseFloat(cs.borderLeftWidth) + parseFloat(cs.borderRightWidth);
     mirror.textContent = input.placeholder; var w = mirror.getBoundingClientRect().width;
     mirror.textContent = input.value; w = Math.max(w, mirror.getBoundingClientRect().width);
-    input.style.width = Math.ceil(w + pad + 4) + "px"; // +4: room for the caret
+    w = Math.ceil(w + pad + 4); // +4: room for the caret
+    // On narrow screens, never wider than the room left after "How do I say ", so the box stays on that line.
+    var lead = form.firstChild, r = document.createRange();
+    if (lead && lead.nodeType === 3) {
+      // Measure the words without the trailing space (it collapses once the box has wrapped), then add a space back.
+      var t = lead.textContent, start = t.length - t.replace(/^\s+/, "").length, end = t.replace(/\s+$/, "").length;
+      r.setStart(lead, start); r.setEnd(lead, end);
+      mirror.textContent = " "; var space = mirror.getBoundingClientRect().width;
+      w = Math.min(w, Math.floor(form.clientWidth - r.getBoundingClientRect().width - space - 2));
+    }
+    input.style.width = w + "px";
   }
   fit();
   input.addEventListener("input", fit);
