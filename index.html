@@ -441,7 +441,8 @@
   }
 
   /* ---------- Empty Next Event: the calendar fills the left panel (js/site.js renderWallCalendar) ---------- */
-  .event-visual.is-cal{ display:block; background:#fff; border-right:1px solid var(--line); }
+  /* same warm paper as the rest of the card (was pure white, which read as a third neutral against the beige) */
+  .event-visual.is-cal{ display:block; background:var(--bg-raised); border-right:1px solid var(--line); }
   /* red band along the top: removed Nov 20 (user trying the calendar without it) */
   .event-visual.is-cal::before{ content:""; position:absolute; left:0; right:0; top:0; z-index:1; height:var(--bh,26px);
     background:var(--red); display:none; }
