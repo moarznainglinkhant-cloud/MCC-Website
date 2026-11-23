@@ -1702,7 +1702,8 @@ function buildPastTimeline(past) {
     TL.listening = true;
     window.addEventListener("scroll", tlOnScroll, { passive: true });
     window.addEventListener("resize", () => { if (TL.el) { tlMeasure(); tlKick(); } });
-    window.addEventListener("touchstart", () => { TL.touching = true; }, { passive: true });
+    window.addEventListener("touchstart", () => { TL.touching = true; tlGlideStop(); }, { passive: true });
+    window.addEventListener("wheel", tlGlideStop, { passive: true });
     window.addEventListener("touchend", () => { TL.touching = false; tlOnScroll(); }, { passive: true });
     window.addEventListener("touchcancel", () => { TL.touching = false; tlOnScroll(); }, { passive: true });
   }
@@ -1717,6 +1718,36 @@ function buildPastTimeline(past) {
 // scroll the page as before.
 const TL_FLICK = 0.2;        // px per ms: faster than this counts as a flick to the next poster
 const TL_COMMIT_PX = 48;     // a slower drag this far also moves on, rather than springing back
+const TL_FLING = 1.4;        // px per ms: a hard flick carries one poster further (two at twice this)
+
+// Glide the page to a poster after a swipe. Starts fast and slows to a stop, so it carries on from
+// the finger instead of pausing first (which the browser's own smooth scroll does).
+function tlGlide(i) {
+  tlGlideStop();
+  const root = document.documentElement;
+  const from = window.scrollY;
+  const to = Math.round(TL.el.getBoundingClientRect().top + from - TL.top + i * TL.step);
+  const dist = to - from;
+  if (Math.abs(dist) < 1) return;
+  const dur = Math.min(560, Math.max(240, Math.abs(dist) * 1.2));
+  let t0 = null;
+  root.style.scrollBehavior = "auto";
+  const step = ts => {
+    if (t0 === null) t0 = ts;
+    const k = Math.min(1, (ts - t0) / dur);
+    window.scrollTo(0, from + dist * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) TL.glide = requestAnimationFrame(step);
+    else { TL.glide = 0; root.style.scrollBehavior = ""; }
+  };
+  TL.glide = requestAnimationFrame(step);
+}
+function tlGlideStop() {
+  if (!TL.glide) return;
+  cancelAnimationFrame(TL.glide);
+  TL.glide = 0;
+  document.documentElement.style.scrollBehavior = "";
+}
+
 function tlSwipeInit() {
   const stage = TL.el.querySelector(".tl-stage");
   const root = document.documentElement;
@@ -1773,19 +1804,25 @@ function tlSwipeInit() {
     if (was.pinned) {
       const pos = Math.max(0, Math.min(TL.dist, offset())) / TL.step;
       const i0 = Math.round(was.o0 / TL.step), d = pos - i0;
-      if (flick) i = was.v < 0 ? Math.floor(pos + 0.02) + 1 : Math.ceil(pos - 0.02) - 1;
+      if (flick) {
+        const more = Math.min(2, Math.floor(Math.abs(was.v) / TL_FLING));
+        i = was.v < 0 ? Math.floor(pos + 0.02) + 1 + more : Math.ceil(pos - 0.02) - 1 - more;
+      }
       else { i = Math.round(pos); if (i === i0 && Math.abs(d) * TL.step > TL_COMMIT_PX) i = i0 + (d > 0 ? 1 : -1); }
     } else {
       if (Math.abs(moved) < 30) return;
       i = (TL.active < 0 ? 0 : TL.active) + (moved < 0 ? 1 : -1);
     }
-    tlJump(clampI(i));
+    tlGlide(clampI(i));
   };
   stage.addEventListener("touchend", release, { passive: true });
   stage.addEventListener("touchcancel", release, { passive: true });
   // A swipe that ends on a poster or link isn't a tap.
   stage.addEventListener("click", e => {
-    if (swallowClick && e.timeStamp - swallowClick < 400) { e.preventDefault(); e.stopPropagation(); }
+    if (swallowClick && e.timeStamp - swallowClick < 400) { e.preventDefault(); e.stopPropagation(); return; }
+    // Tapping a poster at the side brings it to the middle.
+    const card = e.target.closest(".tl-card"), i = card ? TL.cards.indexOf(card) : -1;
+    if (i >= 0 && i !== TL.active) { e.preventDefault(); e.stopPropagation(); tlGlide(i); }
   }, true);
 }
 
@@ -1918,7 +1955,7 @@ function tlFrame() {
   if (!TL.el) return;
   const target = tlTarget();
   if (TL.cur === null) TL.cur = target;
-  if (TL.dragging) TL.cur = target;                    // under a finger the row tracks it exactly
+  if (TL.dragging || TL.glide) TL.cur = target;        // under a finger, or gliding after one, the row tracks exactly
   else TL.cur += (target - TL.cur) * 0.16;            // eased, so it glides rather than jerks
   if (Math.abs(target - TL.cur) < 0.4) TL.cur = target;
   const x = TL.cur;
@@ -1949,6 +1986,9 @@ function tlFrame() {
       tlSetYear(year);
       TL.ticks.forEach(b => b.classList.toggle("now", b.dataset.year === year));
     }
+    // fetch the next few posters now, so they are there by the time a swipe reaches them
+    for (let j = active + 1; j <= active + 3 && j < TL.cards.length; j++)
+      TL.cards[j].querySelectorAll('img[loading="lazy"]').forEach(im => { im.loading = "eager"; });
     TL.count.textContent = active < TL.n ? `${String(active + 1).padStart(2, "0")} / ${String(TL.n).padStart(2, "0")}` : "";
   }
   const frac = TL.dist ? x / TL.dist : 0;

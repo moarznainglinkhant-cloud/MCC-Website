@@ -227,6 +227,9 @@
 
   /* ---------- TEAM WHEEL (scroll-driven) ---------- */
   .wheel-section{ position:relative; }
+  /* Ask MCC steps aside on phones while the wheel fills the screen (js/ask-mcc.js watches data-askmcc-avoid). */
+  .ask-avoid{ display:none; position:absolute; left:0; top:55vh; bottom:55vh; width:1px; opacity:0; pointer-events:none; }
+  @media (max-width:899px){ .ask-avoid{ display:block; } }
   .wheel-sticky{
     position:sticky; top:0;
     height:100vh; height:100svh;
@@ -356,7 +359,8 @@
   .wheel-name .ch.enter{ transform:translateY(110%); opacity:0; transition:none; }
   .wheel-bar{ display:block; width:56px; height:4px; border-radius:2px; transition: background-color .45s ease; }
   .wheel-pips{ display:none; gap:6px; justify-content:center; margin-top:14px; }
-  .wheel-pips button{ appearance:none; border:none; background:none; padding:9px 0; cursor:pointer; }
+  .wheel-pips button{ appearance:none; border:none; background:none; padding:9px 0; cursor:pointer; position:relative; }
+  .wheel-pips button::after{ content:""; position:absolute; inset:-10px -3px; }   /* bigger target for a thumb, same look */
   .wheel-pips button i{
     display:block; width:6px; height:6px; border-radius:3px; background:var(--line);
     transition: width .35s cubic-bezier(.2,.8,.2,1), background-color .35s ease;
@@ -930,6 +934,7 @@
   </section>
 
   <section class="wheel-section" id="team" aria-label="Our team, by department">
+    <div class="ask-avoid" data-askmcc-avoid aria-hidden="true"></div>
     <div class="wheel-sticky" id="wheelSticky">
       <div class="wheel-glow" id="wheelGlow" aria-hidden="true"></div>
       <div class="wheel" id="wheel"></div>
@@ -1630,7 +1635,7 @@
   function tick(){
     var done = true;
     ["p", "enter", "hero"].forEach(function(key){
-      cur[key] += (tgt[key] - cur[key]) * 0.14;
+      cur[key] += (tgt[key] - cur[key]) * (sw && sw.pinned ? 0.4 : 0.14);   // follows a finger more closely than a scroll
       if (Math.abs(tgt[key] - cur[key]) < 0.0005) cur[key] = tgt[key]; else done = false;
     });
     vel *= 0.86;
@@ -2150,6 +2155,16 @@
     animateScrollTo(unitTop(target));
   });
 
+  // Ask MCC stays on the first screen, then steps aside once the wheel takes over (phones).
+  var askAvoid = section.querySelector(".ask-avoid");
+  function placeAskAvoid(){
+    if (!askAvoid) return;
+    var top = section.getBoundingClientRect().top + window.scrollY;
+    askAvoid.style.top = Math.max(window.innerHeight * 0.55, window.innerHeight + 1 - top) + "px";
+  }
+  placeAskAvoid();
+  window.addEventListener("load", placeAskAvoid);
+
   layout();
   cur = readScroll(); tgt = { p:cur.p, enter:cur.enter, hero:cur.hero };
   apply(cur);
@@ -2157,7 +2172,7 @@
   var resizeTimer = null;
   window.addEventListener("resize", function(){
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(function(){ layout(); apply(cur); onScroll(); }, 120);
+    resizeTimer = window.setTimeout(function(){ layout(); apply(cur); onScroll(); placeAskAvoid(); }, 120);
   });
   }
 })();

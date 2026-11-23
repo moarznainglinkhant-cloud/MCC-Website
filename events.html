@@ -497,6 +497,10 @@
   #past-events.tl-on{ padding-bottom:clamp(24px,4vw,40px); }
   #past-events.tl-on > .wrap{ display:none; }
   .tl{ position:relative; }
+  /* Ask MCC steps aside while the posters fill the screen (js/ask-mcc.js watches data-askmcc-avoid). */
+  #past-events{ position:relative; }
+  .ask-avoid{ display:none; position:absolute; left:0; top:55vh; bottom:55vh; width:1px; opacity:0; pointer-events:none; }
+  #past-events.tl-on .ask-avoid{ display:block; }
   .tl-stage{
     position:sticky; top:var(--tl-top, 64px);
     height:calc(100vh - var(--tl-top, 64px)); height:calc(100svh - var(--tl-top, 64px));
@@ -554,6 +558,7 @@
     position:absolute; top:50%; transform:translate(-50%,-50%);
     background:none; border:0; padding:8px; cursor:pointer; color:var(--ink-soft); font:inherit;
   }
+  .tl-tick::after{ content:""; position:absolute; inset:-8px; }   /* bigger target for a thumb, same look */
   .tl-tick::before{ content:""; display:block; width:9px; height:9px; border-radius:50%; background:var(--bg); border:2px solid var(--line); margin:auto; transition:background .3s, border-color .3s, transform .3s; }
   .tl-tick span{ position:absolute; top:100%; left:50%; transform:translate(-50%,-4px); font-size:0.7rem; font-weight:700; letter-spacing:0.04em; transition:color .3s; }
   .tl-tick.on::before{ background:var(--red); border-color:var(--red); }
@@ -835,6 +840,7 @@
   </section>
 
   <section class="section" id="past-events" style="padding-top:0;">
+    <div class="ask-avoid" data-askmcc-avoid aria-hidden="true"></div>
     <div class="wrap">
       <div class="section-head">
         <div>
