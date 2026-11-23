@@ -1704,8 +1704,89 @@ function buildPastTimeline(past) {
     window.addEventListener("resize", () => { if (TL.el) { tlMeasure(); tlKick(); } });
     window.addEventListener("touchstart", () => { TL.touching = true; }, { passive: true });
     window.addEventListener("touchend", () => { TL.touching = false; tlOnScroll(); }, { passive: true });
+    window.addEventListener("touchcancel", () => { TL.touching = false; tlOnScroll(); }, { passive: true });
   }
+  tlSwipeInit();
   tlKick();
+}
+
+// ---------- Sideways swipe on the phone timeline ----------
+// The posters sit in a row, so people swipe them. A sideways drag moves the row with the finger
+// (it scrolls the page by the same amount, so the year, rail and ink all follow). Letting go
+// glides to the nearest poster, or on to the next one after a quick flick. Up and down still
+// scroll the page as before.
+const TL_FLICK = 0.2;        // px per ms: faster than this counts as a flick to the next poster
+const TL_COMMIT_PX = 48;     // a slower drag this far also moves on, rather than springing back
+function tlSwipeInit() {
+  const stage = TL.el.querySelector(".tl-stage");
+  const root = document.documentElement;
+  let g = null, swallowClick = 0;
+  const offset = () => TL.top - TL.el.getBoundingClientRect().top;      // how far the row has travelled
+  const clampI = i => Math.max(0, Math.min(TL.cards.length - 1, i));
+  const end = () => { TL.dragging = false; root.style.scrollBehavior = ""; g = null; };
+
+  stage.addEventListener("touchstart", e => {
+    if (e.touches.length !== 1) { if (g) end(); return; }
+    const t = e.touches[0];
+    g = { x: t.clientX, y: t.clientY, axis: null, lastX: t.clientX, lastT: e.timeStamp, v: 0 };
+  }, { passive: true });
+
+  stage.addEventListener("touchmove", e => {
+    if (!g || e.touches.length !== 1) return;
+    const t = e.touches[0], dx = t.clientX - g.x, dy = t.clientY - g.y;
+    if (!g.axis) {
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      g.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+      if (g.axis === "x") {
+        const o = offset();
+        g.pinned = o >= -1 && o <= TL.dist + 1;       // posters are in place and can follow the finger
+        g.o0 = Math.max(0, Math.min(TL.dist, o));
+        g.y0 = window.scrollY;
+        g.x = t.clientX;                              // start from here, so the row doesn't jump by the 8px
+        if (g.pinned) { TL.dragging = true; root.style.scrollBehavior = "auto"; }
+      }
+    }
+    if (g.axis !== "x") return;
+    if (e.cancelable) e.preventDefault();
+    const now = e.timeStamp, dt = now - g.lastT;
+    if (dt > 0) { g.v = g.v * 0.4 + ((t.clientX - g.lastX) / dt) * 0.6; g.lastX = t.clientX; g.lastT = now; }
+    if (!g.pinned) return;
+    let o = g.o0 - (t.clientX - g.x);
+    if (o < 0) o *= 0.3; else if (o > TL.dist) o = TL.dist + (o - TL.dist) * 0.3;   // soft resistance at either end
+    g.over = o < 0 ? o : (o > TL.dist ? o - TL.dist : 0);
+    const inside = Math.max(0, Math.min(TL.dist, o));
+    TL.pull = -g.over;                                // past the ends the row gives a little, then springs back
+    window.scrollTo(0, g.y0 + (inside - g.o0));
+    tlKick();
+  }, { passive: false });
+
+  const release = e => {
+    if (!g) return;
+    const was = g;
+    end();
+    if (was.axis !== "x") return;
+    TL.pull = 0;
+    swallowClick = e.timeStamp;
+    const moved = was.lastX - was.x;
+    const flick = Math.abs(was.v) > TL_FLICK && e.timeStamp - was.lastT < 120;
+    let i;
+    if (was.pinned) {
+      const pos = Math.max(0, Math.min(TL.dist, offset())) / TL.step;
+      const i0 = Math.round(was.o0 / TL.step), d = pos - i0;
+      if (flick) i = was.v < 0 ? Math.floor(pos + 0.02) + 1 : Math.ceil(pos - 0.02) - 1;
+      else { i = Math.round(pos); if (i === i0 && Math.abs(d) * TL.step > TL_COMMIT_PX) i = i0 + (d > 0 ? 1 : -1); }
+    } else {
+      if (Math.abs(moved) < 30) return;
+      i = (TL.active < 0 ? 0 : TL.active) + (moved < 0 ? 1 : -1);
+    }
+    tlJump(clampI(i));
+  };
+  stage.addEventListener("touchend", release, { passive: true });
+  stage.addEventListener("touchcancel", release, { passive: true });
+  // A swipe that ends on a poster or link isn't a tap.
+  stage.addEventListener("click", e => {
+    if (swallowClick && e.timeStamp - swallowClick < 400) { e.preventDefault(); e.stopPropagation(); }
+  }, true);
 }
 
 function tlMeasure() {
@@ -1837,10 +1918,13 @@ function tlFrame() {
   if (!TL.el) return;
   const target = tlTarget();
   if (TL.cur === null) TL.cur = target;
-  TL.cur += (target - TL.cur) * 0.16;                 // eased, so it glides rather than jerks
+  if (TL.dragging) TL.cur = target;                    // under a finger the row tracks it exactly
+  else TL.cur += (target - TL.cur) * 0.16;            // eased, so it glides rather than jerks
   if (Math.abs(target - TL.cur) < 0.4) TL.cur = target;
   const x = TL.cur;
-  TL.track.style.transform = `translate3d(${-x}px,0,0)`;
+  TL.pullNow = TL.dragging ? (TL.pull || 0) : (TL.pullNow || 0) * 0.8;   // give at the ends, springing back on release
+  if (Math.abs(TL.pullNow) < 0.4) TL.pullNow = 0;
+  TL.track.style.transform = `translate3d(${TL.pullNow - x}px,0,0)`;
 
   const pos = x / TL.step;
   tlInkDraw(x);
@@ -1871,7 +1955,7 @@ function tlFrame() {
   TL.fill.style.width = (frac * 100) + "%";
   TL.ticks.forEach(b => b.classList.toggle("on", Number(b.dataset.i) <= pos + 0.01));
 
-  if (TL.cur !== target) tlKick();
+  if (TL.cur !== target || TL.pullNow) tlKick();
 }
 
 function tlOnScroll() {

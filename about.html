@@ -413,6 +413,7 @@
   .wheel-btn.ghost:hover{ background:var(--gold); color:var(--navy-deep); }
 
   /* Phones and small tablets: title on top, wheel turns up from the bottom. */
+  .wheel-sticky.is-mobile{ touch-action:pan-y; }   /* up/down scrolls; sideways swipes turn the wheel */
   .wheel-sticky.is-mobile .wheel-glow{ width:720px; height:720px; }
   .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; }
   .wheel-sticky.is-mobile .wheel-title{ text-align:center; }
@@ -2065,6 +2066,73 @@
   }
   window.addEventListener("touchend", touchDone, { passive:true });
   window.addEventListener("touchcancel", touchDone, { passive:true });
+
+  // ---------- sideways swipe (phone layout) ----------
+  // On phones the departments read as a row of pages, so people swipe them. A sideways drag turns
+  // the wheel with the finger (by scrolling the page the matching amount, so everything else
+  // follows); letting go settles on the nearest department, or the next one after a quick flick.
+  var FLICK = 0.2;             // px per ms: faster than this counts as a flick to the next department
+  var COMMIT_PX = 48;          // a slower drag this far also moves on, rather than springing back
+  var sw = null, swallowClick = 0;
+  function swipeEnd(){ sw = null; rootEl.style.scrollBehavior = ""; }
+  sticky.addEventListener("touchstart", function(ev){
+    if (!L.mobile || panelOpen || ev.touches.length !== 1){ if (sw) swipeEnd(); return; }
+    var t = ev.touches[0];
+    sw = { x:t.clientX, y:t.clientY, axis:null, lastX:t.clientX, lastT:ev.timeStamp, v:0 };
+  }, { passive:true });
+  sticky.addEventListener("touchmove", function(ev){
+    if (!sw || ev.touches.length !== 1) return;
+    var t = ev.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.axis){
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      sw.axis = Math.abs(dx) > Math.abs(dy) * 1.2 ? "x" : "y";
+      if (sw.axis === "x"){
+        var raw = pinnedRaw();
+        sw.pinned = raw !== null;
+        sw.raw0 = sw.pinned ? Math.min(N, raw) : 0;
+        sw.unit0 = Math.round(sw.raw0);
+        sw.x = t.clientX;                              // start from here, so the wheel doesn't jump by the 8px
+        sw.per = Math.max(180, L.W * 0.8);             // finger travel for one department
+        if (sw.pinned) rootEl.style.scrollBehavior = "auto";
+      }
+    }
+    if (sw.axis !== "x") return;
+    if (ev.cancelable) ev.preventDefault();
+    var dt = ev.timeStamp - sw.lastT;
+    if (dt > 0){ sw.v = sw.v * 0.4 + ((t.clientX - sw.lastX) / dt) * 0.6; sw.lastX = t.clientX; sw.lastT = ev.timeStamp; }
+    if (!sw.pinned) return;
+    var want = sw.raw0 - (t.clientX - sw.x) / sw.per;
+    window.scrollTo(0, unitTop(Math.max(0, Math.min(N, want))));   // stays on the wheel: no further than the first or last stop
+  }, { passive:false });
+  function swipeRelease(ev){
+    if (!sw) return;
+    var was = sw;
+    swipeEnd();
+    if (was.axis !== "x") return;
+    swallowClick = ev.timeStamp;
+    var moved = was.lastX - was.x, target;
+    var flick = Math.abs(was.v) > FLICK && ev.timeStamp - was.lastT < 120;
+    if (was.pinned){
+      var raw = pinnedRaw();
+      if (raw === null) return;
+      raw = Math.min(N, raw);
+      if (flick) target = was.v < 0 ? Math.floor(raw + 0.02) + 1 : Math.ceil(raw - 0.02) - 1;
+      else {
+        target = Math.round(raw);
+        if (target === was.unit0 && Math.abs(moved) > COMMIT_PX) target = was.unit0 + (moved < 0 ? 1 : -1);   // a deliberate drag commits well before halfway
+      }
+    } else {
+      if (Math.abs(moved) < 30 || section.getBoundingClientRect().top <= 1) return;
+      target = moved < 0 ? 1 : 0;                      // wheel still arriving: bring it into place
+    }
+    animateScrollTo(unitTop(Math.max(0, Math.min(N, target))), true);
+  }
+  sticky.addEventListener("touchend", swipeRelease, { passive:true });
+  sticky.addEventListener("touchcancel", swipeRelease, { passive:true });
+  // A swipe that ends on a card isn't a tap.
+  sticky.addEventListener("click", function(ev){
+    if (swallowClick && ev.timeStamp - swallowClick < 400){ ev.preventDefault(); ev.stopPropagation(); }
+  }, true);
 
   // Arrow keys / Page Up / Page Down / Space step one department at a time while the wheel is pinned.
   window.addEventListener("keydown", function(ev){

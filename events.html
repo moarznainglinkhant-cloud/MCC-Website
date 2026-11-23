@@ -502,6 +502,7 @@
     height:calc(100vh - var(--tl-top, 64px)); height:calc(100svh - var(--tl-top, 64px));
     display:flex; flex-direction:column; justify-content:center; gap:clamp(10px,2.2vh,24px);
     overflow:hidden;
+    touch-action:pan-y;          /* up/down scrolls the page; sideways swipes move the posters (js/site.js) */
   }
   .tl-head{ width:100%; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; }
   .tl-head .section-head{ margin-bottom:0; }
@@ -511,7 +512,8 @@
   .odo-s{ display:block; transition:transform .75s cubic-bezier(.2,.85,.2,1); }
   .odo-s span{ display:block; height:1.08em; line-height:1.08em; }
 
-  .tl-track{ position:relative; display:flex; gap:var(--tl-gap, 28px); width:max-content; will-change:transform; padding-block:8px 4px; }
+  .tl-track{ position:relative; display:flex; gap:var(--tl-gap, 28px); width:max-content; will-change:transform; padding-block:8px 4px; -webkit-user-select:none; user-select:none; }
+  .tl-poster img{ -webkit-user-drag:none; -webkit-touch-callout:none; }
   .tl-card{
     --w: max(170px, min(300px, 64vw, calc((100svh - 340px) * 0.8)));
     width:var(--w); flex:none; transform-origin:50% 45%; will-change:transform, opacity;
