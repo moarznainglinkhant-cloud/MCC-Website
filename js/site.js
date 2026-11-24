@@ -2795,7 +2795,10 @@ function initBentoPosters(box) {
 
 // Team photos, shared by the homepage "Meet the team" tile and about.html.
 // Key = full name in lower case; value = image path. A `photo` column in the Team tab also works.
-var MCC_TEAM_PHOTOS = { "naing lin khant": "images/team/moarz.jpg" };
+var MCC_TEAM_PHOTOS = {
+  "naing lin khant": "images/team/moarz.jpg",
+  "eaint chan myae": "images/team/grace.jpg"
+};
 function teamPhoto(r) {
   const col = (r.photo || r.photo_url || r.image || "").trim();
   return col || MCC_TEAM_PHOTOS[(r.name || "").trim().toLowerCase()] || "";
