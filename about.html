@@ -612,6 +612,13 @@
   @keyframes term-blink{ 50%{ opacity:0; } }
   @media (prefers-reduced-motion: reduce){ .term-cursor{ animation:none; } }
   @media (max-width:480px){ .pp-band.term{ height:196px; } .term-screen{ left:14px; right:14px; } }
+  /* Brain band (bg: "brain" in TEAM_EXTRAS; drawn by js/about-brain.js from real tractography data). */
+  .pp-band.brain{ position:relative; overflow:hidden; background:#000; height:216px; }
+  .brain-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; transition:opacity .6s ease; }
+  .brain-canvas.on{ opacity:1; }
+  .brain-credit{ position:absolute; left:16px; top:12px; z-index:1; font-size:10px; line-height:1.2; color:rgba(255,255,255,.45); text-decoration:none; text-shadow:0 0 4px #000, 0 0 8px #000; }
+  .brain-credit:hover, .brain-credit:focus-visible{ color:rgba(255,255,255,.8); text-decoration:underline; }
+  @media (max-width:480px){ .pp-band.brain{ height:196px; } .brain-credit{ left:12px; top:10px; } }
   .pp-photo{
     position:relative; width:182px; height:182px; border-radius:50%; margin:-97px auto 0;
     display:flex; align-items:center; justify-content:center;
@@ -1042,6 +1049,7 @@
 <script src="js/about-ink.js"></script>
 <script src="js/about-stars.js"></script>
 <script src="js/about-term.js"></script>
+<script src="js/about-brain.js"></script>
 
 <script>
 (function(){
@@ -1153,6 +1161,9 @@
       github: "moarznainglinkhant-cloud",
       bg: "terminal",
       fun_fact: "I watch an unhealthy amount of [ASOIAF](https://www.youtube.com/watch?v=qSy2uaJ7ecU) theory videos."
+    },
+    "thant thiri oo": {
+      bg: "brain" // Psychology; real white-matter fibres, grown out from the sagittal midline (js/about-brain.js)
     }
   };
   function initialsOf(s){
@@ -1749,11 +1760,18 @@
   function fillPanel(idx){
     var p = PEOPLE[idx], g = GROUPS[GIDX[p.group]];
     shell.style.setProperty("--tint", g.color);
-    var band = q(".pp-band"), isTerm = p.bg === "terminal" && !!window.MCCTerm;
+    var band = q(".pp-band"), isTerm = p.bg === "terminal" && !!window.MCCTerm, isBrain = p.bg === "brain" && !!window.MCCBrain;
     if (window.MCCTerm) window.MCCTerm.stop();
+    if (window.MCCBrain) window.MCCBrain.stop();
     band.classList.toggle("term", isTerm);
+    band.classList.remove("brain");
     band.innerHTML = isTerm ? '<div class="term-bar" aria-hidden="true"><i></i><i></i><i></i></div><div class="term-screen" aria-hidden="true"></div>' : "";
     if (isTerm) window.MCCTerm.start(band);
+    if (isBrain){
+      band.classList.add("brain");
+      band.innerHTML = '<a class="brain-credit" href="https://doi.org/10.1038/s41467-022-32595-4" target="_blank" rel="noopener" title="HCP1065 tractography atlas (Yeh, 2022), CC BY-SA 4.0. Data: Human Connectome Project.">Fibres: HCP1065 atlas</a>';
+      if (!window.MCCBrain.start(band)){ band.classList.remove("brain"); band.innerHTML = ""; } // no WebGL: plain band
+    }
     var ppp = q(".pp-photo");
     ppp.textContent = p.photo ? "" : p.i;
     ppp.classList.toggle("has-photo", !!p.photo);
@@ -1942,6 +1960,7 @@
   function closePanel(){
     if (!panelOpen || busy) return;
     if (window.MCCTerm) window.MCCTerm.stop();
+    if (window.MCCBrain) window.MCCBrain.stop();
     var card = cardByIdx[panelIdx], fly = null;
     function finish(){
       if (fly) fly.remove();
