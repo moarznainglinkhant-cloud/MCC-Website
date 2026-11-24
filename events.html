@@ -565,6 +565,18 @@
   .tl-tick.now::before{ transform:scale(1.35); }
   .tl-tick.now span{ color:var(--red); }
   .tl-count{ font-size:0.8rem; font-weight:700; color:var(--ink-soft); font-variant-numeric:tabular-nums; min-width:4.6em; text-align:right; margin-bottom:22px; }
+  /* Skip past the posters: same pill as the desktop grid's Skip */
+  .tl-skip{ flex:none; margin-bottom:22px; padding:11px 15px; }
+  /* One-time "Swipe" pill over the foot of the middle poster (same pill as About's "Tap a card") */
+  .tl-hint{
+    position:absolute; left:50%; z-index:6; transform:translateX(-50%);
+    display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border-radius:999px;
+    background:var(--navy); color:#F6F1E4; font-size:0.8rem; font-weight:600; white-space:nowrap;
+    box-shadow:0 12px 30px rgba(28,36,64,0.22); pointer-events:none;
+    opacity:0; transition:opacity .5s ease;
+  }
+  .tl-hint.show{ opacity:1; }
+  .tl-hint svg{ width:15px; height:15px; }
   @media (max-width:600px){ .tl-head{ flex-direction:column; align-items:flex-start; gap:4px; } .tl-count{ display:none; } }
 
   /* ---------- FOOTER / CONTACT (same as homepage) ---------- */

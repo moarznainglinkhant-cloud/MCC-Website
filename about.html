@@ -528,6 +528,8 @@
   .card-hint.show{ opacity:1; }
   .wheel-sticky:has(.card-hint.show) .wheel-cue{ opacity:0 !important; visibility:hidden; } /* the pill takes the cue's spot */
   .card-hint svg{ width:15px; height:15px; }
+  .swipe-hint{ display:none; }
+  .wheel-sticky.is-mobile .swipe-hint{ display:inline-flex; }   /* phones only: follows the "Tap a card" pill, in the same spot */
   .cluster .person-card.card-nudge{ animation: card-nudge 1.8s ease-in-out 3; }
   @keyframes card-nudge{
     0%,100%{ box-shadow: 0 1px 0 rgba(28,36,64,0.05), 0 10px 30px rgba(28,36,64,0.06), 0 0 0 0 rgba(192,138,46,0); border-color:var(--line); }
@@ -950,6 +952,7 @@
       <nav class="wheel-index" id="wheelIndex" aria-label="Jump to a department"></nav>
       <div class="wheel-cue" id="wheelCue" aria-hidden="true"><span>Scroll</span><i></i></div>
       <div class="card-hint" id="cardHint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.6L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></svg>Tap a card to meet them</div>
+      <div class="card-hint swipe-hint" id="swipeHint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>Swipe for the next team</div>
       <div class="wheel-close" id="wheelClose">
         <h2 data-i18n="about_close_h">There's always a seat for you at our table.</h2>
         <div class="wheel-close-cta">
@@ -1852,8 +1855,32 @@
       if (window.matchMedia && matchMedia("(hover: hover)").matches) cardHint.lastChild.data = "Click a card to meet them";
       cardHint.classList.add("show");
     }
-    hintTimer = setTimeout(cardHintHide, 7000);
+    hintTimer = setTimeout(function(){ cardHintHide(); swipeHintShow(); }, 7000);
   }
+  // One-time "Swipe" pill (phones). It takes over from the "Tap a card" pill, or shows on its own
+  // for someone who has opened cards before, and never again once they have swiped.
+  var swipeHint = document.getElementById("swipeHint"), swipeTimer = null, swipeHintSeen = false;
+  function swipedBefore(){ try { return localStorage.getItem("mcc_swiped") === "1"; } catch (e) { return false; } }
+  function swipeHintHide(){ if (swipeHint) swipeHint.classList.remove("show"); clearTimeout(swipeTimer); }
+  function swipeHintDone(){ swipeHintSeen = true; swipeHintHide(); try { localStorage.setItem("mcc_swiped", "1"); } catch (e) {} }
+  function swipeHintShow(){
+    if (!swipeHint || swipeHintSeen || swipedBefore() || panelOpen || !L.mobile) return;
+    var r = stickyEl.getBoundingClientRect();
+    if (r.top > innerHeight * 0.25 || r.bottom < innerHeight * 0.75) return;      // only while the wheel fills the screen
+    swipeHintSeen = true;
+    swipeHint.classList.add("show");
+    swipeTimer = setTimeout(swipeHintHide, 6000);
+  }
+  if (swipeHint && "IntersectionObserver" in window && cardsOpenedBefore() && !swipedBefore()){
+    new IntersectionObserver(function(entries){
+      if (entries[0].isIntersecting) setTimeout(swipeHintShow, 1400);
+    }, { threshold: [0.75] }).observe(stickyEl);
+  }
+  if (swipeHint) addEventListener("scroll", function(){   // hide once they leave the wheel
+    if (!swipeHint.classList.contains("show")) return;
+    var r = stickyEl.getBoundingClientRect();
+    if (r.bottom < innerHeight * 0.5 || r.top > innerHeight * 0.5) swipeHintHide();
+  }, { passive: true });
   if (cardHint && "IntersectionObserver" in window && !cardsOpenedBefore()){
     var hintIO = new IntersectionObserver(function(entries){
       if (!entries[0].isIntersecting || hintShown) return;
@@ -1873,6 +1900,7 @@
   function openPanel(idx){
     if (panelOpen || busy) return;
     cardHintDone();
+    swipeHintHide();
     var card = cardByIdx[idx];
     resetTilt(card);
     lastFocus = document.activeElement;
@@ -2099,6 +2127,7 @@
         sw.x = t.clientX;                              // start from here, so the wheel doesn't jump by the 8px
         sw.per = Math.max(180, L.W * 0.8);             // finger travel for one department
         if (sw.pinned) rootEl.style.scrollBehavior = "auto";
+        swipeHintDone();
       }
     }
     if (sw.axis !== "x") return;

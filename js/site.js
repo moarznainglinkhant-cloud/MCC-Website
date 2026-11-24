@@ -1670,7 +1670,7 @@ function buildPastTimeline(past) {
     <div class="tl-stage">
       <div class="wrap tl-head"><div class="tl-year" aria-hidden="true">${tlOdometer(events[0].date.slice(0, 4))}</div></div>
       <div class="tl-viewport"><div class="tl-track">${cards}${end}</div></div>
-      <div class="wrap tl-foot"><div class="tl-rail"><div class="tl-fill"></div>${ticks}</div><div class="tl-count"></div></div>
+      <div class="wrap tl-foot"><div class="tl-rail"><div class="tl-fill"></div>${ticks}</div><div class="tl-count"></div><button type="button" class="snake-skip tl-skip">${escapeHtml(t("snake_skip"))} \u2193</button></div>
     </div>`;
   el.querySelector(".tl-head").prepend(head);
   section.appendChild(el);
@@ -1688,6 +1688,11 @@ function buildPastTimeline(past) {
   TL.count = el.querySelector(".tl-count");
   TL.ticks = Array.from(el.querySelectorAll(".tl-tick"));
   TL.ticks.forEach(b => b.addEventListener("click", () => tlJump(Number(b.dataset.i))));
+  // Skip: straight to whatever comes after the posters.
+  el.querySelector(".tl-skip").addEventListener("click", () => {
+    tlGlideStop();
+    window.scrollTo({ top: section.getBoundingClientRect().bottom + window.scrollY - TL.top, behavior: "smooth" });
+  });
   tlInkBuild();
   TL.cards[TL.cards.length - 1].querySelector("a").addEventListener("click", e => {
     const target = document.getElementById("next-event");
@@ -1748,8 +1753,39 @@ function tlGlideStop() {
   document.documentElement.style.scrollBehavior = "";
 }
 
+// One-time "Swipe" pill: shown the first time the posters come to rest on screen, gone after a
+// few seconds or the first swipe, and never again on this device once someone has swiped.
+function tlHintCheck() {
+  const h = TL.hint;
+  if (!h || TL.hintDone) return;
+  const r = TL.el.getBoundingClientRect();
+  const pinned = r.top <= TL.top + 1 && tlTarget() < TL.dist - 1;
+  if (!pinned) { h.classList.remove("show"); return; }
+  if (h.classList.contains("show")) return;
+  const poster = (TL.cards[Math.max(0, TL.active)] || TL.cards[0]).querySelector(".tl-poster").getBoundingClientRect();
+  const stage = h.parentNode.getBoundingClientRect();
+  h.style.top = Math.round(poster.bottom - stage.top - 58) + "px";
+  h.classList.add("show");
+  clearTimeout(TL.hintTimer);
+  TL.hintTimer = setTimeout(() => tlHintDone(false), 6000);
+}
+function tlHintDone(swiped) {
+  TL.hintDone = true;
+  clearTimeout(TL.hintTimer);
+  if (TL.hint) TL.hint.classList.remove("show");
+  if (swiped) { try { localStorage.setItem("mcc_swiped", "1"); } catch (e) { /* storage blocked */ } }
+}
+
 function tlSwipeInit() {
   const stage = TL.el.querySelector(".tl-stage");
+  let knows = false;
+  try { knows = localStorage.getItem("mcc_swiped") === "1"; } catch (e) { /* storage blocked */ }
+  TL.hintDone = knows;
+  TL.hint = document.createElement("div");
+  TL.hint.className = "tl-hint";
+  TL.hint.setAttribute("aria-hidden", "true");
+  TL.hint.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>Swipe to see more';
+  stage.appendChild(TL.hint);
   const root = document.documentElement;
   let g = null, swallowClick = 0;
   const offset = () => TL.top - TL.el.getBoundingClientRect().top;      // how far the row has travelled
@@ -1775,6 +1811,7 @@ function tlSwipeInit() {
         g.y0 = window.scrollY;
         g.x = t.clientX;                              // start from here, so the row doesn't jump by the 8px
         if (g.pinned) { TL.dragging = true; root.style.scrollBehavior = "auto"; }
+        tlHintDone(true);
       }
     }
     if (g.axis !== "x") return;
@@ -2005,6 +2042,7 @@ function tlOnScroll() {
   TL.settle = setTimeout(() => {
     if (!TL.el || TL.touching) return;
     const target = tlTarget();
+    tlHintCheck();
     if (target <= 1 || target >= TL.dist - 1) return;  // not pinned: leave the page alone
     const delta = Math.round(target / TL.step) * TL.step - target;
     if (Math.abs(delta) > 2) window.scrollTo({ top: window.scrollY + delta, behavior: "smooth" });
