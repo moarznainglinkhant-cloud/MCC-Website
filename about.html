@@ -391,6 +391,47 @@
   .wheel-btn.ghost{ background:transparent; color:var(--ink); border:1.5px solid var(--gold); }
   .wheel-btn.ghost:hover{ background:var(--gold); color:var(--navy-deep); }
 
+  /* the wheel's last step. After the last department, everyone gathers on the same stage. */
+  .team-final{
+    position:absolute; left:0; right:0; bottom:0; top:var(--navh,72px); z-index:4;
+    display:flex; flex-direction:column; align-items:center;
+    padding:clamp(20px,3.2vh,36px) clamp(20px,4vw,64px) clamp(24px,4.5vh,48px);
+    pointer-events:none; visibility:hidden;
+  }
+  .team-final.live{ pointer-events:auto; }
+  .team-stage{ flex:1; min-height:0; width:100%; display:flex; align-items:center; justify-content:center; }
+  .team-final .cluster{
+    position:static; z-index:auto; will-change:auto; flex:none;
+    justify-content:center; align-items:stretch; grid-auto-rows:1fr; gap:8px;   /* every card the same size, close together so the backs read as one photo */
+    transform:scale(var(--fit,1)); transform-origin:50% 50%;   /* the same cards, scaled so everyone fits on one screen */
+  }
+  .team-final .cluster .person-card{ justify-content:flex-start; }
+  .team-final .cluster .person-name{ min-height:2.6em; }   /* every name gets two lines, so roles line up across a row */
+  .team-final .person-line{ min-height:2.7em; }   /* one- and two-line programs line up */
+  .team-final.compact .person-line{ display:none; }
+  /* Flip. The slot fades; the card stays a real 3D object with a back. */
+  .team-final .tf-slot{ display:flex; }
+  .team-final .tf-slot > .person-card{ flex:1 1 0; min-width:0; }   /* fill the cell (the wheel's phone style sets width:auto) */
+  .team-final .cluster .person-card{
+    width:100%; isolation:auto; transform-style:preserve-3d;
+    transform: translateY(var(--rise,0px)) perspective(900px) rotateX(calc(var(--rx,0deg) + var(--tip,0deg))) rotateY(calc(var(--ry,0deg) + var(--flip,0deg)));
+  }
+  .team-final .cluster .person-card:hover{
+    transform: translateY(calc(var(--rise,0px) - 5px)) perspective(900px) rotateX(calc(var(--rx,0deg) + var(--tip,0deg))) rotateY(calc(var(--ry,0deg) + var(--flip,0deg)));
+  }
+  .team-final .person-card > :not(.card-back){ -webkit-backface-visibility:hidden; backface-visibility:hidden; }
+  .card-back{
+    position:absolute; inset:-1px; border-radius:inherit; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--navy); border:1px solid var(--navy);
+    transform: rotateY(180deg); -webkit-backface-visibility:hidden; backface-visibility:hidden;
+  }
+  .card-back{ background-color:var(--navy); background-image:url("images/team/team-2026.jpg"); background-repeat:no-repeat; }
+  .team-final .cluster .person-card{ border-radius:14px; }
+  .team-final.compact .cluster .person-card{ width:196px; padding:16px 10px 14px; gap:6px; }
+  .team-final.compact .cluster .person-photo{ width:112px; height:112px; font-size:1.5rem; }
+  .team-final .person-card{ transition: transform .18s ease-out, box-shadow .25s ease, border-color .25s ease, filter .25s ease; }
+
   /* Phones and small tablets: title on top, wheel turns up from the bottom. */
   .wheel-sticky.is-mobile{ touch-action:pan-y; }   /* up/down scrolls; sideways swipes turn the wheel */
   .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; }
@@ -456,8 +497,8 @@
   .cluster .person-photo:not(.has-photo)::after{ display:none; } /* initials already turn navy + cream */
   .card-sat{ display:none; }
   @media (hover:hover) and (pointer:fine){
-    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .person-photo.has-photo::after{ opacity:1; }
-    .wheel-sticky:not(.is-mobile) .card-sat{
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .cluster .person-card:hover .person-photo.has-photo::after{ opacity:1; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .card-sat{
       --ang:40deg; --R:74px;
       position:absolute; left:50%; top:50%; width:34px; height:34px; margin:-17px 0 0 -17px; border-radius:50%; z-index:2;
       display:flex; align-items:center; justify-content:center; color:var(--footer-ink); background:var(--navy);
@@ -466,13 +507,13 @@
       opacity:0; pointer-events:none;
       transition: --ang .75s cubic-bezier(.22,1,.36,1), opacity .3s ease, scale .2s ease;
     }
-    .wheel-sticky:not(.is-mobile) .card-sat.plus{ background:var(--gold); --sc:.6; transition: opacity .3s ease, --sc .5s cubic-bezier(.3,1.5,.5,1), scale .2s ease; }
-    .wheel-sticky:not(.is-mobile) .card-sat svg{ width:16px; height:16px; margin:0; }
-    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat{ opacity:1; pointer-events:auto; --ang:var(--a); }
-    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat.plus{ --sc:1; }
-    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat:nth-child(1){ transition-delay:.12s; }
-    .wheel-sticky:not(.is-mobile) .cluster .person-card:hover .card-sat:nth-child(2){ transition-delay:.06s; }
-    .wheel-sticky:not(.is-mobile) .card-sat:hover{ scale:1.12; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .card-sat.plus{ background:var(--gold); --sc:.6; transition: opacity .3s ease, --sc .5s cubic-bezier(.3,1.5,.5,1), scale .2s ease; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .card-sat svg{ width:16px; height:16px; margin:0; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .cluster .person-card:hover .card-sat{ opacity:1; pointer-events:auto; --ang:var(--a); }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .cluster .person-card:hover .card-sat.plus{ --sc:1; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .cluster .person-card:hover .card-sat:nth-child(1){ transition-delay:.12s; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .cluster .person-card:hover .card-sat:nth-child(2){ transition-delay:.06s; }
+    :is(.wheel-sticky:not(.is-mobile), .team-final) .card-sat:hover{ scale:1.12; }
     .card-sat .tip{
       position:absolute; bottom:calc(100% + 7px); left:50%; transform:translateX(-50%); white-space:nowrap;
       font-family:'Work Sans',sans-serif; font-size:.64rem; font-weight:700; letter-spacing:.04em; padding:3px 8px; border-radius:6px;
@@ -999,13 +1040,7 @@
       <div class="wheel-cue" id="wheelCue" aria-hidden="true"><span>Scroll</span><i></i></div>
       <div class="card-hint" id="cardHint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M12 10.5V9a1.5 1.5 0 0 1 3 0v2"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.6a6 6 0 0 1-4.9-2.6L4.3 15a1.5 1.5 0 0 1 2.4-1.8L9 15.5"/></svg>Tap a card to meet them</div>
       <div class="card-hint swipe-hint" id="swipeHint" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>Swipe for the next team</div>
-      <div class="wheel-close" id="wheelClose">
-        <h2 data-i18n="about_close_h">There's always a seat for you at our table.</h2>
-        <div class="wheel-close-cta">
-          <a class="wheel-btn solid celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
-          <a class="wheel-btn ghost" href="index.html#event" data-i18n="hero_cta_next">See Our Next Event</a>
-        </div>
-      </div>
+      <div class="wheel-close" id="wheelClose" hidden></div>
     </div>
   </section>
 
@@ -1308,7 +1343,7 @@
 
   var N = GROUPS.length;
   var STEP_DEG = 360 / N;
-  var UNITS = N + 0.5;        // N-1 department turns, one turn into the closing moment, then a short hold
+  var UNITS = N + 2.0;        // Laptops: N-1 department turns, one for the team to arrive, two for the flip, a short hold. Phones: see layout().
   var STEP_VH = 65;           // scroll distance per turn
   var mq = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : null;
   var reduceMotion = !!(mq && mq.matches);
@@ -1402,6 +1437,100 @@
   });
   if (pipsEl) pipsEl.removeAttribute("aria-hidden");
 
+  // ---------- last step of the wheel, everyone on one screen ----------
+  var panelOrigin = null;
+  var fin = document.createElement("div");
+  fin.className = "team-final";
+  fin.setAttribute("aria-label", "The whole team");
+  fin.innerHTML = '<div class="team-stage"><div class="cluster"></div></div>';
+  sticky.appendChild(fin);
+  var stage = fin.firstChild, gridEl = stage.firstChild;
+  var GTINT = {};
+  GROUPS.forEach(function(g){ GTINT[g.key] = g.color; });
+  // Card backs spell the year, a card stunt: every person holds one piece.
+  gridEl.innerHTML = PEOPLE.map(function(p, k){
+    return '<div class="tf-slot">' + cardHTML(p).replace(/<\/div>$/, '<span class="card-back" aria-hidden="true"></span></div>') + '</div>';
+  }).join("");
+  var gslots = Array.prototype.slice.call(gridEl.querySelectorAll(".tf-slot"));
+  var gcards = Array.prototype.slice.call(gridEl.querySelectorAll(".person-card"));
+  gcards.forEach(function(c){
+    var p = PEOPLE[+c.getAttribute("data-idx")];
+    c.style.setProperty("--tint", GTINT[p.group] || "");
+    c.setAttribute("data-g", p.group);
+  });
+  var gridCols = 0, gridStart = [];
+  // The earlier layout (7 across on laptops; 4 across on small screens), cards scaled to fit one screen.
+  // Half-width columns let a short last row sit in the middle.
+  function setCols(cols, w){
+    gridEl.style.gridTemplateColumns = "repeat(" + (cols * 2) + ", " + ((w - 8) / 2) + "px)";
+    var rem = gslots.length % cols, lastStart = rem ? gslots.length - rem : -1;
+    gslots.forEach(function(sl, k){ sl.style.gridColumn = (k === lastStart ? (cols - rem + 1) + " / " : "") + "span 2"; });
+  }
+  function fitGrid(){
+    if (L.mobile) return;
+    var head = document.querySelector("header.nav");
+    fin.style.setProperty("--navh", (head ? head.offsetHeight : 70) + "px");
+    fin.style.visibility = "hidden";
+    var W = stage.clientWidth, H = stage.clientHeight, best = null;
+    [false, true].forEach(function(compact){
+      if (best && best.f >= 0.62) return;
+      fin.classList.toggle("compact", compact);
+      [7, 5, 4].forEach(function(cols){
+        setCols(cols, compact ? 196 : 236);
+        var gw = gridEl.offsetWidth, gh = gridEl.offsetHeight;
+        var f = Math.min(1, W / gw, H / gh);
+        var cut = Math.max(0, 1 - (gw / gh) / (2000 / 1333));          // share of the photo's width a tall grid would crop off
+        var score = f * (1 - cut);                                       // a smaller grid beats cutting people out of the photo
+        if (!best || score > best.score + 0.001) best = { f:f, score:score, cols:cols, compact:compact };
+      });
+    });
+    fin.classList.toggle("compact", best.compact);
+    setCols(best.cols, best.compact ? 196 : 236);
+    gridEl.style.setProperty("--fit", best.f.toFixed(4));
+    // Each back shows its own window onto the team photo: the photo covers the whole grid, so the backs read as one picture.
+    var GW = gridEl.offsetWidth, GH = gridEl.offsetHeight, PW = 2000, PH = 1333;
+    var sc = Math.max(GW / PW, GH / PH), bw = PW * sc, bh = PH * sc;
+    var ox = (bw - GW) / 2, oy = (bh - GH) * 0.9;      // centred across; keep the people (lower part of the photo) in frame
+    gslots.forEach(function(sl){
+      var back = sl.querySelector(".card-back");
+      back.style.backgroundSize = bw.toFixed(1) + "px " + bh.toFixed(1) + "px";
+      back.style.backgroundPosition = (-(sl.offsetLeft - 1 + ox)).toFixed(1) + "px " + (-(sl.offsetTop - 1 + oy)).toFixed(1) + "px";
+    });
+    gridCols = best.cols;
+    // each card's start in the arrival: row by row, left to right
+    var rows = Math.ceil(gcards.length / gridCols), maxD = (rows - 1) * 0.1 + (gridCols - 1) * 0.04 || 1;
+    gridStart = gcards.map(function(c, k){ return ((Math.floor(k / gridCols) * 0.1 + (k % gridCols) * 0.04) / maxD) * 0.5; });
+    fin.style.visibility = "visible";   // apply() hides it again until the last step
+  }
+  gridEl.addEventListener("click", function(ev){
+    if (ev.target.closest(".card-sat-link")) return;
+    var card = ev.target.closest(".person-card");
+    if (card){ panelOrigin = card; openPanel(card.getAttribute("data-idx")); }
+  });
+  gridEl.addEventListener("keydown", function(ev){
+    if (ev.key !== "Enter" && ev.key !== " ") return;
+    var card = ev.target.closest(".person-card");
+    if (card){ ev.preventDefault(); panelOrigin = card; openPanel(card.getAttribute("data-idx")); }
+  });
+  if (finePointer && !reduceMotion){
+    gridEl.addEventListener("pointermove", function(ev){
+      var card = ev.target.closest(".person-card");
+      if (!card || panelOpen) return;
+      var b = card.getBoundingClientRect();
+      var x = (ev.clientX - b.left) / b.width, y = (ev.clientY - b.top) / b.height;
+      card.style.setProperty("--ry", ((x - 0.5) * 10).toFixed(2) + "deg");
+      card.style.setProperty("--rx", ((0.5 - y) * 10).toFixed(2) + "deg");
+      card.style.setProperty("--mx", (x * 100).toFixed(1) + "%");
+      card.style.setProperty("--my", (y * 100).toFixed(1) + "%");
+      card.style.setProperty("--px", ((x - 0.5) * 16).toFixed(1) + "px");
+      card.style.setProperty("--py", ((y - 0.5) * 16).toFixed(1) + "px");
+    });
+    gridEl.addEventListener("pointerout", function(ev){
+      var card = ev.target.closest(".person-card");
+      if (card && !card.contains(ev.relatedTarget)) resetTilt(card);
+    });
+  }
+
   // ---------- layout (recomputed on resize) ----------
   var L = { mobile:false, W:0, H:0, cx:0, cy:0, closeX:0, closeY:0, R:0, rInner:0, F:0, fx:0, fy:0, fit:[], pos:[], circ:0 };
 
@@ -1434,6 +1563,10 @@
     var NAV = nav ? nav.offsetHeight : 70;
     L.mobile = W < 900;
     sticky.classList.toggle("is-mobile", L.mobile);
+    // phones and small tablets don't get the team ending; the wheel stops on the last department.
+    UNITS = L.mobile ? N - 1 + 0.35 : N + 2.0;
+    section.style.height = (UNITS * STEP_VH + 100) + "vh";
+    fin.style.display = L.mobile ? "none" : "";
 
     if (!L.mobile){
       // Hub on the left edge; the department in focus faces right.
@@ -1506,8 +1639,10 @@
     var rect = section.getBoundingClientRect();
     var t = clamp01(-rect.top / scrollSpan());
     var raw = t * UNITS, p;
-    if (raw >= N) p = N;
+    if (raw >= N + 1.5) p = N + 1.5;
+    else if (raw >= N) p = raw;          // the flip follows the scroll 1:1
     else { var k = Math.floor(raw), f = raw - k; p = k + lerp(f, f * f * (3 - 2 * f), 0.35); }   // close to 1:1, so small scrolls move the wheel; settling does the resting
+    if (L.mobile) p = Math.min(p, N - 1);   // no team ending on phones
     return {
       p: p,
       enter: rect.top > 0 ? clamp01(1 - rect.top / window.innerHeight) : 1,
@@ -1565,7 +1700,7 @@
     var focusP = Math.min(p, N - 1);
 
     // The hub (and the wheel around it) glides to the middle for the closing moment.
-    var hx = lerp(L.cx, L.closeX, close), hy = lerp(L.cy, L.closeY, close);
+    var hx = L.cx, hy = L.cy;   // the wheel stays put and steps back for the team
     var r = -p * STEP_DEG - (1 - e) * 40;              // dials in on arrival, completes a full turn at the end
     wheel.style.left = hx + "px";
     wheel.style.top = hy + "px";
@@ -1628,6 +1763,26 @@
     closeEl.style.transform = "translateX(-50%) translateY(" + ((1 - reveal) * 34).toFixed(1) + "px)";
     closeEl.style.pointerEvents = reveal > 0.6 ? "auto" : "none";
 
+    // the wheel steps back; the whole team rises in on the same stage.
+    var back = 1 - close;
+    wheel.querySelectorAll(".wheel-dot, .wheel-ring, .dot-ripple").forEach(function(el){ el.style.opacity = back.toFixed(3); });
+    hub.style.opacity = back.toFixed(3);
+    progSvg.style.opacity = (e * back).toFixed(3);
+    var arrive = clamp01((close - 0.3) / 0.7);
+    var flipP = clamp01((p - N) / 1.3);   // 0 = everyone face up, 1 = the grid has turned into the team photo
+    gcards.forEach(function(card, k){
+      var v = reduceMotion ? (arrive > 0 ? 1 : 0) : clamp01((arrive - (gridStart[k] || 0)) / 0.45);
+      var ev = easeOut(v);
+      card.style.setProperty("--rise", ((1 - ev) * 38).toFixed(1) + "px");
+      card.style.setProperty("--tip", ((1 - ev) * 62 + lean).toFixed(2) + "deg");   // same swing-up (and lean) as the department cards
+      gslots[k].style.opacity = ev.toFixed(3);
+      var fv = reduceMotion ? (flipP > 0.5 ? 1 : 0) : clamp01((flipP - (k / Math.max(1, gcards.length - 1)) * 0.8) / 0.2);   // one by one, in reading order
+      card.style.setProperty("--flip", (180 * easeInOut(fv)).toFixed(1) + "deg");   // face up, then over to the photo
+      card.tabIndex = close > 0.9 && flipP < 0.03 ? 0 : -1;
+    });
+    fin.classList.toggle("live", close > 0.9 && flipP < 0.03);
+    fin.style.visibility = close > 0.001 ? "visible" : "hidden";
+
     if (heroWrap && !reduceMotion){
       var h = st.hero;
       heroWrap.style.opacity = (1 - h * 0.85).toFixed(3);
@@ -1635,7 +1790,7 @@
     }
 
     // Closing moment: once the ring completes, ripples spread out from the crest and every dot.
-    if (close > 0.97 && !bloomed){ bloomed = true; bloom(); }
+    // no crest ripple; the team arrives instead
     else if (close < 0.5) bloomed = false;
 
     setActive(Math.round(focusP));
@@ -1935,7 +2090,7 @@
     if (panelOpen || busy) return;
     cardHintDone();
     swipeHintHide();
-    var card = cardByIdx[idx];
+    var card = panelOrigin || cardByIdx[idx];
     resetTilt(card);
     lastFocus = document.activeElement;
     panelIdx = idx;
@@ -1977,7 +2132,7 @@
     if (window.MCCTerm) window.MCCTerm.stop();
     if (window.MCCBrain) window.MCCBrain.stop();
     if (window.MCCPlaylist) window.MCCPlaylist.stop();
-    var card = cardByIdx[panelIdx], fly = null;
+    var card = panelOrigin || cardByIdx[panelIdx], fly = null;
     function finish(){
       if (fly) fly.remove();
       q(".pp-photo").style.visibility = "";
@@ -1986,6 +2141,7 @@
       shell.style.transition = "none";
       shell.style.transform = "none";
       card.style.visibility = "";
+      panelOrigin = null;
       panelOpen = false; busy = false;
       if (lastFocus && lastFocus.focus) lastFocus.focus({ preventScroll:true });
     }
@@ -2088,7 +2244,7 @@
   function settle(){
     if (anim || touching || panelOpen) return;
     var raw = pinnedRaw();
-    if (raw === null || raw >= N) return;                    // closing moment: let people scroll on
+    if (raw === null || raw >= N - 0.5) return;   // no snapping once the team is arriving                    // closing moment: let people scroll on
     var k = Math.floor(raw), f = raw - k;
     if (f < 0.004 || f > 0.996) return;
     var target = lastDir > 0 ? (f > COMMIT ? k + 1 : k) : (1 - f > COMMIT ? k : k + 1);
@@ -2214,13 +2370,14 @@
   window.addEventListener("load", placeAskAvoid);
 
   layout();
+  fitGrid();
   cur = readScroll(); tgt = { p:cur.p, enter:cur.enter, hero:cur.hero };
   apply(cur);
   window.addEventListener("scroll", onScroll, { passive:true });
   var resizeTimer = null;
   window.addEventListener("resize", function(){
     window.clearTimeout(resizeTimer);
-    resizeTimer = window.setTimeout(function(){ layout(); apply(cur); onScroll(); placeAskAvoid(); }, 120);
+    resizeTimer = window.setTimeout(function(){ layout(); fitGrid(); apply(cur); onScroll(); placeAskAvoid(); }, 120);
   });
   }
 })();
