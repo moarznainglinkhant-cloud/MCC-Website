@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Past events wall tour</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Work+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --bg:#F6F1E4; --bg-raised:#FDFAF2; --bg-sunk:#EEE6D3;
+    --ink:#1C2440; --ink-soft:#5F5A48; --red:#AE3628; --gold:#C08A2E;
+    --line:rgba(28,36,64,0.16);
+    color-scheme:light;
+  }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font-family:'Work Sans', system-ui, sans-serif; }
+  .wrap{ max-width:1240px; margin:0 auto; padding:0 clamp(18px,4vw,56px); }
+  .eyebrow{ font-size:.72rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:var(--red); }
+  h2{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(2rem,3.6vw,2.8rem); margin:.3em 0 0; letter-spacing:-.01em; }
+  .filler{ height:60vh; display:flex; align-items:center; color:var(--ink-soft); }
+  .proto-note{ position:fixed; left:16px; top:14px; z-index:50; font-size:.75rem; font-weight:600; color:var(--ink-soft);
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:999px; padding:6px 12px; }
+
+  /* ---------- the tour ---------- */
+  .tour{ position:relative; }
+  .stage{ position:sticky; top:0; height:100vh; height:100svh; overflow:hidden; }
+
+  .wall{ position:absolute; left:0; top:0; transform-origin:0 0; will-change:transform; }
+  .block{ position:absolute; transition:opacity .5s ease; }
+  .block-label{ position:absolute; left:0; bottom:100%; padding-bottom:22px;
+    font-family:'Fraunces', serif; font-weight:600; font-size:64px; color:var(--ink); opacity:.85; letter-spacing:-.01em; }
+  .poster{ position:absolute; border-radius:22px; overflow:hidden; background:var(--bg-sunk);
+    box-shadow:0 30px 60px -20px rgba(28,36,64,.28), 0 0 0 1px rgba(28,36,64,.06);
+    transition:transform .45s cubic-bezier(.2,.8,.2,1), box-shadow .45s ease; }
+  .poster img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tour.wall-mode .poster:hover{ transform:scale(1.06); z-index:2; box-shadow:0 40px 80px -20px rgba(28,36,64,.4); }
+
+  .headline{ position:absolute; left:0; right:0; top:40px; text-align:center; pointer-events:none;
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.8rem,3.4vw,2.9rem); letter-spacing:-.01em; }
+  .headline b{ color:var(--red); font-weight:600; }
+
+  /* soft cream backdrop so dimmed neighbouring years never sit behind the caption text */
+  .veil{ position:absolute; inset:0 auto 0 0; width:min(48vw, 620px); pointer-events:none;
+    background:linear-gradient(90deg, var(--bg) 0, var(--bg) 62%, color-mix(in srgb, var(--bg) 0%, transparent) 100%); }
+  .block-label{ transition:none; }
+  /* caption column during the tour */
+  .caption{ position:absolute; left:clamp(24px,5vw,88px); top:50%; width:min(30vw, 380px); transform:translateY(-50%); pointer-events:none; }
+  .cap-year{ font-family:'Fraunces', serif; font-weight:600; font-size:clamp(4.5rem,9vw,8.5rem); line-height:.9; color:var(--red);
+    letter-spacing:-.03em; font-variant-numeric:tabular-nums; height:.95em; overflow:hidden; }
+  .cap-year-strip{ display:block; will-change:transform; }
+  .cap-year-strip span{ display:block; height:.95em; }
+  .cap-count{ margin-top:14px; font-size:.78rem; font-weight:700; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-soft); }
+  .cap-list{ list-style:none; margin:22px 0 0; padding:0; }
+  .cap-list li{ display:flex; gap:14px; align-items:baseline; padding:9px 0; border-top:1px solid var(--line);
+    font-family:'Fraunces', serif; font-size:1.06rem; font-weight:500; line-height:1.25; }
+  .cap-list li small{ flex:none; width:3.4em; font-family:'Work Sans', sans-serif; font-size:.7rem; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-soft); }
+  .cap-list li.more{ font-family:'Work Sans', sans-serif; font-size:.82rem; color:var(--ink-soft); }
+  .cap-body{ transition:opacity .35s ease, transform .5s cubic-bezier(.2,.8,.2,1); }
+  .cap-body.swap{ opacity:0; transform:translateY(8px); }
+
+  .rail{ position:absolute; left:50%; bottom:clamp(18px,4vh,36px); transform:translateX(-50%); display:flex; gap:6px; padding:6px;
+    border-radius:999px; background:color-mix(in srgb, var(--bg-raised) 85%, transparent); border:1px solid var(--line);
+    -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); }
+  .rail button{ border:0; background:none; font:inherit; font-size:.78rem; font-weight:700; color:var(--ink-soft);
+    padding:8px 14px; border-radius:999px; cursor:pointer; font-variant-numeric:tabular-nums; transition:background .25s, color .25s; }
+  .rail button.on{ background:var(--ink); color:var(--bg); }
+  .rail button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+
+  .tip{ position:absolute; z-index:5; pointer-events:none; padding:10px 14px; border-radius:12px; background:var(--ink); color:var(--bg);
+    font-size:.85rem; font-weight:600; max-width:260px; opacity:0; transform:translateY(6px); transition:opacity .2s, transform .2s; }
+  .tip small{ display:block; margin-top:3px; font-size:.7rem; letter-spacing:.06em; text-transform:uppercase; opacity:.7; }
+  .tip.show{ opacity:1; transform:none; }
+</style>
+</head>
+<body>
+<div class="proto-note">Prototype · scroll through the past events</div>
+
+<div class="wrap filler"><p>↓ Upcoming events would be up here. Scroll down.</p></div>
+
+<section id="past-events">
+  <div class="wrap">
+    <span class="eyebrow">Past Events</span>
+    <h2>What we've hosted</h2>
+  </div>
+  <div class="tour" id="tour">
+    <div class="stage" id="stage">
+      <div class="wall" id="wall"></div>
+      <div class="veil" id="veil"></div>
+      <div class="headline" id="headline"></div>
+      <div class="caption" id="caption">
+        <div class="cap-year"><span class="cap-year-strip" id="capYear"></span></div>
+        <div class="cap-body" id="capBody">
+          <div class="cap-count" id="capCount"></div>
+          <ul class="cap-list" id="capList"></ul>
+        </div>
+      </div>
+      <nav class="rail" id="rail" aria-label="Jump to year"></nav>
+      <div class="tip" id="tip"></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap filler"><p>Footer would be down here.</p></div>
+
+<script>
+(async function () {
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  function parseCSV(text) {
+    const rows = []; let row = [], f = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(f); f = ""; }
+      else if (c === "\n") { row.push(f); rows.push(row); row = []; f = ""; }
+      else if (c !== "\r") f += c;
+    }
+    if (f || row.length) { row.push(f); rows.push(row); }
+    const head = rows.shift();
+    return rows.filter(r => r.length > 1).map(r => Object.fromEntries(head.map((h, i) => [h, r[i] || ""])));
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const all = parseCSV(await (await fetch("../data/events.csv")).text())
+    .filter(e => e.date && e.date < today)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const years = [...new Set(all.map(e => e.date.slice(0, 4)))];
+  const byYear = years.map(y => all.filter(e => e.date.startsWith(y)));
+  const fmt = d => new Date(d + "T12:00").toLocaleDateString("en-CA", { month: "short", day: "numeric" }).replace(".", "");
+
+  const W = 360, H = 450, GAP = 34, YEAR_GAP = 150, ROWS = 3;
+  const wall = document.getElementById("wall");
+  const blocks = []; let x = 0;
+  byYear.forEach((evs, bi) => {
+    const cols = Math.ceil(evs.length / ROWS), rows = Math.ceil(evs.length / cols);
+    const bw = cols * W + (cols - 1) * GAP, bh = rows * H + (rows - 1) * GAP;
+    const y = ((ROWS * H + (ROWS - 1) * GAP) - bh) / 2;
+    const el = document.createElement("div");
+    el.className = "block";
+    el.style.cssText = `left:${x}px;top:${y}px;width:${bw}px;height:${bh}px`;
+    el.innerHTML = `<div class="block-label">${esc(years[bi])}</div>`;
+    evs.forEach((e, i) => {
+      const p = document.createElement(e.link ? "a" : "div");
+      p.className = "poster";
+      if (e.link) { p.href = e.link; p.target = "_blank"; p.rel = "noopener"; }
+      p.style.cssText = `left:${(i % cols) * (W + GAP)}px;top:${Math.floor(i / cols) * (H + GAP)}px;width:${W}px;height:${H}px`;
+      p.dataset.title = e.name; p.dataset.meta = `${fmt(e.date)}, ${e.date.slice(0, 4)}${e.location ? " · " + e.location : ""}`;
+      p.innerHTML = `<img src="../${esc(e.photo)}" alt="${esc(e.name)}" loading="eager" decoding="async">`;
+      el.appendChild(p);
+    });
+    wall.appendChild(el);
+    blocks.push({ el, x, y, w: bw, h: bh, evs, year: years[bi] });
+    x += bw + YEAR_GAP;
+  });
+  const WALL_W = x - YEAR_GAP, WALL_H = ROWS * H + (ROWS - 1) * GAP, LABEL = 110;
+  wall.style.width = WALL_W + "px"; wall.style.height = WALL_H + "px";
+
+  const stage = document.getElementById("stage"), tour = document.getElementById("tour");
+  let SW = 0, SH = 0, cams = [];
+  function layout() {
+    SW = stage.clientWidth; SH = stage.clientHeight;
+    const over = (() => {
+      const head = 90, bot = SH * 0.14, s = Math.min((SW * 0.9) / WALL_W, (SH - head - bot - 60) / (WALL_H + LABEL));
+      const wallH = (WALL_H + LABEL) * s, top = (SH - bot - wallH - head) / 2 + head;
+      document.getElementById("headline").style.top = (top - head) + "px";
+      return { cx: WALL_W / 2, cy: WALL_H / 2 - LABEL / 2, s, fx: SW / 2, fy: top + wallH / 2, focus: -1 };
+    })();
+    const capRight = Math.min(SW * 0.3, 380) + Math.max(24, SW * 0.05) + 40;
+    const yearCams = blocks.map((b, i) => {
+      const aw = SW - capRight - 40, ah = SH * 0.72;
+      const s = Math.min(aw / b.w, ah / b.h, (SH * 0.62) / H);
+      return { cx: b.x + b.w / 2, cy: b.y + b.h / 2, s, fx: capRight + aw / 2, fy: SH * 0.47, focus: i };
+    });
+    cams = [over, ...yearCams, over];
+    tour.style.height = (cams.length * 0.9 * SH + SH) + "px";
+  }
+
+  const capYear = document.getElementById("capYear"), capBody = document.getElementById("capBody");
+  const capCount = document.getElementById("capCount"), capList = document.getElementById("capList");
+  capYear.innerHTML = years.map(y => `<span>${esc(y)}</span>`).join("");
+  const rail = document.getElementById("rail");
+  years.forEach((y, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.textContent = y;
+    b.addEventListener("click", () => scrollToStop(i + 1));
+    rail.appendChild(b);
+  });
+  let shownYear = -1, railOn = -2;
+  function setCaption(i) {
+    if (i === shownYear) return;
+    shownYear = i;
+    capYear.style.transition = "transform .8s cubic-bezier(.2,.85,.2,1)";
+    capYear.style.transform = `translateY(${-i * 0.95}em)`;
+    capBody.classList.add("swap");
+    setTimeout(() => {
+      const evs = blocks[i].evs, MAX = 6;
+      capCount.textContent = evs.length === 1 ? "1 event" : `${evs.length} events`;
+      capList.innerHTML = evs.slice(0, MAX).map(e => `<li><small>${esc(fmt(e.date))}</small><span>${esc(e.name)}</span></li>`).join("") +
+        (evs.length > MAX ? `<li class="more">and ${evs.length - MAX} more</li>` : "");
+      capBody.classList.remove("swap");
+    }, 180);
+  }
+  document.getElementById("headline").innerHTML = `<b>${all.length}</b> events since ${esc(years[0])}`;
+
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function camAt(p) {
+    const i = clamp(Math.floor(p), 0, cams.length - 2);
+    let t = clamp(p - i, 0, 1);
+    t = clamp((t - 0.3) / 0.7, 0, 1);                     // rest on each year for a beat, then travel
+    const e = ease(t), a = cams[i], b = cams[i + 1];
+    const lerp = (u, v) => u + (v - u) * e;
+    const dist = Math.hypot(b.cx - a.cx, b.cy - a.cy) * Math.min(a.s, b.s) / SW;
+    const lift = 1 - Math.min(0.35, dist * 0.5) * Math.sin(Math.PI * e);
+    const s = Math.exp(lerp(Math.log(a.s), Math.log(b.s))) * lift;
+    return { cx: lerp(a.cx, b.cx), cy: lerp(a.cy, b.cy), s, fx: lerp(a.fx, b.fx), fy: lerp(a.fy, b.fy),
+             fa: a.focus, fb: b.focus, e };
+  }
+  const headline = document.getElementById("headline"), caption = document.getElementById("caption");
+  const veil = document.getElementById("veil"), labels = [...wall.querySelectorAll(".block-label")];
+  let cur = 0, target = 0, raf = 0;
+  function readScroll() {
+    const r = tour.getBoundingClientRect();
+    target = clamp(-r.top / (0.9 * SH), 0, cams.length - 1);
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    raf = 0;
+    cur += (target - cur) * 0.16;
+    if (Math.abs(target - cur) < 0.0005) cur = target;
+    render(cur);
+    if (cur !== target) raf = requestAnimationFrame(tick);
+  }
+  function render(p) {
+    const c = camAt(p);
+    wall.style.transform = `translate3d(${(c.fx - c.cx * c.s).toFixed(2)}px, ${(c.fy - c.cy * c.s).toFixed(2)}px, 0) scale(${c.s.toFixed(4)})`;
+    blocks.forEach((b, i) => {
+      const wa = c.fa < 0 ? 1 : (i === c.fa ? 1 : 0.12), wb = c.fb < 0 ? 1 : (i === c.fb ? 1 : 0.12);
+      b.el.style.opacity = (wa + (wb - wa) * c.e).toFixed(3);
+    });
+    const overview = 1 - Math.min(1, Math.min(p, cams.length - 1 - p) * 2.2);
+    headline.style.opacity = overview.toFixed(3);
+    headline.style.transform = `translateY(${(-(1 - overview) * 14).toFixed(1)}px)`;
+    caption.style.opacity = (1 - overview).toFixed(3);
+    veil.style.opacity = (1 - overview).toFixed(3);
+    labels.forEach(l => l.style.opacity = (0.85 * overview).toFixed(3));
+    tour.classList.toggle("wall-mode", overview > 0.98);
+    const f = c.e < 0.5 ? c.fa : c.fb;                   // caption changes when the camera is halfway there
+    setCaption(f >= 0 ? f : (p < 1 ? 0 : blocks.length - 1));
+    const on = overview > 0.6 ? -1 : shownYear;
+    if (on !== railOn) { railOn = on; rail.querySelectorAll("button").forEach((b, j) => b.classList.toggle("on", j === on)); }
+  }
+  function scrollToStop(i) {
+    const top = tour.getBoundingClientRect().top + scrollY + i * 0.9 * SH;
+    scrollTo({ top, behavior: "smooth" });
+  }
+
+  const tip = document.getElementById("tip");
+  wall.addEventListener("pointerover", e => {
+    const p = e.target.closest(".poster");
+    if (!p || !tour.classList.contains("wall-mode")) return;
+    tip.innerHTML = `${esc(p.dataset.title)}<small>${esc(p.dataset.meta)}</small>`;
+    const r = p.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+    tip.style.left = clamp(r.left - sr.left + r.width / 2 - 130, 12, SW - 272) + "px";
+    tip.style.top = (r.bottom - sr.top + 14) + "px";
+    tip.classList.add("show");
+  });
+  wall.addEventListener("pointerout", e => { if (!e.relatedTarget || !e.relatedTarget.closest?.(".poster")) tip.classList.remove("show"); });
+
+  layout(); readScroll(); render(cur = target);
+  addEventListener("scroll", readScroll, { passive: true });
+  addEventListener("resize", () => { layout(); readScroll(); render(cur = target); });
+})();
+</script>
+</body>
+</html>
