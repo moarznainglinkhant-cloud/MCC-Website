@@ -619,6 +619,40 @@
   .brain-credit{ position:absolute; left:16px; top:12px; z-index:1; font-size:10px; line-height:1.2; color:rgba(255,255,255,.45); text-decoration:none; text-shadow:0 0 4px #000, 0 0 8px #000; }
   .brain-credit:hover, .brain-credit:focus-visible{ color:rgba(255,255,255,.8); text-decoration:underline; }
   @media (max-width:480px){ .pp-band.brain{ height:196px; } .brain-credit{ left:12px; top:10px; } }
+  /* Playlist band (bg: "playlist" + playlist in TEAM_EXTRAS; js/about-playlist.js). Her view from the operating
+     table: the surgical lamp on theatre teal, songs from her playlist coming into focus one at a time. */
+  .pp-band.pl{
+    position:relative; overflow:hidden; height:216px; text-align:left; color:#E8F4EF;
+    background:
+      radial-gradient(190px 190px at calc(100% - 158px) 98px, rgba(240,255,250,.22), transparent 70%),
+      radial-gradient(130% 150% at 75% 25%, #13524D 0%, #0B3533 48%, #061D1C 100%);
+  }
+  .pl-lamp{ position:absolute; right:80px; top:20px; width:156px; height:156px; } /* clear of the close button */
+  .pl-lamp > div{ position:absolute; inset:0; transition:opacity .9s ease; }
+  .pl-lamp svg{ width:100%; height:100%; display:block; }
+  .pl-soft{ filter:blur(7px); opacity:.95; }
+  .pl-sharp{ opacity:0; }
+  .pl-lamp.focus .pl-sharp{ opacity:1; }
+  .pl-lamp.focus .pl-soft{ opacity:.5; }
+  .pl-now{ position:absolute; left:28px; top:22px; width:190px; }
+  .pl-k{ display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:rgba(232,244,239,.62); margin-bottom:7px; }
+  .pl-song{ opacity:0; filter:blur(8px); transition:opacity .7s ease, filter .7s ease; }
+  .pl-song.in{ opacity:1; filter:blur(0); transition-duration:.9s; }
+  .pl-t{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
+    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem; line-height:1.15; color:#F5FBF8; }
+  .pl-a{ display:block; font-size:.8rem; color:rgba(232,244,239,.72); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pl-bar{ width:120px; height:2px; margin-top:10px; border-radius:2px; overflow:hidden; background:rgba(232,244,239,.18); }
+  .pl-bar i{ display:block; height:100%; width:0; background:#BFEBDD; }
+  .pl-foot{ display:block; margin-top:6px; font-size:10.5px; color:rgba(232,244,239,.55); font-variant-numeric:tabular-nums; }
+  .pl-link{ color:rgba(232,244,239,.85); text-decoration:none; }
+  .pl-link:hover, .pl-link:focus-visible{ color:#fff; text-decoration:underline; }
+  .pp-band.pl.pl-reduce .pl-song{ filter:none; }
+  @media (max-width:480px){
+    .pp-band.pl{ height:196px; }
+    .pl-now{ left:18px; top:18px; width:58%; }
+    .pl-t{ font-size:1.15rem; }
+    .pl-lamp{ right:-26px; top:62px; width:120px; height:120px; }
+  }
   .pp-photo{
     position:relative; width:182px; height:182px; border-radius:50%; margin:-97px auto 0;
     display:flex; align-items:center; justify-content:center;
@@ -1050,6 +1084,7 @@
 <script src="js/about-stars.js"></script>
 <script src="js/about-term.js"></script>
 <script src="js/about-brain.js"></script>
+<script src="js/about-playlist.js"></script>
 
 <script>
 (function(){
@@ -1164,6 +1199,27 @@
     },
     "thant thiri oo": {
       bg: "brain" // Psychology; real white-matter fibres, grown out from the sagittal midline (js/about-brain.js)
+    },
+    "eaint htoo pyae aung": {
+      bg: "playlist", // her fun fact is this playlist; the band is her view of the surgical lamp (js/about-playlist.js)
+      playlist: {
+        title: "songs i played in my head during surgery",
+        url: "https://open.spotify.com/playlist/1kaW7Xyk0PPt19Id3cWosl",
+        tracks: [
+          ["CN TOWER", "PARTYNEXTDOOR, Drake"],
+          ["needy", "Ariana Grande"],
+          ["needy x Kicking Flavors", "skyemane"],
+          ["No One Noticed", "The Mar\u00edas"],
+          ["Thotiana", "Blueface"],
+          ["Always", "Daniel Caesar, Summer Walker"],
+          ["Nobody New", "The Mar\u00edas"],
+          ["Sweet", "Cigarettes After Sex"],
+          ["Hooligan", "BTS"],
+          ["Get You", "Daniel Caesar, Kali Uchis"],
+          ["Superpowers", "Daniel Caesar"],
+          ["squabble up", "Kendrick Lamar"]
+        ]
+      }
     }
   };
   function initialsOf(s){
@@ -1192,6 +1248,7 @@
         website: websiteLink(cell(row, ["website", "portfolio", "site"]) || ex.website),
         github: githubLink(cell(row, ["github", "github_url"]) || ex.github),
         bg: ex.bg || null,
+        playlist: ex.playlist || null,
         fact: cell(row, ["fun_fact", "fact", "funfact"]) || ex.fun_fact || null,
         photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null,
         photoFull: cell(row, ["photo_full", "full_photo"]) || (window.MCC_TEAM_PHOTOS_FULL || {})[name.toLowerCase()] || null
@@ -1761,16 +1818,22 @@
     var p = PEOPLE[idx], g = GROUPS[GIDX[p.group]];
     shell.style.setProperty("--tint", g.color);
     var band = q(".pp-band"), isTerm = p.bg === "terminal" && !!window.MCCTerm, isBrain = p.bg === "brain" && !!window.MCCBrain;
+    var isPl = p.bg === "playlist" && !!p.playlist && !!window.MCCPlaylist;
     if (window.MCCTerm) window.MCCTerm.stop();
     if (window.MCCBrain) window.MCCBrain.stop();
+    if (window.MCCPlaylist) window.MCCPlaylist.stop();
     band.classList.toggle("term", isTerm);
-    band.classList.remove("brain");
+    band.classList.remove("brain", "pl", "pl-reduce");
     band.innerHTML = isTerm ? '<div class="term-bar" aria-hidden="true"><i></i><i></i><i></i></div><div class="term-screen" aria-hidden="true"></div>' : "";
     if (isTerm) window.MCCTerm.start(band);
     if (isBrain){
       band.classList.add("brain");
       band.innerHTML = '<a class="brain-credit" href="https://doi.org/10.1038/s41467-022-32595-4" target="_blank" rel="noopener" title="HCP1065 tractography atlas (Yeh, 2022), CC BY-SA 4.0. Data: Human Connectome Project.">Fibres: HCP1065 atlas</a>';
       if (!window.MCCBrain.start(band)){ band.classList.remove("brain"); band.innerHTML = ""; } // no WebGL: plain band
+    }
+    if (isPl){
+      band.classList.add("pl");
+      if (!window.MCCPlaylist.start(band, p.playlist)) band.classList.remove("pl");
     }
     var ppp = q(".pp-photo");
     ppp.textContent = p.photo ? "" : p.i;
@@ -1961,6 +2024,7 @@
     if (!panelOpen || busy) return;
     if (window.MCCTerm) window.MCCTerm.stop();
     if (window.MCCBrain) window.MCCBrain.stop();
+    if (window.MCCPlaylist) window.MCCPlaylist.stop();
     var card = cardByIdx[panelIdx], fly = null;
     function finish(){
       if (fly) fly.remove();
