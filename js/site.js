@@ -30,26 +30,32 @@ const TEAM_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v
    ------------------------------------------------------------
    Random trivia about Myanmar shown when someone clicks the
    footer's "Feeling Lucky?" link. English-only for now, same as
-   the live event descriptions — add more any time, just keep
-   the { emoji, text } shape.
+   the live event descriptions. Add more any time as { text }.
+   Each fact is shown with its number in Burmese digits (factNumeral).
    ============================================================ */
+// Fact number i (0-based) in Burmese digits, e.g. 3 -> "၄".
+function factNumeral(i) { return String(i + 1).replace(/\d/g, d => String.fromCharCode(0x1040 + +d)); }
+function putFactNumber(el, i) {
+  if (!el) return;
+  el.innerHTML = `<b>${factNumeral(i)}</b><small>No. ${i + 1}</small>`;
+}
 const MYANMAR_FUN_FACTS = [
-  { emoji: "🏯", text: "Myanmar is home to over 100 distinct ethnic groups, each with its own language, dress, and traditions." },
-  { emoji: "🍜", text: "Mohinga — a fish-based rice noodle soup often eaten for breakfast — is widely considered Myanmar's unofficial national dish." },
-  { emoji: "🌿", text: "Thanaka, a pale yellow-white paste ground from bark, has been worn on the face as sunscreen and skincare for over 2,000 years." },
-  { emoji: "✨", text: "Shwedagon Pagoda in Yangon is, by legend, said to enshrine strands of the Buddha's hair — and it's genuinely covered in gold leaf, not paint." },
-  { emoji: "📿", text: "Myanmar follows a traditional lunar calendar, which is why Thingyan, the Burmese New Year water festival, falls on a different date every April." },
-  { emoji: "🪷", text: "The plains of Bagan hold thousands of Buddhist temples and pagodas built between the 9th and 13th centuries — one of the densest concentrations of ancient temples anywhere in the world." },
-  { emoji: "👘", text: "The longyi, a long sheet of fabric wrapped and knotted at the waist, is still everyday wear for both men and women across Myanmar." },
-  { emoji: "🎣", text: "Fishermen on Inle Lake are famous for rowing their boats by wrapping one leg around the oar, keeping both hands free for their nets." },
-  { emoji: "🎻", text: "The saung, a Burmese harp shaped like a boat, is one of the oldest surviving string instruments in Asia, with roots going back over a thousand years." },
-  { emoji: "🔤", text: "The Burmese alphabet's round letters are widely believed to come from writing on palm leaves, which would tear along straight lines — a script quirk shared with other Southeast and South Asian writing systems." },
-  { emoji: "🚂", text: "Yangon's Circular Railway loops the city in about three hours, passing through markets and rice paddies — commuters and curious visitors ride it side by side." },
-  { emoji: "🎭", text: "Traditional Burmese marionette theatre (yoke thé) dates back centuries, and puppeteers were once given more creative license to comment on rulers than human actors were." },
-  { emoji: "🗓️", text: "Myanmar was officially known as Burma in English until the country's name was changed in 1989." },
-  { emoji: "🍵", text: "Laphet, fermented tea leaves tossed with nuts, sesame, and crispy beans, is eaten as a salad in Myanmar — one of the few places in the world where tea is eaten as much as it's drunk." },
-  { emoji: "🌊", text: "Mahayana and Theravada Buddhism have coexisted in Myanmar for centuries, but Theravada Buddhism is practiced by the vast majority of the population today." },
-  { emoji: "🧧", text: "In Myanmar, people are traditionally given a name letter based on the day of the week they were born — one of eight days, since Wednesday is split into morning and afternoon." },
+  { text: "Myanmar officially recognizes 135 ethnic groups, and many of them have a language of their own." },
+  { text: "Mohinga, a fish and rice noodle soup, is what a lot of people in Myanmar eat for breakfast. Ask around and most will call it the national dish." },
+  { text: "Thanaka is a yellow paste made by grinding bark against a wet stone. People wear it on their faces as sunscreen, and have for about 2,000 years." },
+  { text: "Legend says Shwedagon Pagoda in Yangon holds eight strands of the Buddha's hair. The gold on it is real: plates and leaf, donated over centuries." },
+  { text: "Thingyan, the water festival that marks Burmese New Year, follows the traditional calendar, so its dates move a little each year. It usually lands in mid-April." },
+  { text: "More than 2,000 temples and pagodas still stand on the plains of Bagan. Most were built between the 11th and 13th centuries." },
+  { text: "The longyi is a tube of cloth tied at the waist. Men and women both wear it every day; they just tie it differently." },
+  { text: "Fishermen on Inle Lake row standing on one leg, with the other wrapped around the oar. That leaves both hands free for the net." },
+  { text: "The saung is a harp shaped like a boat. It's Myanmar's national instrument and the only arched harp still played in Asia." },
+  { text: "Burmese letters are round. The usual explanation: the script was scratched onto palm leaves, and straight lines would split the leaf." },
+  { text: "Yangon's Circular Railway takes about three hours to loop the city, past markets and rice fields. Commuters, vendors and tourists all ride the same slow train." },
+  { text: "In Burmese marionette theatre (yoke thé), a puppet could say things to the king that no human actor would dare to." },
+  { text: "In English the country was called Burma until 1989, when the government changed the official name to Myanmar." },
+  { text: "Laphet is fermented tea leaves. In Myanmar you eat it as a salad, mixed with fried beans, peanuts and sesame." },
+  { text: "Most people in Myanmar are Theravada Buddhist. Many boys spend at least a few weeks as novice monks, starting with a ceremony called shinbyu." },
+  { text: "Burmese names start with a letter tied to the day you were born. There are eight days, because Wednesday is split into morning and afternoon." },
 ];
 
 /* ============================================================
@@ -2314,7 +2320,7 @@ function initFunFact() {
     lastIndex = i;
     const fact = MYANMAR_FUN_FACTS[i];
     textEl.textContent = fact.text;
-    if (emojiEl) emojiEl.textContent = fact.emoji;
+    putFactNumber(emojiEl, i);
   }
 
   showRandomFact();
@@ -2909,7 +2915,7 @@ function initBentoFact() {
     if (MYANMAR_FUN_FACTS.length > 1 && i === BENTO.factIndex) i = (i + 1) % MYANMAR_FUN_FACTS.length;
     BENTO.factIndex = i;
     const f = MYANMAR_FUN_FACTS[i];
-    const put = () => { text.textContent = f.text; if (emoji) emoji.textContent = f.emoji || ""; text.classList.remove("out"); };
+    const put = () => { text.textContent = f.text; putFactNumber(emoji, i); text.classList.remove("out"); };
     if (!animate) return put();
     text.classList.add("out");
     setTimeout(put, 280);

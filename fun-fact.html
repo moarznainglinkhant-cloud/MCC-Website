@@ -232,7 +232,9 @@
     box-shadow: var(--card-shadow);
   }
   .fact-card .eyebrow{ color:var(--gold); }
-  .fact-emoji{ display:block; font-size:2.6rem; margin-block:14px 6px; line-height:1; }
+  .fact-num{ display:flex; flex-direction:column; align-items:center; gap:4px; margin-block:14px 10px; color:var(--navy); }
+  .fact-num b{ font-family:'Yinmar','Noto Sans Myanmar',serif; font-weight:400; font-size:3.4rem; line-height:1.15; }
+  .fact-num small{ font-size:0.66rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
   .fact-text{
     font-family:'Fraunces', serif; font-style:italic; font-weight:500;
     font-size:clamp(1.3rem, 3vw, 1.7rem); line-height:1.4; color:var(--ink);
@@ -509,7 +511,7 @@
     <div class="wrap">
       <div class="fact-card reveal">
         <span class="eyebrow" data-i18n="fun_fact_eyebrow">Fun Fact</span>
-        <span class="fact-emoji" id="js-fact-emoji" aria-hidden="true">✦</span>
+        <span class="fact-num" id="js-fact-emoji" aria-hidden="true"></span>
         <p class="fact-text" id="js-fact-text">Loading a fact about Myanmar…</p>
         <div class="fact-actions">
           <button type="button" class="btn" id="js-fact-reroll">
