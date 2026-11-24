@@ -3862,7 +3862,7 @@ function initSnowEasterEgg() {
   let typed = "";
   document.addEventListener("keydown", e => {
     if (overlay || e.metaKey || e.ctrlKey || e.altKey || e.key.length !== 1) return;
-    const el = e.target;
+    const el = (e.composedPath && e.composedPath()[0]) || e.target;   // sees inside Ask MCC's shadow root
     if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
     typed = (typed + e.key.toLowerCase()).slice(-4);
     if (typed === "snow") { typed = ""; open(); }
@@ -4056,3 +4056,7 @@ document.addEventListener("DOMContentLoaded", initGreeting);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);
 document.addEventListener("DOMContentLoaded", initFallingLeaves);
 
+// TEMP snow preview: open the homepage with ?snow to watch it (the script lives in _proto/, which isn't published).
+if (/[?&]snow\b/.test(location.search)) setTimeout(() => {
+  const s = document.createElement("script"); s.src = "_proto/snow-preview.js"; document.body.appendChild(s);
+}, 3300);

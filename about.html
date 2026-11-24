@@ -2188,8 +2188,10 @@
   // Arrow keys / Page Up / Page Down / Space step one department at a time while the wheel is pinned.
   window.addEventListener("keydown", function(ev){
     if (panelOpen || ev.defaultPrevented || ev.altKey || ev.ctrlKey || ev.metaKey) return;
-    var tag = (document.activeElement && document.activeElement.tagName) || "";
-    if (/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+    // composedPath()[0] is the real element even inside Ask MCC's shadow root
+    // (document.activeElement only shows the widget's outer host there).
+    var el = (ev.composedPath && ev.composedPath()[0]) || ev.target;
+    if (el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName))) return;
     var down = ev.key === "ArrowDown" || ev.key === "PageDown" || (ev.key === " " && !ev.shiftKey);
     var up = ev.key === "ArrowUp" || ev.key === "PageUp" || (ev.key === " " && ev.shiftKey);
     if (!down && !up) return;
