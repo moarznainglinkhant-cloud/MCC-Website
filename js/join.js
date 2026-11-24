@@ -1,8 +1,8 @@
 /* Join the Club form (join.html): one question at a time.
  *
- * Sends the answers to the database function join_club() (supabase/members-4-join.sql). The
- * checks here are for the visitor's benefit; the function repeats every one of them, and the
- * database decides what is stored. The key in js/exec-config.js is the public one.
+ * Sends the answers through MCCSite.join (js/site.js) to the database function join_club()
+ * (supabase/members-4-join.sql). The checks here are for the visitor's benefit; the function
+ * repeats every one of them, and the database decides what is stored.
  */
 (function () {
   "use strict";
@@ -183,28 +183,10 @@
   show("name", 0);
 
   /* ---------- Sending ---------- */
-  function withTimeout(promise, ms) {
-    return new Promise((resolve, reject) => {
-      const t = setTimeout(() => reject(new Error("timeout")), ms);
-      promise.then(v => { clearTimeout(t); resolve(v); }, e => { clearTimeout(t); reject(e); });
-    });
-  }
-
+  // site.js owns the request (MCCSite.join), so this page and the Ask MCC join card send the same way.
   function send(data) {
-    const cfg = window.MCC_EXEC_CONFIG || {};
-    if (!cfg.url || !cfg.key) return Promise.reject(new Error("not configured"));
-    return withTimeout(fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/rpc/join_club", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "apikey": cfg.key },
-      body: JSON.stringify(data),
-    }), 20000).then(r => {
-      if (r.ok) return;
-      return r.json().catch(() => ({})).then(j => {
-        const m = String((j && j.message) || "");
-        // the function's own messages are written for visitors; anything else stays out of sight
-        throw new Error(/^(Please|Too many)/.test(m) ? m + "." : "");
-      });
-    });
+    if (!window.MCCSite || !window.MCCSite.join) return Promise.reject(new Error(""));
+    return window.MCCSite.join(data).then(r => { if (!r.ok) throw new Error(r.message || ""); });
   }
 
   function subscribe(email) {
@@ -292,7 +274,7 @@
       .then(newsletter => showDone(name, newsletter))
       .catch(err => {
         busy(false);
-        el.msg.textContent = (err && err.message && err.message !== "timeout" && err.message !== "not configured" && !/fetch|network|load failed/i.test(err.message))
+        el.msg.textContent = (err && err.message)
           ? err.message
           : (navigator.onLine === false
               ? "You're offline. Your answers are still here; try again once you're connected."

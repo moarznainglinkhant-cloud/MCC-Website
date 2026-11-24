@@ -922,6 +922,27 @@ window.MCCSite = {
       return { ok: false, message: m ? m + "." : "" };
     })).catch(() => ({ ok: false, message: "Couldn't reach the sign-up service. Please try again in a moment." }));
   },
+  // Adds a member through the database function join_club() (supabase/members-4-join.sql).
+  // The join page and the join card in the Ask MCC chat both come through here, so there is
+  // one way in and the function checks every sign-up the same way.
+  join(member) {
+    return loadScriptOnce("js/exec-config.js", () => !!window.MCC_EXEC_CONFIG).then(() => {
+      const cfg = window.MCC_EXEC_CONFIG || {};
+      if (!cfg.url || !cfg.key) return { ok: false };
+      const ctl = typeof AbortController === "function" ? new AbortController() : null;
+      const timer = setTimeout(() => { if (ctl) ctl.abort(); }, 20000);
+      return fetch(cfg.url.replace(/\/$/, "") + "/rest/v1/rpc/join_club", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "apikey": cfg.key },
+        body: JSON.stringify(member),
+        signal: ctl ? ctl.signal : undefined,
+      }).then(r => r.ok ? { ok: true } : r.json().catch(() => ({})).then(j => {
+        const m = String((j && j.message) || "");
+        // the function's own messages are written for visitors; anything else stays out of sight
+        return { ok: false, message: /^(Please|Too many)/.test(m) ? m + "." : "" };
+      })).finally(() => clearTimeout(timer));
+    }).catch(() => ({ ok: false }));
+  },
   // Sends the question to the exec portal's Questions inbox (supabase/ask-mcc-questions.sql).
   askTeam({ question, email, context, session }) {
     return loadScriptOnce("js/exec-config.js", () => !!window.MCC_EXEC_CONFIG).then(() => {
