@@ -625,8 +625,8 @@
   .pl-wrap{ position:absolute; left:0; right:0; top:0; padding-top:18px; }
   .pl-head{ margin:0 74px 0 24px; display:flex; align-items:center; gap:14px; } /* right margin clears the close button */
   .pl-cover{ flex:none; width:56px; height:56px; border-radius:4px; display:grid; place-items:center;
-    background:#282828; color:#7F7F7F; box-shadow:0 6px 16px rgba(0,0,0,.45); }
-  .pl-cover svg{ width:26px; height:26px; display:block; fill:currentColor; }
+    overflow:hidden; background:linear-gradient(135deg, #2F7A72, #173F3C); box-shadow:0 6px 16px rgba(0,0,0,.45); }
+  .pl-cover img{ width:100%; height:100%; object-fit:cover; display:block; }
   .pl-meta{ min-width:0; display:flex; flex-direction:column; gap:2px; }
   .pl-title{ font-size:16px; font-weight:700; line-height:1.18; color:#fff;
     display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
@@ -1199,6 +1199,7 @@
         title: "songs i played in my head during surgery",
         owner: "seeoh",
         url: "https://open.spotify.com/playlist/1kaW7Xyk0PPt19Id3cWosl",
+        cover: "https://image-cdn-ak.spotifycdn.com/image/ab67706c0000da843414526837aaa5717e42b4c9", // her own playlist cover, from Spotify
         tracks: [
           ["CN TOWER", "PARTYNEXTDOOR, Drake"],
           ["needy", "Ariana Grande"],
