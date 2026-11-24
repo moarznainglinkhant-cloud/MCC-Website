@@ -2837,6 +2837,11 @@ var MCC_TEAM_PHOTOS = {
   "naing lin khant": "images/team/moarz.jpg",
   "eaint chan myae": "images/team/grace.jpg"
 };
+// Optional uncropped originals: shown when someone opens a profile and clicks the photo.
+// Same keys as above. Without an entry here, the click shows the round photo's own file.
+var MCC_TEAM_PHOTOS_FULL = {
+  "eaint chan myae": "images/team/grace-full.jpg"
+};
 function teamPhoto(r) {
   const col = (r.photo || r.photo_url || r.image || "").trim();
   return col || MCC_TEAM_PHOTOS[(r.name || "").trim().toLowerCase()] || "";

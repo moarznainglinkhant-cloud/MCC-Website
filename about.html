@@ -1182,7 +1182,8 @@
         github: githubLink(cell(row, ["github", "github_url"]) || ex.github),
         bg: ex.bg || null,
         fact: cell(row, ["fun_fact", "fact", "funfact"]) || ex.fun_fact || null,
-        photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null
+        photo: cell(row, ["photo", "photo_url", "image"]) || TEAM_PHOTOS[name.toLowerCase()] || null,
+        photoFull: cell(row, ["photo_full", "full_photo"]) || (window.MCC_TEAM_PHOTOS_FULL || {})[name.toLowerCase()] || null
       });
     });
     return list;
@@ -1717,7 +1718,7 @@
   function openView(){
     var p = PEOPLE[panelIdx];
     if (!p || !p.photo || viewOpen) return;
-    viewImg.src = p.photo; viewImg.alt = p.name;
+    viewImg.src = p.photoFull || p.photo; viewImg.alt = p.name;   // the uncropped original when there is one
     view.hidden = false; viewOpen = true;
     void view.offsetWidth; view.classList.add("show");
     viewX.focus({ preventScroll:true });
