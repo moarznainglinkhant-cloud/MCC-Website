@@ -598,8 +598,8 @@
 
   .t-fact{ grid-area:fa; justify-content:center; }
   .t-fact-row{ display:flex; align-items:center; gap:20px; }
-  .t-fact-num{ flex:none; width:68px; display:flex; flex-direction:column; align-items:center; gap:4px; color:var(--navy); }
-  .t-fact-num b{ font-family:'Yinmar','Noto Sans Myanmar',serif; font-weight:400; font-size:2.9rem; line-height:1.15; }
+  .t-fact-icon{ flex:none; width:66px; height:66px; border-radius:50%; display:grid; place-items:center; background:var(--bg-sunk); color:var(--navy); }
+  .t-fact-icon svg{ width:44px; height:44px; }
   .t-fact-text{ font-family:'Fraunces', serif; font-size:clamp(1.05rem,1.6vw,1.3rem); line-height:1.35; transition:opacity .45s ease, transform .45s ease; }
   .t-fact-text.out{ opacity:0; transform:translateY(6px); }
   .t-fact-btn{
@@ -763,8 +763,8 @@
     .t-ig svg.big{ top:14px; right:14px; width:34px; height:34px; }
     .t-ig .t-sub{ font-size:0.78rem; }
     .t-fact-row{ flex-wrap:wrap; gap:12px 16px; }
-    .t-fact-num{ width:52px; }
-    .t-fact-num b{ font-size:2.2rem; }
+    .t-fact-icon{ width:54px; height:54px; }
+    .t-fact-icon svg{ width:36px; height:36px; }
     .t-fact-text{ flex:1 1 200px; font-size:1.02rem; }
     .t-fact-btn{ margin-left:0; }
   }
@@ -1161,7 +1161,7 @@
         <div class="tile t-fact reveal">
           <span class="t-kicker" data-i18n="bento_fact_kicker">Did you know?</span>
           <div class="t-fact-row" style="margin-top:10px">
-            <span class="t-fact-num" id="js-bento-fact-emoji" aria-hidden="true"></span>
+            <span class="t-fact-icon" id="js-bento-fact-emoji" aria-hidden="true"></span>
             <p class="t-fact-text" id="js-bento-fact" aria-live="polite"></p>
             <button type="button" class="t-fact-btn" id="js-bento-fact-btn" data-i18n="bento_fact_btn">Another one</button>
           </div>
