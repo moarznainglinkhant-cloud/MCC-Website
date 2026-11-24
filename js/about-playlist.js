@@ -1,29 +1,28 @@
-// About page: "songs i played in my head during surgery" — LuLu's profile band.
-// Used when a person has bg: "playlist" and a `playlist` entry in TEAM_EXTRAS (about.html).
+// About page: LuLu's profile band, her real playlist "songs i played in my head during surgery",
+// drawn like a Spotify playlist. Used when a person has bg: "playlist" and a `playlist` entry in
+// TEAM_EXTRAS (about.html).
 //
-// The band is her view from the operating table during eye surgery: looking up into the
-// surgical lamp on theatre teal. Her playlist's songs come into focus one at a time, in order,
-// the way eyes refocus, while the lamp sharpens with them; then everything softens and the
-// next song comes in. Links to the real playlist. CSS transitions only (opacity + a short blur
-// on one line of text); no canvas, nothing runs between songs. Reduced motion: plain fades.
+// Header: cover (the operating lamp she was staring up at), title, owner and song count, and a
+// green play button that opens the playlist on Spotify. Below: three track rows. The playing
+// song is green with an equalizer, and the list moves down the playlist one song at a time,
+// keeping the playing row in view, then starts over. CSS transitions and one small keyframe
+// animation; stops when the card closes. Reduced motion: no scrolling or bouncing, songs still change.
 (function () {
   var run = null;
-  var HOLD = 4200, IN = 900, OUT = 700;
+  var STEP = 3400; // ms per song
+  var VISIBLE = 3;
 
-  function lampSVG(id) {
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function lamp() {
     var b = "";
     for (var i = 0; i < 6; i++) {
       var a = i / 6 * Math.PI * 2 - Math.PI / 2;
-      b += '<circle cx="' + (75 + Math.cos(a) * 36).toFixed(1) + '" cy="' + (75 + Math.sin(a) * 36).toFixed(1) + '" r="14"/>';
+      b += '<circle cx="' + (32 + Math.cos(a) * 15).toFixed(1) + '" cy="' + (32 + Math.sin(a) * 15).toFixed(1) + '" r="5.6"/>';
     }
-    return '<svg viewBox="0 0 150 150" aria-hidden="true"><defs>' +
-      '<radialGradient id="plb' + id + '"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#F3FFFA"/>' +
-      '<stop offset=".85" stop-color="#CDEDE2" stop-opacity=".9"/><stop offset="1" stop-color="#9FD3C3" stop-opacity=".55"/></radialGradient>' +
-      '<radialGradient id="plh' + id + '"><stop offset="0" stop-color="#EFFFF8" stop-opacity=".55"/><stop offset="1" stop-color="#EFFFF8" stop-opacity="0"/></radialGradient></defs>' +
-      '<circle cx="75" cy="75" r="74" fill="url(#plh' + id + ')"/>' +
-      '<circle cx="75" cy="75" r="64" fill="rgba(10,40,38,.35)" stroke="rgba(235,250,244,.25)" stroke-width="2"/>' +
-      '<circle cx="75" cy="75" r="56" fill="none" stroke="rgba(235,250,244,.10)" stroke-width="1"/>' +
-      '<g fill="url(#plb' + id + ')">' + b + '<circle cx="75" cy="75" r="15"/></g></svg>';
+    return '<svg viewBox="0 0 64 64" aria-hidden="true">' +
+      '<circle cx="32" cy="32" r="27" fill="rgba(6,30,28,.35)" stroke="rgba(235,250,244,.35)" stroke-width="1.5"/>' +
+      '<g fill="#F4FFFA">' + b + '<circle cx="32" cy="32" r="6.2"/></g></svg>';
   }
 
   function stop() {
@@ -39,41 +38,34 @@
     var r = { alive: true, timers: [] };
     run = r;
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var n = pl.tracks.length, pad = function (x) { return (x < 10 ? "0" : "") + x; };
+    var n = pl.tracks.length;
 
+    var rows = pl.tracks.map(function (t, i) {
+      return '<li class="pl-row"><span class="pl-num"><i>' + (i + 1) + '</i><span class="pl-eq" aria-hidden="true"><b></b><b></b><b></b></span></span>' +
+        '<span class="pl-txt"><span class="pl-t">' + esc(t[0]) + '</span><span class="pl-a">' + esc(t[1]) + '</span></span></li>';
+    }).join("");
     band.insertAdjacentHTML("beforeend",
-      '<div class="pl-lamp" aria-hidden="true"><div class="pl-soft">' + lampSVG("s") + '</div><div class="pl-sharp">' + lampSVG("f") + '</div></div>' +
-      '<div class="pl-now">' +
-        '<span class="pl-k">' + (pl.label || "playing in my head") + '</span>' +
-        '<div class="pl-song" aria-live="off"><b class="pl-t"></b><span class="pl-a"></span></div>' +
-        '<div class="pl-bar" aria-hidden="true"><i></i></div>' +
-        '<span class="pl-foot"><span class="pl-n"></span> &middot; <a class="pl-link" target="_blank" rel="noopener"></a></span>' +
-      '</div>');
-    var q = function (s) { return band.querySelector(s); };
-    var lamp = q(".pl-lamp"), song = q(".pl-song"), bar = q(".pl-bar i");
-    var link = q(".pl-link");
-    link.href = pl.url;
-    link.textContent = "listen ↗";
-    link.setAttribute("aria-label", "Listen to “" + pl.title + "” on Spotify");
+      '<div class="pl-wrap"><div class="pl-head">' +
+        '<div class="pl-cover">' + lamp() + '</div>' +
+        '<div class="pl-meta"><b class="pl-title">' + esc(pl.title) + '</b>' +
+          '<span class="pl-by"><b>' + esc(pl.owner || "") + '</b>' + (pl.owner ? " &middot; " : "") + n + ' songs</span></div>' +
+        '<a class="pl-play" href="' + esc(pl.url) + '" target="_blank" rel="noopener" aria-label="Play “' + esc(pl.title) + '” on Spotify">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10.5-6.5z"/></svg></a>' +
+      '</div>' +
+      '<div class="pl-list" aria-hidden="true"><ol class="pl-rows">' + rows + '</ol></div></div>');
     band.classList.toggle("pl-reduce", !!reduce);
 
+    var list = band.querySelector(".pl-rows"), items = list.children;
     function later(fn, ms) { r.timers.push(setTimeout(function () { if (r.alive) fn(); }, ms)); }
 
-    function show(i) {
-      var t = pl.tracks[i];
-      q(".pl-t").textContent = t[0];
-      q(".pl-a").textContent = t[1];
-      q(".pl-n").textContent = pad(i + 1) + " / " + pad(n);
-      bar.style.transition = "none"; bar.style.width = "0%";
-      void bar.offsetWidth;                       // restart the bar
-      song.classList.add("in"); lamp.classList.add("focus");
-      bar.style.transition = "width " + (IN + HOLD) + "ms linear"; bar.style.width = "100%";
-      later(function () {
-        song.classList.remove("in"); lamp.classList.remove("focus");
-        later(function () { show((i + 1) % n); }, OUT);
-      }, IN + HOLD);
+    function play(i) {
+      for (var k = 0; k < n; k++) items[k].classList.toggle("on", k === i);
+      var h = items[0].offsetHeight || 32;
+      var top = Math.max(0, Math.min(i - 1, n - VISIBLE)); // keep the playing row in the middle when possible
+      list.style.transform = "translateY(" + (-top * h) + "px)";
+      later(function () { play((i + 1) % n); }, STEP);
     }
-    later(function () { show(0); }, 250);
+    play(0);
     return true;
   }
 

@@ -619,39 +619,54 @@
   .brain-credit{ position:absolute; left:16px; top:12px; z-index:1; font-size:10px; line-height:1.2; color:rgba(255,255,255,.45); text-decoration:none; text-shadow:0 0 4px #000, 0 0 8px #000; }
   .brain-credit:hover, .brain-credit:focus-visible{ color:rgba(255,255,255,.8); text-decoration:underline; }
   @media (max-width:480px){ .pp-band.brain{ height:228px; } .brain-credit{ left:12px; top:10px; } }
-  /* Playlist band (bg: "playlist" + playlist in TEAM_EXTRAS; js/about-playlist.js). Her view from the operating
-     table: the surgical lamp on theatre teal, songs from her playlist coming into focus one at a time. */
+  /* Playlist band (bg: "playlist" + playlist in TEAM_EXTRAS; js/about-playlist.js): LuLu's real playlist, drawn like a
+     Spotify playlist. Taller than other bands so the header and three rows sit above the photo. */
   .pp-band.pl{
-    position:relative; overflow:hidden; height:216px; text-align:left; color:#E8F4EF;
-    background:
-      radial-gradient(190px 190px at calc(100% - 158px) 98px, rgba(240,255,250,.22), transparent 70%),
-      radial-gradient(130% 150% at 75% 25%, #13524D 0%, #0B3533 48%, #061D1C 100%);
+    position:relative; overflow:hidden; height:284px; text-align:left; color:#fff;
+    font-family:'Work Sans', system-ui, sans-serif;
+    background:linear-gradient(180deg, #24605A 0%, #173F3C 34%, #121212 74%);
   }
-  .pl-lamp{ position:absolute; right:80px; top:20px; width:156px; height:156px; } /* clear of the close button */
-  .pl-lamp > div{ position:absolute; inset:0; transition:opacity .9s ease; }
-  .pl-lamp svg{ width:100%; height:100%; display:block; }
-  .pl-soft{ filter:blur(7px); opacity:.95; }
-  .pl-sharp{ opacity:0; }
-  .pl-lamp.focus .pl-sharp{ opacity:1; }
-  .pl-lamp.focus .pl-soft{ opacity:.5; }
-  .pl-now{ position:absolute; left:28px; top:22px; width:190px; }
-  .pl-k{ display:block; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:rgba(232,244,239,.62); margin-bottom:7px; }
-  .pl-song{ opacity:0; filter:blur(8px); transition:opacity .7s ease, filter .7s ease; }
-  .pl-song.in{ opacity:1; filter:blur(0); transition-duration:.9s; }
-  .pl-t{ display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-    font-family:'Fraunces', serif; font-weight:600; font-size:1.3rem; line-height:1.15; color:#F5FBF8; }
-  .pl-a{ display:block; font-size:.8rem; color:rgba(232,244,239,.72); margin-top:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .pl-bar{ width:120px; height:2px; margin-top:10px; border-radius:2px; overflow:hidden; background:rgba(232,244,239,.18); }
-  .pl-bar i{ display:block; height:100%; width:0; background:#BFEBDD; }
-  .pl-foot{ display:block; margin-top:6px; font-size:10.5px; color:rgba(232,244,239,.55); font-variant-numeric:tabular-nums; }
-  .pl-link{ color:rgba(232,244,239,.85); text-decoration:none; }
-  .pl-link:hover, .pl-link:focus-visible{ color:#fff; text-decoration:underline; }
-  .pp-band.pl.pl-reduce .pl-song{ filter:none; }
+  .pl-wrap{ position:absolute; left:0; right:0; top:0; padding-top:18px; }
+  .pl-head{ margin:0 74px 0 24px; display:flex; align-items:center; gap:14px; } /* right margin clears the close button */
+  .pl-cover{ flex:none; width:56px; height:56px; border-radius:4px; display:grid; place-items:center;
+    background:radial-gradient(circle at 50% 45%, #2F7A72 0%, #164743 70%, #0E2F2C 100%); box-shadow:0 6px 16px rgba(0,0,0,.45); }
+  .pl-cover svg{ width:44px; height:44px; display:block; }
+  .pl-meta{ min-width:0; display:flex; flex-direction:column; gap:2px; }
+  .pl-title{ font-size:16px; font-weight:700; line-height:1.18; color:#fff;
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; }
+  .pl-by{ font-size:11.5px; color:#B3B3B3; }
+  .pl-by b{ color:#fff; font-weight:600; }
+  .pl-play{ flex:none; margin-left:auto; width:40px; height:40px; border-radius:50%; background:#1ED760; color:#000;
+    display:grid; place-items:center; box-shadow:0 6px 14px rgba(0,0,0,.35); transition:transform .15s ease, background .15s ease; }
+  .pl-play svg{ width:20px; height:20px; fill:currentColor; display:block; }
+  .pl-play:hover{ transform:scale(1.06); background:#3BE477; }
+  .pl-play:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+  .pl-list{ margin:12px 14px 0; height:96px; overflow:hidden; } /* 3 rows of 32px */
+  .pl-rows{ list-style:none; margin:0; padding:0; transition:transform .55s cubic-bezier(.3,.7,.2,1); }
+  .pl-row{ height:32px; display:flex; align-items:center; gap:12px; padding:0 10px; border-radius:4px; transition:background .3s ease; }
+  .pl-row.on{ background:rgba(255,255,255,.08); }
+  .pl-num{ position:relative; flex:none; width:16px; text-align:center; font-size:13px; color:#B3B3B3; font-variant-numeric:tabular-nums; }
+  .pl-num i{ font-style:normal; }
+  .pl-row.on .pl-num i{ visibility:hidden; }
+  .pl-eq{ position:absolute; left:2px; right:2px; bottom:3px; height:12px; display:none; align-items:flex-end; justify-content:space-between; }
+  .pl-row.on .pl-eq{ display:flex; }
+  .pl-eq b{ width:3px; height:100%; background:#1ED760; transform-origin:bottom; animation:pl-eq .8s ease-in-out infinite alternate; }
+  .pl-eq b:nth-child(2){ animation-delay:-.35s; animation-duration:.65s; }
+  .pl-eq b:nth-child(3){ animation-delay:-.6s; animation-duration:.95s; }
+  @keyframes pl-eq{ from{ transform:scaleY(.25); } to{ transform:scaleY(1); } }
+  .pl-txt{ min-width:0; display:flex; flex-direction:column; }
+  .pl-t, .pl-a{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .pl-t{ font-size:13.5px; line-height:1.25; color:#fff; }
+  .pl-row.on .pl-t{ color:#1ED760; }
+  .pl-a{ font-size:11.5px; line-height:1.25; color:#B3B3B3; }
+  .pp-band.pl.pl-reduce .pl-rows{ transition:none; }
+  .pp-band.pl.pl-reduce .pl-eq b{ animation:none; transform:scaleY(.7); }
   @media (max-width:480px){
-    .pp-band.pl{ height:196px; }
-    .pl-now{ left:18px; top:18px; width:58%; }
-    .pl-t{ font-size:1.15rem; }
-    .pl-lamp{ right:-26px; top:62px; width:120px; height:120px; }
+    .pp-band.pl{ height:270px; }
+    .pl-wrap{ padding-top:16px; }
+    .pl-head{ margin:0 64px 0 16px; gap:12px; }
+    .pl-title{ font-size:15px; }
+    .pl-list{ margin:10px 6px 0; }
   }
   .pp-photo{
     position:relative; width:182px; height:182px; border-radius:50%; margin:-97px auto 0;
@@ -1186,6 +1201,7 @@
       bg: "playlist", // her fun fact is this playlist; the band is her view of the surgical lamp (js/about-playlist.js)
       playlist: {
         title: "songs i played in my head during surgery",
+        owner: "seeoh",
         url: "https://open.spotify.com/playlist/1kaW7Xyk0PPt19Id3cWosl",
         tracks: [
           ["CN TOWER", "PARTYNEXTDOOR, Drake"],
@@ -1193,11 +1209,11 @@
           ["needy x Kicking Flavors", "skyemane"],
           ["No One Noticed", "The Mar\u00edas"],
           ["Thotiana", "Blueface"],
-          ["Always", "Daniel Caesar, Summer Walker"],
+          ["Always (feat. Summer Walker) - Bonus", "Daniel Caesar, Summer Walker"],
           ["Nobody New", "The Mar\u00edas"],
           ["Sweet", "Cigarettes After Sex"],
           ["Hooligan", "BTS"],
-          ["Get You", "Daniel Caesar, Kali Uchis"],
+          ["Get You (feat. Kali Uchis)", "Daniel Caesar, Kali Uchis"],
           ["Superpowers", "Daniel Caesar"],
           ["squabble up", "Kendrick Lamar"]
         ]
