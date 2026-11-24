@@ -3205,14 +3205,14 @@ function initBentoLearn() {
 
   /* time: every wait/animation belongs to a "life" that can be stopped */
   function lifeFor() {
-    const life = { alive: true, timers: [], rafs: [] };
+    const life = { alive: true, timers: [], rafs: [], ac: new AbortController() };
     life.wait = ms => new Promise((res, rej) => { life.timers.push(setTimeout(() => life.alive ? res() : rej("stop"), ms)); });
     life.anim = (ms, fn) => new Promise((res, rej) => {
       const t0 = performance.now();
       const step = now => { if (!life.alive) return rej("stop"); const k = Math.max(0, Math.min(1, (now - t0) / ms)); fn(k); if (k < 1) life.rafs.push(requestAnimationFrame(step)); else res(); };
       life.rafs.push(requestAnimationFrame(step));
     });
-    life.stop = () => { life.alive = false; life.timers.forEach(clearTimeout); life.rafs.forEach(cancelAnimationFrame); };
+    life.stop = () => { life.alive = false; life.timers.forEach(clearTimeout); life.rafs.forEach(cancelAnimationFrame); life.ac.abort(); };
     return life;
   }
   const quiet = p => p.catch(e => { if (e !== "stop") console.error(e); });
@@ -3344,6 +3344,7 @@ function initBentoLearn() {
   /* the pane: one row at a time, waits for each preview to finish */
   function runPane(life) {
     const rows = [...tile.querySelectorAll(".row")], stage = tile.querySelector(".stage"), sc = scenes();
+    stage.innerHTML = "";                     // drop the previews of an earlier run (else they stay stacked on top)
     sc.forEach(s => stage.appendChild(s.el));
     let act = -1, forced = -1;
     function show(r, ms) {
@@ -3356,8 +3357,8 @@ function initBentoLearn() {
       act = r; quiet(sc[r].play(life));
     }
     rows.forEach((row, r) => {
-      row.addEventListener("pointerenter", () => { forced = r; tile.classList.add("hold"); if (act !== r) show(r); });
-      row.addEventListener("pointerleave", () => { forced = -1; tile.classList.remove("hold"); });
+      row.addEventListener("pointerenter", () => { forced = r; tile.classList.add("hold"); if (act !== r) show(r); }, { signal: life.ac.signal });
+      row.addEventListener("pointerleave", () => { forced = -1; tile.classList.remove("hold"); }, { signal: life.ac.signal });
     });
     return async () => {
       let r = 0;
