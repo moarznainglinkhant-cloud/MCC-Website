@@ -116,6 +116,10 @@
   }
   el.email.addEventListener("blur", suggestEmail);
 
+  // The ideas box grows a line at a time as it fills.
+  const grow = () => { el.ideas.style.height = "auto"; el.ideas.style.height = el.ideas.scrollHeight + 2 + "px"; };
+  el.ideas.addEventListener("input", grow);
+
   /* ---------- Newsletter ---------- */
   function syncNewsletterAddress() {
     const v = el.email.value.trim();
@@ -170,6 +174,7 @@
     // Straight into the answer: the first box, or the chosen pill. The question is the group's name.
     const first = node.querySelector("input:checked, input:not([type=radio]):not([type=checkbox]), textarea, input");
     if (first) first.focus({ preventScroll: true });
+    if (name === "ideas") grow();
     const top = $("join").getBoundingClientRect().top;
     if (top < 70) window.scrollTo({ top: window.scrollY + top - 96, behavior: "auto" });
   }

@@ -276,7 +276,8 @@
     transition: border-color .15s ease, box-shadow .15s ease;
     -webkit-appearance:none; appearance:none;
   }
-  .f textarea{ min-height:4.4em; resize:none; }
+  /* One line to start, growing with what is written, so its rule sits under the text like the other answers. */
+  .f textarea{ height:auto; min-height:0; overflow:hidden; resize:none; }
   .f ::placeholder{ color:rgba(28,36,64,.38); opacity:1; }
   .f input:focus, .f textarea:focus{ border-bottom-color:var(--navy); box-shadow:0 1.5px 0 var(--navy); }
   .f [aria-invalid="true"], .f [aria-invalid="true"]:focus{ border-bottom-color:var(--red); box-shadow:0 1.5px 0 var(--red); }
@@ -679,8 +680,8 @@
             <section class="step" data-step="ideas" role="group" aria-labelledby="q-ideas" hidden>
               <h2 id="q-ideas" tabindex="-1">Any ideas for the club?</h2>
               <div class="f">
-                <label for="j-ideas"><span class="vh">Your ideas, </span>Optional</label>
-                <textarea id="j-ideas" name="ideas" maxlength="1000" rows="3"></textarea>
+                <label for="j-ideas" class="vh">Your ideas (optional)</label>
+                <textarea id="j-ideas" name="ideas" maxlength="1000" rows="1" placeholder="Optional"></textarea>
               </div>
             </section>
           </div>
