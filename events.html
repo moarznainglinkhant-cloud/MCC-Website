@@ -366,6 +366,14 @@
   .past-card .info .title{ font-family:'Fraunces', serif; font-size:0.95rem; font-weight:600; line-height:1.25; }
   .past-card .info .date{ font-size:0.68rem; color:var(--ink-soft); font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-top:4px; }
   @media (max-width:420px){ .past-gallery{ grid-template-columns: repeat(auto-fill, minmax(150px,1fr)); } }
+  /* Plain grid: at most 5 per row, one per row on phones. Cards show at once (no fade-in);
+     on hover the card lifts and the poster stays still. */
+  #js-past-gallery{ grid-template-columns:repeat(auto-fill, minmax(max(180px, calc((100% - 4 * 20px) / 5)), 1fr)); column-gap:20px; row-gap:24px; }
+  @media (max-width:560px){ #js-past-gallery{ grid-template-columns:minmax(0,1fr); row-gap:20px; } }
+  #js-past-gallery .past-card.reveal{ opacity:1 !important; transform:none; transition:transform .18s ease, box-shadow .25s ease; }
+  #js-past-gallery .past-card{ box-shadow:0 12px 28px rgba(28,36,64,0.10); }
+  #js-past-gallery .past-card:hover{ transform:translateY(-3px); box-shadow:0 18px 36px rgba(28,36,64,0.15); }
+  #js-past-gallery .past-card .photo img, #js-past-gallery .past-card:hover .photo img{ transform:none; transition:none; }
 
   /* ---------- Desktop "connecting line": a thin line draws itself through the grid as you scroll;
      each poster rises and colour washes across it as the line passes (js/site.js) ---------- */

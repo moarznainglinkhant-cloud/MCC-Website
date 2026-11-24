@@ -1065,9 +1065,9 @@ function renderPastGallery(past) {
       </div>
     </div>
   `).join("");
-  // Phones get the sideways timeline; wider screens keep the grid with the connecting line.
-  try { buildPastTimeline(past); } catch (err) { console.error("Timeline failed, showing the grid instead:", err); }
-  try { buildSnake(); } catch (err) { console.error("Connecting line failed, showing the plain grid:", err); }
+  // Past events are a plain grid on every screen. The connecting line (buildSnake) and the phone
+  // timeline (buildPastTimeline) are no longer used; the last version with them is the
+  // `events-line-version` branch.
   if (!PAST_MQ_WIRED && window.matchMedia) {
     PAST_MQ_WIRED = true;
     window.matchMedia(PAST_PHONE_MQ).addEventListener("change", () => { if (_dataLoaded) renderPastGallery(_cachedPast); });
