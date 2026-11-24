@@ -8,15 +8,26 @@ Output: brain.bin, little-endian:
   uint8  colors[n*3]        (one colour per streamline)
   uint8  phases[n]          (random 0-255, for the travelling pulses)
   uint8  midline[n]         (0-255: how close the streamline gets to the midline, for the grow-in)
-Usage: python3 brain-fibres.py <atlas_dir> <out.bin> [target_streamlines] [points]
+Version 2 appends two more sections (when --mesh and --swc are given):
+  cortex: uint32 nPts, int16 pos[nPts*3] (same frame and scale as the fibres), int8 normal[nPts*3]
+          (one hemisphere; the page mirrors it for the other)
+  neurons: uint32 nNeurons, then per neuron: uint32 nVerts (line-list pairs), int16 xy[nVerts*2]
+          (micrometres x 4, soma at 0,0, apical dendrite up), uint8 dist[nVerts] (path distance from the soma, 0-255)
+Usage: python3 brain-fibres.py <atlas_dir> <out.bin> [target_streamlines] [points] [--mesh lh.mz3] [--swc dir]
 """
 import colorsys, glob, os, struct, sys
 import numpy as np
 import nibabel as nib
 
-src, out = sys.argv[1], sys.argv[2]
-TARGET = int(sys.argv[3]) if len(sys.argv) > 3 else 3000
-K = int(sys.argv[4]) if len(sys.argv) > 4 else 21
+args = sys.argv[1:]
+def opt(name):
+    if name in args:
+        i = args.index(name); v = args[i + 1]; del args[i:i + 2]; return v
+    return None
+MESH, SWC = opt("--mesh"), opt("--swc")
+src, out = args[0], args[1]
+TARGET = int(args[2]) if len(args) > 2 else 3000
+K = int(args[3]) if len(args) > 3 else 21
 rng = np.random.default_rng(7)
 
 
@@ -69,8 +80,42 @@ phase = rng.integers(0, 256, n, dtype=np.uint8)
 mid = np.abs(P[:, :, 0]).min(1)
 midline = (255 * (1 - np.clip(mid / mid.max(), 0, 1))).astype(np.uint8)
 
+VERSION = 2 if (MESH and SWC) else 1
 with open(out, "wb") as fh:
-    fh.write(b"MCCB" + struct.pack("<IIIf", 1, n, K, scale))
+    fh.write(b"MCCB" + struct.pack("<IIIf", VERSION, n, K, scale))
     fh.write(np.round(P / scale).astype("<i2").tobytes())
     fh.write(cols.tobytes()); fh.write(phase.tobytes()); fh.write(midline.tobytes())
+    if VERSION == 2:
+        import gzip
+        b = open(MESH, "rb").read()
+        if b[:2] == b"\x1f\x8b": b = gzip.decompress(b)
+        _, _, nf, nv, nskip = struct.unpack("<HHIII", b[:16]); o = 16 + nskip
+        F = np.frombuffer(b, np.int32, nf * 3, o).reshape(-1, 3); o += nf * 12
+        V = np.frombuffer(b, np.float32, nv * 3, o).reshape(-1, 3).astype(np.float64)
+        N = np.zeros_like(V)                       # vertex normals from the full mesh
+        fn = np.cross(V[F[:, 1]] - V[F[:, 0]], V[F[:, 2]] - V[F[:, 0]])
+        for c in range(3): np.add.at(N, F[:, c], fn)
+        N /= np.linalg.norm(N, axis=1, keepdims=True) + 1e-9
+        keep = 10242 if nv == 40962 else nv        # icosphere mesh: the first 10,242 vertices are an even subset
+        Vc, Nc = V[:keep] - centre, N[:keep]
+        fh.write(struct.pack("<I", keep))
+        fh.write(np.round(Vc / scale).astype("<i2").tobytes())
+        fh.write(np.round(Nc * 127).astype("i1").tobytes())
+        files = sorted(glob.glob(os.path.join(SWC, "*.swc")))
+        fh.write(struct.pack("<I", len(files)))
+        for f in files:
+            d = np.loadtxt(f, comments="#", ndmin=2)
+            idx = {int(r[0]): i for i, r in enumerate(d)}
+            root = next(i for i, r in enumerate(d) if int(r[6]) == -1)
+            xy = d[:, 2:4] - d[root, 2:4]
+            dist = np.zeros(len(d))
+            for i, r in enumerate(d):              # SWC lists parents before children
+                p = idx.get(int(r[6]))
+                if p is not None: dist[i] = dist[p] + np.linalg.norm(d[i, 2:5] - d[p, 2:5])
+            segs = [(idx[int(r[6])], i) for i, r in enumerate(d) if int(r[6]) in idx]
+            ids = np.array(segs).reshape(-1)
+            fh.write(struct.pack("<I", len(ids)))
+            fh.write(np.round(xy[ids] * 4).astype("<i2").tobytes())
+            fh.write((255 * dist[ids] / dist.max()).astype(np.uint8).tobytes())
+            print(f"neuron {os.path.basename(f)}: {len(segs)} segments", file=sys.stderr)
 print(f"{n} streamlines x {K} points, {os.path.getsize(out)/1024:.0f} KB, extent mm {np.ptp(P.reshape(-1,3),0).round(1)}", file=sys.stderr)
