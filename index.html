@@ -840,9 +840,9 @@
   }
   @media (max-width:760px){ .contact-top{ grid-template-columns: 1fr; } }
 
-  /* Footer newsletter: sits beside Join the Club, drops to its own full-width line when space runs out */
+  /* Footer newsletter: its own line under the heading, above Join the Club / Exec login */
   .footer-nl{
-    flex:1 1 300px; max-width:420px; display:flex; align-items:center; gap:6px;
+    max-width:440px; margin-top:26px; display:flex; align-items:center; gap:6px;
     background:var(--footer-ink); border-radius:999px; padding:4px;
   }
   .footer-nl:focus-within{ box-shadow:0 0 0 3px rgba(192,138,46,.45); }
@@ -863,18 +863,6 @@
   .footer-nl.is-done{ background:transparent; padding:10px 0; color:var(--footer-ink); font-weight:600; font-size:0.95rem; }
   .footer-nl-msg{ margin:10px 0 0; font-size:0.85rem; color:#F2B8A8; }
   .footer-nl-msg:empty{ display:none; }
-  .footer-join .jc-short{ display:none; }
-  /* Phones: "Join the Club" shortens to "Join" so the newsletter field fits beside it */
-  @media (max-width:560px){
-    footer.contact .contact-intro .cta-row{ flex-wrap:nowrap; gap:10px; }
-    .footer-join{ flex:none; padding:13px 18px; }
-    .footer-join .jc-full{ display:none; }
-    .footer-join .jc-short{ display:inline; }
-    .contact-intro{ min-width:0; }
-    .footer-nl{ flex:1 1 0; min-width:0; max-width:none; }
-    .footer-nl input[type="email"]{ width:0; padding-left:14px; font-size:0.9rem; }
-    .footer-nl button{ padding:11px 15px; }
-  }
   .contact-intro h2{ color:var(--footer-ink); font-size:clamp(2.1rem,4.4vw,3.2rem); margin-bottom:16px; }
   .contact-intro p{ color:var(--footer-ink-soft); max-width:42ch; font-size:1rem; }
   .contact-intro .cta-row{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:26px; }
@@ -1246,15 +1234,16 @@
         <div class="contact-intro">
           <span class="eyebrow" style="color:var(--gold)" data-i18n="label_connect">Connect</span>
           <h2 data-i18n="footer_h2">Let's stay in touch.</h2>
-          <div class="cta-row">
-            <a class="btn-footer celebrate footer-join" href="https://forms.gle/vTo1tkwcfAPDFuiWA"><span class="jc-full" data-i18n="label_join_club">Join the Club</span><span class="jc-short" data-i18n="label_join_short">Join</span></a>
-            <form class="footer-nl" novalidate>
-              <label class="hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
-              <input type="email" name="email_address" placeholder="Email for our newsletter" data-i18n-ph="footer_nl_placeholder" data-i18n-ph-short="label_newsletter" autocomplete="email" inputmode="email" required aria-label="Email address for the newsletter">
-              <button type="submit" data-i18n="footer_nl_subscribe">Subscribe</button>
-            </form>
-          </div>
+          <form class="footer-nl" novalidate>
+            <label class="hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            <input type="email" name="email_address" placeholder="Join our newsletter" data-i18n-ph="footer_nl_placeholder" autocomplete="email" inputmode="email" required aria-label="Email address for the newsletter">
+            <button type="submit" data-i18n="footer_nl_subscribe">Subscribe</button>
+          </form>
           <p class="footer-nl-msg" role="status" aria-live="polite"></p>
+          <div class="cta-row">
+            <a class="btn-footer celebrate" href="https://forms.gle/vTo1tkwcfAPDFuiWA" data-i18n="label_join_club">Join the Club</a>
+            <a class="btn-footer exec" href="login.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec login</a>
+          </div>
         </div>
         <div class="contact-links">
           <a href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">

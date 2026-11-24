@@ -96,9 +96,8 @@ const I18N = {
     label_connect: "Connect",
     label_join_newsletter_nav: "Join Newsletter",
     label_join_club: "Join the Club",
-    label_join_short: "Join",
     label_join_newsletter_footer: "Join the Newsletter",
-    footer_nl_placeholder: "Email for our newsletter",
+    footer_nl_placeholder: "Join our newsletter",
     footer_nl_subscribe: "Subscribe",
 
     hero_h1: "Mingalabar",
@@ -195,9 +194,8 @@ const I18N = {
     label_connect: "ဆက်သွယ်ရန်",
     label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
     label_join_club: "အသင်းဝင်ရန်",
-    label_join_short: "ဝင်ရန်",
     label_join_newsletter_footer: "သတင်းလွှာတွင် စာရင်းသွင်းရန်",
-    footer_nl_placeholder: "သတင်းလွှာအတွက် အီးမေးလ်",
+    footer_nl_placeholder: "သတင်းလွှာတွင် စာရင်းသွင်းပါ",
     footer_nl_subscribe: "စာရင်းသွင်းရန်",
 
     hero_h1: "မင်္ဂလာပါ",
