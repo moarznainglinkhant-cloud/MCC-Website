@@ -2393,7 +2393,7 @@
   var wrap=document.querySelector('header.nav .wrap');
   if(!sticky||!ix||!title||!wrap) return;
   var probe=document.createElement('span');
-  probe.style.cssText="position:absolute;visibility:hidden;white-space:nowrap;font:600 100px Fraunces,Georgia,serif;letter-spacing:-.01em";
+  probe.style.cssText="position:absolute;left:0;top:0;visibility:hidden;pointer-events:none;white-space:nowrap;font:600 100px Fraunces,Georgia,serif;letter-spacing:-.01em";   /* pinned to the top: left where it fell, it added blank scroll below the footer */
   document.body.appendChild(probe);
   function fit(){
     var r=wrap.getBoundingClientRect(), cs=getComputedStyle(wrap);
