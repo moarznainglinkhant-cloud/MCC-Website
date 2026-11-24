@@ -713,24 +713,6 @@
   .pp-fact p{ margin-top:6px; font-size:0.95rem; line-height:1.5; }
   .pp-fact a{ color:inherit; text-decoration:underline; text-decoration-color:var(--gold); text-underline-offset:3px; text-decoration-thickness:2px; }
   .pp-fact a:hover{ color:var(--red, #AE3628); }
-  .pp-team{ margin-top:26px; padding-top:22px; border-top:1px solid var(--line); }
-  .pp-team-row{ display:flex; flex-wrap:wrap; justify-content:center; gap:14px; margin-top:14px; }
-  .pp-mate{
-    appearance:none; border:none; background:none; cursor:pointer; padding:0;
-    display:flex; flex-direction:column; align-items:center; gap:7px; width:64px;
-    font-family:'Work Sans',sans-serif; font-size:0.74rem; font-weight:600; color:var(--ink-soft);
-    transition: color .18s ease, transform .18s ease;
-  }
-  .pp-mate span{
-    width:48px; height:48px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    font-family:'Fraunces', serif; font-weight:600; font-size:0.9rem;
-    background: color-mix(in srgb, var(--tint) 13%, var(--bg-raised)); color:var(--tint);
-    box-shadow: 0 0 0 3px var(--bg-raised), 0 0 0 4px var(--gold);
-    transition: background .18s ease, color .18s ease;
-  }
-  .pp-mate:hover{ color:var(--ink); transform:translateY(-2px); }
-  .pp-mate:hover span{ background:var(--navy); color:var(--footer-ink); }
   .pp-fly{
     position:fixed; z-index:101; margin:0; border-radius:50%; pointer-events:none;
     display:flex; align-items:center; justify-content:center;
@@ -1772,7 +1754,6 @@
         '<span class="person-title pp-title"></span>' +
         '<div class="pp-links"></div>' +
         '<div class="pp-fact"><span class="pp-eyebrow">Fun fact</span><p></p></div>' +
-        '<div class="pp-team"><span class="pp-eyebrow"></span><div class="pp-team-row"></div></div>' +
       '</div>' +
     '</div>';
   document.body.appendChild(overlay);
@@ -1868,15 +1849,6 @@
     fact.hidden = !p.fact;
     fact.querySelector("p").innerHTML = p.fact ? factHtml(p.fact) : "";
 
-    var mates = PEOPLE.filter(function(o){ return o.group === p.group && o !== p; });
-    var team = q(".pp-team");
-    team.hidden = mates.length === 0;
-    q(".pp-team .pp-eyebrow").textContent = "Also in " + g.label;
-    q(".pp-team-row").innerHTML = mates.map(function(o){
-      var short = o.pref || o.name.split(" ")[0];
-      return '<button type="button" class="pp-mate" data-idx="' + PEOPLE.indexOf(o) + '" aria-label="' + esc(o.name) + '">' +
-        '<span aria-hidden="true">' + esc(o.i) + '</span>' + esc(short) + '</button>';
-    }).join("");
     shell.scrollTop = 0;
   }
 
@@ -2062,21 +2034,6 @@
     window.setTimeout(finish, 480);
   }
 
-  function switchTo(idx){
-    if (!panelOpen || busy || idx === panelIdx) return;
-    busy = true;
-    inner.classList.remove("show");
-    window.setTimeout(function(){
-      cardByIdx[panelIdx].style.visibility = "";
-      panelIdx = idx;
-      cardByIdx[idx].style.visibility = "hidden";
-      fillPanel(idx);
-      inner.classList.add("show");
-      busy = false;
-      q(".pp-close").focus({ preventScroll:true });
-    }, reduceMotion ? 0 : 200);
-  }
-
   wheel.addEventListener("click", function(ev){
     if (ev.target.closest && ev.target.closest(".card-sat-link")) return; // orbit link: just follow it
     var card = ev.target.closest ? ev.target.closest(".person-card") : null;
@@ -2089,10 +2046,6 @@
   });
   q(".pp-backdrop").addEventListener("click", closePanel);
   q(".pp-close").addEventListener("click", closePanel);
-  q(".pp-team-row").addEventListener("click", function(ev){
-    var b = ev.target.closest ? ev.target.closest(".pp-mate") : null;
-    if (b) switchTo(b.getAttribute("data-idx"));
-  });
 
   // Keep the page (and the wheel) still while a panel is open.
   function blockScroll(ev){
