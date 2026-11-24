@@ -115,7 +115,7 @@ const I18N = {
     footer_map_open: "Open in Google Maps",
 
     events_eyebrow: "MCC Calendar",
-    events_h1: "Every gathering, in one place.",
+    events_h1: "Our Gatherings",
     events_lede: "From food nights to festival celebrations, here's what the Myanmar Culture Club has coming up — and what we've hosted before. Can't make it in person? Follow along on Instagram so you never miss the next one.",
     coming_up_eyebrow: "Coming Up",
     coming_up_h2: "More on the calendar",
