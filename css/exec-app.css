@@ -1,0 +1,225 @@
+/* Exec portal (exec.html): layout and look.
+   Loaded after exec.css, which login.html shares. Everything here is scoped to
+   html.exec-app so the sign-in page keeps its own style. */
+
+.exec-app{
+  --bg:#FAFAFA; --bg-raised:#FFFFFF; --bg-sunk:#F1F2F5;
+  --ink:#1B1F2E; --ink-soft:#636978;
+  --line:#E4E6EB; --line-strong:#CDD0D8;
+  --card-shadow:none;
+  font-size:87.5%;                       /* 14px base: this is a tool, not a page to read */
+}
+.exec-app body.app{ background:var(--bg); font-size:1rem; line-height:1.5; }
+.exec-app .app :is(h1, h2, h3, .q-text, .announce-body, .gh-btn, .cal-title, .bc-title, .slot-info strong, .reg-stat b){
+  font-family:inherit; letter-spacing:-0.005em;
+}
+.exec-app .app :is(a, button, summary):focus-visible{ outline:2px solid var(--navy); outline-offset:2px; }
+
+/* ---------- Top bar ---------- */
+.exec-app .app-shell{ display:block; min-height:0; }
+.topbar{ position:sticky; top:0; z-index:60; background:var(--bg-raised); border-bottom:1px solid var(--line); }
+.topbar-in{ max-width:1168px; margin-inline:auto; padding:0 24px; height:52px; display:flex; align-items:stretch; gap:22px; }
+.tb-brand{ display:flex; align-items:center; gap:9px; font-weight:650; white-space:nowrap; text-decoration:none; color:var(--ink); }
+.tb-brand img{ border-radius:50%; display:block; }
+.tb-nav{ display:flex; gap:2px; min-width:0; overflow-x:auto; scrollbar-width:none; }
+.tb-nav::-webkit-scrollbar{ display:none; }
+.tb-tab{
+  display:flex; align-items:center; gap:7px; padding:0 11px; white-space:nowrap;
+  color:var(--ink-soft); font-weight:500; text-decoration:none;
+  border-bottom:2px solid transparent; transition:color .12s ease;
+}
+.tb-tab:hover{ color:var(--ink); }
+.tb-tab[aria-current]{ color:var(--ink); font-weight:600; border-bottom-color:var(--red); }
+.tb-tab.locked{ opacity:.4; pointer-events:none; }
+.exec-app .app .tb-tab:focus-visible{ outline-offset:-3px; }
+.tb-n{ min-width:19px; padding:1px 6px; border-radius:999px; background:var(--bg-sunk); color:var(--ink-soft); font-size:.78rem; font-weight:700; line-height:1.45; text-align:center; }
+.tb-n.alert{ background:var(--red); color:#fff; }
+.tb-n[hidden]{ display:none; }
+
+.acct{ position:relative; margin-left:auto; display:flex; align-items:center; }
+.acct-btn{ width:32px; height:32px; padding:0; border:0; border-radius:50%; background:var(--navy); color:#fff; font:inherit; font-size:.8rem; font-weight:700; cursor:pointer; }
+.acct-menu{
+  position:absolute; right:0; top:calc(100% - 4px); z-index:70; min-width:220px; padding:6px;
+  background:var(--bg-raised); border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px rgba(20,24,40,.12);
+}
+.acct-menu[hidden]{ display:none; }
+.acct-who{ padding:8px 10px 10px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+.acct-who strong{ display:block; font-weight:600; }
+.acct-who span{ color:var(--ink-soft); font-size:.93rem; }
+.acct-menu a, .acct-menu button{
+  display:block; width:100%; padding:8px 10px; border:0; border-radius:6px; background:none;
+  font:inherit; color:var(--ink); text-align:left; text-decoration:none; cursor:pointer;
+}
+.acct-menu a:hover, .acct-menu button:hover{ background:var(--bg-sunk); }
+
+/* ---------- Page ---------- */
+.exec-app .app-content{ max-width:1168px; margin-inline:auto; padding:28px 24px 72px; overflow:visible; }
+.exec-app .view:not([hidden]), .exec-app #view-home:not([hidden]){ display:flex; flex-direction:column; align-items:stretch; max-width:none; gap:18px; }
+.exec-app #view-todo{ max-width:none; }
+.exec-app .view-head{ display:block; margin:0; }
+.exec-app .view-head.split{ display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:36px; }
+.exec-app .view-head h1{ font-size:1.57rem; font-weight:650; line-height:1.2; margin:0; }
+.exec-app .view-head .panel-sub{ margin-top:4px; }
+.head-meta{ color:var(--ink-soft); white-space:nowrap; }
+
+.exec-app .panel{ padding:18px 20px; background:var(--bg-raised); border:1px solid var(--line); border-radius:10px; box-shadow:none; }
+.exec-app .panel h2, .exec-app .h-sub{ font-size:1.07rem; font-weight:650; line-height:1.3; margin-bottom:4px; }
+.exec-app .h-sub{ margin-top:26px; }
+.exec-app .panel-sub{ font-size:.96rem; margin-bottom:14px; max-width:none; }
+.exec-app .meta{ font-size:.89rem; }
+.exec-app .msg{ text-align:left; font-size:.96rem; }
+.exec-app .msg:empty{ display:none; }
+.exec-app .empty{ font-style:normal; }
+
+/* A panel that is a list: header row, then rows edge to edge. */
+.exec-app .panel.rows{ padding:0; overflow:hidden; }
+.panel-head{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); }
+.exec-app .panel-head h2{ margin:0; font-size:1rem; }
+.panel-head a{ color:var(--ink-soft); font-size:.93rem; font-weight:500; text-decoration:none; }
+.panel-head a:hover{ color:var(--ink); }
+.panel-empty{ padding:14px 16px; color:var(--ink-soft); }
+.row-add{
+  display:flex; align-items:center; gap:8px; width:100%; padding:11px 16px;
+  border:0; border-top:1px solid var(--line); background:none; font:inherit; color:var(--ink-soft); text-align:left; cursor:pointer;
+}
+.row-add:hover{ background:var(--bg); color:var(--ink); }
+.row-add svg{ width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; }
+
+/* ---------- Controls ---------- */
+.exec-app .app .btn{
+  min-height:36px; padding:7px 14px; border-radius:8px;
+  font-size:.96rem; font-weight:600; letter-spacing:0; text-transform:none;
+  transition:background .12s ease, border-color .12s ease;
+}
+.exec-app .app .btn:hover{ transform:none; }
+.exec-app .app .btn.ghost{ border-color:var(--line-strong); background:var(--bg-raised); }
+.exec-app .app .btn.ghost:hover{ background:var(--bg-sunk); }
+
+.exec-app .app :is(input[type="text"], input[type="search"], input[type="url"], input[type="date"], input[type="password"], select, textarea){
+  min-height:36px; padding:7px 11px; border:1px solid var(--line-strong); border-radius:8px;
+  background:var(--bg-raised); color:var(--ink); font:inherit; font-size:1rem; height:auto;
+}
+.exec-app .app :is(input, select, textarea):focus-visible{ outline:2px solid rgba(28,36,64,.2); outline-offset:0; border-color:var(--navy); }
+.exec-app .app :is(.field-inline, .tfield > span, .who legend, .reg-pick .meta){
+  font-size:.89rem; font-weight:500; letter-spacing:0; text-transform:none; color:var(--ink-soft);
+}
+.exec-app .group-toggle{ font-size:.93rem; font-weight:500; }
+
+/* Tabs inside a screen: underlined, like the top bar. */
+.exec-app .vtabs, .exec-app .tabs{ display:flex; gap:2px; border-bottom:1px solid var(--line); overflow-x:auto; scrollbar-width:none; }
+.exec-app .vtabs{ max-width:none; margin:-18px -20px 16px; padding:0 10px; }
+.exec-app .tabs{ margin-top:12px; }
+.exec-app :is(.vtab, .tab){
+  flex:none; padding:11px 10px; margin-bottom:-1px; border:0; border-bottom:2px solid transparent; border-radius:0; background:none;
+  font-size:.96rem; font-weight:500; color:var(--ink-soft);
+}
+.exec-app :is(.vtab, .tab):hover{ color:var(--ink); }
+.exec-app :is(.vtab, .tab).on{ background:none; color:var(--ink); font-weight:600; border-bottom-color:var(--navy); }
+
+/* Filters: small pills. */
+.exec-app :is(.chip, .q-filter){ padding:4px 12px; border-color:var(--line-strong); background:var(--bg-raised); font-size:.93rem; font-weight:500; }
+.exec-app .chip.on, .exec-app .q-filter[aria-pressed="true"]{ background:var(--navy); border-color:var(--navy); }
+.exec-app .seg{ border-radius:8px; background:var(--bg-sunk); border:0; }
+.exec-app .seg-btn{ border-radius:6px; font-size:.93rem; font-weight:500; padding:5px 12px; }
+.exec-app .seg-btn.on{ background:var(--bg-raised); color:var(--ink); box-shadow:0 1px 2px rgba(20,24,40,.12); font-weight:600; }
+.exec-app .link-btn{ font-size:.93rem; }
+.exec-app :is(.bcol, .bcard, .ecard, .pcard, .cal-detail, .who, .slot-info, .todo-form, .nl-form, .reg-table-wrap, .cal-day, .cal-evrow){ border-radius:8px; }
+
+/* ---------- Home ---------- */
+.home-grid{ display:grid; grid-template-columns:minmax(0,1.55fr) minmax(0,1fr); gap:18px; align-items:start; }
+.home-grid.solo{ grid-template-columns:minmax(0,760px); }
+.home-grid.solo #home-side{ display:none; }
+.home-col{ display:grid; gap:18px; min-width:0; }
+.home-event-body{ padding:16px; }
+.home-event-body strong{ display:block; font-size:1.14rem; font-weight:650; line-height:1.3; }
+.home-event-body .reg-stats{ margin:14px 0 0; }
+.home-event-body .btn{ margin-top:16px; }
+.home-q-list{ list-style:none; margin:0; padding:0; }
+.home-q-list li + li{ border-top:1px solid var(--line); }
+.home-q-list a{ display:block; padding:11px 16px; font-weight:500; text-decoration:none; }
+.home-q-list a:hover{ background:var(--bg); }
+.home-q-list small{ display:block; font-size:.89rem; font-weight:400; color:var(--ink-soft); }
+
+.exec-app .announce{ padding:14px 16px; background:#FFF9EC; border-color:#EED9A8; border-radius:10px; color:var(--ink); }
+.exec-app .announce .eyebrow{ color:#8A6417; letter-spacing:.08em; }
+.exec-app .announce-body{ font-size:1rem; line-height:1.5; margin-block:4px 6px; }
+.exec-app .announce .meta{ color:var(--ink-soft); }
+
+/* Team notes */
+.exec-app .panel.rows .shout-form{ padding:12px 16px; border-bottom:1px solid var(--line); }
+.exec-app .shout-form textarea{ display:block; width:100%; min-height:36px; resize:none; overflow:hidden; border-radius:8px; }
+.exec-app .shout-row{ margin-top:8px; }
+.exec-app .shout-form:not(:focus-within):has(textarea:placeholder-shown) .shout-row{ display:none; }
+.exec-app .panel.rows > .msg{ padding:10px 16px 0; }
+.exec-app .shout-list{ margin:0; gap:0; }
+.exec-app .shout{ padding:12px 16px; border:0; border-bottom:1px solid var(--line); border-radius:0; background:none; }
+.exec-app .shout:last-child{ border-bottom:0; }
+.exec-app .shout{ display:flex; flex-direction:column; }
+.exec-app .shout-foot{ order:-1; margin:0 0 2px; }
+.exec-app .reacts{ margin-top:8px; }
+/* With a mouse, reactions nobody has used stay out of the way until the note is pointed at. */
+@media (hover:hover){
+  .exec-app .shout:not(:hover):not(:focus-within) .react:not(:has(.n)){ display:none; }
+  .exec-app .shout:not(:hover):not(:focus-within) .reacts:not(:has(.n)){ display:none; }
+}
+.exec-app .shout-list .empty{ padding:14px 16px; text-align:left; }
+.exec-app .shout-by{ font-size:.89rem; font-weight:600; }
+.exec-app .react{ padding:2px 9px; }
+
+/* ---------- Tasks ---------- */
+.exec-app .toolbar{ margin-bottom:12px; }
+.exec-app .tsearch input{ width:220px; border-radius:8px; }
+.exec-app .todo-list{ margin:0; border-radius:8px; }
+.exec-app .panel.rows .todo-list{ border:0; border-radius:0; }
+.exec-app .todo-list[hidden]{ display:none; }
+.exec-app .trow{ min-height:42px; }
+.exec-app .t-name{ font-size:1rem; }
+.exec-app .todo.open{ background:var(--bg); }
+.exec-app .group-head{ background:var(--bg); }
+.exec-app .gh-btn{ font-size:.93rem; font-weight:650; }
+.exec-app .tchip{ font-weight:500; font-size:.82rem; padding:3px 8px; }
+.exec-app .tchip.due.late{ font-weight:600; }
+.exec-app .pill-doing{ font-size:.82rem; font-weight:600; letter-spacing:0; text-transform:none; }
+.exec-app .todo-form{ margin-bottom:16px; padding:12px; border-color:var(--line-strong); background:var(--bg); }
+.exec-app :is(.bcol, .ecard, .pcard, .cal-detail){ background:var(--bg); }
+.exec-app :is(.bcol-head h3, .ecard h3, .pcard h3){ font-size:1rem; font-weight:650; }
+.exec-app .cal-title{ font-size:1.07rem; font-weight:650; }
+.exec-app .cal-nav{ width:34px; height:34px; border-radius:8px; font-size:1.2rem; }
+
+/* ---------- Tables (registrations, members) ---------- */
+.exec-app .reg-bar{ gap:10px; margin-bottom:14px; align-items:flex-end; }
+.exec-app .app .reg-bar :is(#reg-search, #mem-search){ height:auto; min-height:36px; padding:7px 11px; }
+.exec-app .reg-stats{ gap:8px; margin-bottom:14px; }
+.exec-app .reg-stat{ min-width:92px; padding:9px 14px; background:var(--bg-raised); border:1px solid var(--line); border-radius:8px; }
+.exec-app .reg-stat b{ font-size:1.43rem; font-weight:650; }
+.exec-app .reg-stat span{ font-size:.86rem; font-weight:500; letter-spacing:0; text-transform:none; }
+.exec-app .reg-table{ font-size:.96rem; }
+.exec-app .reg-table th{ background:var(--bg); font-size:.86rem; font-weight:600; letter-spacing:0; text-transform:none; }
+.exec-app .reg-tag{ font-size:.82rem; font-weight:500; }
+
+/* ---------- Questions ---------- */
+.exec-app .q-bar{ margin-bottom:6px; }
+.exec-app .q-item{ padding:16px 0; }
+.exec-app .q-text{ font-size:1.07rem; font-weight:600; }
+
+/* ---------- Account ---------- */
+.exec-app #view-account:not([hidden]){ max-width:560px; margin-inline:0; }
+.exec-app .pw-form{ margin-bottom:8px; }
+
+/* ---------- Phones ---------- */
+@media (max-width:820px){
+  .exec-app{ font-size:93.75%; }
+  .topbar-in{ height:auto; flex-wrap:wrap; gap:0 12px; padding:0 16px; }
+  .tb-brand, .acct{ height:48px; }
+  .tb-nav{ order:3; flex:1 0 100%; height:44px; margin:0 -16px; padding:0 6px; border-top:1px solid var(--line); }
+  .exec-app .app-content{ padding:18px 16px 56px; }
+  .home-grid, .home-grid.solo{ grid-template-columns:minmax(0,1fr); }
+  .exec-app .app .btn{ min-height:44px; }
+  .exec-app .app :is(input[type="text"], input[type="search"], input[type="url"], input[type="date"], input[type="password"], select, textarea){ min-height:44px; font-size:16px; }
+  .exec-app .vtabs{ margin:-18px -16px 14px; }
+  .exec-app .panel{ padding:18px 16px; }
+  .exec-app .tsearch input{ width:100%; }
+  .exec-app .reg-stat{ min-width:0; padding:9px 6px; }
+  .exec-app .reg-pick{ margin:0; padding:0; }
+  .exec-app .view-head.split .btn{ flex:none; }
+}

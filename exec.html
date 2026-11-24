@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="exec-app">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -8,7 +8,7 @@
 <meta name="author" content="Naing Lin Khant (Moarz)">
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="same-origin">
-<meta name="theme-color" content="#1C2440">
+<meta name="theme-color" content="#ffffff">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
@@ -18,15 +18,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&display=swap">
 <style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
 <link rel="stylesheet" href="css/exec.css">
-<script>
-(function(){
-  try {
-    if (localStorage.getItem("mcc_exec_bg") === "white") {
-      document.documentElement.setAttribute("data-exec-bg", "white");
-    }
-  } catch (e) { /* ignore */ }
-})();
-</script>
+<link rel="stylesheet" href="css/exec-app.css">
 </head>
 <body data-page="exec" class="app">
 
@@ -39,76 +31,47 @@
 
 <div class="app-shell" id="app-shell" hidden>
 
-  <!-- Sidebar on laptops; becomes the bottom tab bar on phones -->
-  <aside class="side" id="side">
-    <a class="side-brand" href="#home">
-      <img src="images/brand/favicon-192.png" alt="" width="40" height="40">
-      <span>Myanmar Culture Club<small>Exec area</small></span>
-    </a>
+  <header class="topbar">
+    <div class="topbar-in">
+      <a class="tb-brand" href="#home">
+        <img src="images/brand/favicon-192.png" alt="" width="28" height="28">
+        <span>MCC Exec</span>
+      </a>
 
-    <nav class="side-nav" aria-label="Exec area">
-      <a class="nav-item" href="#home" data-view="home">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/></svg>
-        <span>Home</span>
-      </a>
-      <a class="nav-item" href="#todo" data-view="todo">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12.2 2.5 2.5 4.5-5"/></svg>
-        <span>To-do</span>
-      </a>
-      <a class="nav-item" href="#meet" data-view="meet">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-        <span>Meetings</span>
-      </a>
-      <a class="nav-item" href="#newsletters" data-view="newsletters">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M4 7.5 12 13l8-5.5"/></svg>
-        <span><span class="lbl-long">Newsletters</span><span class="lbl-short">News</span></span>
-      </a>
-      <a class="nav-item" href="#registrations" data-view="registrations">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5a2 2 0 0 0 2-2h12a2 2 0 0 0 2 2v3a2 2 0 0 0 0 3v3a2 2 0 0 0-2 2H6a2 2 0 0 0-2-2v-3a2 2 0 0 0 0-3z"/><path d="M14.5 6v12" stroke-dasharray="2 2.2"/></svg>
-        <span><span class="lbl-long">Registrations</span><span class="lbl-short">RSVPs</span></span>
-      </a>
-      <a class="nav-item" href="#questions" data-view="questions">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-4.5 3.5V17H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/><path d="M10 9.3a2 2 0 1 1 2.6 1.9c-.4.2-.6.5-.6.9v.4"/><path d="M12 14.4v.1"/></svg>
-        <span><span class="lbl-long">Questions</span><span class="lbl-short">Q&amp;A</span></span>
-      </a>
-      <a class="nav-item" href="#account" data-view="account">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
-        <span>Account</span>
-      </a>
-    </nav>
+      <nav class="tb-nav" aria-label="Exec area">
+        <a class="tb-tab" href="#home" data-view="home">Home</a>
+        <a class="tb-tab" href="#todo" data-view="todo">Tasks<span class="tb-n" id="nav-n-tasks" hidden></span></a>
+        <a class="tb-tab" href="#meet" data-view="meet">Meetings</a>
+        <a class="tb-tab" href="#newsletters" data-view="newsletters">Newsletters</a>
+        <a class="tb-tab" href="#registrations" data-view="registrations">Registrations</a>
+        <a class="tb-tab" href="#members" data-view="members">Members</a>
+        <a class="tb-tab" href="#questions" data-view="questions">Questions<span class="tb-n alert" id="nav-n-questions" hidden></span></a>
+      </nav>
 
-    <div class="side-foot">
-      <div class="side-me">
-        <strong id="side-name"></strong>
-        <span id="side-role"></span>
+      <div class="acct">
+        <button type="button" class="acct-btn" id="acct-btn" aria-haspopup="true" aria-expanded="false" aria-controls="acct-menu" aria-label="Account menu">
+          <span class="acct-av" id="acct-av" aria-hidden="true"></span>
+        </button>
+        <div class="acct-menu" id="acct-menu" hidden>
+          <div class="acct-who">
+            <strong id="side-name"></strong>
+            <span id="side-role"></span>
+          </div>
+          <a href="#account">Account</a>
+          <a href="index.html">Back to the site</a>
+          <button type="button" data-action="signout">Sign out</button>
+        </div>
       </div>
-      <a class="side-link" href="index.html">Back to the site</a>
-      <button class="side-link" type="button" data-action="signout">Sign out</button>
     </div>
-  </aside>
+  </header>
 
-  <div class="app-main">
-
-    <!-- Slim top bar, phones only -->
-    <header class="app-top">
-      <img src="images/brand/favicon-192.png" alt="" width="32" height="32">
-      <span class="app-top-title" id="top-title">Home</span>
-      <a class="app-top-me" href="#account" aria-label="Account">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.5" r="3.7"/><path d="M4.5 20c.8-3.8 3.8-5.8 7.5-5.8s6.7 2 7.5 5.8"/></svg>
-      </a>
-    </header>
-
-    <main class="app-content" id="app-content" tabindex="-1">
-      <span class="watermark myanmar" aria-hidden="true">မြန်မာ</span>
+  <main class="app-content" id="app-content" tabindex="-1">
 
       <!-- ===================== HOME ===================== -->
-      <section class="view" id="view-home" data-view="home" hidden aria-labelledby="welcome-name">
-        <div class="hero" id="welcome-card">
-          <div class="mingalaba myanmar" aria-hidden="true">မင်္ဂလာပါ</div>
-          <span class="eyebrow">Exec area</span>
-          <h1 id="welcome-name" tabindex="-1">Welcome</h1>
-          <span class="role-chip" id="welcome-role">exec</span>
-          <p class="sub" id="welcome-sub"></p>
+      <section class="view" id="view-home" data-view="home" hidden aria-labelledby="home-h1">
+        <div class="view-head split">
+          <h1 id="home-h1" tabindex="-1">Home</h1>
+          <span class="head-meta" id="home-date"></span>
         </div>
 
         <section class="panel announce" id="announce" hidden aria-labelledby="announce-title">
@@ -117,56 +80,74 @@
           <p class="meta" id="announce-meta"></p>
         </section>
 
-        <div class="quick">
-          <a class="quick-card" href="#todo">
-            <span class="quick-num" id="home-tasks-n">–</span>
-            <span class="quick-label"><strong>Your open tasks</strong><small id="home-tasks-sub">Open the to-do board</small></span>
-          </a>
-          <a class="quick-card" href="#meet">
-            <span class="quick-num" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
-            </span>
-            <span class="quick-label"><strong>Find a meeting time</strong></span>
-          </a>
+        <div class="home-grid" id="home-grid">
+          <div class="home-col">
+            <section class="panel rows" aria-labelledby="home-tasks-title">
+              <div class="panel-head">
+                <h2 id="home-tasks-title">My tasks</h2>
+                <a href="#todo">All tasks</a>
+              </div>
+              <ul class="todo-list" id="home-tasks"></ul>
+              <p class="panel-empty" id="home-tasks-empty" hidden>Nothing assigned to you.</p>
+              <button type="button" class="row-add" id="home-add-task">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Add a task
+              </button>
+            </section>
+
+            <section class="panel rows" id="shout-panel" hidden aria-labelledby="shout-title">
+              <div class="panel-head"><h2 id="shout-title">Team notes</h2></div>
+              <form class="shout-form" id="shout-form">
+                <label class="sr-only" for="shout-body">Note to the team</label>
+                <textarea id="shout-body" maxlength="280" rows="1" placeholder="Write a note to the team"></textarea>
+                <div class="shout-row">
+                  <span class="meta" id="shout-count">0 / 280</span>
+                  <button class="btn" id="shout-btn" type="submit">Post</button>
+                </div>
+              </form>
+              <p class="msg" id="shout-msg" role="status" aria-live="polite"></p>
+              <ul class="shout-list" id="shout-list"></ul>
+            </section>
+          </div>
+
+          <div class="home-col" id="home-side">
+            <section class="panel rows" id="home-event" hidden aria-labelledby="home-event-title">
+              <div class="panel-head">
+                <h2 id="home-event-title">Next event</h2>
+                <span class="head-meta" id="home-event-when"></span>
+              </div>
+              <div class="home-event-body">
+                <strong id="home-event-name"></strong>
+                <p class="meta" id="home-event-info"></p>
+                <div class="reg-stats" id="home-event-stats" hidden></div>
+                <button type="button" class="btn" id="home-event-open" hidden>Open check-in</button>
+              </div>
+            </section>
+
+            <section class="panel rows" id="home-q" hidden aria-labelledby="home-q-title">
+              <div class="panel-head">
+                <h2 id="home-q-title">Waiting on a reply</h2>
+                <a href="#questions">All questions</a>
+              </div>
+              <ul class="home-q-list" id="home-q-list"></ul>
+            </section>
+          </div>
         </div>
-
-        <section class="panel" id="shout-panel" hidden aria-labelledby="shout-title">
-          <h2 id="shout-title">The lounge</h2>
-          <form class="shout-form" id="shout-form">
-            <label class="sr-only" for="shout-body">Your note</label>
-            <textarea id="shout-body" maxlength="280" rows="3" placeholder="What's on your mind?"></textarea>
-            <div class="shout-row">
-              <span class="meta" id="shout-count">0 / 280</span>
-              <button class="btn" id="shout-btn" type="submit">Post</button>
-            </div>
-          </form>
-          <p class="msg" id="shout-msg" role="status" aria-live="polite"></p>
-          <ul class="shout-list" id="shout-list"></ul>
-        </section>
-
-        <section class="panel" id="team-panel" hidden aria-labelledby="team-title">
-          <h2 id="team-title">The team</h2>
-          <ul class="team-list" id="team-list"></ul>
-        </section>
       </section>
 
-      <!-- ===================== TO-DO ===================== -->
+      <!-- ===================== TASKS ===================== -->
       <section class="view" id="view-todo" data-view="todo" hidden aria-labelledby="todo-h1">
-        <div class="view-head">
-          <h1 id="todo-h1" tabindex="-1">To-do board</h1>
-          <p class="panel-sub">Add a task, give it an owner, tick it off. Everyone sees everything.</p>
+        <div class="view-head split">
+          <h1 id="todo-h1" tabindex="-1">Tasks</h1>
+          <button type="button" class="btn" id="todo-new" aria-expanded="false" aria-controls="todo-form">New task</button>
         </div>
 
-        <section class="panel" id="todo-panel" hidden aria-label="Exec to-do board">
-          <div class="viewbar">
-            <div class="vtabs" role="group" aria-label="Board view">
-              <button type="button" class="vtab on" data-tv="list" aria-pressed="true">List</button>
-              <button type="button" class="vtab" data-tv="board" aria-pressed="false">Board</button>
-              <button type="button" class="vtab" data-tv="cal" aria-pressed="false">Calendar</button>
-              <button type="button" class="vtab" data-tv="event" aria-pressed="false">By event</button>
-              <button type="button" class="vtab" data-tv="person" aria-pressed="false">By person</button>
-            </div>
-            <button type="button" class="btn new-task-btn" id="todo-new" aria-expanded="false" aria-controls="todo-form">+ New task</button>
+        <section class="panel" id="todo-panel" hidden aria-label="Tasks">
+          <div class="vtabs" role="group" aria-label="View">
+            <button type="button" class="vtab on" data-tv="list" aria-pressed="true">List</button>
+            <button type="button" class="vtab" data-tv="board" aria-pressed="false">Board</button>
+            <button type="button" class="vtab" data-tv="cal" aria-pressed="false">Calendar</button>
+            <button type="button" class="vtab" data-tv="event" aria-pressed="false">By event</button>
+            <button type="button" class="vtab" data-tv="person" aria-pressed="false">By person</button>
           </div>
 
           <form class="todo-form" id="todo-form" hidden>
@@ -218,8 +199,8 @@
       <!-- ===================== MEETINGS ===================== -->
       <section class="view wide" id="view-meet" data-view="meet" hidden aria-labelledby="meet-h1">
         <div class="view-head">
-          <h1 id="meet-h1" tabindex="-1">Meeting finder</h1>
-          <div class="tabs" role="tablist" aria-label="Meeting finder">
+          <h1 id="meet-h1" tabindex="-1">Meetings</h1>
+          <div class="tabs" role="tablist" aria-label="Meetings">
             <button type="button" class="tab on" role="tab" id="tab-find" data-tab="find" aria-selected="true" aria-controls="pane-find">Find a time</button>
             <button type="button" class="tab" role="tab" id="tab-glance" data-tab="glance" aria-selected="false" aria-controls="pane-glance">Week at a glance</button>
             <button type="button" class="tab" role="tab" id="tab-mine" data-tab="mine" aria-selected="false" aria-controls="pane-mine">My availability</button>
@@ -280,7 +261,7 @@
 
         <!-- Week at a glance -->
         <section class="panel" id="pane-glance" role="tabpanel" aria-labelledby="tab-glance" hidden>
-          <p class="panel-sub">The whole team at once. Darker green means more execs are free, and the number is how many. Tap a block to see who.</p>
+          <p class="panel-sub">Darker means more people are free.</p>
           <p class="meta" id="g-status"></p>
           <div class="grid-wrap" id="g-heat"></div>
           <div class="slot-info" id="g-info" aria-live="polite">Tap a block to see who's free.</div>
@@ -288,7 +269,7 @@
 
         <!-- My availability -->
         <section class="panel" id="pane-mine" role="tabpanel" aria-labelledby="tab-mine" hidden>
-          <p class="panel-sub">Pick a brush, then drag across the blocks to paint when you're usually free. Tap a day name to fill that whole day. Anything you leave blank counts as busy. Easier if most of your week is free: press “Start with everything free”, then paint the times you can't do.</p>
+          <p class="panel-sub">Drag to paint when you're usually free. Blank counts as busy.</p>
           <div class="brushes" role="group" aria-label="Brush">
             <button type="button" class="brush on" data-b="1"><i class="sw s1"></i>Free</button>
             <button type="button" class="brush" data-b="2"><i class="sw s2"></i>If needed</button>
@@ -306,7 +287,7 @@
           </div>
 
           <h2 class="h-sub">Days you can't make it</h2>
-          <p class="panel-sub">One-off clashes like a midterm or a trip. These override your weekly pattern on those dates. Others see that you're unavailable, not why.</p>
+          <p class="panel-sub">Others see that you're unavailable, not why.</p>
           <form class="blk-form" id="blk-form">
             <label class="field-inline">From <input type="date" id="blk-from"></label>
             <label class="field-inline">To (optional) <input type="date" id="blk-to"></label>
@@ -319,17 +300,12 @@
 
       <!-- ===================== NEWSLETTERS ===================== -->
       <section class="view" id="view-newsletters" data-view="newsletters" hidden aria-labelledby="nl-h1">
-        <div class="view-head">
+        <div class="view-head split">
           <h1 id="nl-h1" tabindex="-1">Newsletters</h1>
-          <p class="panel-sub">Draft in Google Docs, track status here. Published issues show up on the public site automatically.</p>
+          <button type="button" class="btn" id="nl-new" aria-expanded="false" aria-controls="nl-form">New newsletter</button>
         </div>
 
         <section class="panel" id="nl-panel" hidden aria-label="Newsletters">
-          <div class="viewbar">
-            <span></span>
-            <button type="button" class="btn new-task-btn" id="nl-new" aria-expanded="false" aria-controls="nl-form">+ New newsletter</button>
-          </div>
-
           <form class="nl-form" id="nl-form" hidden>
             <input class="opt" id="nl-name-input" type="text" maxlength="160" placeholder="Issue name (e.g. November 2026)" aria-label="Issue name" autocomplete="off">
             <input class="opt" id="nl-edit-input" type="url" placeholder="Google Doc edit link" aria-label="Google Doc edit link" autocomplete="off">
@@ -375,15 +351,10 @@
         </div>
       </div>
 
-      <!-- ===================== ACCOUNT ===================== -->
+      <!-- ===================== REGISTRATIONS ===================== -->
       <section class="view wide" id="view-registrations" data-view="registrations" hidden aria-labelledby="reg-h1">
         <div class="view-head">
           <h1 id="reg-h1" tabindex="-1">Registrations</h1>
-          <p class="panel-sub">Everyone who registered on the website, per event. At the door, search a name or the 8-letter ticket code and tick them in.</p>
-          <div class="reg-tabs">
-            <button type="button" class="reg-tab" data-reg-tab="events" aria-pressed="true">Event registrations</button>
-            <button type="button" class="reg-tab" data-reg-tab="members" aria-pressed="false">Club members <b id="mem-n"></b></button>
-          </div>
           <p class="msg" id="reg-msg" role="status" aria-live="polite"></p>
         </div>
         <section class="panel" id="reg-panel" aria-label="Registrations">
@@ -402,15 +373,23 @@
           <p class="meta" id="reg-empty" hidden>No registrations for this event yet.</p>
         </section>
         <p class="meta" id="reg-missing" hidden>Registrations aren't set up yet — run <code>supabase/members-2-registration.sql</code> in the Supabase SQL editor.</p>
-        <section class="panel" id="mem-panel" aria-label="Club members" hidden>
+      </section>
+
+      <!-- ===================== MEMBERS (from join.html) ===================== -->
+      <section class="view wide" id="view-members" data-view="members" hidden aria-labelledby="mem-h1">
+        <div class="view-head">
+          <h1 id="mem-h1" tabindex="-1">Members</h1>
+          <p class="msg" id="mem-msg" role="status" aria-live="polite"></p>
+        </div>
+        <section class="panel" id="mem-panel" aria-label="Club members">
           <div class="reg-bar">
-            <input class="opt" id="mem-search" type="search" placeholder="Search name, email, UTORid or student number" aria-label="Search club members" autocomplete="off">
+            <input class="opt" id="mem-search" type="search" placeholder="Search name, email, UTORid or student number" aria-label="Search members" autocomplete="off">
             <button type="button" class="btn ghost" id="mem-csv">Download CSV</button>
           </div>
           <div class="reg-stats" id="mem-stats"></div>
           <div class="reg-table-wrap">
             <table class="reg-table mem-table" id="mem-table">
-              <thead><tr><th>Name</th><th>Connection</th><th>Email</th><th>UTORid</th><th>Student #</th><th>Year</th><th>Joined</th><th class="c">Remove</th></tr></thead>
+              <thead><tr><th>Name</th><th>Connection</th><th>Email</th><th>UTORid</th><th>Student #</th><th>Year</th><th>Joined</th><th class="c"><span class="sr-only">Remove</span></th></tr></thead>
               <tbody id="mem-rows"></tbody>
             </table>
           </div>
@@ -423,7 +402,6 @@
       <section class="view wide" id="view-questions" data-view="questions" hidden aria-labelledby="q-h1">
         <div class="view-head">
           <h1 id="q-h1" tabindex="-1">Questions</h1>
-          <p class="panel-sub">When Ask MCC can't answer, visitors can send the question to you. Reply by email, and tick "Teach Ask MCC" so the bot answers it next time (it picks up new answers within 6 hours).</p>
           <p class="msg" id="q-msg" role="status" aria-live="polite"></p>
         </div>
         <section class="panel" id="q-panel" aria-label="Questions from Ask MCC">
@@ -433,7 +411,7 @@
             <button type="button" class="q-filter" data-q="dismissed" aria-pressed="false">Dismissed <b id="q-n-dismissed">0</b></button>
           </div>
           <ol class="q-list" id="q-list"></ol>
-          <p class="meta" id="q-empty" hidden>Nothing here. Ask MCC is keeping up!</p>
+          <p class="meta" id="q-empty" hidden>No questions here.</p>
         </section>
         <p class="meta" id="q-missing" hidden>Questions aren't set up yet — run <code>supabase/ask-mcc-questions.sql</code> in the Supabase SQL editor.</p>
       </section>
@@ -457,33 +435,13 @@
             <label class="group-toggle pw-show"><input type="checkbox" id="pw-show"> Show passwords</label>
             <button class="btn" id="pw-btn" type="submit">Save password</button>
           </form>
-          <p class="meta">At least 10 characters. A few random words is a good way to make a long one you can remember.</p>
+          <p class="meta">At least 10 characters.</p>
           <p class="msg" id="pw-msg" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="panel" id="bg-panel" aria-labelledby="bg-title">
-          <h2 id="bg-title">Background</h2>
-          <p class="panel-sub">Pick how the portal looks for you. Only changes it on this browser.</p>
-          <div class="bg-choice" id="bg-choice" role="radiogroup" aria-label="Background color">
-            <button type="button" class="bg-opt" data-bg="cream" role="radio" aria-checked="true">
-              <span class="bg-swatch bg-swatch-cream" aria-hidden="true"></span>
-              Cream (current)
-            </button>
-            <button type="button" class="bg-opt" data-bg="white" role="radio" aria-checked="false">
-              <span class="bg-swatch bg-swatch-white" aria-hidden="true"></span>
-              White
-            </button>
-          </div>
-        </section>
-
-        <section class="panel account-actions" id="account-actions">
-          <a class="btn ghost" href="index.html">Back to the site</a>
-          <button class="btn" type="button" data-action="signout">Sign out</button>
-        </section>
       </section>
 
-    </main>
-  </div>
+  </main>
 </div>
 
 <script src="js/supabase.js"></script>

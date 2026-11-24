@@ -167,11 +167,7 @@
         });
     }
 
-    // Set to true to show the "The team" panel again. The roster still loads either way,
-    // because names and the to-do assignee list depend on it.
-    var SHOW_TEAM_PANEL = false;
-
-    // ----- Team roster (also feeds the name lookup + assignee dropdown) -----
+    // ----- Team roster (feeds the name lookup + assignee dropdown) -----
     function loadTeam() {
       return sb.from("profiles").select("id, display_name, role").order("created_at", { ascending: true })
         .then(function (r) {
@@ -179,15 +175,6 @@
           team = r.data;
           names = {};
           team.forEach(function (p) { names[p.id] = p.display_name; });
-          var ul = $("team-list");
-          ul.textContent = "";
-          team.forEach(function (p) {
-            var li = el("li", "team-card");
-            li.appendChild(el("strong", null, p.display_name));
-            li.appendChild(el("span", null, p.role));
-            ul.appendChild(li);
-          });
-          $("team-panel").hidden = !SHOW_TEAM_PANEL;
         });
     }
 
@@ -234,7 +221,7 @@
       var ul = $("shout-list");
       ul.textContent = "";
       if (!rows.length) {
-        ul.appendChild(el("li", "empty", "Nothing here yet. Say hi!"));
+        ul.appendChild(el("li", "empty", "No notes yet."));
         return;
       }
       rows.forEach(function (s) {
@@ -409,11 +396,15 @@
     }
 
     function loadSheetEvents() {
-      if (typeof loadCSV !== "function" || typeof EVENTS_CSV_URL === "undefined") return Promise.resolve();
-      var fallback = typeof FALLBACK_EVENTS_CSV !== "undefined" ? FALLBACK_EVENTS_CSV : "";
-      return loadCSV(EVENTS_CSV_URL, fallback).then(function (rows) {
-        var sp = splitEvents(rows);
+      // site.js owns the Sheet: fresh copy if Google answers, else this browser's last copy, else the bundled one.
+      if (typeof fetchCSVText !== "function" || typeof safeParse !== "function" || typeof EVENTS_CSV_URL === "undefined") return Promise.resolve();
+      var fallback = (typeof readCachedCSV === "function" && readCachedCSV(EVENTS_CSV_URL)) ||
+        (typeof FALLBACK_EVENTS_CSV !== "undefined" ? FALLBACK_EVENTS_CSV : "");
+      return fetchCSVText(EVENTS_CSV_URL).then(function (text) {
+        var sp = splitEvents(safeParse(text || fallback));
         eventNames = []; eventDates = {}; eventInfo = {};
+        nextEvent = sp.upcoming[0] || null;
+        renderHomeEvent();
         sp.upcoming.concat(sp.past.slice(0, 12)).forEach(function (e) {
           var n = (e.name || "").trim();
           if (n) {
@@ -649,8 +640,7 @@
       var done = base.filter(function (t) { return t.status === "done"; });
       $("n-open").textContent = open.length;
       $("n-done").textContent = done.length;
-      $("home-tasks-n").textContent = mineAll.length;
-      $("home-tasks-sub").textContent = mineAll.length ? "" : "Nothing assigned to you right now";
+      renderHomeTasks(mineAll, today);
       if (todoFilter !== "done") todoFilter = "open";
 
       document.querySelectorAll("#todo-panel .chip[data-filter]").forEach(function (c) {
@@ -668,7 +658,7 @@
         ul.appendChild(el("li", "empty",
           query ? "No tasks match \u201C" + query + "\u201D." :
           todoFilter === "done" ? "Nothing ticked off yet." :
-          onlyMine ? "Nothing assigned to you. Nice." : "No open tasks. Tap \u201C+ New task\u201D to add one."));
+          onlyMine ? "Nothing assigned to you." : "No open tasks."));
         return;
       }
 
@@ -700,6 +690,100 @@
       if (todoFilter === "done" && !query && done.length > 30) {
         ul.appendChild(el("li", "empty", "Showing the 30 most recent."));
       }
+    }
+
+    // ----- Home -----
+    // Home is a work list built from what the other screens already load: my open tasks,
+    // the next event with its registrations, and questions still waiting for a reply.
+    var nextEvent = null;       // soonest upcoming row of the public events Sheet
+    var HOME_TASKS_MAX = 6;
+    var addOnArrival = false;   // "Add a task" on Home: open the new-task form on arriving at Tasks
+
+    function renderHomeTasks(mine, today) {
+      var ul = $("home-tasks"), far = "9999-12-31";
+      var rows = mine.slice().sort(function (a, b) { return (dueOf(a) || far).localeCompare(dueOf(b) || far); });
+      ul.textContent = "";
+      rows.slice(0, HOME_TASKS_MAX).forEach(function (t) { ul.appendChild(todoItem(t, today, { hideWho: true })); });
+      ul.hidden = !rows.length;
+      $("home-tasks-empty").hidden = rows.length > 0;
+      var n = $("nav-n-tasks");
+      n.textContent = String(rows.length);
+      n.hidden = !rows.length;
+    }
+
+    function daysAway(ymd) {
+      var a = new Date(localToday() + "T00:00:00"), b = new Date(ymd + "T00:00:00");
+      var d = Math.round((b - a) / 86400000);
+      return isNaN(d) || d < 0 ? "" : d === 0 ? "Today" : d === 1 ? "Tomorrow" : "In " + d + " days";
+    }
+
+    function homeEventId() {
+      if (!nextEvent) return "";
+      return typeof registrationId === "function" ? (registrationId(nextEvent) || "") : "";
+    }
+
+    function renderHomeEvent() {
+      var box = $("home-event");
+      box.hidden = !nextEvent;
+      if (nextEvent) {
+        var onSite = String(nextEvent.link || "").trim().toLowerCase() === "site";
+        var id = homeEventId();
+        var all = regs.filter(function (r) { return id && r.event_id === id; });
+        $("home-event-name").textContent = (nextEvent.name || "").trim();
+        $("home-event-when").textContent = nextEvent.date ? daysAway(nextEvent.date) : "";
+        $("home-event-info").textContent = [nextEvent.date ? dueLabel(nextEvent.date) : "", (nextEvent.time || "").trim(), (nextEvent.location || "").trim()]
+          .filter(Boolean).join(" \u00b7 ");
+        var stats = $("home-event-stats"), show = onSite || all.length > 0;
+        stats.textContent = "";
+        if (show) {
+          var members = all.filter(function (r) { return r.user_id; }).length;
+          [[all.length, "Registered"], [members, "Members"], [all.length - members, "Guests"]].forEach(function (s) {
+            var b = el("div", "reg-stat"); b.appendChild(el("b", null, String(s[0]))); b.appendChild(el("span", null, s[1])); stats.appendChild(b);
+          });
+        }
+        stats.hidden = !show;
+        $("home-event-open").hidden = !show;
+      }
+      syncHomeSide();
+    }
+
+    function renderHomeQuestions() {
+      var open = qs.filter(function (q) { return q.status === "open"; });
+      var ul = $("home-q-list");
+      ul.textContent = "";
+      open.slice(0, 3).forEach(function (q) {
+        var li = el("li"), a = el("a", null, q.question);
+        a.href = "#questions";
+        a.appendChild(el("small", null, "Asked " + when(q.created_at)));
+        li.appendChild(a);
+        ul.appendChild(li);
+      });
+      $("home-q").hidden = !open.length;
+      var n = $("nav-n-questions");
+      n.textContent = String(open.length);
+      n.hidden = !open.length;
+      syncHomeSide();
+    }
+
+    // With nothing in the right-hand column, the left one takes the full width.
+    function syncHomeSide() {
+      $("home-grid").classList.toggle("solo", $("home-event").hidden && $("home-q").hidden);
+    }
+
+    function initHome() {
+      $("home-date").textContent = new Date().toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+      $("home-add-task").addEventListener("click", function () {
+        addOnArrival = true;        // showView opens the form once the Tasks screen is up
+        navigate("todo");
+      });
+      $("home-event-open").addEventListener("click", function () {
+        var id = homeEventId();
+        if (id) regEvent = id;
+        navigate("registrations");
+      });
+      // The note box grows with what's typed instead of scrolling inside itself.
+      var ta = $("shout-body");
+      ta.addEventListener("input", function () { ta.style.height = "auto"; ta.style.height = ta.scrollHeight + 2 + "px"; });
     }
 
     function loadTodos() {
@@ -1273,7 +1357,7 @@
       var list = $("nl-list");
       list.innerHTML = "";
       if (!newsletters.length) {
-        list.appendChild(el("li", "empty", "No newsletters yet. Add one above."));
+        list.appendChild(el("li", "empty", "No newsletters yet."));
         return;
       }
       newsletters.forEach(function (n) { list.appendChild(newsletterItem(n)); });
@@ -1295,11 +1379,13 @@
         .order("created_at", { ascending: true })
         .then(function (r) {
           regOk = !r.error;
-          showRegTab();
+          $("reg-panel").hidden = !regOk;
+          $("reg-missing").hidden = regOk;
           if (r.error) return;
           regs = r.data || [];
           renderRegEvents();
           renderRegs();
+          renderHomeEvent();
           stamp("registrations");
         });
     }
@@ -1312,7 +1398,7 @@
       });
       var list = Object.keys(byId).map(function (k) { return byId[k]; })
         .sort(function (a, b) { return (b.date || "").localeCompare(a.date || ""); });
-      if (!regEvent || !byId[regEvent]) regEvent = list.length ? list[0].id : "";
+      if (!regEvent || !byId[regEvent]) regEvent = byId[homeEventId()] ? homeEventId() : (list.length ? list[0].id : "");
       sel.textContent = "";
       if (!list.length) { var o0 = el("option", null, "No registrations yet"); o0.value = ""; sel.appendChild(o0); }
       list.forEach(function (e) {
@@ -1365,6 +1451,7 @@
             if (res.error) { box.checked = !box.checked; setMsg($("reg-msg"), "Couldn't save that check-in. Try again.", "error"); return; }
             r.checked_in_at = val;
             renderRegs();
+            renderHomeEvent();
           });
         });
         c.appendChild(box); tr.appendChild(c);
@@ -1396,27 +1483,18 @@
       $("reg-event").addEventListener("change", function () { regEvent = this.value; renderRegs(); });
       $("reg-search").addEventListener("input", renderRegs);
       $("reg-csv").addEventListener("click", regCsv);
-      $("mem-search").addEventListener("input", renderMembers);
-      $("mem-csv").addEventListener("click", memCsv);
-      document.querySelectorAll(".reg-tab").forEach(function (b) {
-        b.addEventListener("click", function () { regTab = b.getAttribute("data-reg-tab"); showRegTab(); });
-      });
     }
 
     // ----- Club members (from the Join the Club form, join.html) -----
-    var mems = [], regTab = "events", regOk = true, memOk = true;
+    var mems = [], regOk = true, memOk = true, memInit = false;
     var MEM_KIND = { undergrad: "Undergrad", grad: "Grad student", faculty: "Faculty / staff", alumni: "Alumni", external: "Not at UofT" };
     function memName(m) { return m.first_name + " " + m.last_name + (m.preferred_name ? " (" + m.preferred_name + ")" : ""); }
 
-    function showRegTab() {
-      var onMembers = regTab === "members";
-      document.querySelectorAll(".reg-tab").forEach(function (b) {
-        b.setAttribute("aria-pressed", String(b.getAttribute("data-reg-tab") === regTab));
-      });
-      $("reg-panel").hidden = onMembers || !regOk;
-      $("reg-missing").hidden = onMembers || regOk;
-      $("mem-panel").hidden = !onMembers || !memOk;
-      $("mem-missing").hidden = !onMembers || memOk;
+    function initMembers() {
+      if (memInit) return;
+      memInit = true;
+      $("mem-search").addEventListener("input", renderMembers);
+      $("mem-csv").addEventListener("click", memCsv);
     }
 
     function loadMembers() {
@@ -1426,8 +1504,8 @@
         .then(function (r) {
           memOk = !r.error;
           mems = r.data || [];
-          $("mem-n").textContent = memOk ? String(mems.length) : "";
-          showRegTab();
+          $("mem-panel").hidden = !memOk;
+          $("mem-missing").hidden = memOk;
           if (memOk) renderMembers();
           stamp("members");
         });
@@ -1478,11 +1556,10 @@
           sb.from("club_members").delete().eq("id", m.id).then(function (res) {
             if (res.error) {
               armed = null; del.disabled = false; del.textContent = "Remove";
-              setMsg($("reg-msg"), "Couldn't remove that member. Try again.", "error");
+              setMsg($("mem-msg"), "Couldn't remove that member. Try again.", "error");
               return;
             }
             mems = mems.filter(function (x) { return x.id !== m.id; });
-            $("mem-n").textContent = String(mems.length);
             renderMembers();
           });
         });
@@ -1555,6 +1632,7 @@
       var counts = { open: 0, answered: 0, dismissed: 0 };
       qs.forEach(function (q) { counts[q.status] = (counts[q.status] || 0) + 1; });
       Object.keys(counts).forEach(function (k) { var b = $("q-n-" + k); if (b) b.textContent = counts[k]; });
+      renderHomeQuestions();
       document.querySelectorAll(".q-filter").forEach(function (b) { b.setAttribute("aria-pressed", String(b.getAttribute("data-q") === qShow)); });
       var list = $("q-list"), rows = qs.filter(function (q) { return q.status === qShow; });
       list.textContent = "";
@@ -1762,35 +1840,11 @@
       });
     }
 
-    // ----- Background preference (Account) -- per-browser via localStorage,
-    // overrides the --bg/--bg-raised/--bg-sunk vars the whole app is built on -----
-    function initAppearance() {
-      var KEY = "mcc_exec_bg";
-      var opts = document.querySelectorAll("#bg-choice .bg-opt");
-      if (!opts.length) return;
-      var saved = "cream";
-      try { if (localStorage.getItem(KEY) === "white") saved = "white"; } catch (e) { /* ignore */ }
-
-      function apply(v) {
-        document.documentElement.setAttribute("data-exec-bg", v === "white" ? "white" : "cream");
-        opts.forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-bg") === v)); });
-      }
-      apply(saved);
-
-      opts.forEach(function (b) {
-        b.addEventListener("click", function () {
-          var v = b.getAttribute("data-bg");
-          try { localStorage.setItem(KEY, v); } catch (e) { /* ignore */ }
-          apply(v);
-        });
-      });
-    }
-
     // ----- App shell: views, routing, lazy loading -----
-    var VIEWS = ["home", "todo", "meet", "newsletters", "registrations", "questions", "account"];
-    var TITLES = { home: "Home", todo: "To-do board", meet: "Meeting finder", newsletters: "Newsletters", registrations: "Registrations", questions: "Questions", account: "Account" };
+    var VIEWS = ["home", "todo", "meet", "newsletters", "registrations", "members", "questions", "account"];
+    var TITLES = { home: "Home", todo: "Tasks", meet: "Meetings", newsletters: "Newsletters", registrations: "Registrations", members: "Members", questions: "Questions", account: "Account" };
     var locked = false;       // true until a new exec has chosen their own password
-    var appStarted = false, viewNow = null, welcomed = false;
+    var appStarted = false, viewNow = null;
     var loadedAt = {};        // view key -> ms timestamp of last data load
     function stamp(k) { loadedAt[k] = Date.now(); }
     function fresh(k, secs) { return loadedAt[k] && Date.now() - loadedAt[k] < secs * 1000; }
@@ -1804,10 +1858,9 @@
     }
     function setLocked(v) {
       locked = v;
-      document.querySelectorAll(".nav-item").forEach(function (a) {
-        var lock = v && a.getAttribute("data-view") !== "account";
-        a.classList.toggle("locked", lock);
-        if (lock) a.setAttribute("aria-disabled", "true"); else a.removeAttribute("aria-disabled");
+      document.querySelectorAll(".tb-tab").forEach(function (a) {
+        a.classList.toggle("locked", v);
+        if (v) a.setAttribute("aria-disabled", "true"); else a.removeAttribute("aria-disabled");
       });
     }
 
@@ -1817,30 +1870,22 @@
       initShoutForm();
       initNewsletterForm();
       initNewsletterPreview();
-      initAppearance();
+      initHome();
       // Team first: its names + ids feed the lounge reactions and the to-do board.
       return loadTeam().then(function () {
         initTodoForm();
-        return Promise.all([loadAnnouncement(), loadShouts(), loadSheetEvents().then(loadTodos)]);
+        // Questions and registrations load up front as well: Home and the tab counts show them.
+        return Promise.all([loadAnnouncement(), loadShouts(), loadSheetEvents().then(loadTodos), loadQuestions(), loadRegistrations()]);
       }).then(function () { enterView(viewNow); });
-    }
-
-    function maybeWelcome() {
-      if (welcomed) return;
-      welcomed = true;
-      var seen = false;
-      try { seen = !!sessionStorage.getItem("mcc_welcomed"); sessionStorage.setItem("mcc_welcomed", "1"); } catch (e) { /* ignore */ }
-      if (seen || reducedMotion() || typeof confettiBurst !== "function") return;
-      var rect = $("welcome-card").getBoundingClientRect();
-      confettiBurst(rect.left + rect.width / 2, rect.top + 60);
     }
 
     // Runs whenever a view is shown (and once data is ready). Data is refreshed if it's gone stale.
     function enterView(name) {
       if (!appStarted || !name) return;
       if (name === "home") {
-        maybeWelcome();
         if (!fresh("home", 20)) { loadAnnouncement(); loadShouts(); }
+        if (!fresh("questions", 60)) loadQuestions();
+        if (!fresh("registrations", 60)) loadRegistrations();
       } else if (name === "todo") {
         if (!fresh("todo", 15)) loadTodos();
       } else if (name === "meet") {
@@ -1850,6 +1895,8 @@
       } else if (name === "registrations") {
         initRegistrations();
         if (!fresh("registrations", 10)) loadRegistrations();
+      } else if (name === "members") {
+        initMembers();
         if (!fresh("members", 10)) loadMembers();
       } else if (name === "questions") {
         initQuestions();
@@ -1860,11 +1907,12 @@
     function showView(name, focusHeading) {
       if (locked) name = "account";
       VIEWS.forEach(function (v) { $("view-" + v).hidden = v !== name; });
-      document.querySelectorAll(".nav-item").forEach(function (a) {
-        if (a.getAttribute("data-view") === name) a.setAttribute("aria-current", "page");
-        else a.removeAttribute("aria-current");
+      document.querySelectorAll(".tb-tab").forEach(function (a) {
+        if (a.getAttribute("data-view") === name) {
+          a.setAttribute("aria-current", "page");
+          if (a.scrollIntoView) a.scrollIntoView({ block: "nearest", inline: "center" });   // phones: the tab row scrolls
+        } else a.removeAttribute("aria-current");
       });
-      $("top-title").textContent = TITLES[name];
       document.title = TITLES[name] + " \u2014 Myanmar Culture Club";
       var changed = viewNow !== name;
       viewNow = name;
@@ -1876,6 +1924,7 @@
         }
       }
       enterView(name);
+      if (name === "todo" && addOnArrival) { addOnArrival = false; showAddForm(true); }
     }
 
     // ----- Choose / change password -----
@@ -1941,6 +1990,18 @@
       });
     }
 
+    // ----- Account menu (top right) -----
+    function initAccountMenu() {
+      var btn = $("acct-btn"), menu = $("acct-menu");
+      function set(open) { menu.hidden = !open; btn.setAttribute("aria-expanded", String(open)); }
+      btn.addEventListener("click", function () { set(menu.hidden); });
+      menu.addEventListener("click", function (e) { if (e.target.closest("a, button")) set(false); });
+      document.addEventListener("click", function (e) { if (!menu.hidden && !e.target.closest(".acct")) set(false); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && !menu.hidden) { set(false); btn.focus(); }
+      });
+    }
+
     // ----- boot -----
     function bootFail(text) {
       var bt = $("boot-text");
@@ -1953,22 +2014,14 @@
 
     window.addEventListener("hashchange", function () { if (appStarted || viewNow) showView(viewFromHash(), true); });
 
-    // Phones: hide the bottom tab bar while the on-screen keyboard is up.
-    function isField(t) { return t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) && !/^(checkbox|radio|button|submit)$/.test(t.type || ""); }
-    document.addEventListener("focusin", function (e) { if (isField(e.target)) document.body.classList.add("typing"); });
-    document.addEventListener("focusout", function () {
-      setTimeout(function () { if (!isField(document.activeElement)) document.body.classList.remove("typing"); }, 60);
-    });
-
-    document.querySelector(".side-nav").addEventListener("click", function (e) {
-      var a = e.target.closest(".nav-item");
-      if (a && locked && a.getAttribute("data-view") !== "account") e.preventDefault();
+    document.querySelector(".tb-nav").addEventListener("click", function (e) {
+      var a = e.target.closest(".tb-tab");
+      if (a && locked) e.preventDefault();
     });
 
     document.querySelectorAll('[data-action="signout"]').forEach(function (b) {
       b.addEventListener("click", function () {
         b.disabled = true;
-        try { sessionStorage.removeItem("mcc_welcomed"); } catch (e) { /* ignore */ }
         clearSid(); sb.auth.signOut().then(goLogin, goLogin);
       });
     });
@@ -1998,11 +2051,10 @@
             me = { id: user.id, name: name, role: role, email: user.email || "" };
             startHeartbeat();
 
-            $("welcome-name").textContent = "Welcome, " + name;
-            $("welcome-sub").textContent = "You're signed in as " + me.email;
-            $("welcome-role").textContent = role;
             $("side-name").textContent = name;
             $("side-role").textContent = role;
+            $("acct-av").textContent = initials(name);
+            initAccountMenu();
             $("account-sub").textContent = name + " · " + role + " · " + me.email;
             $("boot").hidden = true;
             $("app-shell").hidden = false;
