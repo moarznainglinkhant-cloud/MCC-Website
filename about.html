@@ -917,6 +917,23 @@
 </script>
 <!-- Fetch a page as soon as the visitor shows intent (hover / press), so the click doesn't wait on the network. -->
 <script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
+<style>
+/* Laptops: the team list takes the place of the wheel, crest and big title.
+   Left edge lines up with the site's content edge (logo, "Connect"). Cards are untouched. Phones keep the current layout. */
+.wheel-sticky:not(.is-mobile) .wheel-ring, .wheel-sticky:not(.is-mobile) .wheel-dot, .wheel-sticky:not(.is-mobile) .wheel-hub,
+.wheel-sticky:not(.is-mobile) .wheel-progress, .wheel-sticky:not(.is-mobile) .wheel-title,
+.wheel-sticky:not(.is-mobile) .close-ripples, .wheel-sticky:not(.is-mobile) .dot-ripple{ display:none !important; }
+.wheel-sticky:not(.is-mobile) .wheel-index{ display:flex; right:auto; left:var(--list-left, 56px); align-items:flex-start; gap:4px; }
+.wheel-sticky:not(.is-mobile) .wheel-index button{
+  flex-direction:row-reverse; gap:14px; font-size:1rem; line-height:1.2; padding:6px 0; opacity:.5;
+  transition: font-size .55s cubic-bezier(.2,.8,.2,1), opacity .3s ease, color .3s ease;
+}
+.wheel-sticky:not(.is-mobile) .wheel-index button.active{
+  font-family:'Fraunces',serif; font-weight:600; font-size:var(--list-big, 2.4rem); letter-spacing:-.01em; opacity:1; color:var(--ink);
+}
+.wheel-sticky:not(.is-mobile) .wheel-index button .dot{ flex:none; }
+.wheel-sticky:not(.is-mobile) .wheel-index button.active .dot{ transform:scale(1.6); }
+</style>
 </head>
 <body>
 
@@ -1389,7 +1406,7 @@
 
   // Pick the column count that lets each department show at the largest size.
   function chooseColumns(c, n, maxCols, availW, availH, mobileW){
-    var best = { fit:-1 };
+    var best = { fit:-1 }, wide = { fit:-1 };
     for (var cols = 1; cols <= Math.min(maxCols, n); cols++){
       if (L.mobile){
         c.style.width = (n === 1 ? Math.min(mobileW, 240) : mobileW) + "px";
@@ -1400,7 +1417,11 @@
       }
       var fit = Math.min(1, availW / c.offsetWidth, availH / c.offsetHeight);
       if (fit > best.fit + 0.001){ best = { fit:fit, w:c.style.width, g:c.style.gridTemplateColumns }; }
+      if (cols === 3) wide = { fit:fit, w:c.style.width, g:c.style.gridTemplateColumns };
     }
+    // Big teams (5 or more, i.e. Events and Media) go three across on laptops whenever that keeps the cards
+    // at least 90% as big as the tallest arrangement would. Smaller teams keep the original choice.
+    if (!L.mobile && n >= 5 && maxCols >= 3 && wide.fit >= best.fit * 0.9) best = wide;
     c.style.width = best.w;
     c.style.gridTemplateColumns = best.g;
     return best.fit;
@@ -1547,7 +1568,7 @@
     var r = -p * STEP_DEG - (1 - e) * 40;              // dials in on arrival, completes a full turn at the end
     wheel.style.left = hx + "px";
     wheel.style.top = hy + "px";
-    wheel.style.transform = "rotate(" + r + "deg)";
+    wheel.style.transform = L.mobile ? "rotate(" + r + "deg)" : "none";   // laptops: no turning
     hub.style.left = hx + "px";
     hub.style.top = hy + "px";
     hub.style.transform = "translate(-50%,-50%) scale(" + (0.82 + 0.18 * e).toFixed(3) + ")";
@@ -1562,7 +1583,12 @@
       var blur = Math.min(d, 1) * 4;
       c.style.opacity = op.toFixed(3);
       c.style.filter = blur > 0.05 ? "blur(" + blur.toFixed(2) + "px)" : "none";
-      c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(4) + ")";
+      if (L.mobile){
+        c.style.transform = "translate(" + L.pos[k].x + "px," + L.pos[k].y + "px) translate(-50%,-50%) rotate(" + (-r) + "deg) scale(" + sc.toFixed(4) + ")";
+      } else {
+        // Laptops: each team travels straight up: the next one rises from below as you scroll, the current one leaves upward.
+        c.style.transform = "translate(" + L.R + "px," + ((k - p) * L.H * 0.45).toFixed(1) + "px) translate(-50%,-50%) scale(" + sc.toFixed(4) + ")";
+      }
       c.style.pointerEvents = d < 0.4 && close < 0.2 ? "auto" : "none";
       c.style.visibility = op < 0.01 ? "hidden" : "visible";
 
@@ -2199,5 +2225,30 @@
 
 
 <script src="js/ask-mcc.js" data-api="https://ask-mcc.onrender.com"></script>
+<script>
+/* Team list (laptops): place it on the site's left content edge, and size the current team's name so the
+   longest one ("External Relations") ends where the old title column ended, so the cards never move. */
+(function(){
+  var sticky=document.getElementById('wheelSticky'), ix=document.getElementById('wheelIndex'), title=document.getElementById('wheelTitle');
+  var wrap=document.querySelector('header.nav .wrap');
+  if(!sticky||!ix||!title||!wrap) return;
+  var probe=document.createElement('span');
+  probe.style.cssText="position:absolute;visibility:hidden;white-space:nowrap;font:600 100px Fraunces,Georgia,serif;letter-spacing:-.01em";
+  document.body.appendChild(probe);
+  function fit(){
+    var r=wrap.getBoundingClientRect(), cs=getComputedStyle(wrap);
+    var left=r.left+parseFloat(cs.paddingLeft)-sticky.getBoundingClientRect().left;   /* the sticky box can sit a few px in from the window edge */
+    sticky.style.setProperty('--list-left', left.toFixed(1)+'px');
+    var right=(parseFloat(title.style.left)||0)+(parseFloat(title.style.width)||0);
+    var longest=0;
+    ix.querySelectorAll('button').forEach(function(b){ probe.textContent=b.textContent; longest=Math.max(longest, probe.offsetWidth/100); });
+    var room=right-left-13-14;                       /* minus the dot and its gap */
+    var px=Math.max(26, Math.min(42, room/longest));
+    sticky.style.setProperty('--list-big', px.toFixed(1)+'px');
+  }
+  (document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(fit);
+  addEventListener('resize', fit); setTimeout(fit,300); setTimeout(fit,1500);
+})();
+</script>
 </body>
 </html>
