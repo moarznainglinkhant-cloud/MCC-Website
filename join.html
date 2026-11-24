@@ -235,23 +235,18 @@
     display:grid; grid-template-columns: minmax(0,5fr) minmax(0,6fr);
     gap: clamp(32px,6vw,88px); align-items:start;
   }
-  .join-intro h1{
-    font-weight:600; font-size:clamp(2.1rem,4.4vw,3.3rem); line-height:1.08; letter-spacing:-0.01em;
-    margin-block:14px 16px;
-  }
-  .join-intro .lede{ font-family:'Fraunces', Georgia, serif; font-size:1.12rem; color:var(--ink-soft); }
-  .join-photo{ margin:clamp(26px,4vw,40px) 0 0; border-radius:20px; overflow:hidden; aspect-ratio:3/2; background:var(--bg-sunk); }
+  .join-photo{ margin:0; border-radius:20px; overflow:hidden; aspect-ratio:4/3; background:var(--bg-sunk); }
   .join-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 62%; display:block; }
   .join-panel{ padding-top:6px; scroll-margin-top:110px; }
   @media (max-width:900px){
-    .join-grid{ grid-template-columns:1fr; }
+    .join-grid{ display:block; }
     .join-photo{ display:none; }
   }
 
   /* One question at a time. */
   .step-bar{ height:3px; background:rgba(28,36,64,.12); border-radius:3px; overflow:hidden; }
   .step-bar i{ display:block; height:100%; width:0; background:var(--red); border-radius:3px; transition:width .45s cubic-bezier(.2,.8,.2,1); }
-  .step-n{ margin-top:14px; font-size:0.72rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
+  .step-n{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-top:14px; font-size:0.72rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
   .steps{ min-height:430px; }
   @media (max-width:900px){ .steps{ min-height:0; } }
   .step{ margin:0; padding:0; border:0; min-width:0; }
@@ -584,9 +579,7 @@
   <section class="join">
     <div class="wrap join-grid">
       <div class="join-intro">
-        <span class="eyebrow">Membership</span>
-        <h1>Become a member</h1>
-        <p class="lede">Open to everyone, at UofT or not.</p>
+        <h1 class="vh">Become a member of the Myanmar Culture Club</h1>
         <figure class="join-photo">
           <img src="images/welcome_top.jpg" alt="Club members sharing food on the lawn in front of University College" width="1440" height="960" decoding="async">
         </figure>
@@ -595,22 +588,15 @@
       <div class="join-panel" id="join">
         <form class="join-form" id="join-form" novalidate>
           <div class="step-bar" id="j-bar" role="progressbar" aria-label="Progress" aria-valuemin="1" aria-valuenow="1" aria-valuemax="5"><i></i></div>
-          <p class="step-n" id="j-count" aria-live="polite">1 of 5</p>
+          <p class="step-n"><span class="eyebrow">Membership</span><span id="j-count" aria-live="polite">1 of 5</span></p>
 
           <div class="steps">
             <section class="step" data-step="name" role="group" aria-labelledby="q-name">
               <h2 id="q-name" tabindex="-1">What's your name?</h2>
-              <div class="f-row">
-                <div class="f">
-                  <label for="j-first">First name</label>
-                  <input type="text" id="j-first" name="first_name" autocomplete="given-name" maxlength="60" required>
-                  <p class="err" id="j-first-err"></p>
-                </div>
-                <div class="f">
-                  <label for="j-last">Last name</label>
-                  <input type="text" id="j-last" name="last_name" autocomplete="family-name" maxlength="60" required>
-                  <p class="err" id="j-last-err"></p>
-                </div>
+              <div class="f">
+                <label for="j-name" class="vh">Name</label>
+                <input type="text" id="j-name" name="full_name" autocomplete="name" maxlength="120" required>
+                <p class="err" id="j-name-err"></p>
               </div>
               <div class="f">
                 <label for="j-pref">Preferred name <span class="optional">(optional)</span></label>

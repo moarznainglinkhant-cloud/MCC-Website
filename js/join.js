@@ -24,7 +24,7 @@
   };
 
   const el = {
-    first: $("j-first"), last: $("j-last"), pref: $("j-pref"), email: $("j-email"),
+    name: $("j-name"), pref: $("j-pref"), email: $("j-email"),
     aff: $("j-aff"), utorid: $("j-utorid"), snum: $("j-snum"), year: $("j-year"), ideas: $("j-ideas"),
     nl: $("j-nl"), nlMore: $("j-nl-more"), nlTo: $("j-nl-to"), nlAddr: $("j-nl-addr"),
     nlSwitch: $("j-nl-switch"), nlAlt: $("j-nl-alt"), nlEmail: $("j-nl-email"),
@@ -38,8 +38,7 @@
 
   /* ---------- Rules: each returns an error message, or "" ---------- */
   const rules = {
-    first: () => clean(el.first.value) ? "" : "Enter your first name",
-    last: () => clean(el.last.value) ? "" : "Enter your last name",
+    name: () => clean(el.name.value) ? "" : "Enter your name",
     email: () => {
       const v = el.email.value.trim();
       if (!v) return "Enter your email";
@@ -83,7 +82,7 @@
   }
 
   // A field is checked when you leave it, then on every keystroke until it's right.
-  ["first", "last", "email", "utorid", "snum", "nlEmail"].forEach(key => {
+  ["name", "email", "utorid", "snum", "nlEmail"].forEach(key => {
     const input = el[key];
     input.addEventListener("blur", () => { if (input.value.trim()) check(key); });
     input.addEventListener("input", () => { if (input.getAttribute("aria-invalid")) check(key); });
@@ -124,7 +123,7 @@
 
   /* ---------- Steps ---------- */
   const STEPS = {
-    name: ["first", "last"],
+    name: ["name"],
     aff: ["aff"],
     student: ["utorid", "snum", "year"],       // only shown to current students
     contact: ["email", "nlEmail"],
@@ -266,7 +265,7 @@
     const broken = steps.find(s => STEPS[s].some(key => rules[key]()));
     if (broken) { show(broken, -1); validStep(broken); return; }
 
-    const name = clean(el.pref.value) || clean(el.first.value);
+    const name = clean(el.pref.value) || clean(el.name.value);
     const email = el.email.value.trim();
     const wantsNews = el.nl.checked;
     const newsEmail = (!el.nlAlt.hidden && el.nlEmail.value.trim()) || email;
@@ -275,8 +274,7 @@
     busy(true);
     // bots fill in the hidden box: they get the same ending and nothing is sent
     const joined = form.website.value ? Promise.resolve() : send({
-      p_first_name: clean(el.first.value),
-      p_last_name: clean(el.last.value),
+      p_full_name: clean(el.name.value),
       p_preferred_name: clean(el.pref.value) || null,
       p_email: email,
       p_affiliation: aff,

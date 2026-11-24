@@ -1488,7 +1488,7 @@
     // ----- Club members (from the Join the Club form, join.html) -----
     var mems = [], regOk = true, memOk = true, memInit = false;
     var MEM_KIND = { undergrad: "Undergrad", grad: "Grad student", faculty: "Faculty / staff", alumni: "Alumni", external: "Not at UofT" };
-    function memName(m) { return m.first_name + " " + m.last_name + (m.preferred_name ? " (" + m.preferred_name + ")" : ""); }
+    function memName(m) { return m.full_name + (m.preferred_name ? " (" + m.preferred_name + ")" : ""); }
 
     function initMembers() {
       if (memInit) return;
@@ -1499,7 +1499,7 @@
 
     function loadMembers() {
       return sb.from("club_members")
-        .select("id, first_name, preferred_name, last_name, email, affiliation, utorid, student_number, year_of_study, ideas, newsletter, account_id, created_at")
+        .select("id, full_name, preferred_name, email, affiliation, utorid, student_number, year_of_study, ideas, newsletter, account_id, created_at")
         .order("created_at", { ascending: false })
         .then(function (r) {
           memOk = !r.error;
@@ -1577,9 +1577,9 @@
         if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;        // so a spreadsheet never runs a member's text as a formula
         return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
       };
-      var head = ["first_name", "preferred_name", "last_name", "email", "connection", "utorid", "student_number", "year_of_study", "newsletter", "ideas", "joined_at"];
+      var head = ["name", "preferred_name", "email", "connection", "utorid", "student_number", "year_of_study", "newsletter", "ideas", "joined_at"];
       var lines = [head.join(",")].concat(mems.map(function (m) {
-        return [m.first_name, m.preferred_name, m.last_name, m.email, m.affiliation, m.utorid, m.student_number, m.year_of_study,
+        return [m.full_name, m.preferred_name, m.email, m.affiliation, m.utorid, m.student_number, m.year_of_study,
                 m.newsletter ? "yes" : "no", m.ideas, m.created_at].map(cell).join(",");
       }));
       var blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });

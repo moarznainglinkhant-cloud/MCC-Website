@@ -16,9 +16,8 @@
 
 create table if not exists public.club_members (
   id             bigint generated always as identity primary key,
-  first_name     text not null check (char_length(first_name) between 1 and 60),
+  full_name      text not null check (char_length(full_name) between 1 and 120),   -- one name: many Burmese names have no first/last split
   preferred_name text check (char_length(preferred_name) between 1 and 60),
-  last_name      text not null check (char_length(last_name) between 1 and 60),
   email          text not null unique check (email = lower(email) and char_length(email) <= 254),
   affiliation    text not null check (affiliation in ('undergrad', 'grad', 'faculty', 'alumni', 'external')),
   utorid         text check (utorid ~ '^[a-z0-9]{3,8}$'),
@@ -33,6 +32,21 @@ create table if not exists public.club_members (
   check (affiliation = 'undergrad' or year_of_study is null)
 );
 create index if not exists club_members_created on public.club_members (created_at desc);
+
+-- The first version of this file kept first and last name apart. If that table is already
+-- here, fold the two into full_name (nobody is lost) and retire the old function.
+do $$
+begin
+  if exists (select 1 from information_schema.columns
+              where table_schema = 'public' and table_name = 'club_members' and column_name = 'first_name') then
+    alter table public.club_members add column if not exists full_name text;
+    update public.club_members set full_name = btrim(first_name || ' ' || last_name) where full_name is null;
+    alter table public.club_members alter column full_name set not null;
+    alter table public.club_members add constraint club_members_full_name_check check (char_length(full_name) between 1 and 120);
+    alter table public.club_members drop column first_name, drop column last_name;
+  end if;
+end $$;
+drop function if exists public.join_club(text, text, text, text, text, text, text, text, text, boolean);
 
 alter table public.club_members enable row level security;
 revoke all on public.club_members from anon, authenticated;
@@ -49,7 +63,7 @@ create policy "execs remove club members" on public.club_members for delete to a
 -- Joining twice with the same email changes nothing and answers the same as the first time, so
 -- the form can't be used to find out whether an email is already on the list.
 create or replace function public.join_club(
-  p_first_name text, p_last_name text, p_email text, p_affiliation text,
+  p_full_name text, p_email text, p_affiliation text,
   p_preferred_name text default null, p_utorid text default null,
   p_student_number text default null, p_year_of_study text default null,
   p_ideas text default null, p_newsletter boolean default false)
@@ -59,8 +73,7 @@ security definer
 set search_path = ''
 as $$
 declare
-  v_first   text := regexp_replace(btrim(coalesce(p_first_name, '')), '\s+', ' ', 'g');
-  v_last    text := regexp_replace(btrim(coalesce(p_last_name, '')), '\s+', ' ', 'g');
+  v_name    text := regexp_replace(btrim(coalesce(p_full_name, '')), '\s+', ' ', 'g');
   v_pref    text := nullif(regexp_replace(btrim(coalesce(p_preferred_name, '')), '\s+', ' ', 'g'), '');
   v_email   text := lower(btrim(coalesce(p_email, '')));
   v_aff     text := coalesce(p_affiliation, '');
@@ -69,11 +82,8 @@ declare
   v_year    text := nullif(btrim(coalesce(p_year_of_study, '')), '');
   v_ideas   text := nullif(btrim(coalesce(p_ideas, '')), '');
 begin
-  if char_length(v_first) < 1 or char_length(v_first) > 60 then
-    raise exception 'Please enter your first name';
-  end if;
-  if char_length(v_last) < 1 or char_length(v_last) > 60 then
-    raise exception 'Please enter your last name';
+  if char_length(v_name) < 1 or char_length(v_name) > 120 then
+    raise exception 'Please enter your name';
   end if;
   if char_length(v_pref) > 60 then
     raise exception 'Please shorten your preferred name';
@@ -109,17 +119,17 @@ begin
   end if;
 
   insert into public.club_members
-    (first_name, preferred_name, last_name, email, affiliation, utorid, student_number,
+    (full_name, preferred_name, email, affiliation, utorid, student_number,
      year_of_study, ideas, newsletter, account_id)
   values
-    (v_first, v_pref, v_last, v_email, v_aff, v_utorid, v_student, v_year, left(v_ideas, 1000),
+    (v_name, v_pref, v_email, v_aff, v_utorid, v_student, v_year, left(v_ideas, 1000),
      coalesce(p_newsletter, false),
      (select m.id from public.members m where lower(m.email) = v_email limit 1))
   on conflict (email) do nothing;
 end;
 $$;
-revoke execute on function public.join_club(text, text, text, text, text, text, text, text, text, boolean) from public;
-grant execute on function public.join_club(text, text, text, text, text, text, text, text, text, boolean) to anon, authenticated;
+revoke execute on function public.join_club(text, text, text, text, text, text, text, text, boolean) from public;
+grant execute on function public.join_club(text, text, text, text, text, text, text, text, boolean) to anon, authenticated;
 
 -- ---------- Link a later website account to the member row ----------
 create or replace function public.link_club_member()
@@ -138,6 +148,9 @@ revoke execute on function public.link_club_member() from public, anon, authenti
 drop trigger if exists members_link_club_member on public.members;
 create trigger members_link_club_member after insert on public.members
   for each row execute function public.link_club_member();
+
+-- Tell the API about the new function straight away.
+notify pgrst, 'reload schema';
 
 -- ---------- Check ----------
 select 'club_members' as tbl, count(*) from public.club_members;
