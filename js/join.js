@@ -1,8 +1,8 @@
-/* Join the Club form (join.html).
+/* Join the Club form (join.html): one question at a time.
  *
- * Sends the form to the database function join_club() (supabase/members-4-join.sql). The checks
- * here are for the visitor's benefit; the function repeats every one of them, and the database
- * decides what is stored. The key in js/exec-config.js is the public one.
+ * Sends the answers to the database function join_club() (supabase/members-4-join.sql). The
+ * checks here are for the visitor's benefit; the function repeats every one of them, and the
+ * database decides what is stored. The key in js/exec-config.js is the public one.
  */
 (function () {
   "use strict";
@@ -25,11 +25,11 @@
 
   const el = {
     first: $("j-first"), last: $("j-last"), pref: $("j-pref"), email: $("j-email"),
-    aff: $("j-aff"), studentFold: $("j-student"), utorid: $("j-utorid"), snum: $("j-snum"),
-    yearFold: $("j-year-fold"), year: $("j-year"), ideas: $("j-ideas"),
+    aff: $("j-aff"), utorid: $("j-utorid"), snum: $("j-snum"), year: $("j-year"), ideas: $("j-ideas"),
     nl: $("j-nl"), nlMore: $("j-nl-more"), nlTo: $("j-nl-to"), nlAddr: $("j-nl-addr"),
     nlSwitch: $("j-nl-switch"), nlAlt: $("j-nl-alt"), nlEmail: $("j-nl-email"),
-    msg: $("j-msg"), submit: $("j-submit"),
+    msg: $("j-msg"), next: $("j-next"), back: $("j-back"), privacy: $("j-privacy"),
+    bar: $("j-bar"), count: $("j-count"),
   };
 
   const clean = s => String(s || "").trim().replace(/\s+/g, " ");
@@ -47,14 +47,12 @@
     },
     aff: () => picked("affiliation") ? "" : "Choose one",
     utorid: () => {
-      if (!isStudent()) return "";
       const v = el.utorid.value.trim();
       if (!v) return "Enter your UTORid";
       if (v.includes("@")) return "Your UTORid is the short login name, not an email";
       return /^[a-z0-9]{3,8}$/i.test(v) ? "" : "A UTORid is 3 to 8 letters and numbers";
     },
     snum: () => {
-      if (!isStudent()) return "";
       const v = el.snum.value.replace(/[\s-]/g, "");
       if (!v) return "Enter your student number";
       return /^\d{9,10}$/.test(v) ? "" : "A student number is 9 or 10 digits";
@@ -66,15 +64,14 @@
       return EMAIL.test(v) ? "" : "Enter an email like name@example.com";
     },
   };
-  const ORDER = ["first", "last", "email", "aff", "utorid", "snum", "year", "nlEmail"];
 
-  // Text boxes carry aria-invalid themselves; the two radio groups are fieldsets, marked on their box.
-  function errNode(key) { return $((el[key].id) + "-err"); }
+  // Text boxes carry aria-invalid themselves; the two groups of pills are marked on their row.
+  function errNode(key) { return $(el[key].id + "-err"); }
   function setError(key, text) {
-    const node = el[key], box = node.querySelector(".choices, .seg");
+    const node = el[key], pills = node.querySelector(".pills");
     errNode(key).textContent = text;
     errNode(key).classList.remove("hint");
-    if (box) box.classList.toggle("is-invalid", !!text);
+    if (pills) pills.classList.toggle("is-invalid", !!text);
     else if (text) { node.setAttribute("aria-invalid", "true"); node.setAttribute("aria-describedby", node.id + "-err"); }
     else { node.removeAttribute("aria-invalid"); node.removeAttribute("aria-describedby"); }
     return !text;
@@ -82,7 +79,7 @@
   function check(key) { return setError(key, rules[key]()); }
   function focusField(key) {
     const node = el[key];
-    (node.matches("fieldset") ? node.querySelector("input:checked, input") : node).focus();
+    (node.matches("input, textarea") ? node : node.querySelector("input:checked, input")).focus();
   }
 
   // A field is checked when you leave it, then on every keystroke until it's right.
@@ -91,6 +88,8 @@
     input.addEventListener("blur", () => { if (input.value.trim()) check(key); });
     input.addEventListener("input", () => { if (input.getAttribute("aria-invalid")) check(key); });
   });
+  el.aff.addEventListener("change", () => { check("aff"); el.year.hidden = picked("affiliation") !== "undergrad"; progress(); });
+  el.year.addEventListener("change", () => check("year"));
 
   /* ---------- Email: offer a fix for an obvious typo ---------- */
   function suggestEmail() {
@@ -110,23 +109,6 @@
   }
   el.email.addEventListener("blur", suggestEmail);
 
-  /* ---------- Student-only questions ---------- */
-  function setFold(fold, open) {
-    fold.classList.toggle("open", open);
-    fold.inert = !open;
-    // Closed questions are switched off as well as hidden, so they can't be tabbed to or sent.
-    fold.querySelectorAll(":scope > .fold-in > .f-row input, :scope > .fold-in > .f input").forEach(i => { i.disabled = !open; });
-  }
-  function syncAffiliation() {
-    const a = picked("affiliation");
-    setFold(el.studentFold, STUDENT.includes(a));
-    setFold(el.yearFold, a === "undergrad");
-    if (!STUDENT.includes(a)) { setError("utorid", ""); setError("snum", ""); }
-    if (a !== "undergrad") setError("year", "");
-  }
-  el.aff.addEventListener("change", () => { syncAffiliation(); check("aff"); });
-  el.year.addEventListener("change", () => check("year"));
-
   /* ---------- Newsletter ---------- */
   function syncNewsletterAddress() {
     const v = el.email.value.trim();
@@ -140,10 +122,66 @@
     el.nlEmail.focus();
   });
 
+  /* ---------- Steps ---------- */
+  const STEPS = {
+    name: ["first", "last"],
+    aff: ["aff"],
+    student: ["utorid", "snum", "year"],       // only shown to current students
+    contact: ["email", "nlEmail"],
+    ideas: [],
+  };
+  const stepNode = name => form.querySelector('.step[data-step="' + name + '"]');
+  // Until the connection question is answered, count the student step: the total can only shrink.
+  const path = () => Object.keys(STEPS).filter(s => s !== "student" || isStudent() || !picked("affiliation"));
+  let current = "name";
+
+  function progress() {
+    const steps = path(), i = steps.indexOf(current);
+    el.bar.firstElementChild.style.width = ((i + 1) / steps.length * 100) + "%";
+    el.bar.setAttribute("aria-valuenow", String(i + 1));
+    el.bar.setAttribute("aria-valuemax", String(steps.length));
+    el.count.textContent = (i + 1) + " of " + steps.length;
+  }
+
+  function show(name, dir) {
+    const steps = path(), i = steps.indexOf(name), last = i === steps.length - 1;
+    Object.keys(STEPS).forEach(s => { stepNode(s).hidden = s !== name; });
+    const node = stepNode(name);
+    if (dir) {
+      node.classList.remove("is-fwd", "is-back");
+      void node.offsetWidth;                    // restart the slide when the same step is shown again
+      node.classList.add(dir > 0 ? "is-fwd" : "is-back");
+    }
+    current = name;
+    el.msg.textContent = "";
+    el.year.hidden = picked("affiliation") !== "undergrad";
+    progress();
+    el.next.textContent = last ? "Join the club" : "Continue";
+    el.back.hidden = i === 0;
+    el.privacy.hidden = !last;
+    if (!dir) return;
+    // Straight into the answer: the first box, or the chosen pill. The question is the group's name.
+    const first = node.querySelector("input:checked, input:not([type=radio]):not([type=checkbox]), textarea, input");
+    if (first) first.focus({ preventScroll: true });
+    const top = $("join").getBoundingClientRect().top;
+    if (top < 70) window.scrollTo({ top: window.scrollY + top - 96, behavior: "auto" });
+  }
+
+  function validStep(name) {
+    const bad = STEPS[name].filter(key => !check(key));
+    if (bad.length) focusField(bad[0]);
+    return !bad.length;
+  }
+
+  el.back.addEventListener("click", () => {
+    const steps = path(), i = steps.indexOf(current);
+    if (i > 0) show(steps[i - 1], -1);
+  });
+
   // The browser can restore answers after Back or a reload; make the page match them.
-  syncAffiliation();
   el.nlMore.hidden = !el.nl.checked;
   syncNewsletterAddress();
+  show("name", 0);
 
   /* ---------- Sending ---------- */
   function withTimeout(promise, ms) {
@@ -176,13 +214,14 @@
   }
 
   function busy(on) {
-    el.submit.disabled = on;
-    el.submit.setAttribute("aria-busy", String(on));
-    el.submit.textContent = on ? "Joining…" : "Join the club";
+    el.next.disabled = on;
+    el.back.disabled = on;
+    el.next.setAttribute("aria-busy", String(on));
+    el.next.textContent = on ? "Joining…" : "Join the club";
   }
 
   function showDone(name, newsletter) {
-    const card = form.parentNode;
+    const panel = form.parentNode;
     const done = document.createElement("div");
     done.className = "join-done";
     done.tabIndex = -1;
@@ -203,24 +242,29 @@
       p.textContent = "You're on the member list. The newsletter sign-up didn't go through; you can try it again at the bottom of this page.";
     }
     form.remove();
-    card.appendChild(done);
+    panel.appendChild(done);
     done.focus({ preventScroll: true });
-    // The page just got much shorter. Once it has settled, bring the card back under the nav.
     const settle = () => {
-      const top = card.getBoundingClientRect().top;
-      if (top < 80 || top > window.innerHeight - 200) window.scrollTo({ top: Math.max(0, window.scrollY + top - 96), behavior: "auto" });
+      const top = panel.getBoundingClientRect().top;
+      if (top < 70 || top > window.innerHeight - 200) window.scrollTo({ top: Math.max(0, window.scrollY + top - 96), behavior: "auto" });
     };
     requestAnimationFrame(() => requestAnimationFrame(settle));
     setTimeout(settle, 500);     // again, in case a scroll was already under way
   }
 
+  // Enter in any box and the Continue button both land here.
   form.addEventListener("submit", e => {
     e.preventDefault();
-    if (el.submit.disabled) return;
+    if (el.next.disabled) return;
     el.msg.textContent = "";
+    if (!validStep(current)) return;
 
-    const bad = ORDER.filter(key => !check(key));
-    if (bad.length) { focusField(bad[0]); return; }
+    const steps = path(), i = steps.indexOf(current);
+    if (i < steps.length - 1) { show(steps[i + 1], 1); return; }
+
+    // Last step. Everything was checked on the way here; check again in case an earlier answer changed.
+    const broken = steps.find(s => STEPS[s].some(key => rules[key]()));
+    if (broken) { show(broken, -1); validStep(broken); return; }
 
     const name = clean(el.pref.value) || clean(el.first.value);
     const email = el.email.value.trim();
