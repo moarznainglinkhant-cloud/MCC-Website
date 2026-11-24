@@ -1294,8 +1294,9 @@
         .select("id, event_id, event_name, event_date, user_id, guest_name, guest_email, ticket_code, created_at, checked_in_at, members(full_name, email, student_number, year, program)")
         .order("created_at", { ascending: true })
         .then(function (r) {
-          if (r.error) { $("reg-panel").hidden = true; $("reg-missing").hidden = false; return; }
-          $("reg-panel").hidden = false; $("reg-missing").hidden = true;
+          regOk = !r.error;
+          showRegTab();
+          if (r.error) return;
           regs = r.data || [];
           renderRegEvents();
           renderRegs();
@@ -1395,6 +1396,121 @@
       $("reg-event").addEventListener("change", function () { regEvent = this.value; renderRegs(); });
       $("reg-search").addEventListener("input", renderRegs);
       $("reg-csv").addEventListener("click", regCsv);
+      $("mem-search").addEventListener("input", renderMembers);
+      $("mem-csv").addEventListener("click", memCsv);
+      document.querySelectorAll(".reg-tab").forEach(function (b) {
+        b.addEventListener("click", function () { regTab = b.getAttribute("data-reg-tab"); showRegTab(); });
+      });
+    }
+
+    // ----- Club members (from the Join the Club form, join.html) -----
+    var mems = [], regTab = "events", regOk = true, memOk = true;
+    var MEM_KIND = { undergrad: "Undergrad", grad: "Grad student", faculty: "Faculty / staff", alumni: "Alumni", external: "Not at UofT" };
+    function memName(m) { return m.first_name + " " + m.last_name + (m.preferred_name ? " (" + m.preferred_name + ")" : ""); }
+
+    function showRegTab() {
+      var onMembers = regTab === "members";
+      document.querySelectorAll(".reg-tab").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(b.getAttribute("data-reg-tab") === regTab));
+      });
+      $("reg-panel").hidden = onMembers || !regOk;
+      $("reg-missing").hidden = onMembers || regOk;
+      $("mem-panel").hidden = !onMembers || !memOk;
+      $("mem-missing").hidden = !onMembers || memOk;
+    }
+
+    function loadMembers() {
+      return sb.from("club_members")
+        .select("id, first_name, preferred_name, last_name, email, affiliation, utorid, student_number, year_of_study, ideas, newsletter, account_id, created_at")
+        .order("created_at", { ascending: false })
+        .then(function (r) {
+          memOk = !r.error;
+          mems = r.data || [];
+          $("mem-n").textContent = memOk ? String(mems.length) : "";
+          showRegTab();
+          if (memOk) renderMembers();
+          stamp("members");
+        });
+    }
+
+    function memFiltered() {
+      var q = ($("mem-search").value || "").trim().toLowerCase();
+      if (!q) return mems;
+      return mems.filter(function (m) {
+        return (memName(m) + " " + m.email + " " + (m.utorid || "") + " " + (m.student_number || "")).toLowerCase().indexOf(q) > -1;
+      });
+    }
+
+    function renderMembers() {
+      var body = $("mem-rows"), stats = $("mem-stats");
+      var students = mems.filter(function (m) { return m.affiliation === "undergrad" || m.affiliation === "grad"; }).length;
+      var news = mems.filter(function (m) { return m.newsletter; }).length;
+      stats.textContent = "";
+      [[mems.length, "Members"], [students, "Students"], [mems.length - students, "Others"], [news, "Newsletter"]].forEach(function (s) {
+        var b = el("div", "reg-stat"); b.appendChild(el("b", null, String(s[0]))); b.appendChild(el("span", null, s[1])); stats.appendChild(b);
+      });
+      body.textContent = "";
+      $("mem-empty").hidden = mems.length > 0;
+      memFiltered().forEach(function (m) {
+        var tr = el("tr");
+        var name = el("td", null, memName(m));
+        if (m.ideas) name.appendChild(el("span", "mem-idea", m.ideas));
+        tr.appendChild(name);
+        var k = el("td"); k.appendChild(el("span", "reg-tag" + (m.account_id ? " member" : ""), MEM_KIND[m.affiliation] || m.affiliation)); tr.appendChild(k);
+        tr.appendChild(el("td", null, m.email));
+        tr.appendChild(el("td", null, m.utorid || ""));
+        tr.appendChild(el("td", null, m.student_number || ""));
+        tr.appendChild(el("td", null, m.year_of_study || ""));
+        tr.appendChild(el("td", null, regDate(m.created_at)));
+        var c = el("td", "c"), del = el("button", "link-btn danger", "Remove");
+        del.type = "button";
+        del.setAttribute("aria-label", "Remove " + memName(m));
+        // First press asks, second press (within a few seconds) removes for good.
+        var armed = null;
+        del.addEventListener("click", function () {
+          if (!armed) {
+            del.textContent = "Sure?";
+            armed = setTimeout(function () { armed = null; del.textContent = "Remove"; }, 4000);
+            return;
+          }
+          clearTimeout(armed);
+          del.disabled = true;
+          sb.from("club_members").delete().eq("id", m.id).then(function (res) {
+            if (res.error) {
+              armed = null; del.disabled = false; del.textContent = "Remove";
+              setMsg($("reg-msg"), "Couldn't remove that member. Try again.", "error");
+              return;
+            }
+            mems = mems.filter(function (x) { return x.id !== m.id; });
+            $("mem-n").textContent = String(mems.length);
+            renderMembers();
+          });
+        });
+        c.appendChild(del); tr.appendChild(c);
+        ["Name", "Connection", "Email", "UTORid", "Student #", "Year", "Joined", "Remove"].forEach(function (lab, i) {
+          tr.children[i].setAttribute("data-label", lab);
+        });
+        body.appendChild(tr);
+      });
+    }
+
+    function memCsv() {
+      var cell = function (v) {
+        v = v == null ? "" : String(v);
+        if (/^[=+\-@\t\r]/.test(v)) v = "'" + v;        // so a spreadsheet never runs a member's text as a formula
+        return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+      };
+      var head = ["first_name", "preferred_name", "last_name", "email", "connection", "utorid", "student_number", "year_of_study", "newsletter", "ideas", "joined_at"];
+      var lines = [head.join(",")].concat(mems.map(function (m) {
+        return [m.first_name, m.preferred_name, m.last_name, m.email, m.affiliation, m.utorid, m.student_number, m.year_of_study,
+                m.newsletter ? "yes" : "no", m.ideas, m.created_at].map(cell).join(",");
+      }));
+      var blob = new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "club-members.csv";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
     }
 
     // ----- Questions (sent from the Ask MCC chat when it couldn't answer) -----
@@ -1734,6 +1850,7 @@
       } else if (name === "registrations") {
         initRegistrations();
         if (!fresh("registrations", 10)) loadRegistrations();
+        if (!fresh("members", 10)) loadMembers();
       } else if (name === "questions") {
         initQuestions();
         if (!fresh("questions", 10)) loadQuestions();

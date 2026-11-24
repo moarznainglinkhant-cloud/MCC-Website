@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Myanmar Culture Club (University of Toronto) — site designed & engineered from scratch by Naing Lin Khant (Moarz). -->
+<title>Join the Club — Myanmar Culture Club (University of Toronto)</title>
+<meta name="author" content="Naing Lin Khant (Moarz)">
+<meta name="description" content="Become a member of the Myanmar Culture Club at the University of Toronto. Open to everyone, at UofT or not.">
+<link rel="canonical" href="https://uoftmcc.ca/join.html">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="32x32" href="images/brand/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="images/brand/favicon-192.png">
+<link rel="apple-touch-icon" href="images/brand/apple-touch-icon.png">
+
+<!-- Social share preview (iMessage, Instagram, Discord, Twitter/X, etc.) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Myanmar Culture Club">
+<meta property="og:title" content="Join the Club — Myanmar Culture Club">
+<meta property="og:description" content="Become a member of the Myanmar Culture Club at the University of Toronto. Open to everyone, at UofT or not.">
+<meta property="og:url" content="https://uoftmcc.ca/join.html">
+<meta property="og:image" content="https://uoftmcc.ca/images/og-share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Myanmar Culture Club — University of Toronto">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Join the Club — Myanmar Culture Club">
+<meta name="twitter:description" content="Become a member of the Myanmar Culture Club at the University of Toronto. Open to everyone, at UofT or not.">
+<meta name="twitter:image" content="https://uoftmcc.ca/images/og-share.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Myanmar Culture Club — Join",
+  "about": "UofT Myanmar Culture Club",
+  "creator": {
+    "@type": "Person",
+    "name": "Naing Lin Khant",
+    "alternateName": "Moarz",
+    "url": "https://moarznainglinkhant-cloud.github.io/Portfolio-/"
+  }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;1,9..144,400;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600;700&family=Noto+Sans+Myanmar:wght@400;500;600&display=swap">
+<style>@font-face{font-family:'Yinmar';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/Yinmar-Regular.woff2') format('woff2');}</style>
+<style>
+
+  :root{
+    --bg:#F6F1E4;
+    --bg-raised:#FDFAF2;
+    --bg-sunk:#EEE6D3;
+    --ink:#1C2440;
+    --ink-soft:#5F5A48;
+    --red:#AE3628;
+    --red-ink:#8C2A1F;
+    --gold:#C08A2E;
+    --gold-ink:#86601E; /* gold dark enough for text on cream (4.6:1) */
+    --green:#4B7A3C;
+    --navy:#1C2440;
+    --navy-deep:#12162A;
+    --line: rgba(28,36,64,0.16);
+    --card-shadow: 0 1px 0 rgba(28,36,64,0.06);
+    --footer-bg:#1C2440;
+    --footer-ink:#F6F1E4;
+    --footer-ink-soft: rgba(246,241,228,0.68);
+    color-scheme: light;
+  }
+
+  *{ box-sizing:border-box; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans', system-ui, -apple-system, sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; scroll-behavior:auto !important; transition-duration:0.001ms !important; }
+    .reveal{ opacity:1 !important; transform:none !important; }
+  }
+
+  /* Soft cross-fade when navigating between pages, in browsers that support it — a plain instant navigation elsewhere. */
+  @view-transition{ navigation:auto; }
+  header.nav{ view-transition-name: site-nav; }
+  /* A true cross-fade: the new page dissolves straight over the old one. No gap where both are faded
+     out (that read as a blink), no movement, and the nav is identical on every page so it stays
+     perfectly still. 0.4s with a symmetric ease-in-out: long enough to read as a calm dissolve,
+     short enough that the page never feels like it's making you wait. */
+  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.4s; animation-timing-function:cubic-bezier(.45,0,.55,1); }
+  @media (prefers-reduced-motion: reduce){ ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*){ animation:none !important; } }
+  [data-pending]{ visibility:hidden; }
+
+  /* ---------- SCROLL REVEAL ---------- */
+  /* Cards start visible; site.js hides only the ones further down the page, then slides them in on scroll. */
+  .reveal-on .reveal{ opacity:0; transition: opacity .6s ease, transform .6s ease; }  /* fade only — no slide-up (user dislikes it) */
+  .reveal-on .reveal.is-visible{ opacity:1; transform:translateY(0); }
+  @media (scripting: none){ .reveal{ opacity:1 !important; transform:none !important; } }
+  html{ scroll-behavior:smooth; }
+
+  h1,h2,h3{ font-family:'Fraunces', Georgia, serif; margin:0; color:var(--ink); text-wrap:balance; }
+  p{ margin:0; }
+  a{ color:inherit; }
+  .myanmar{ font-family:'Noto Sans Myanmar','Work Sans', sans-serif; }
+
+  .wrap{ max-width:1240px; margin-inline:auto; padding-inline: clamp(18px, 4vw, 56px); }
+
+  .eyebrow{
+    font-family:'Work Sans', sans-serif;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--red-ink);
+  }
+
+  /* ---------- NAV ---------- */
+  header.nav{
+    position:sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index:50;
+    background:color-mix(in srgb, var(--bg) 92%, transparent);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--line);
+    transform: translateZ(0);
+    will-change: backdrop-filter;
+  }
+  .nav-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding-block:14px;
+    gap:16px;
+  }
+  .brand{ display:flex; align-items:center; gap:12px; text-decoration:none; }
+  .brand img{
+    width:40px; height:40px; border-radius:50%; display:block;
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--line);
+  }
+  .brand-name{
+    font-family:'Fraunces', serif; font-weight:600; font-size:0.98rem;
+    letter-spacing:0.01em; line-height:1.15;
+  }
+  .brand-name small{
+    display:block; font-family:'Work Sans',sans-serif; font-weight:600;
+    font-size:0.7rem; letter-spacing:0.14em; color:var(--ink-soft); text-transform:uppercase;
+  }
+  nav.links{ display:flex; align-items:center; gap:clamp(18px,3vw,34px); }
+  nav.links a{
+    font-size:0.82rem; font-weight:600; letter-spacing:0.03em;
+    text-decoration:none; color:var(--ink); position:relative; padding-block:12px; margin-block:-6px; /* ~44px tap area without a taller header */
+  }
+  nav.links a::after{
+    content:''; position:absolute; left:0; right:0; bottom:6px; height:2px;
+    background:var(--red); transform:scaleX(0); transform-origin:left;
+    transition:transform .25s ease;
+  }
+  nav.links a:hover::after{ transform:scaleX(1); }
+  nav.links a.current::after{ transform:scaleX(1); background:var(--gold); }
+  .nav-cta{
+    background:var(--navy); color:var(--footer-ink) !important;
+    padding:12px 18px; border-radius:999px; font-size:0.78rem !important;
+  }
+  nav.links a.nav-cta{ padding:12px 18px; }
+  .nav-cta::after{ display:none; }
+  .lang-toggle{
+    position:relative;
+    /* two equal columns so the 50%-wide slider always fits whichever label is wider */
+    display:grid; grid-template-columns:1fr 1fr; align-items:center;
+    border:1px solid var(--line); border-radius:999px; padding:3px;
+  }
+  .lang-toggle-slider{
+    position:absolute; top:3px; left:3px; bottom:3px;
+    width:calc(50% - 3px);
+    background:var(--navy); border-radius:999px;
+    transition:transform .28s cubic-bezier(.65,0,.35,1);
+    z-index:0;
+  }
+  .lang-toggle[data-active="mm"] .lang-toggle-slider{ transform:translateX(100%); }
+  .lang-toggle button{
+    position:relative; z-index:1;
+    border:none; background:none; cursor:pointer;
+    font-family:'Work Sans', 'Noto Sans Myanmar', sans-serif; font-size:0.78rem; font-weight:700; letter-spacing:0.04em;
+    color:var(--ink-soft); padding:8px 13px; min-height:34px; line-height:1.2; border-radius:999px;
+    flex:1 1 0; text-align:center;
+    transition: color .18s ease;
+  }
+  .lang-toggle button.active{ color:var(--footer-ink); }
+  .lang-toggle button:hover:not(.active){ color:var(--ink); }
+  #mobile-panel .lang-toggle{ align-self:flex-start; margin-top:4px; }
+  @media (prefers-reduced-motion: reduce){
+    .lang-toggle-slider{ transition:none; }
+  }
+  .menu-btn{
+    display:none; background:none; border:1px solid var(--line); border-radius:8px;
+    width:40px; height:40px; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{
+    content:''; display:block; width:18px; height:2px; background:var(--ink); position:relative;
+  }
+  .menu-btn span::before{ position:absolute; top:-6px; }
+  .menu-btn span::after{ position:absolute; top:6px; }
+  #mobile-panel{
+    border-top:1px solid var(--line);
+    padding:16px clamp(18px,4vw,56px) 22px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  #mobile-panel[hidden]{ display:none; }
+  #mobile-panel a{ text-decoration:none; color:var(--ink); font-weight:600; font-size:0.95rem; }
+
+  @media (max-width:760px){
+    nav.links{ display:none; }
+    .menu-btn{ display:flex; }
+  }
+
+  /* ---------- JOIN PAGE ---------- */
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--navy); color:var(--footer-ink);
+    padding:14px 26px; border-radius:999px;
+    font-family:inherit; font-size:0.82rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    text-decoration:none; border:1px solid var(--navy);
+    transition: transform .18s ease, background .18s ease;
+    cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+  }
+  .btn:hover{ transform:translateY(-2px); background:var(--navy-deep); }
+  .btn.ghost{ background:transparent; color:var(--ink); border:1px solid var(--line); }
+  .btn.ghost:hover{ background:var(--bg-sunk); }
+  .btn[aria-busy="true"]{ opacity:.7; cursor:progress; transform:none; }
+
+  .join{ padding-block: clamp(36px,6vw,80px) clamp(56px,9vw,112px); }
+  .join-grid{
+    display:grid; grid-template-columns: minmax(0,5fr) minmax(0,6fr);
+    gap: clamp(32px,6vw,88px); align-items:start;
+  }
+  .join-intro{ position:sticky; top:104px; }
+  .join-intro h1{
+    font-weight:600; font-size:clamp(2.1rem,4.4vw,3.3rem); line-height:1.08; letter-spacing:-0.01em;
+    margin-block:14px 16px;
+  }
+  .join-intro .lede{ font-family:'Fraunces', Georgia, serif; font-size:1.12rem; color:var(--ink-soft); max-width:34ch; }
+  .join-photo{ margin:clamp(26px,4vw,40px) 0 0; border-radius:20px; overflow:hidden; aspect-ratio:3/2; background:var(--bg-sunk); }
+  .join-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 62%; display:block; }
+  @media (max-width:900px){
+    .join-grid{ grid-template-columns:1fr; }
+    .join-intro{ position:static; }
+    .join-photo{ display:none; }
+  }
+
+  .join-card{
+    background:var(--bg-raised); border:1px solid var(--line); border-radius:20px;
+    padding: clamp(22px,4vw,40px); box-shadow:var(--card-shadow);
+  }
+  .join-form{ --field-line: rgba(28,36,64,.5); }
+  .f{ margin:0 0 22px; padding:0; border:0; min-width:0; }
+  .f-row{ display:grid; grid-template-columns:1fr 1fr; gap:0 16px; }
+  @media (max-width:520px){ .f-row{ grid-template-columns:1fr; } }
+  .f > label, .f > legend, .nl-alt > label{
+    display:block; padding:0; margin:0 0 7px;
+    font-size:0.88rem; font-weight:600; color:var(--ink);
+  }
+  .f .optional{ font-weight:400; color:var(--ink-soft); }
+  .f input[type="text"], .f input[type="email"], .f textarea{
+    display:block; width:100%;
+    font:inherit; font-size:1rem; color:var(--ink);
+    background:#fff; border:1px solid var(--field-line); border-radius:14px;
+    padding:12px 14px; outline:none;
+    transition: border-color .15s ease, box-shadow .15s ease;
+    -webkit-appearance:none; appearance:none;
+  }
+  .f textarea{ min-height:96px; resize:vertical; line-height:1.5; }
+  .f input:focus, .f textarea:focus{ border-color:var(--navy); box-shadow:0 0 0 3px rgba(28,36,64,.14); }
+  .f [aria-invalid="true"]{ border-color:var(--red); }
+  .f [aria-invalid="true"]:focus{ border-color:var(--red); box-shadow:0 0 0 3px rgba(174,54,40,.16); }
+  .err{ margin:7px 0 0; font-size:0.84rem; font-weight:500; color:var(--red-ink); }
+  .err:empty{ display:none; }
+  .err.hint{ color:var(--ink-soft); }
+  .err button{
+    font:inherit; font-weight:600; color:inherit; background:none; border:0; padding:0; cursor:pointer;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+
+  /* One of five: a single bordered list, so it reads as one question. */
+  .choices{ border:1px solid var(--field-line); border-radius:14px; background:#fff; overflow:hidden; }
+  .choices label{
+    display:flex; align-items:center; gap:12px; padding:12px 14px; cursor:pointer;
+    font-size:1rem; transition:background .15s ease;
+  }
+  .choices label + label{ border-top:1px solid var(--line); }
+  .choices label:hover{ background:var(--bg-raised); }
+  .choices label:has(input:checked){ background:var(--bg-sunk); font-weight:600; }
+  .choices input{ width:18px; height:18px; margin:0; flex:none; accent-color:var(--navy); }
+  .choices.is-invalid, .seg.is-invalid{ border-color:var(--red); }
+
+  .seg{
+    display:grid; grid-template-columns:repeat(5, minmax(0,1fr));
+    border:1px solid var(--field-line); border-radius:14px; background:#fff; overflow:hidden;
+  }
+  .seg label{ position:relative; cursor:pointer; }
+  .seg label + label{ border-left:1px solid var(--line); }
+  .seg input{ position:absolute; inset:0; width:100%; height:100%; margin:0; opacity:0; cursor:pointer; }
+  .seg span{ display:block; text-align:center; padding:12px 4px; font-weight:600; transition:background .15s ease, color .15s ease; }
+  .seg label:hover span{ background:var(--bg-raised); }
+  .seg input:checked + span{ background:var(--navy); color:var(--footer-ink); }
+  .seg input:focus-visible + span{ outline:2px solid var(--gold); outline-offset:-3px; }
+
+  /* Student-only questions open in place instead of jumping the page. */
+  .fold{ display:grid; grid-template-rows:0fr; visibility:hidden; transition:grid-template-rows .3s cubic-bezier(.2,.8,.2,1), visibility 0s .3s; }
+  .fold.open{ grid-template-rows:1fr; visibility:visible; transition-delay:0s; }
+  .fold-in{ min-height:0; overflow:hidden; padding-inline:4px; margin-inline:-4px; }
+
+  .f > label.check{ display:flex; align-items:flex-start; gap:12px; margin:-10px 0; padding-block:10px; cursor:pointer; font-size:1rem; font-weight:400; }
+  .check input{ width:20px; height:20px; margin:2px 0 0; flex:none; accent-color:var(--navy); }
+  .nl-to{ margin:10px 0 0 32px; font-size:0.9rem; color:var(--ink-soft); }
+  .nl-to b{ color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
+  .linkish{
+    font:inherit; color:var(--ink); background:none; border:0; padding:0; cursor:pointer;
+    text-decoration:underline; text-underline-offset:2px;
+  }
+  .nl-alt{ margin:14px 0 0 32px; }
+  .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
+  .join-foot{ display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; margin-top:6px; padding-top:24px; border-top:1px solid var(--line); }
+  .join-foot .privacy{ flex:1 1 220px; font-size:0.84rem; color:var(--ink-soft); }
+  @media (max-width:520px){ .join-foot .btn{ width:100%; } }
+  .form-msg{ margin:0 0 20px; padding:12px 14px; border-radius:12px; background:rgba(174,54,40,.1); color:var(--red-ink); font-size:0.9rem; font-weight:500; }
+  .form-msg:empty{ display:none; }
+
+  .join-done{ text-align:center; padding-block:clamp(14px,4vw,36px); }
+  .join-done:focus{ outline:none; }
+  .join-done .seal{ width:76px; height:76px; margin:0 auto 20px; display:block; }
+  .join-done .seal circle{ fill:none; stroke:var(--gold); stroke-width:2; stroke-dasharray:214; stroke-dashoffset:214; animation:seal-draw .7s cubic-bezier(.65,0,.35,1) .1s forwards; }
+  .join-done .seal path{ fill:none; stroke:var(--navy); stroke-width:3; stroke-linecap:round; stroke-linejoin:round; stroke-dasharray:44; stroke-dashoffset:44; animation:seal-draw .4s cubic-bezier(.65,0,.35,1) .65s forwards; }
+  @keyframes seal-draw{ to{ stroke-dashoffset:0; } }
+  .join-done h2{ font-weight:600; font-size:clamp(1.7rem,3.4vw,2.3rem); line-height:1.15; margin-bottom:12px; overflow-wrap:anywhere; }
+  .join-done p{ color:var(--ink-soft); max-width:40ch; margin-inline:auto; }
+  .join-done p b{ color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
+  .join-done .actions{ display:flex; flex-wrap:wrap; justify-content:center; gap:12px; margin-top:26px; }
+
+  /* ---------- FOOTER / CONTACT (same as homepage) ---------- */
+  footer.contact{
+    background:var(--footer-bg); color:var(--footer-ink);
+    position:relative; overflow:clip;
+  }
+  footer.contact .wrap{ padding-block: clamp(56px,8vw,96px) clamp(28px,4vw,40px); position:relative; z-index:2; }
+  .contact-top{
+    display:grid; grid-template-columns: 1.1fr 1fr; gap:clamp(30px,6vw,80px);
+    padding-bottom:clamp(36px,6vw,56px); border-bottom:1px solid rgba(246,241,228,0.16);
+  }
+  @media (max-width:760px){ .contact-top{ grid-template-columns: 1fr; } }
+
+  /* Footer newsletter: its own line under the heading, above Join the Club / Exec login */
+  .footer-nl{
+    max-width:440px; margin-top:26px; display:flex; align-items:center; gap:6px;
+    background:var(--footer-ink); border-radius:999px; padding:4px;
+  }
+  .footer-nl:focus-within{ box-shadow:0 0 0 3px rgba(192,138,46,.45); }
+  .footer-nl input[type="email"]{
+    flex:1; min-width:0; border:0; outline:none; background:transparent;
+    padding:9px 8px 9px 18px; font:inherit; font-size:0.95rem; color:var(--ink);
+  }
+  .footer-nl input[type="email"]::placeholder{ color:var(--ink-soft); }
+  .footer-nl button{
+    flex:none; cursor:pointer; background:var(--red); color:var(--footer-ink);
+    border:0; border-radius:999px; padding:11px 22px;
+    font:inherit; font-size:0.78rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    transition:transform .18s ease, background .18s ease;
+  }
+  .footer-nl button:hover{ transform:translateY(-2px); background:var(--red-ink); }
+  .footer-nl button:disabled{ opacity:.7; cursor:default; transform:none; }
+  .footer-nl .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  .footer-nl.is-done{ background:transparent; padding:10px 0; color:var(--footer-ink); font-weight:600; font-size:0.95rem; }
+  .footer-nl-msg{ margin:10px 0 0; font-size:0.85rem; color:#F2B8A8; }
+  .footer-nl-msg:empty{ display:none; }
+  .contact-intro h2{ color:var(--footer-ink); font-size:clamp(2.1rem,4.4vw,3.2rem); margin-bottom:16px; }
+  .contact-intro p{ color:var(--footer-ink-soft); max-width:42ch; font-size:1rem; }
+  .contact-intro .cta-row{ display:flex; flex-wrap:wrap; gap:14px; align-items:center; margin-top:26px; }
+  .btn-footer{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--footer-ink); color:var(--footer-bg);
+    padding:13px 24px; border-radius:999px;
+    font-size:0.78rem; font-weight:700; letter-spacing:0.04em; text-transform:uppercase;
+    text-decoration:none; border:1px solid var(--footer-ink);
+    transition: transform .18s ease, opacity .18s ease;
+  }
+  .btn-footer:hover{ transform:translateY(-2px); opacity:0.85; }
+  .btn-footer.ghost{
+    background:transparent; color:var(--footer-ink); border:1px solid rgba(246,241,228,0.4);
+  }
+  .btn-footer.ghost:hover{ background:rgba(246,241,228,0.1); opacity:1; }
+  .contact-links{ display:flex; flex-direction:column; gap:4px; }
+  .contact-links a, .contact-links button{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    text-decoration:none; color:var(--footer-ink);
+    padding:16px 0; margin:0;
+    font-family:'Fraunces', serif; font-size:clamp(1.15rem,2.4vw,1.5rem); font-weight:500;
+    transition: opacity .18s ease, gap .18s ease;
+    background:none; border:none; width:100%; text-align:left; cursor:pointer;
+    -webkit-appearance:none; appearance:none;
+  }
+  .contact-links a:hover, .contact-links button:hover{ opacity:0.72; gap:22px; }
+  .contact-links .link-lead{ display:flex; align-items:center; gap:16px; }
+  .contact-links .ig-icon{ width:24px; height:24px; flex:none; }
+  .contact-links .k{ font-family:'Work Sans',sans-serif; font-size:0.68rem; font-weight:700; letter-spacing:0.14em; color:var(--footer-ink-soft); text-transform:uppercase; }
+  .contact-links .arrow{ display:flex; align-items:center; flex:none; }
+  .contact-links .arrow svg{ width:20px; height:20px; flex:none; }
+  .contact-links button.is-copied .arrow{ color:var(--gold); }
+  .contact-bottom{
+    display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:14px;
+    padding-top:24px; font-size:0.8rem; color:var(--footer-ink-soft);
+  }
+  .contact-bottom .mark{ display:flex; align-items:center; gap:10px; }
+  .contact-bottom img{ width:26px; height:26px; border-radius:50%; }
+  .analytics-note{ margin-top:14px; font-size:0.74rem; color:var(--footer-ink-soft); opacity:0.85; }
+  /* Exec login: outlined gold pill in the nav, a gold-edged button in the footer */
+  nav.links a.nav-exec{
+    display:inline-flex; align-items:center; gap:7px;
+    padding:11px 16px; border-radius:999px; border:1.5px solid var(--gold);
+    color:var(--ink); font-size:0.78rem; font-weight:700; letter-spacing:0.03em;
+    transition: background .18s ease, color .18s ease, border-color .18s ease;
+  }
+  nav.links a.nav-exec::after{ display:none; }
+  nav.links a.nav-exec:hover{ background:var(--navy); border-color:var(--navy); color:var(--footer-ink); }
+  nav.links a.nav-exec svg, .btn-footer.exec svg, #mobile-panel a.nav-exec-m svg{ width:14px; height:14px; flex:none; }
+  #mobile-panel a.nav-exec-m{
+    display:inline-flex; align-items:center; align-self:flex-start; gap:8px;
+    padding:10px 18px; border-radius:999px; border:1.5px solid var(--gold);
+  }
+  .btn-footer.exec{ border-color:var(--gold); color:var(--gold-ink); }
+  .btn-footer.exec:hover{ background:var(--gold); color:var(--footer-bg); opacity:1; }
+  /* The nav has 8 items: tighter spacing, and fold into the menu button below 1200px so it never wraps. */
+  nav.links{ gap:clamp(12px,1.5vw,30px); }
+  @media (max-width:1200px){
+    nav.links{ display:none; }
+    .menu-btn{ display:flex; }
+  }
+
+
+  /* ---------- POLISH (shared across pages) ---------- */
+  ::selection{ background:rgba(192,138,46,0.28); color:var(--ink); }
+  .contact a[href*="Portfolio-"]{ display:inline-block; padding-block:12px; margin-block:-12px; }
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
+
+  /* The sticky nav picks up a soft shadow once the page scrolls under it. */
+  header.nav{ transition: box-shadow .3s ease; }
+  header.nav.scrolled{ box-shadow: 0 8px 28px rgba(28,36,64,0.07); }
+
+  /* Buttons give a little press when tapped. */
+  .btn:active, .btn-footer:active, .nav-cta:active, nav.links a.nav-exec:active, .wheel-btn:active, .lang-toggle button:active{
+    transform:translateY(0) scale(.97); transition-duration:.08s;
+  }
+
+  /* The menu button turns into an X while the menu is open, and the menu slides in. */
+  .menu-btn span, .menu-btn span::before, .menu-btn span::after{
+    transition: transform .3s cubic-bezier(.2,.8,.2,1), top .3s cubic-bezier(.2,.8,.2,1), background-color .2s ease;
+  }
+  .menu-btn[aria-expanded="true"] span{ background:transparent; }
+  .menu-btn[aria-expanded="true"] span::before{ top:0; transform:rotate(45deg); }
+  .menu-btn[aria-expanded="true"] span::after{ top:0; transform:rotate(-45deg); }
+  @keyframes menu-in{ from{ opacity:0; transform:translateY(-8px); } to{ opacity:1; transform:none; } }
+  #mobile-panel:not([hidden]){ animation: menu-in .28s cubic-bezier(.2,.8,.2,1) both; }
+  #mobile-panel:not([hidden]) > *{ animation: menu-in .34s cubic-bezier(.2,.8,.2,1) both; }
+  #mobile-panel:not([hidden]) > :nth-child(2){ animation-delay:.03s; }
+  #mobile-panel:not([hidden]) > :nth-child(3){ animation-delay:.06s; }
+  #mobile-panel:not([hidden]) > :nth-child(4){ animation-delay:.09s; }
+  #mobile-panel:not([hidden]) > :nth-child(5){ animation-delay:.12s; }
+  #mobile-panel:not([hidden]) > :nth-child(6){ animation-delay:.15s; }
+
+  /* Softer, consistent corners on cards and photos (matching the About and Gallery pages). */
+  .event-card{ border-radius:20px; overflow:hidden; }
+  .event-body{ display:flex; flex-direction:column; align-items:flex-start; justify-content:center; }
+  .past-card{ border-radius:16px; transition: transform .2s ease, box-shadow .25s ease; }
+  .past-card:hover{ box-shadow: 0 16px 32px rgba(28,36,64,0.12); }
+  .past-card .photo{ overflow:hidden; }
+  .panel{ border-radius:16px; }
+
+  /* Big screens: a slightly wider column and larger type, so wide monitors don't feel empty. */
+  @media (min-width:1600px){
+    html{ font-size:106.25%; }
+    body{ font-size:17px; }
+    .wrap{ max-width:1400px; }
+  }
+  @media (min-width:2000px){
+    html{ font-size:112.5%; }
+    body{ font-size:18px; }
+    .wrap{ max-width:1560px; }
+  }
+
+  /* Next event card: the poster column stops growing, so the card doesn't get taller as the window gets wider. */
+  @media (min-width:821px){
+    .event-card{ grid-template-columns: minmax(0, min(460px, 46%)) minmax(0, 1fr); }
+  }
+  @media (min-width:1600px){
+    .event-card{ grid-template-columns: minmax(0, min(500px, 42%)) minmax(0, 1fr); }
+  }
+
+  /* Next event: add-to-calendar buttons and a map link on the location. */
+  .cal-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; margin:0 0 22px; }
+  .cal-label{ display:inline-flex; align-items:center; gap:8px; font-size:0.82rem; font-weight:600; color:var(--ink-soft); margin-right:2px; }
+  .cal-label svg{ width:16px; height:16px; flex:none; color:var(--red-ink); }
+  .cal-btn{
+    display:inline-flex; align-items:center; padding:7px 14px; border-radius:999px;
+    border:1.5px solid var(--line); background:var(--bg-raised); color:var(--ink);
+    font-size:0.78rem; font-weight:700; text-decoration:none;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .cal-btn:hover{ background:var(--navy); color:var(--footer-ink); border-color:var(--navy); transform:translateY(-1px); }
+  .cal-btn:active{ transform:scale(.97); }
+  a.meta-link{ color:inherit; text-decoration:none; border-bottom:1px dashed rgba(140,42,31,0.35); transition: color .18s ease, border-color .18s ease; }
+  a.meta-link:hover{ color:var(--red-ink); border-bottom-color:var(--red-ink); }
+
+  /* Photos that are still downloading fade in instead of popping. */
+  img.fade-img{ opacity:0; transition: opacity .45s ease, transform .5s ease; }
+  img.fade-img.is-loaded{ opacity:1; }
+
+</style>
+<!-- Privacy-friendly, cookie-free visitor counter (GoatCounter) -->
+<script data-goatcounter="https://moarz.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<!-- Google Analytics (GA4). Skipped on localhost so test visits don't pollute the stats. -->
+<script>
+(function(){
+  var h = location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1' || h === '') return;
+  var s = document.createElement('script');
+  s.async = true;
+  s.src = 'https://www.googletagmanager.com/gtag/js?id=G-RZ1DC1SBQ2';
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ dataLayer.push(arguments); };
+  gtag('js', new Date());
+  gtag('config', 'G-RZ1DC1SBQ2');
+})();
+</script>
+<!-- Fetch a page as soon as the visitor shows intent (hover / press), so the click doesn't wait on the network. -->
+<script type="speculationrules">{"prefetch":[{"where":{"href_matches":"/*"},"eagerness":"moderate"}]}</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-row">
+    <a href="index.html" class="brand">
+      <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
+      <span class="brand-name">Myanmar Culture Club<small>University of Toronto</small></span>
+    </a>
+    <nav class="links">
+      <a href="index.html" data-i18n="label_welcome">Welcome</a>
+      <a href="events.html" data-i18n="label_all_events">Events</a>
+      <a href="about.html" data-i18n="label_about">About</a>
+      <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
+      <a href="learn.html" data-i18n="label_learn">Learn</a>
+      <a href="login.html" class="nav-exec"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
+      <div class="lang-toggle" role="group" aria-label="Language">
+        <span class="lang-toggle-slider" aria-hidden="true"></span>
+        <button type="button" data-lang="en">English</button>
+        <button type="button" data-lang="mm">မြန်မာ</button>
+      </div>
+    </nav>
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-panel"><span></span></button>
+  </div>
+  <div id="mobile-panel" hidden>
+    <a href="index.html" data-i18n="label_welcome">Welcome</a>
+    <a href="events.html" data-i18n="label_all_events">Events</a>
+    <a href="about.html" data-i18n="label_about">About</a>
+    <a href="gallery.html" data-i18n="label_gallery">Gallery</a>
+    <a href="learn.html" data-i18n="label_learn">Learn</a>
+    <a href="login.html" class="nav-exec-m"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec Login</a>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <span class="lang-toggle-slider" aria-hidden="true"></span>
+      <button type="button" data-lang="en">English</button>
+      <button type="button" data-lang="mm">မြန်မာ</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="join">
+    <div class="wrap join-grid">
+      <div class="join-intro">
+        <span class="eyebrow">Join the club</span>
+        <h1>There's always a seat for you at our table.</h1>
+        <p class="lede">Open to everyone, at UofT or not.</p>
+        <figure class="join-photo">
+          <img src="images/welcome_top.jpg" alt="Club members sharing food on the lawn in front of University College" width="1440" height="960" decoding="async">
+        </figure>
+      </div>
+
+      <div class="join-card" id="join">
+        <form class="join-form" id="join-form" novalidate>
+          <div class="f-row">
+            <div class="f">
+              <label for="j-first">First name</label>
+              <input type="text" id="j-first" name="first_name" autocomplete="given-name" maxlength="60" required>
+              <p class="err" id="j-first-err"></p>
+            </div>
+            <div class="f">
+              <label for="j-last">Last name</label>
+              <input type="text" id="j-last" name="last_name" autocomplete="family-name" maxlength="60" required>
+              <p class="err" id="j-last-err"></p>
+            </div>
+          </div>
+
+          <div class="f">
+            <label for="j-pref">Preferred name <span class="optional">(optional)</span></label>
+            <input type="text" id="j-pref" name="preferred_name" autocomplete="nickname" maxlength="60">
+            <p class="err" id="j-pref-err"></p>
+          </div>
+
+          <div class="f">
+            <label for="j-email">Email</label>
+            <input type="email" id="j-email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required>
+            <p class="err" id="j-email-err"></p>
+          </div>
+
+          <fieldset class="f" id="j-aff" aria-describedby="j-aff-err">
+            <legend>What's your connection to UofT?</legend>
+            <div class="choices">
+              <label><input type="radio" name="affiliation" value="undergrad" required><span>Undergraduate student</span></label>
+              <label><input type="radio" name="affiliation" value="grad"><span>Graduate student</span></label>
+              <label><input type="radio" name="affiliation" value="faculty"><span>Faculty or staff</span></label>
+              <label><input type="radio" name="affiliation" value="alumni"><span>Alumni</span></label>
+              <label><input type="radio" name="affiliation" value="external"><span>Not at UofT</span></label>
+            </div>
+            <p class="err" id="j-aff-err"></p>
+          </fieldset>
+
+          <div class="fold" id="j-student" inert>
+            <div class="fold-in">
+              <div class="f-row">
+                <div class="f">
+                  <label for="j-utorid">UTORid</label>
+                  <input type="text" id="j-utorid" name="utorid" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="8" disabled>
+                  <p class="err" id="j-utorid-err"></p>
+                </div>
+                <div class="f">
+                  <label for="j-snum">Student number</label>
+                  <input type="text" id="j-snum" name="student_number" autocomplete="off" inputmode="numeric" maxlength="12" disabled>
+                  <p class="err" id="j-snum-err"></p>
+                </div>
+              </div>
+              <div class="fold" id="j-year-fold" inert>
+                <div class="fold-in">
+                  <fieldset class="f" id="j-year" aria-describedby="j-year-err">
+                    <legend>Year of study</legend>
+                    <div class="seg">
+                      <label><input type="radio" name="year_of_study" value="1" disabled><span>1st</span></label>
+                      <label><input type="radio" name="year_of_study" value="2" disabled><span>2nd</span></label>
+                      <label><input type="radio" name="year_of_study" value="3" disabled><span>3rd</span></label>
+                      <label><input type="radio" name="year_of_study" value="4" disabled><span>4th</span></label>
+                      <label><input type="radio" name="year_of_study" value="5+" disabled><span>5th+</span></label>
+                    </div>
+                    <p class="err" id="j-year-err"></p>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="f">
+            <label for="j-ideas">Any ideas for the club? <span class="optional">(optional)</span></label>
+            <textarea id="j-ideas" name="ideas" maxlength="1000" rows="3"></textarea>
+          </div>
+
+          <div class="f">
+            <label class="check"><input type="checkbox" id="j-nl" name="newsletter"><span>Send me the MCC newsletter</span></label>
+            <div id="j-nl-more" hidden>
+              <p class="nl-to" id="j-nl-to">It will go to <b id="j-nl-addr">the email above</b>. <button type="button" class="linkish" id="j-nl-switch">Use a different email</button></p>
+              <div class="nl-alt" id="j-nl-alt" hidden>
+                <label for="j-nl-email">Newsletter email</label>
+                <input type="email" id="j-nl-email" name="newsletter_email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254">
+                <p class="err" id="j-nl-email-err"></p>
+              </div>
+            </div>
+          </div>
+
+          <label class="hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+
+          <p class="form-msg" id="j-msg" role="alert"></p>
+          <div class="join-foot">
+            <button type="submit" class="btn" id="j-submit">Join the club</button>
+            <p class="privacy">Only the MCC executive team can see your details.</p>
+          </div>
+        </form>
+        <noscript><p class="form-msg">This form needs JavaScript. You can also email contact@uoftmcc.ca to join.</p></noscript>
+      </div>
+    </div>
+  </section>
+
+  <footer class="contact" id="connect">
+    <div class="wrap">
+      <div class="contact-top" data-nosnippet>
+        <div class="contact-intro">
+          <span class="eyebrow" style="color:var(--gold)" data-i18n="label_connect">Connect</span>
+          <h2 data-i18n="footer_h2">Let's stay in touch.</h2>
+          <form class="footer-nl" novalidate>
+            <label class="hp" aria-hidden="true">Leave blank<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            <input type="email" name="email_address" placeholder="Join our newsletter" data-i18n-ph="footer_nl_placeholder" autocomplete="email" inputmode="email" required aria-label="Email address for the newsletter">
+            <button type="submit" data-i18n="footer_nl_subscribe">Subscribe</button>
+          </form>
+          <p class="footer-nl-msg" role="status" aria-live="polite"></p>
+          <div class="cta-row">
+            <a class="btn-footer" href="#top" data-i18n="label_join_club">Join the Club</a>
+            <a class="btn-footer exec" href="login.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Exec login</a>
+          </div>
+        </div>
+        <div class="contact-links">
+          <a href="https://www.instagram.com/mcc_uoft/" target="_blank" rel="noopener">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.3" cy="6.7" r="1.1" fill="currentColor" stroke="none"/></svg>
+              <span><span class="k">Instagram</span><br>@mcc_uoft</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+          <button type="button" class="js-email-copy" data-email="contact@uoftmcc.ca">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M4 7 L12 13 L20 7"/></svg>
+              <span><span class="k js-email-label" data-i18n="contact_email_label">Email</span><br>contact@uoftmcc.ca</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </button>
+          <a href="https://linktr.ee/mcc.uoft" target="_blank" rel="noopener">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+              <span><span class="k" data-i18n="contact_linktree_label">Everything else</span><br>linktr.ee/mcc.uoft</span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+          <a class="celebrate" href="fun-fact.html">
+            <span class="link-lead">
+              <svg class="ig-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor" stroke="none"/></svg>
+              <span><span class="k" data-i18n="contact_lucky_label">Feeling lucky?</span><br><span data-i18n="contact_lucky_value">Get a random fun fact</span></span>
+            </span>
+            <span class="arrow"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 L17 7"/><path d="M8 7 H17 V16"/></svg></span>
+          </a>
+        </div>
+      </div>
+      <div class="contact-bottom">
+        <div class="mark">
+          <img src="images/brand/logo.png" alt="Myanmar Culture Club logo">
+          <span>Myanmar Culture Club, 21 Sussex Ave, Toronto, ON M5S 1J6</span>
+        </div>
+        <span>&copy; <span class="js-cy">2026</span><script>(function(e,y){if(y>2026)e.textContent="2026\u2013"+y})(document.currentScript.previousElementSibling,new Date().getFullYear())</script> MCC &middot; Designed &amp; engineered from scratch by <a href="https://moarznainglinkhant-cloud.github.io/Portfolio-/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:2px">Naing Lin Khant (Moarz)</a></span>
+      </div>
+      <p class="analytics-note" data-i18n="footer_analytics" data-nosnippet>This site uses Google Analytics to understand visitor traffic.</p>
+    </div>
+  </footer>
+</main>
+
+<script>
+(function(){
+  try{
+    var btn = document.getElementById('menuBtn');
+    var panel = document.getElementById('mobile-panel');
+    btn.addEventListener('click', function(){
+      var isHidden = panel.hidden;
+      panel.hidden = !isHidden;
+      btn.setAttribute('aria-expanded', String(isHidden));
+    });
+    panel.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ panel.hidden = true; btn.setAttribute('aria-expanded','false'); });
+    });
+  }catch(e){}
+})();
+</script>
+
+<script src="js/site.js"></script>
+<script src="js/exec-config.js"></script>
+<script src="js/join.js"></script>
+</body>
+</html>

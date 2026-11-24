@@ -380,6 +380,10 @@
         <div class="view-head">
           <h1 id="reg-h1" tabindex="-1">Registrations</h1>
           <p class="panel-sub">Everyone who registered on the website, per event. At the door, search a name or the 8-letter ticket code and tick them in.</p>
+          <div class="reg-tabs">
+            <button type="button" class="reg-tab" data-reg-tab="events" aria-pressed="true">Event registrations</button>
+            <button type="button" class="reg-tab" data-reg-tab="members" aria-pressed="false">Club members <b id="mem-n"></b></button>
+          </div>
           <p class="msg" id="reg-msg" role="status" aria-live="polite"></p>
         </div>
         <section class="panel" id="reg-panel" aria-label="Registrations">
@@ -398,6 +402,21 @@
           <p class="meta" id="reg-empty" hidden>No registrations for this event yet.</p>
         </section>
         <p class="meta" id="reg-missing" hidden>Registrations aren't set up yet — run <code>supabase/members-2-registration.sql</code> in the Supabase SQL editor.</p>
+        <section class="panel" id="mem-panel" aria-label="Club members" hidden>
+          <div class="reg-bar">
+            <input class="opt" id="mem-search" type="search" placeholder="Search name, email, UTORid or student number" aria-label="Search club members" autocomplete="off">
+            <button type="button" class="btn ghost" id="mem-csv">Download CSV</button>
+          </div>
+          <div class="reg-stats" id="mem-stats"></div>
+          <div class="reg-table-wrap">
+            <table class="reg-table mem-table" id="mem-table">
+              <thead><tr><th>Name</th><th>Connection</th><th>Email</th><th>UTORid</th><th>Student #</th><th>Year</th><th>Joined</th><th class="c">Remove</th></tr></thead>
+              <tbody id="mem-rows"></tbody>
+            </table>
+          </div>
+          <p class="meta" id="mem-empty" hidden>No one has joined through the website yet.</p>
+        </section>
+        <p class="meta" id="mem-missing" hidden>The member list isn't set up yet — run <code>supabase/members-4-join.sql</code> in the Supabase SQL editor.</p>
       </section>
 
       <!-- ===================== QUESTIONS (from Ask MCC) ===================== -->
