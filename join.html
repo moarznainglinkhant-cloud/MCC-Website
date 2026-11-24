@@ -304,18 +304,26 @@
   .pill input:checked + span{ background:var(--navy); border-color:var(--navy); color:var(--footer-ink); font-weight:600; }
   .pill input:focus-visible + span{ outline:2px solid var(--gold); outline-offset:3px; }
   .pills.is-invalid .pill span{ border-color:var(--red); }
-  .pill .tick{ width:18px; height:18px; flex:none; border-radius:50%; border:1.5px solid currentColor; opacity:.55; display:grid; place-items:center; }
-  .pill .tick svg{ width:11px; height:11px; opacity:0; }
-  .pill input:checked + span .tick{ opacity:1; border-color:var(--gold); background:var(--gold); color:var(--navy); }
-  .pill input:checked + span .tick svg{ opacity:1; }
+  /* An ordinary tick box, drawn to match the page. */
+  .check{ display:inline-flex; align-items:center; gap:12px; min-height:44px; cursor:pointer; font-size:1.05rem; }
+  .check input{
+    -webkit-appearance:none; appearance:none; flex:none; width:22px; height:22px; margin:0; cursor:pointer;
+    border:1.5px solid rgba(28,36,64,.5); border-radius:6px; background:transparent center / 14px 14px no-repeat;
+    transition: background-color .12s ease, border-color .12s ease;
+  }
+  .check input:checked{
+    background-color:var(--navy); border-color:var(--navy);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 14 14' fill='none' stroke='%23F6F1E4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 7.4 5.8 10 11 4.2'/%3E%3C/svg%3E");
+  }
+  .check input:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; }
 
-  .nl-to{ margin:14px 0 0; font-size:0.92rem; color:var(--ink-soft); }
+  .nl-to{ margin:4px 0 0 34px; font-size:0.92rem; color:var(--ink-soft); }
   .nl-to b{ color:var(--ink); font-weight:600; overflow-wrap:anywhere; }
   .linkish{
     font:inherit; color:var(--ink); background:none; border:0; padding:0; cursor:pointer;
     text-decoration:underline; text-underline-offset:2px;
   }
-  .nl-alt{ margin:24px 0 0; }
+  .nl-alt{ margin:18px 0 0 34px; }
   .nl-alt > label{ display:block; margin:0 0 4px; font-size:0.72rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
   .vh{ position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
@@ -654,8 +662,8 @@
                 <p class="err" id="j-email-err"></p>
               </div>
               <div class="f">
-                <div class="pills">
-                  <label class="pill"><input type="checkbox" id="j-nl" name="newsletter"><span><i class="tick" aria-hidden="true"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 6.3 5 8.7l4.5-5.2"/></svg></i>Send me the MCC newsletter</span></label>
+                <div class="check-row">
+                  <label class="check"><input type="checkbox" id="j-nl" name="newsletter"><span>Send me the MCC newsletter</span></label>
                 </div>
                 <div id="j-nl-more" hidden>
                   <p class="nl-to" id="j-nl-to">It will go to <b id="j-nl-addr">the email above</b>. <button type="button" class="linkish" id="j-nl-switch">Use a different email</button></p>
