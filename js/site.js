@@ -2867,22 +2867,27 @@ function tiltCard(card) {
 // fun facts list above. The Newsletter tile is just its label and a Read link.
 const BENTO = { posters: null, factIndex: -1, team: null, news: null, since: "", count: 0 };
 
-// Events tile posters — edit these two lists to curate it (matched against the event's name or
-// poster filename, ignoring capitals). The count ("22 events since 2022") still includes every event.
-const BENTO_POSTERS_HIDE = ["multicultural-bazaar", "mcc-mixer"];            // never shown in the tile
-const BENTO_POSTERS_FIRST = ["sea of love", "thingyan", "general meeting", "home away from home"]; // shown first
+// Events tile posters — only the events in this list are shown, in this order (matched against the
+// event's name, ignoring capitals). Any event dated after BENTO_POSTERS_AUTO_AFTER shows automatically,
+// newest first, so new events appear without editing this. To hide one of those later, add it to
+// BENTO_POSTERS_HIDE. The count ("24 events since 2022") still includes every event.
+const BENTO_POSTERS_SHOW = ["taste of southeast asia", "mcc run", "general meeting", "home away from home",
+  "mcc welcome picnic", "toronto ready", "thingyan", "hihi culture exchange", "sea of love", "origami",
+  "condo party", "burmese language", "back to school picnic"];
+const BENTO_POSTERS_AUTO_AFTER = "2026-11-10";   // date of the newest event when the list above was made
+const BENTO_POSTERS_HIDE = [];                    // never shown, even if new
 const BENTO_COLORS = ["#AE3628", "#86601E", "#4B7A3C", "#1C2440", "#8C2A1F"];
 
 function renderBento(past) {
   const root = document.getElementById("js-bento");
   if (!root) return;
   const key = ev => ((ev.name || "") + " " + (ev.photo || "")).toLowerCase();
-  const rank = ev => { const k = key(ev); const i = BENTO_POSTERS_FIRST.findIndex(w => k.includes(w)); return i < 0 ? 999 : i; };
-  const withPhoto = past
-    .filter(ev => ev.photo && !BENTO_POSTERS_HIDE.some(w => key(ev).includes(w)))
-    .map((ev, i) => ({ ev, i }))
-    .sort((a, b) => (rank(a.ev) - rank(b.ev)) || (a.i - b.i))
-    .map(x => x.ev);
+  const name = ev => (ev.name || "").toLowerCase();
+  const isNew = ev => (ev.date || "") > BENTO_POSTERS_AUTO_AFTER;
+  const rank = ev => BENTO_POSTERS_SHOW.findIndex(w => name(ev).includes(w));
+  const usable = past.filter(ev => ev.photo && !BENTO_POSTERS_HIDE.some(w => key(ev).includes(w)));
+  const withPhoto = usable.filter(isNew).sort((a, b) => (b.date || "").localeCompare(a.date || ""))
+    .concat(usable.filter(ev => !isNew(ev) && rank(ev) >= 0).sort((a, b) => rank(a) - rank(b)));
   const years = past.map(ev => (ev.date || "").slice(0, 4)).filter(y => /^\d{4}$/.test(y)).sort();
   BENTO.count = past.length;
   BENTO.since = years[0] || "";
@@ -2980,6 +2985,11 @@ async function loadBentoTeam() {
   const MAX = 9, withPhoto = rows.filter(teamPhoto).slice(0, MAX);
   const pick = new Set(withPhoto.concat(rows.filter(r => !teamPhoto(r)).slice(0, MAX - withPhoto.length)));
   const show = rows.filter(r => pick.has(r));
+  // Grace's photo points to her left, so keep Moarz out of the spot just before her:
+  // if he lands there, he trades places with the person before him.
+  const key = r => (r.name || "").trim().toLowerCase();
+  const mi = show.findIndex(r => key(r) === "naing lin khant"), gi = show.findIndex(r => key(r) === "eaint chan myae");
+  if (mi > 0 && gi === mi + 1) [show[mi - 1], show[mi]] = [show[mi], show[mi - 1]];
   faces.innerHTML = show.map((r, i) => {
     const ph = teamPhoto(r);
     return ph
