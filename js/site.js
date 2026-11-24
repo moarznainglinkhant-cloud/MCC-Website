@@ -3799,47 +3799,53 @@ function initSnowEasterEgg() {
 }
 
 /* ============================================================
-   FALLING LEAVES (autumn only)
+   FALLING LEAVES (homepage, autumn only)
    ------------------------------------------------------------
-   A few maple, ginkgo and birch leaves drift down the page
-   in September, October and November (Toronto time). In the
-   club's own colours, drawn on one canvas that ignores clicks
-   and sits under the nav. Skipped for reduced-motion visitors,
-   on the exec/login pages, and paused while the tab is hidden.
-   Add ?leaves to a URL to preview it outside fall; ?leaves=off
-   to turn it off for a quick look without it.
+   A one-time moment, not a constant effect: shortly after the
+   homepage loads, five leaves (red maple, gold ginkgo, green
+   birch) drift down, land at the bottom of the screen, rest
+   for a beat and fade away. Nothing new falls after that, and
+   it plays once per visit (sessionStorage), so going back to
+   the homepage doesn't repeat it. Sept–Nov, Toronto time only.
+   Skipped for reduced-motion visitors and on every other page.
+   Add ?leaves to the homepage URL to replay it any time of year
+   (?leaves=off hides it).
    ============================================================ */
 function initFallingLeaves() {
   const param = new URLSearchParams(location.search).get("leaves");
   if (param === "off") return;
+  if (!/(^|\/)(index\.html)?$/.test(location.pathname)) return;   // homepage only
   const month = Number(new Intl.DateTimeFormat("en-CA",
     { timeZone: "America/Toronto", month: "numeric" }).format(new Date())); // 1–12
-  const isFall = month >= 9 && month <= 11;
-  if (!isFall && param === null) return;
-  if (/\/(exec|login)\.html$/.test(location.pathname)) return;
+  const forced = param !== null;
+  if (!forced && (month < 9 || month > 11)) return;
+  const SEEN = "mcc_leaves_seen";
+  try { if (!forced && sessionStorage.getItem(SEEN)) return; sessionStorage.setItem(SEEN, "1"); } catch (_) {}
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (typeof Path2D === "undefined") return;
 
-  // Leaf shapes in a 100×100 box: outline, veins (clipped to the outline) and stem.
+  // Leaf shapes in a 100×100 box: outline, veins (clipped to the outline),
+  // stem, and one colour per type: red maple, gold ginkgo, green birch.
   const SHAPES = [
     { // maple: five pointed lobes, veins fanning from the base
       body: new Path2D("M50 6 L57 23 L66 18 L63 39 L80 27 L77 37 L94 39 L84 51 L90 55 L68 66 L71 76 L53 72 L50 76 L47 72 L29 76 L32 66 L10 55 L16 51 L6 39 L23 37 L20 27 L37 39 L34 18 L43 23 Z"),
       veins: new Path2D("M50 74 L50 10 M50 68 L9 40 M50 68 L91 40 M50 68 L14 54 M50 68 L86 54 M50 40 L35 22 M50 40 L65 22"),
       stem: new Path2D("M50 77.5 L50 96"),
+      colour: "#AE3628",
     },
     { // ginkgo: fan with a notch at the top, fine radiating veins
       body: new Path2D("M50 68 C44 58 22 44 8 30 C14 18 30 10 46 12 C48 16 49 22 50 26 C51 22 52 16 54 12 C70 10 86 18 92 30 C78 44 56 58 50 68 Z"),
       veins: new Path2D("M50 68 L12 30 M50 68 L20 22 M50 68 L30 15 M50 68 L40 12 M50 68 L47 14 M50 68 L53 14 M50 68 L60 12 M50 68 L70 15 M50 68 L80 22 M50 68 L88 30"),
       stem: new Path2D("M50 69.5 L50 96"),
+      colour: "#DAA63E",
     },
     { // birch: ovate, finely toothed, straight parallel side veins
       body: new Path2D("M50 8 L48.8 9.8 L47.7 11.5 L45.7 13.2 L44.9 15.0 L42.5 16.8 L42.1 18.5 L39.4 20.2 L39.2 22.0 L36.6 23.8 L36.4 25.5 L33.8 27.2 L33.7 29.0 L31.2 30.8 L31.1 32.5 L28.7 34.2 L28.7 36.0 L26.3 37.8 L26.4 39.5 L24.1 41.2 L24.3 43.0 L22.2 44.8 L22.6 46.5 L20.6 48.2 L21.1 50.0 L19.2 51.8 L19.9 53.5 L18.3 55.2 L19.2 57.0 L17.8 58.8 L19.0 60.5 L17.9 62.2 L19.5 64.0 L18.8 65.8 L20.8 67.5 L20.8 69.2 L23.5 71.0 L24.4 72.8 L28.6 74.5 L32.1 76.2 L50.0 78.0 L50.0 78.0 L67.9 76.2 L71.4 74.5 L75.6 72.8 L76.5 71.0 L79.2 69.2 L79.2 67.5 L81.2 65.8 L80.5 64.0 L82.1 62.2 L81.0 60.5 L82.2 58.8 L80.8 57.0 L81.7 55.2 L80.1 53.5 L80.8 51.8 L78.9 50.0 L79.4 48.2 L77.4 46.5 L77.8 44.8 L75.7 43.0 L75.9 41.2 L73.6 39.5 L73.7 37.8 L71.3 36.0 L71.3 34.2 L68.9 32.5 L68.8 30.8 L66.3 29.0 L66.2 27.2 L63.6 25.5 L63.4 23.8 L60.8 22.0 L60.6 20.2 L57.9 18.5 L57.5 16.8 L55.1 15.0 L54.3 13.2 L52.3 11.5 L51.2 9.8 Z"),
       veins: new Path2D("M50 78 L50 12 M50 33.6 L35.5 23.6 M50 33.6 L64.5 23.6 M50 42.0 L29.7 32.0 M50 42.0 L70.3 32.0 M50 50.4 L24.9 40.4 M50 50.4 L75.1 40.4 M50 58.8 L21.6 48.8 M50 58.8 L78.4 48.8 M50 67.2 L20.6 57.2 M50 67.2 L79.4 57.2 M50 74.9 L23.1 64.9 M50 74.9 L76.9 64.9"),
       stem: new Path2D("M50 79.5 L50 96"),
+      colour: "#4B7A3C",
     },
   ];
-  // Brand red, gold and green plus a burnt orange and rust.
-  const COLOURS = ["#AE3628", "#C08A2E", "#D06B3A", "#8C2A1F", "#4B7A3C", "#DAA63E"];
 
   const canvas = document.createElement("canvas");
   canvas.className = "falling-leaves";
@@ -3848,72 +3854,101 @@ function initFallingLeaves() {
   document.body.appendChild(canvas);
   const ctx = canvas.getContext("2d");
 
-  let w = 0, h = 0, dpr = 1, leaves = [];
+  let w = 0, h = 0, dpr = 1;
   const rand = (a, b) => a + Math.random() * (b - a);
-
-  function makeLeaf(startAnywhere) {
-    return {
-      x: rand(0, w), y: startAnywhere ? rand(-h, h) : rand(-120, -30),
-      size: rand(16, 30), vy: rand(0.35, 0.8),
-      sway: rand(18, 46), swaySpeed: rand(0.006, 0.014), phase: rand(0, Math.PI * 2),
-      rot: rand(0, Math.PI * 2), spin: rand(-0.012, 0.012), flip: rand(0.01, 0.03),
-      shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
-      colour: COLOURS[Math.floor(Math.random() * COLOURS.length)],
-      alpha: rand(0.55, 0.85),
-    };
-  }
-
   function resize() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = window.innerWidth; h = window.innerHeight;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    const want = Math.round(Math.min(8, Math.max(3, w / 170)));   // ~3 on phones, 8 on wide screens
-    while (leaves.length < want) leaves.push(makeLeaf(true));
-    leaves.length = want;
+  }
+  resize();
+
+  // Five leaves: two maples, two ginkgos, one birch, each in its own lane across
+  // the screen so they don't clump, released one after another over ~2.5s.
+  const kinds = [0, 1, 2, 0, 1].sort(() => Math.random() - 0.5);
+  const lanes = [0, 1, 2, 3, 4].sort(() => Math.random() - 0.5);
+  const DELAY = 900;                                    // let the hero settle first
+  const leaves = kinds.map((k, i) => ({
+    shape: SHAPES[k],
+    x: (lanes[i] + rand(0.25, 0.75)) * w / 5,
+    y: rand(-70, -30), born: DELAY + i * rand(380, 620),
+    size: rand(20, 30), vy: rand(1.1, 1.5),
+    sway: rand(20, 42), swaySpeed: rand(0.018, 0.03), phase: rand(0, Math.PI * 2),
+    rot: rand(0, Math.PI * 2), spin: rand(-0.02, 0.02), flip: rand(0.02, 0.04),
+    alpha: rand(0.8, 0.92), landed: 0, done: false,
+  }));
+
+  function draw(L, x, y, angle, sx, alpha) {
+    const s = L.size / 100;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.scale(s * sx, s);
+    ctx.translate(-50, -50);
+    ctx.globalAlpha = alpha;
+    ctx.lineCap = "round";
+    ctx.strokeStyle = ctx.fillStyle = L.shape.colour;
+    ctx.lineWidth = 3.2;
+    ctx.stroke(L.shape.stem);
+    ctx.fill(L.shape.body);
+    ctx.save();
+    ctx.clip(L.shape.body);
+    ctx.strokeStyle = "rgba(40,20,10,0.28)";
+    ctx.lineWidth = 1.3;
+    ctx.stroke(L.shape.veins);
+    ctx.restore();
+    ctx.restore();
   }
 
-  let t = 0, raf = 0, last = 0;
+  const HOLD = 1600, FADE = 1100;                       // ms resting on the ground, then fading
+  let raf = 0, last = 0, clock = 0;
   function frame(now) {
-    const step = last ? Math.min((now - last) / 16.7, 3) : 1;   // frame-rate independent
-    last = now; t += step;
+    const dt = last ? Math.min(now - last, 50) : 16.7;   // frame-rate independent
+    last = now; clock += dt;
+    const step = dt / 16.7;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    const wind = Math.sin(t * 0.002) * 0.35;                    // slow gusts
-    leaves.forEach((L, i) => {
-      L.y += L.vy * step;
-      L.rot += L.spin * step;
-      const x = L.x + Math.sin(t * L.swaySpeed + L.phase) * L.sway + wind * L.y * 0.15;
-      if (L.y > h + 40 || x < -80 || x > w + 80) { leaves[i] = makeLeaf(false); return; }
-      const s = L.size / 100;
-      ctx.save();
-      ctx.translate(x, L.y);
-      ctx.rotate(L.rot + Math.sin(t * L.swaySpeed + L.phase) * 0.6);
-      ctx.scale(s * Math.cos(t * L.flip + L.phase), s);          // tumbling in 3D
-      ctx.translate(-50, -50);
-      ctx.globalAlpha = L.alpha;
-      ctx.lineCap = "round";
-      ctx.strokeStyle = L.colour;
-      ctx.lineWidth = 3.2;
-      ctx.stroke(L.shape.stem);
-      ctx.fillStyle = L.colour;
-      ctx.fill(L.shape.body);
-      ctx.save();
-      ctx.clip(L.shape.body);
-      ctx.strokeStyle = "rgba(40,20,10,0.28)";
-      ctx.lineWidth = 1.3;
-      ctx.stroke(L.shape.veins);
-      ctx.restore();
-      ctx.restore();
+    leaves.forEach(L => {
+      if (L.done || clock < L.born) return;
+      const t = (clock - L.born) / 16.7;
+      if (!L.landed) {
+        L.y += L.vy * step;
+        L.rot += L.spin * step;
+        L.cx = L.x + Math.sin(t * L.swaySpeed + L.phase) * L.sway;
+        L.angle = L.rot + Math.sin(t * L.swaySpeed + L.phase) * 0.6;
+        L.sx = Math.cos(t * L.flip + L.phase);                 // tumbling in 3D
+        const ground = h - L.size * 0.32;
+        if (L.y >= ground) {                                    // touch down
+          L.y = ground; L.landed = clock;
+          L.restAngle = (Math.random() < 0.5 ? -1 : 1) * Math.PI / 2 + rand(-0.35, 0.35);
+          L.fromAngle = L.angle; L.fromSx = L.sx;
+          L.restSx = L.sx < 0 ? -1 : 1;
+        }
+        draw(L, L.cx, L.y, L.angle, L.sx, L.alpha);
+        return;
+      }
+      const since = clock - L.landed;
+      const k = Math.min(since / 450, 1), e = 1 - Math.pow(1 - k, 3);   // settle flat
+      const angle = L.fromAngle + (L.restAngle - L.fromAngle) * e;
+      const sx = L.fromSx + (L.restSx - L.fromSx) * e;
+      const fade = Math.max(0, Math.min((since - HOLD) / FADE, 1));
+      if (fade >= 1) { L.done = true; return; }
+      draw(L, L.cx, L.y, angle, sx, L.alpha * (1 - fade));
     });
+    if (leaves.every(L => L.done)) { finish(); return; }
     raf = requestAnimationFrame(frame);
   }
 
-  function start() { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } }
-  function stop() { cancelAnimationFrame(raf); raf = 0; }
-  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  function onVis() { if (document.hidden) { cancelAnimationFrame(raf); raf = 0; } else if (!raf) { last = 0; raf = requestAnimationFrame(frame); } }
+  function finish() {                                   // all leaves have landed and faded: tidy up
+    cancelAnimationFrame(raf); raf = 0;
+    document.removeEventListener("visibilitychange", onVis);
+    window.removeEventListener("resize", resize);
+    canvas.remove();
+  }
+  document.addEventListener("visibilitychange", onVis);
   window.addEventListener("resize", resize);
-  resize();
-  start();
+  raf = requestAnimationFrame(frame);
 }
 
 // site.js is loaded at the end of <body>, so the page's HTML is already in place here.
