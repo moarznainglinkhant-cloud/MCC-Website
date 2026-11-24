@@ -76,6 +76,8 @@ const I18N = {
     label_join_newsletter_nav: "Join Newsletter",
     label_join_club: "Join the Club",
     label_join_newsletter_footer: "Join the Newsletter",
+    footer_nl_placeholder: "Email for our newsletter",
+    footer_nl_subscribe: "Subscribe",
 
     hero_h1: "Mingalabar",
     hero_lede: "The Myanmar Culture Club brings the food, festivals, and stories of Myanmar to the University of Toronto. Whether you grew up with these traditions or are discovering them for the first time, there's always a seat for you at our table.",
@@ -172,6 +174,8 @@ const I18N = {
     label_join_newsletter_nav: "သတင်းလွှာစာရင်းသွင်းရန်",
     label_join_club: "အသင်းဝင်ရန်",
     label_join_newsletter_footer: "သတင်းလွှာတွင် စာရင်းသွင်းရန်",
+    footer_nl_placeholder: "သတင်းလွှာအတွက် အီးမေးလ်",
+    footer_nl_subscribe: "စာရင်းသွင်းရန်",
 
     hero_h1: "မင်္ဂလာပါ",
     hero_lede: "Myanmar Culture Club သည် တိုရွန်တိုတက္ကသိုလ်သို့ မြန်မာ့အစားအစာ၊ ပွဲတော်များ၊ ဘာသာစကားနှင့် ဇာတ်လမ်းများကို ယူဆောင်လာပါသည်။ ဤအစဉ်အလာများကြားတွင် ကြီးပြင်းခဲ့သူဖြစ်စေ၊ ယခုမှစတင်၍ ရှာဖွေလေ့လာနေသူဖြစ်စေ၊ ကျွန်ုပ်တို့စားပွဲတွင် သင့်အတွက် နေရာတစ်နေရာ ရှိပါသည်။",
@@ -277,6 +281,9 @@ function applyTranslations() {
     const key = el.getAttribute("data-i18n");
     el.textContent = t(key);
     el.classList.toggle("myanmar", lang === "mm");
+  });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => {
+    el.placeholder = t(el.getAttribute("data-i18n-ph"));
   });
   document.querySelectorAll(".lang-toggle button").forEach(btn => {
     const isActive = btn.dataset.lang === lang;
@@ -2316,26 +2323,33 @@ function initFunFact() {
   }
 }
 
-function initFooterMap() {
-  // Wide screens only: the iframe is created (and its tiles downloaded) only when the screen is >= 1000px.
-  var box = document.getElementById("footerMap");
-  if (!box || !window.matchMedia) return;
-  var frame = box.querySelector(".fm-frame");
-  var mq = window.matchMedia("(min-width: 1000px)");
-  function sync() {
-    if (mq.matches && !frame.firstChild) {
-      var f = document.createElement("iframe");
-      f.src = "https://www.google.com/maps?q=" + encodeURIComponent(box.getAttribute("data-q")) + "&z=16&output=embed";
-      f.title = "Map of 21 Sussex Ave, Toronto";
-      f.loading = "lazy";
-      f.referrerPolicy = "no-referrer-when-downgrade";
-      f.setAttribute("allowfullscreen", "");
-      frame.appendChild(f);
-    }
-  }
-  sync();
-  if (mq.addEventListener) mq.addEventListener("change", sync);
-  else if (mq.addListener) mq.addListener(sync);
+function initFooterNewsletter() {
+  // Footer sign-up beside "Join the Club". Posts through MCCSite.newsletter (same Kit form as newsletter.html).
+  document.querySelectorAll("form.footer-nl").forEach(form => {
+    const input = form.querySelector('input[type="email"]');
+    const btn = form.querySelector('button[type="submit"]');
+    const msg = form.closest(".contact-intro")?.querySelector(".footer-nl-msg");
+    const say = text => { if (msg) msg.textContent = text || ""; };
+    const done = () => {
+      form.classList.add("is-done");
+      form.innerHTML = "";
+      form.textContent = "You're on the list! Check your inbox to confirm.";
+      form.setAttribute("role", "status");
+      say("");
+    };
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      if (form.website && form.website.value) { done(); return; }   // honeypot: bots fill this in
+      const email = input.value.trim();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { say("Please enter a valid email address."); input.focus(); return; }
+      say(""); btn.disabled = true;
+      window.MCCSite.newsletter(email).then(res => {
+        if (res.ok) { done(); return; }
+        say(res.message || "That didn't go through. Please try a different email address.");
+        btn.disabled = false; input.focus();
+      });
+    });
+  });
 }
 
 function initEmailCopy() {
@@ -3771,7 +3785,7 @@ document.addEventListener("DOMContentLoaded", initNavShadow);
 document.addEventListener("DOMContentLoaded", initCelebrations);
 document.addEventListener("DOMContentLoaded", initLogoEasterEgg);
 document.addEventListener("DOMContentLoaded", initEmailCopy);
-document.addEventListener("DOMContentLoaded", initFooterMap);
+document.addEventListener("DOMContentLoaded", initFooterNewsletter);
 document.addEventListener("DOMContentLoaded", initFunFact);
 document.addEventListener("DOMContentLoaded", initEventTilt);
 document.addEventListener("DOMContentLoaded", initRegisterButtons);
