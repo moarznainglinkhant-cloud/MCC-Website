@@ -237,18 +237,18 @@
   }
   .join-photo{ margin:0; border-radius:20px; overflow:hidden; aspect-ratio:4/3; background:var(--bg-sunk); }
   .join-photo img{ width:100%; height:100%; object-fit:cover; object-position:50% 62%; display:block; }
-  .join-panel{ padding-top:6px; scroll-margin-top:110px; }
+  /* The panel keeps a steady height so the footer doesn't jump between steps; the button stays with its fields. */
+  .join-panel{ padding-top:6px; scroll-margin-top:110px; min-height:520px; }
   @media (max-width:900px){
     .join-grid{ display:block; }
     .join-photo{ display:none; }
+    .join-panel{ min-height:0; }
   }
 
   /* One question at a time. */
   .step-bar{ height:3px; background:rgba(28,36,64,.12); border-radius:3px; overflow:hidden; }
   .step-bar i{ display:block; height:100%; width:0; background:var(--red); border-radius:3px; transition:width .45s cubic-bezier(.2,.8,.2,1); }
   .step-n{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-top:14px; font-size:0.72rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--ink-soft); }
-  .steps{ min-height:430px; }
-  @media (max-width:900px){ .steps{ min-height:0; } }
   .step{ margin:0; padding:0; border:0; min-width:0; }
   .step[hidden]{ display:none; }
   .step h2{ font-weight:600; font-size:clamp(1.7rem,3vw,2.3rem); line-height:1.15; margin:26px 0 30px; }
@@ -277,6 +277,7 @@
     -webkit-appearance:none; appearance:none;
   }
   .f textarea{ min-height:4.4em; resize:none; }
+  .f ::placeholder{ color:rgba(28,36,64,.38); opacity:1; }
   .f input:focus, .f textarea:focus{ border-bottom-color:var(--navy); box-shadow:0 1.5px 0 var(--navy); }
   .f [aria-invalid="true"], .f [aria-invalid="true"]:focus{ border-bottom-color:var(--red); box-shadow:0 1.5px 0 var(--red); }
   .f input:-webkit-autofill{ -webkit-text-fill-color:var(--ink); transition:background-color 99999s ease-out 0s; }
@@ -319,7 +320,7 @@
   .vh{ position:absolute !important; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
   .hp{ position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
 
-  .step-foot{ display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; margin-top:8px; }
+  .step-foot{ display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; margin-top:12px; }
   .step-foot .back{ font:inherit; font-weight:600; color:var(--ink-soft); background:none; border:0; padding:12px 4px; cursor:pointer; }
   .step-foot .back:hover{ color:var(--ink); }
   .step-foot .back[hidden]{ display:none; }
@@ -594,7 +595,7 @@
             <section class="step" data-step="name" role="group" aria-labelledby="q-name">
               <h2 id="q-name" tabindex="-1">What's your name?</h2>
               <div class="f">
-                <label for="j-name" class="vh">Name</label>
+                <label for="j-name">Full name</label>
                 <input type="text" id="j-name" name="full_name" autocomplete="name" maxlength="120" required>
                 <p class="err" id="j-name-err"></p>
               </div>
@@ -649,7 +650,7 @@
               <h2 id="q-contact" tabindex="-1">What's your email?</h2>
               <div class="f">
                 <label for="j-email" class="vh">Email</label>
-                <input type="email" id="j-email" name="email" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required>
+                <input type="email" id="j-email" name="email" placeholder="name@example.com" autocomplete="email" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="254" required>
                 <p class="err" id="j-email-err"></p>
               </div>
               <div class="f">
