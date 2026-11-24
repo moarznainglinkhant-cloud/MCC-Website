@@ -33,6 +33,14 @@
   };
 
   const clean = s => String(s || "").trim().replace(/\s+/g, " ");
+  // "moarz" -> "Moarz", "NAING LIN KHANT" -> "Naing Lin Khant". Only a name typed all in one case
+  // is touched: "McKay" or "van der Berg" was typed that way on purpose.
+  const nameCase = raw => {
+    const s = clean(raw);
+    if (s === s.toLowerCase() && s === s.toUpperCase()) return s;      // no cased letters (e.g. Burmese script)
+    if (s !== s.toLowerCase() && s !== s.toUpperCase()) return s;      // mixed case: leave it
+    return s.toLowerCase().replace(/(^|[\s\-'\u2019])(\p{L})/gu, (m, before, letter) => before + letter.toUpperCase());
+  };
   const picked = name => { const r = form.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ""; };
   const isStudent = () => STUDENT.includes(picked("affiliation"));
 
@@ -247,7 +255,7 @@
     const broken = steps.find(s => STEPS[s].some(key => rules[key]()));
     if (broken) { show(broken, -1); validStep(broken); return; }
 
-    const name = clean(el.pref.value) || clean(el.name.value);
+    const name = nameCase(el.pref.value) || nameCase(el.name.value);
     const email = el.email.value.trim();
     const wantsNews = el.nl.checked;
     const newsEmail = (!el.nlAlt.hidden && el.nlEmail.value.trim()) || email;
@@ -256,8 +264,8 @@
     busy(true);
     // bots fill in the hidden box: they get the same ending and nothing is sent
     const joined = form.website.value ? Promise.resolve() : send({
-      p_full_name: clean(el.name.value),
-      p_preferred_name: clean(el.pref.value) || null,
+      p_full_name: nameCase(el.name.value),
+      p_preferred_name: nameCase(el.pref.value) || null,
       p_email: email,
       p_affiliation: aff,
       p_utorid: isStudent() ? el.utorid.value.trim().toLowerCase() : null,
