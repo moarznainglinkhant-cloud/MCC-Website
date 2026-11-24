@@ -613,12 +613,12 @@
   @media (prefers-reduced-motion: reduce){ .term-cursor{ animation:none; } }
   @media (max-width:480px){ .pp-band.term{ height:196px; } .term-screen{ left:14px; right:14px; } }
   /* Brain band (bg: "brain" in TEAM_EXTRAS; drawn by js/about-brain.js from real tractography data). */
-  .pp-band.brain{ position:relative; overflow:hidden; background:#000; height:216px; }
+  .pp-band.brain{ position:relative; overflow:hidden; background:#000; height:256px; } /* taller: the whole brain sits above the photo */
   .brain-canvas{ position:absolute; inset:0; width:100%; height:100%; display:block; opacity:0; transition:opacity .6s ease; }
   .brain-canvas.on{ opacity:1; }
   .brain-credit{ position:absolute; left:16px; top:12px; z-index:1; font-size:10px; line-height:1.2; color:rgba(255,255,255,.45); text-decoration:none; text-shadow:0 0 4px #000, 0 0 8px #000; }
   .brain-credit:hover, .brain-credit:focus-visible{ color:rgba(255,255,255,.8); text-decoration:underline; }
-  @media (max-width:480px){ .pp-band.brain{ height:196px; } .brain-credit{ left:12px; top:10px; } }
+  @media (max-width:480px){ .pp-band.brain{ height:228px; } .brain-credit{ left:12px; top:10px; } }
   /* Playlist band (bg: "playlist" + playlist in TEAM_EXTRAS; js/about-playlist.js). Her view from the operating
      table: the surgical lamp on theatre teal, songs from her playlist coming into focus one at a time. */
   .pp-band.pl{

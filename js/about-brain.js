@@ -67,7 +67,7 @@
     "  float s = fract(ph * 7.0 + uTime * 0.16 - t * 0.9);",          // travelling pulse
     "  float pulse = step(ph, 0.33) * smoothstep(0.0, 0.05, s) * (1.0 - smoothstep(0.05, 0.14, s));",
     "  vCol = aCol; vPt = uPoint;",
-    "  vA = shown * mix(0.13 + 0.6 * pulse, 0.3, uPoint) * smoothstep(0.0, 0.15, g);",
+    "  vA = shown * mix(0.10 + 0.5 * pulse, 0.24, uPoint) * smoothstep(0.0, 0.15, g);",
     "  gl_PointSize = 2.0 * uDpr;",
     "}"
   ].join("\n");
@@ -133,9 +133,14 @@
         W = band.clientWidth; H = band.clientHeight;
         cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
         gl.viewport(0, 0, cv.width, cv.height);
-        var ppm = H / 120;                      // brain a little taller than the band; the photo covers the bottom
+        // Fit the whole brain in the space above the profile photo, which overlaps the band's bottom.
+        var photo = band.parentNode && band.parentNode.querySelector(".pp-photo");
+        var photoTop = photo && photo.offsetParent === band.offsetParent ? photo.offsetTop - band.offsetTop : H * 0.6;
+        if (!(photoTop > 40 && photoTop <= H)) photoTop = H * 0.6;
+        var avail = photoTop - 22;              // 10px above the brain, 12px between it and the photo
+        var ppm = Math.min(avail / 140, W * 0.8 / 190); // 140 mm: brain height incl. tilt; 190 mm: widest turn
         gl.uniform1f(U.uPpmX, ppm * 2 / W); gl.uniform1f(U.uPpmY, ppm * 2 / H);
-        gl.uniform1f(U.uCy, -0.16);             // brain centre ~58% down, so its top just clears the band's top
+        gl.uniform1f(U.uCy, 1 - 2 * (10 + avail / 2) / H);
         gl.uniform1f(U.uDpr, dpr);
         if (reduce || paused) frame(last);
       }
