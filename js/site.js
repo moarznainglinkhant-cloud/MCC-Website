@@ -3801,7 +3801,7 @@ function initSnowEasterEgg() {
 /* ============================================================
    FALLING LEAVES (autumn only)
    ------------------------------------------------------------
-   A handful of maple, ginkgo and elm leaves drift down the page
+   A few maple, ginkgo and birch leaves drift down the page
    in September, October and November (Toronto time). In the
    club's own colours, drawn on one canvas that ignores clicks
    and sits under the nav. Skipped for reduced-motion visitors,
@@ -3820,19 +3820,22 @@ function initFallingLeaves() {
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   if (typeof Path2D === "undefined") return;
 
-  // Leaf outlines in a 100×100 box centred on (50,50); `vein` is stroked on top.
+  // Leaf shapes in a 100×100 box: outline, veins (clipped to the outline) and stem.
   const SHAPES = [
-    { // maple
-      body: new Path2D("M50 6 L57 23 L66 18 L63 39 L80 27 L77 37 L94 39 L84 51 L90 55 L68 66 L71 76 L53 72 L51 94 L49 94 L47 72 L29 76 L32 66 L10 55 L16 51 L6 39 L23 37 L20 27 L37 39 L34 18 L43 23 Z"),
-      vein: new Path2D("M50 92 L50 30 M50 60 L30 45 M50 60 L70 45"),
+    { // maple: five pointed lobes, veins fanning from the base
+      body: new Path2D("M50 6 L57 23 L66 18 L63 39 L80 27 L77 37 L94 39 L84 51 L90 55 L68 66 L71 76 L53 72 L50 76 L47 72 L29 76 L32 66 L10 55 L16 51 L6 39 L23 37 L20 27 L37 39 L34 18 L43 23 Z"),
+      veins: new Path2D("M50 74 L50 10 M50 68 L9 40 M50 68 L91 40 M50 68 L14 54 M50 68 L86 54 M50 40 L35 22 M50 40 L65 22"),
+      stem: new Path2D("M50 77.5 L50 96"),
     },
-    { // ginkgo
-      body: new Path2D("M50 62 C30 60 8 46 6 24 C20 14 37 18 46 31 L50 22 L54 31 C63 18 80 14 94 24 C92 46 70 60 50 62 Z"),
-      vein: new Path2D("M50 96 L50 58"),
+    { // ginkgo: fan with a notch at the top, fine radiating veins
+      body: new Path2D("M50 68 C44 58 22 44 8 30 C14 18 30 10 46 12 C48 16 49 22 50 26 C51 22 52 16 54 12 C70 10 86 18 92 30 C78 44 56 58 50 68 Z"),
+      veins: new Path2D("M50 68 L12 30 M50 68 L20 22 M50 68 L30 15 M50 68 L40 12 M50 68 L47 14 M50 68 L53 14 M50 68 L60 12 M50 68 L70 15 M50 68 L80 22 M50 68 L88 30"),
+      stem: new Path2D("M50 69.5 L50 96"),
     },
-    { // elm / birch
-      body: new Path2D("M50 4 C74 22 78 52 52 86 L50 92 L48 86 C22 52 26 22 50 4 Z"),
-      vein: new Path2D("M50 98 L50 14"),
+    { // birch: ovate, finely toothed, straight parallel side veins
+      body: new Path2D("M50 8 L48.8 9.8 L47.7 11.5 L45.7 13.2 L44.9 15.0 L42.5 16.8 L42.1 18.5 L39.4 20.2 L39.2 22.0 L36.6 23.8 L36.4 25.5 L33.8 27.2 L33.7 29.0 L31.2 30.8 L31.1 32.5 L28.7 34.2 L28.7 36.0 L26.3 37.8 L26.4 39.5 L24.1 41.2 L24.3 43.0 L22.2 44.8 L22.6 46.5 L20.6 48.2 L21.1 50.0 L19.2 51.8 L19.9 53.5 L18.3 55.2 L19.2 57.0 L17.8 58.8 L19.0 60.5 L17.9 62.2 L19.5 64.0 L18.8 65.8 L20.8 67.5 L20.8 69.2 L23.5 71.0 L24.4 72.8 L28.6 74.5 L32.1 76.2 L50.0 78.0 L50.0 78.0 L67.9 76.2 L71.4 74.5 L75.6 72.8 L76.5 71.0 L79.2 69.2 L79.2 67.5 L81.2 65.8 L80.5 64.0 L82.1 62.2 L81.0 60.5 L82.2 58.8 L80.8 57.0 L81.7 55.2 L80.1 53.5 L80.8 51.8 L78.9 50.0 L79.4 48.2 L77.4 46.5 L77.8 44.8 L75.7 43.0 L75.9 41.2 L73.6 39.5 L73.7 37.8 L71.3 36.0 L71.3 34.2 L68.9 32.5 L68.8 30.8 L66.3 29.0 L66.2 27.2 L63.6 25.5 L63.4 23.8 L60.8 22.0 L60.6 20.2 L57.9 18.5 L57.5 16.8 L55.1 15.0 L54.3 13.2 L52.3 11.5 L51.2 9.8 Z"),
+      veins: new Path2D("M50 78 L50 12 M50 33.6 L35.5 23.6 M50 33.6 L64.5 23.6 M50 42.0 L29.7 32.0 M50 42.0 L70.3 32.0 M50 50.4 L24.9 40.4 M50 50.4 L75.1 40.4 M50 58.8 L21.6 48.8 M50 58.8 L78.4 48.8 M50 67.2 L20.6 57.2 M50 67.2 L79.4 57.2 M50 74.9 L23.1 64.9 M50 74.9 L76.9 64.9"),
+      stem: new Path2D("M50 79.5 L50 96"),
     },
   ];
   // Brand red, gold and green plus a burnt orange and rust.
@@ -3864,7 +3867,7 @@ function initFallingLeaves() {
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     w = window.innerWidth; h = window.innerHeight;
     canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
-    const want = Math.round(Math.min(16, Math.max(6, w / 90)));   // ~6 on phones, 16 on wide screens
+    const want = Math.round(Math.min(8, Math.max(3, w / 170)));   // ~3 on phones, 8 on wide screens
     while (leaves.length < want) leaves.push(makeLeaf(true));
     leaves.length = want;
   }
@@ -3888,12 +3891,18 @@ function initFallingLeaves() {
       ctx.scale(s * Math.cos(t * L.flip + L.phase), s);          // tumbling in 3D
       ctx.translate(-50, -50);
       ctx.globalAlpha = L.alpha;
+      ctx.lineCap = "round";
+      ctx.strokeStyle = L.colour;
+      ctx.lineWidth = 3.2;
+      ctx.stroke(L.shape.stem);
       ctx.fillStyle = L.colour;
       ctx.fill(L.shape.body);
-      ctx.globalAlpha = L.alpha * 0.5;
-      ctx.strokeStyle = "#3A2414";
-      ctx.lineWidth = 3;
-      ctx.stroke(L.shape.vein);
+      ctx.save();
+      ctx.clip(L.shape.body);
+      ctx.strokeStyle = "rgba(40,20,10,0.28)";
+      ctx.lineWidth = 1.3;
+      ctx.stroke(L.shape.veins);
+      ctx.restore();
       ctx.restore();
     });
     raf = requestAnimationFrame(frame);
