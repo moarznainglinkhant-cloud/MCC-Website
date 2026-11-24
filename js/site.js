@@ -2091,19 +2091,38 @@ function tlJump(i) {
   window.scrollTo({ top: elTop - TL.top + i * TL.step, behavior: "smooth" });
 }
 
+// Tiny blurred copies of the usual hero photos (24px JPEGs, ~600 bytes each, also inline in index.html).
+// A panel shows its copy straight away and the real photo dissolves in over it once loaded, so the opening
+// keeps its rhythm on a slow connection. A photo with no copy here just has the panel's own colour behind it.
+const HERO_LQIP = {
+ "images/welcome_vertical.jpg": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAUABgDASIAAhEBAxEB/8QAGQABAAMBAQAAAAAAAAAAAAAAAAMEBQYB/8QAJxAAAgICAQIEBwAAAAAAAAAAAQIDBAARBRJBISJRgRMUYXFysdH/xAAXAQADAQAAAAAAAAAAAAAAAAABAgME/8QAHBEBAQAABwAAAAAAAAAAAAAAAAECERITIjFh/9oADAMBAAIRAxEAPwChY4rj0rJN8lKFYb8srD9g5NYq8fa5efrjtrI7aPQ6kdvUZ1IvLBQSoVJdFCgsP7kdaNzIHaCvMpIG2j03bx2PfM2v1bbY8/A1mYiK1ajJbsinQA+4xnVrSryxbEXwmO9hT9cYeQZYV5oo5CC6K2/UZ4acOvKnT+PhjGPZCy1mWiYX0pPvjGMy3tZ//9k=",
+ "images/welcome_top.jpg": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAQABgDASIAAhEBAxEB/8QAFgABAQEAAAAAAAAAAAAAAAAABQAC/8QAKBAAAgEDAQYHAQAAAAAAAAAAAQIRAAMEEgYTITFBYRQWIjJRccHR/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAED/8QAFxEBAQEBAAAAAAAAAAAAAAAAAQARAv/aAAwDAQACEQMRAD8AYG2pdiEwX9/AGRK/2h7O0uZhPkNjoLgvNrlwWjsDWABeyFLZK2iylfVBIAmT+UfFy1hOwvowZSNCKZnjMjpzrMXo2Er53zmvWwMcBEjejTz+YPSqj8K/YF654hW3FvSwgQCSO/1VV1iX/9k=",
+ "images/welcome_bottom.jpg": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA4KCw0LCQ4NDA0QDw4RFiQXFhQUFiwgIRokNC43NjMuMjI6QVNGOj1OPjIySGJJTlZYXV5dOEVmbWVabFNbXVn/2wBDAQ8QEBYTFioXFypZOzI7WVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVlZWVn/wAARCAAOABgDASIAAhEBAxEB/8QAFwAAAwEAAAAAAAAAAAAAAAAAAAIDBP/EACUQAAIBAwMDBQEAAAAAAAAAAAECAwAEERIhUQUTMQYWIjJBcf/EABYBAQEBAAAAAAAAAAAAAAAAAAECBP/EABkRAAIDAQAAAAAAAAAAAAAAAAABAgQSFP/aAAwDAQACEQMRAD8AzdW6xexNFaxXDaEGcr/ef2re6byKCFROGk1fImPyK1tBDKUbtIGUhgdIztVGhiOWEahyPsBuOMcYrD0FuIvUPVMF9aGIQEaVDsMjyDnaikuNCRk9tSedI3opVlhlH//Z"
+};
+
 function renderHeroPhotos(heroRows) {
   const container = document.getElementById("js-hero-photos");
   if (!container) return;
   const bySlot = {};
   heroRows.forEach(r => { bySlot[r.slot] = r; });
   const letters = ["a", "b", "c"];
-  container.innerHTML = [1, 2, 3].map((slot, i) => {
+  const panels = container.querySelectorAll(".panel");
+  const html = [1, 2, 3].map((slot, i) => {
     const row = bySlot[slot];
+    const lq = row && HERO_LQIP[row.photo];
     const inner = row
-      ? `<img src="${safeUrl(row.photo)}" alt="${escapeHtml(row.alt || "")}" loading="lazy" style="width:100%;height:100%;object-fit:cover;">`
+      ? (lq ? `<i class="lq" aria-hidden="true" style="background-image:url(${lq})"></i>` : "") +
+        `<img src="${safeUrl(row.photo)}" alt="${escapeHtml(row.alt || "")}"${i === 0 ? ' fetchpriority="high"' : ""} decoding="async" onerror="this.style.visibility='hidden'" style="width:100%;height:100%;object-fit:cover;">`
       : "";
     return `<div class="panel panel-${letters[i]}">${inner}</div>`;
-  }).join("");
+  });
+  // Same photos as already on the page (the usual case): leave them alone, so nothing reloads or flickers
+  // in the middle of the opening.
+  const same = panels.length === 3 && [1, 2, 3].every((slot, i) => {
+    const img = panels[i].querySelector("img"), row = bySlot[slot];
+    return row ? !!img && img.getAttribute("src") === safeUrl(row.photo) : !img;
+  });
+  if (!same) container.innerHTML = html.join("");
 }
 
 // Fades/slides ".reveal" elements in as they scroll into view (once each —
@@ -2643,7 +2662,17 @@ function initGreeting() {
     // The paragraph comes in one line at a time. It's split into lines just before it appears (so the
     // web font has loaded and the line breaks are the real ones), then the plain text goes back.
     const lede = html.classList.contains("hero-intro") && document.querySelector(".hero-copy .lede");
-    if (lede && !lede.classList.contains("myanmar")) setTimeout(() => {
+    // The lines are measured in the real font, so wait for it, but never past 3s from the start of the page.
+    const fontsThen = fn => {
+      const f = document.fonts;
+      if (!f || f.status === "loaded") return fn();
+      lede.classList.add("lede-wait");
+      let done = false;
+      const go = () => { if (done) return; done = true; fn(); lede.classList.remove("lede-wait"); };
+      f.ready.then(go, go);
+      setTimeout(go, Math.max(0, 3000 - performance.now()));
+    };
+    if (lede && !lede.classList.contains("myanmar")) setTimeout(() => fontsThen(() => {
       try {
         const text = lede.textContent;
         lede.innerHTML = text.split(" ").map(w => `<span class="w">${escapeHtml(w)}</span>`).join(" ");
@@ -2662,7 +2691,33 @@ function initGreeting() {
           lede.classList.remove("split");
         }, 50 + spans.length * 110 + 900);
       } catch (e) { lede.textContent = lede.textContent; lede.classList.remove("split"); }
-    }, 1700);
+    }), 1700);
+    // Then the section below (the Next Event heading and card, held by hold-below): only once the hero
+    // buttons have landed. Scrolling, tapping or a key press before that finishes the opening at once.
+    if (html.classList.contains("hold-below")) {
+      const evs = ["wheel", "touchmove", "keydown", "pointerdown"];
+      const done = () => { evs.forEach(e => window.removeEventListener(e, skip)); window.removeEventListener("scroll", onScroll); };
+      const skip = () => {
+        done();
+        if (!html.classList.contains("hold-below")) return;
+        html.classList.add("intro-skip");
+        html.classList.remove("greet-pending", "hold-a", "hold-b", "hold-c", "hold-below");
+        // The paragraph and buttons may already be waiting out their delays; a transition keeps the delay it
+        // started with, so shorten the ones in flight.
+        document.querySelectorAll(".hero-copy .lede, .hero-copy .cta-row .btn").forEach(el => {
+          if (!el.getAnimations) { el.style.transition = "none"; return; }
+          el.getAnimations().forEach(an => {
+            try { an.effect.updateTiming({ delay: 0, duration: Math.min(300, Number(an.effect.getTiming().duration) || 300) }); }
+            catch (e) { an.finish(); }
+          });
+        });
+      };
+      const onScroll = () => { if (window.scrollY > 8) skip(); };
+      evs.forEach(e => window.addEventListener(e, skip, { passive: true }));
+      window.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();   // a reload that restored the scroll position
+      setTimeout(() => { html.classList.remove("hold-below"); done(); }, 3000);
+    }
     setTimeout(() => html.classList.remove("hero-intro"), 5200);   // then hover goes back to its quick zoom
   };
   const NS = "http://www.w3.org/2000/svg";
@@ -3406,8 +3461,27 @@ function pendingEventAreas() {
     .filter(Boolean);
 }
 
+// Homepage, first visit: while the Sheet is on its way, the Next Event card shows a quiet skeleton in its
+// own shape (styles in index.html). It fades away over the real card once the data is in.
+function showEventSkeleton() {
+  const body = document.getElementById("js-event-body");
+  const card = body && body.closest("#event .event-card");
+  if (!card || card.querySelector(".event-skel")) return;
+  card.insertAdjacentHTML("beforeend",
+    '<div class="event-skel" aria-hidden="true"><div class="sk-vis"></div><div class="sk-body">' +
+    '<i style="width:28%"></i><i class="sk-h" style="width:72%"></i><i style="width:54%"></i>' +
+    '<i style="width:94%"></i><i style="width:86%"></i><i style="width:60%"></i><i class="sk-btn"></i></div></div>');
+}
+function clearEventSkeleton() {
+  document.querySelectorAll(".event-skel:not(.is-gone)").forEach(sk => {
+    sk.classList.add("is-gone");
+    setTimeout(() => sk.remove(), 500);
+  });
+}
+
 function renderSiteData(eventRows, heroRows) {
   pendingEventAreas().forEach(el => el.removeAttribute("data-pending"));
+  clearEventSkeleton();
   const { upcoming, past } = splitEvents(eventRows);
   let next = upcoming[0] || null;
   const rest = upcoming.slice(1);
@@ -3464,7 +3538,7 @@ async function initSiteData() {
   if (!pageUsesSiteData()) { initScrollReveal(); return; }
 
   // Safety net: never leave the event areas hidden if something below goes wrong.
-  setTimeout(() => pendingEventAreas().forEach(el => el.removeAttribute("data-pending")), 6000);
+  setTimeout(() => { pendingEventAreas().forEach(el => el.removeAttribute("data-pending")); clearEventSkeleton(); }, 6000);
 
   // Show this browser's last copy straight away (no waiting on Google)...
   const cachedEvents = readCachedCSV(EVENTS_CSV_URL);
@@ -3477,6 +3551,7 @@ async function initSiteData() {
     // First visit: hold the space for the events (rather than showing the placeholder ones
     // built into the page and swapping them) until the Sheet arrives.
     pendingEventAreas().forEach(el => el.setAttribute("data-pending", ""));
+    showEventSkeleton();
     initScrollReveal();
   }
 
@@ -3980,3 +4055,4 @@ document.addEventListener("DOMContentLoaded", initRegisterButtons);
 document.addEventListener("DOMContentLoaded", initGreeting);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);
 document.addEventListener("DOMContentLoaded", initFallingLeaves);
+
