@@ -2,7 +2,7 @@
 // drawn like a Spotify playlist. Used when a person has bg: "playlist" and a `playlist` entry in
 // TEAM_EXTRAS (about.html).
 //
-// Header: cover (the operating lamp she was staring up at), title, owner and song count, and a
+// Header: cover (plain music-note tile), title, owner and song count, and a
 // green play button that opens the playlist on Spotify. Below: three track rows. The playing
 // song is green with an equalizer, and the list moves down the playlist one song at a time,
 // keeping the playing row in view, then starts over. CSS transitions and one small keyframe
@@ -14,16 +14,8 @@
 
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
-  function lamp() {
-    var b = "";
-    for (var i = 0; i < 6; i++) {
-      var a = i / 6 * Math.PI * 2 - Math.PI / 2;
-      b += '<circle cx="' + (32 + Math.cos(a) * 15).toFixed(1) + '" cy="' + (32 + Math.sin(a) * 15).toFixed(1) + '" r="5.6"/>';
-    }
-    return '<svg viewBox="0 0 64 64" aria-hidden="true">' +
-      '<circle cx="32" cy="32" r="27" fill="rgba(6,30,28,.35)" stroke="rgba(235,250,244,.35)" stroke-width="1.5"/>' +
-      '<g fill="#F4FFFA">' + b + '<circle cx="32" cy="32" r="6.2"/></g></svg>';
-  }
+  // Cover: the plain music-note tile a playlist shows when it has no picture.
+  var NOTE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18.5a2.5 2.5 0 1 1-2-2.45V5.5l11-2v11.5a2.5 2.5 0 1 1-2-2.45V7.1l-7 1.3z"/></svg>';
 
   function stop() {
     if (!run) return;
@@ -46,7 +38,7 @@
     }).join("");
     band.insertAdjacentHTML("beforeend",
       '<div class="pl-wrap"><div class="pl-head">' +
-        '<div class="pl-cover">' + lamp() + '</div>' +
+        '<div class="pl-cover">' + NOTE + '</div>' +
         '<div class="pl-meta"><b class="pl-title">' + esc(pl.title) + '</b>' +
           '<span class="pl-by"><b>' + esc(pl.owner || "") + '</b>' + (pl.owner ? " &middot; " : "") + n + ' songs</span></div>' +
         '<a class="pl-play" href="' + esc(pl.url) + '" target="_blank" rel="noopener" aria-label="Play “' + esc(pl.title) + '” on Spotify">' +
