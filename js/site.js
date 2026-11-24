@@ -37,7 +37,7 @@ const TEAM_CSV_URL     = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTxO5v
 function factNumeral(i) { return String(i + 1).replace(/\d/g, d => String.fromCharCode(0x1040 + +d)); }
 function putFactNumber(el, i) {
   if (!el) return;
-  el.innerHTML = `<b>${factNumeral(i)}</b><small>No. ${i + 1}</small>`;
+  el.innerHTML = `<b>${factNumeral(i)}</b>`;
 }
 const MYANMAR_FUN_FACTS = [
   { text: "Myanmar officially recognizes 135 ethnic groups, and many of them have a language of their own." },
