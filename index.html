@@ -306,16 +306,18 @@
   .hero-copy .lede.lede-wait{ opacity:0; transition:none; }   /* paragraph waiting (up to 3s) for its font before it is split into lines */
   .greet-pending .hero-copy .cta-row .btn{ opacity:0; transform:scale(.94); transition:none; }
   /* Hero photos wait for the pen (js/site.js initGreeting lets each in by removing hold-a/b/c from <html>),
-     then dissolve in one after another, settling from a hair larger (no sliding). */
-  .hero-intro .collage .panel{ transition: opacity .5s cubic-bezier(.2,.8,.2,1); }
-  .hero-intro .collage .panel img{ transition: transform 1.1s cubic-bezier(.2,.8,.2,1), opacity .45s ease; }
-  .hero-intro .collage .panel-a{ transition: opacity 1.6s cubic-bezier(.25,.1,.25,1); }
-  .hero-intro .collage .panel-a img{ transition: transform 2.8s cubic-bezier(.16,1,.3,1), opacity .45s ease; }
+     then fade in one after another: a soft fade with a slight settle (user picked "C · Fade + slight settle",
+     Nov 23). Big photo 1.4s, the small ones 1.2s, all on the same slow-in/slow-out curve. The settle is only
+     102% -> 100% and ends with the fade: the old 110% zoom over 2.8s crawled at under a pixel per frame for
+     most of its length, which read as judder. Each photo is decoded before its fade starts (site.js). */
+  .hero-intro .collage .panel{ transition: opacity 1.2s cubic-bezier(.45,0,.55,1); will-change:opacity; }
+  .hero-intro .collage .panel img{ transition: transform 1.2s cubic-bezier(.33,0,.25,1), opacity .45s ease; will-change:transform; }
+  .hero-intro .collage .panel-a{ transition-duration: 1.4s; }
+  .hero-intro .collage .panel-a img{ transition-duration: 1.4s, .45s; }
   .hero-wait .collage .panel,
   .hero-intro.hold-a .collage .panel-a, .hero-intro.hold-b .collage .panel-b, .hero-intro.hold-c .collage .panel-c{ opacity:0; }
   .hero-wait .collage .panel img,
-  .hero-intro.hold-b .collage .panel-b img, .hero-intro.hold-c .collage .panel-c img{ transform:scale(1.03); }
-  .hero-wait .collage .panel-a img, .hero-intro.hold-a .collage .panel-a img{ transform:scale(1.1); }
+  .hero-intro.hold-a .collage .panel-a img, .hero-intro.hold-b .collage .panel-b img, .hero-intro.hold-c .collage .panel-c img{ transform:scale(1.02); }
   .greet .greet-pen path{ fill:none; stroke:currentColor; stroke-width:3.6; stroke-linejoin:round; stroke-linecap:round; }
   .greet .greet-cover path{ fill:var(--bg); }
   /* "Learn to write this": a handwritten note (Gochi Hand) just above the greeting, with an arrow down to the top

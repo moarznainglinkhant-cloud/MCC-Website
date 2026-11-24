@@ -2657,8 +2657,23 @@ function initGreeting() {
   const letPhotosIn = () => {
     if (photosLetIn) return;
     photosLetIn = true;
-    // Uneven tempo: the big photo early and slow, the two small ones together and quick (CSS sets the speeds).
-    [["a", 700], ["b", 1500], ["c", 1640]].forEach(([x, ms]) => setTimeout(() => html.classList.remove("hold-" + x), ms));
+    // Big photo first, then the two small ones a quarter-second apart (CSS sets the fades).
+    // Each photo that has already downloaded is decoded now, so its fade never starts on a dropped frame;
+    // its turn waits for that, but never more than 200ms. A photo still downloading goes in on time and
+    // shows its soft preview until it arrives.
+    const decoded = x => {
+      const img = document.querySelector(`#js-hero-photos .panel-${x} img`);
+      if (!img || !img.complete || !img.naturalWidth || !img.decode) return Promise.resolve();
+      return img.decode().catch(() => {});
+    };
+    [["a", 700], ["b", 1450], ["c", 1700]].forEach(([x, ms]) => {
+      const ready = decoded(x);
+      setTimeout(() => {
+        let go = false;
+        const letIn = () => { if (go) return; go = true; html.classList.remove("hold-" + x); };
+        ready.then(letIn); setTimeout(letIn, 200);
+      }, ms);
+    });
     // The paragraph comes in one line at a time. It's split into lines just before it appears (so the
     // web font has loaded and the line breaks are the real ones), then the plain text goes back.
     const lede = html.classList.contains("hero-intro") && document.querySelector(".hero-copy .lede");
