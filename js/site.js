@@ -3798,6 +3798,115 @@ function initSnowEasterEgg() {
   window.addEventListener("hashchange", () => { if (location.hash === "#snow") open(); });
 }
 
+/* ============================================================
+   FALLING LEAVES (autumn only)
+   ------------------------------------------------------------
+   A handful of maple, ginkgo and elm leaves drift down the page
+   in September, October and November (Toronto time). In the
+   club's own colours, drawn on one canvas that ignores clicks
+   and sits under the nav. Skipped for reduced-motion visitors,
+   on the exec/login pages, and paused while the tab is hidden.
+   Add ?leaves to a URL to preview it outside fall; ?leaves=off
+   to turn it off for a quick look without it.
+   ============================================================ */
+function initFallingLeaves() {
+  const param = new URLSearchParams(location.search).get("leaves");
+  if (param === "off") return;
+  const month = Number(new Intl.DateTimeFormat("en-CA",
+    { timeZone: "America/Toronto", month: "numeric" }).format(new Date())); // 1–12
+  const isFall = month >= 9 && month <= 11;
+  if (!isFall && param === null) return;
+  if (/\/(exec|login)\.html$/.test(location.pathname)) return;
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  if (typeof Path2D === "undefined") return;
+
+  // Leaf outlines in a 100×100 box centred on (50,50); `vein` is stroked on top.
+  const SHAPES = [
+    { // maple
+      body: new Path2D("M50 6 L57 23 L66 18 L63 39 L80 27 L77 37 L94 39 L84 51 L90 55 L68 66 L71 76 L53 72 L51 94 L49 94 L47 72 L29 76 L32 66 L10 55 L16 51 L6 39 L23 37 L20 27 L37 39 L34 18 L43 23 Z"),
+      vein: new Path2D("M50 92 L50 30 M50 60 L30 45 M50 60 L70 45"),
+    },
+    { // ginkgo
+      body: new Path2D("M50 62 C30 60 8 46 6 24 C20 14 37 18 46 31 L50 22 L54 31 C63 18 80 14 94 24 C92 46 70 60 50 62 Z"),
+      vein: new Path2D("M50 96 L50 58"),
+    },
+    { // elm / birch
+      body: new Path2D("M50 4 C74 22 78 52 52 86 L50 92 L48 86 C22 52 26 22 50 4 Z"),
+      vein: new Path2D("M50 98 L50 14"),
+    },
+  ];
+  // Brand red, gold and green plus a burnt orange and rust.
+  const COLOURS = ["#AE3628", "#C08A2E", "#D06B3A", "#8C2A1F", "#4B7A3C", "#DAA63E"];
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "falling-leaves";
+  canvas.setAttribute("aria-hidden", "true");
+  canvas.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:40";
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext("2d");
+
+  let w = 0, h = 0, dpr = 1, leaves = [];
+  const rand = (a, b) => a + Math.random() * (b - a);
+
+  function makeLeaf(startAnywhere) {
+    return {
+      x: rand(0, w), y: startAnywhere ? rand(-h, h) : rand(-120, -30),
+      size: rand(16, 30), vy: rand(0.35, 0.8),
+      sway: rand(18, 46), swaySpeed: rand(0.006, 0.014), phase: rand(0, Math.PI * 2),
+      rot: rand(0, Math.PI * 2), spin: rand(-0.012, 0.012), flip: rand(0.01, 0.03),
+      shape: SHAPES[Math.floor(Math.random() * SHAPES.length)],
+      colour: COLOURS[Math.floor(Math.random() * COLOURS.length)],
+      alpha: rand(0.55, 0.85),
+    };
+  }
+
+  function resize() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth; h = window.innerHeight;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+    const want = Math.round(Math.min(16, Math.max(6, w / 90)));   // ~6 on phones, 16 on wide screens
+    while (leaves.length < want) leaves.push(makeLeaf(true));
+    leaves.length = want;
+  }
+
+  let t = 0, raf = 0, last = 0;
+  function frame(now) {
+    const step = last ? Math.min((now - last) / 16.7, 3) : 1;   // frame-rate independent
+    last = now; t += step;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const wind = Math.sin(t * 0.002) * 0.35;                    // slow gusts
+    leaves.forEach((L, i) => {
+      L.y += L.vy * step;
+      L.rot += L.spin * step;
+      const x = L.x + Math.sin(t * L.swaySpeed + L.phase) * L.sway + wind * L.y * 0.15;
+      if (L.y > h + 40 || x < -80 || x > w + 80) { leaves[i] = makeLeaf(false); return; }
+      const s = L.size / 100;
+      ctx.save();
+      ctx.translate(x, L.y);
+      ctx.rotate(L.rot + Math.sin(t * L.swaySpeed + L.phase) * 0.6);
+      ctx.scale(s * Math.cos(t * L.flip + L.phase), s);          // tumbling in 3D
+      ctx.translate(-50, -50);
+      ctx.globalAlpha = L.alpha;
+      ctx.fillStyle = L.colour;
+      ctx.fill(L.shape.body);
+      ctx.globalAlpha = L.alpha * 0.5;
+      ctx.strokeStyle = "#3A2414";
+      ctx.lineWidth = 3;
+      ctx.stroke(L.shape.vein);
+      ctx.restore();
+    });
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start() { if (!raf) { last = 0; raf = requestAnimationFrame(frame); } }
+  function stop() { cancelAnimationFrame(raf); raf = 0; }
+  document.addEventListener("visibilitychange", () => (document.hidden ? stop() : start()));
+  window.addEventListener("resize", resize);
+  resize();
+  start();
+}
+
 // site.js is loaded at the end of <body>, so the page's HTML is already in place here.
 // Translations and event data are drawn right away, before the browser's first paint,
 // so there's no flash of English or of the placeholder events before they switch.
@@ -3826,3 +3935,4 @@ document.addEventListener("DOMContentLoaded", initEventTilt);
 document.addEventListener("DOMContentLoaded", initRegisterButtons);
 document.addEventListener("DOMContentLoaded", initGreeting);
 document.addEventListener("DOMContentLoaded", initSnowEasterEgg);
+document.addEventListener("DOMContentLoaded", initFallingLeaves);
