@@ -237,28 +237,11 @@
     transition: transform .6s cubic-bezier(.2,.85,.25,1), border-radius .6s ease;
   }
   .wheel-sticky.recede{ transform:scale(.94); border-radius:28px; }
-  .wheel-stars{ position:absolute; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; }
-  .wheel-glow{
-    position:absolute; left:0; top:0; width:1100px; height:1100px; z-index:0;
-    border-radius:50%; pointer-events:none;
-  }
-  /* Three soft lights drifting slowly in the colour of the department in focus. */
-  .wheel-glow i{
-    position:absolute; border-radius:50%;
-    background: radial-gradient(circle, rgba(var(--glow, 192,138,46), 0.15) 0%, rgba(var(--glow, 192,138,46), 0) 66%);
-  }
-  .wheel-glow i:nth-child(1){ inset:6% 16% 22% 4%;  animation: aurora-a 19s ease-in-out infinite alternate; }
-  .wheel-glow i:nth-child(2){ inset:24% 2% 4% 28%;  animation: aurora-b 23s ease-in-out infinite alternate; opacity:.85; }
-  .wheel-glow i:nth-child(3){ inset:16% 22% 12% 16%; animation: aurora-c 29s ease-in-out infinite alternate; opacity:.75; }
-  @keyframes aurora-a{ to{ transform:translate(9%, 7%) scale(1.12); } }
-  @keyframes aurora-b{ to{ transform:translate(-11%, -6%) scale(.9); } }
-  @keyframes aurora-c{ to{ transform:translate(6%, -10%) scale(1.18); } }
   .wheel{ position:absolute; left:0; top:0; width:0; height:0; z-index:1; will-change:transform; }
   .wheel-ring{
     position:absolute; left:0; top:0; border-radius:50%;
     transform:translate(-50%,-50%); pointer-events:none;
   }
-  .wheel-ring.outer{ border:1px dashed var(--line); }
   .wheel-ring.inner{ border:1px solid var(--line); }
   .wheel-dot{
     position:absolute; left:0; top:0; width:12px; height:12px; border-radius:50%;
@@ -278,7 +261,6 @@
     animation: close-ripple 2.6s cubic-bezier(.2,.65,.3,1) both; animation-delay: var(--d, 0s);
   }
   @keyframes close-ripple{ 0%{ transform:scale(1); opacity:.55; } 100%{ transform:scale(3.4); opacity:0; } }
-  .wheel-bezel{ position:absolute; left:0; top:0; transform:translate(-50%,-50%); overflow:visible; pointer-events:none; }
   .wheel-progress{ position:absolute; left:0; top:0; z-index:2; overflow:visible; pointer-events:none; }
   .wheel-progress circle{ fill:none; stroke:var(--gold); stroke-width:2.5; stroke-linecap:round; }
   .wheel-hub{
@@ -329,31 +311,21 @@
     transform: translate3d(var(--px,0px), var(--py,0px), 0) scale(.96);
   }
   .cluster .person-name{ font-size:1.04rem; margin-top:6px; }
-  .cluster .person-title{ font-size:0.74rem; padding:4px 13px; }
+  .cluster .person-title{ font-size:0.8rem; font-weight:600; padding:0; background:none; border-radius:0; }
   .person-line{ display:block; font-size:0.8rem; line-height:1.35; color:var(--ink-soft); }
 
   .wheel-title{ position:absolute; z-index:4; }
-  .wheel-num{
-    position:absolute; left:-28px; top:50%; z-index:-1; transform:translateY(-56%);
-    font-family:'Fraunces', serif; font-weight:700; line-height:1;
-    font-size:clamp(9rem,15vw,14rem); letter-spacing:-0.04em;
-    color:transparent; -webkit-text-stroke:1.5px rgba(28,36,64,0.10);
-    pointer-events:none; user-select:none; display:flex;
-  }
-  .wheel-num .reel{ display:block; height:1em; overflow:hidden; }
-  .wheel-num .strip{ display:flex; flex-direction:column; transition: transform .8s cubic-bezier(.2,.8,.2,1); }
-  .wheel-num .strip span{ display:block; height:1em; line-height:1; }
   .wheel-count{
     font-family:'Work Sans',sans-serif; font-size:0.74rem; font-weight:700;
     letter-spacing:0.18em; color:var(--ink-soft);
   }
   .wheel-count b{ color:var(--ink); font-weight:700; }
   .wheel-name{
-    font-size:clamp(2.2rem,3.6vw,3.6rem); line-height:1.04;
+    font-size:clamp(2rem,2.7vw,2.6rem); line-height:1.04;   /* sized so the longest name ("Administration") fits the title column */
     margin:12px 0 20px; padding-bottom:0.08em;
     overflow-x:visible; overflow-y:clip;
   }
-  .wheel-name .w{ display:inline-block; overflow:hidden; vertical-align:top; padding-bottom:0.1em; margin-bottom:-0.1em; }
+  .wheel-name .w{ display:inline-block; white-space:nowrap; overflow:hidden; vertical-align:top; padding-bottom:0.1em; margin-bottom:-0.1em; }
   .wheel-name .ch{ display:inline-block; transition: transform .6s cubic-bezier(.2,.8,.2,1), opacity .5s ease; }
   .wheel-name .ch.leave{ transform:translateY(-110%); opacity:0; transition-duration:.3s, .25s; }
   .wheel-name .ch.enter{ transform:translateY(110%); opacity:0; transition:none; }
@@ -418,10 +390,8 @@
 
   /* Phones and small tablets: title on top, wheel turns up from the bottom. */
   .wheel-sticky.is-mobile{ touch-action:pan-y; }   /* up/down scrolls; sideways swipes turn the wheel */
-  .wheel-sticky.is-mobile .wheel-glow{ width:720px; height:720px; }
   .wheel-sticky.is-mobile .wheel-hub{ width:150px; height:150px; }
   .wheel-sticky.is-mobile .wheel-title{ text-align:center; }
-  .wheel-sticky.is-mobile .wheel-num{ display:none; }
   .wheel-sticky.is-mobile .wheel-bar{ display:none; }
   .wheel-sticky.is-mobile .wheel-pips{ display:flex; }
   .wheel-sticky.is-mobile .wheel-name{ font-size:2.3rem; margin:6px 0 0; }
@@ -429,7 +399,7 @@
   .wheel-sticky.is-mobile .cluster .person-card{ width:auto; padding:20px 10px 16px; gap:8px; border-radius:18px; }
   .wheel-sticky.is-mobile .cluster .person-photo{ width:92px; height:92px; font-size:1.3rem; box-shadow: 0 0 0 4px var(--bg-raised), 0 0 0 6px var(--gold); }
   .wheel-sticky.is-mobile .cluster .person-name{ font-size:0.9rem; margin-top:2px; }
-  .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.66rem; padding:3px 10px; }
+  .wheel-sticky.is-mobile .cluster .person-title{ font-size:0.7rem; }
   .wheel-sticky.is-mobile .person-line{ font-size:0.74rem; }
 
   .person-card{
@@ -972,12 +942,10 @@
   <section class="wheel-section" id="team" aria-label="Our team, by department">
     <div class="ask-avoid" data-askmcc-avoid aria-hidden="true"></div>
     <div class="wheel-sticky" id="wheelSticky">
-      <div class="wheel-glow" id="wheelGlow" aria-hidden="true"></div>
       <div class="wheel" id="wheel"></div>
       <svg class="wheel-progress" id="wheelProgress" aria-hidden="true"><circle id="wheelProgressArc"/></svg>
       <div class="wheel-hub" aria-hidden="true"><img src="images/brand/logo.png" alt=""></div>
       <div class="wheel-title" id="wheelTitle">
-        <span class="wheel-num" id="wheelNum" aria-hidden="true">01</span>
         <span class="wheel-count"><b id="wheelCount">01</b> / 07</span>
         <h2 class="wheel-name"><span class="wheel-name-inner" id="wheelName">Administration</span></h2>
         <span class="wheel-bar" id="wheelBar"></span>
@@ -1074,7 +1042,6 @@
 
 <script src="js/site.js"></script>
 <script src="js/about-ink.js"></script>
-<script src="js/about-stars.js"></script>
 <script src="js/about-term.js"></script>
 <script src="js/about-brain.js"></script>
 <script src="js/about-playlist.js"></script>
@@ -1287,8 +1254,8 @@
   var $ = function(id){ return document.getElementById(id); };
   var section = $("team"), sticky = $("wheelSticky"), wheel = $("wheel");
   var hub = sticky ? sticky.querySelector(".wheel-hub") : null;
-  var titleEl = $("wheelTitle"), nameEl = $("wheelName"), numEl = $("wheelNum"), countEl = $("wheelCount");
-  var barEl = $("wheelBar"), pipsEl = $("wheelPips"), glow = $("wheelGlow");
+  var titleEl = $("wheelTitle"), nameEl = $("wheelName"), countEl = $("wheelCount");
+  var barEl = $("wheelBar"), pipsEl = $("wheelPips");
   var progSvg = $("wheelProgress"), progArc = $("wheelProgressArc");
   var cue = $("wheelCue"), indexEl = $("wheelIndex"), closeEl = $("wheelClose");
   var heroWrap = document.querySelector(".about-hero .wrap");
@@ -1342,9 +1309,6 @@
       (p.line ? '<span class="person-line">' + esc(p.line) + '</span>' : '') +
     '</div>';
   }
-  function hexRgb(h){ var n = parseInt(h.slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
-  var RGB = GROUPS.map(function(g){ return hexRgb(g.color); });
-  var GOLD = hexRgb("#C08A2E");
   function clamp01(v){ return v < 0 ? 0 : (v > 1 ? 1 : v); }
   function lerp(a, b, t){ return a + (b - a) * t; }
   function easeOut(t){ return 1 - Math.pow(1 - t, 3); }
@@ -1352,25 +1316,9 @@
   function pad(n){ return ("0" + n).slice(-2); }
 
   // ---------- build ----------
-  var outerRing = document.createElement("div"); outerRing.className = "wheel-ring outer";
   var innerRing = document.createElement("div"); innerRing.className = "wheel-ring inner";
-  wheel.appendChild(outerRing); wheel.appendChild(innerRing);
-  var SVGNS = "http://www.w3.org/2000/svg";
-  var bezel = document.createElementNS(SVGNS, "svg");
-  bezel.setAttribute("class", "wheel-bezel");
-  bezel.setAttribute("aria-hidden", "true");
-  wheel.appendChild(bezel);
-  glow.innerHTML = "<i></i><i></i><i></i>";
+  wheel.appendChild(innerRing);
 
-  // Odometer reels for the big outlined number.
-  var strips = [];
-  numEl.innerHTML = "";
-  for (var r = 0; r < 2; r++){
-    var reel = document.createElement("span"); reel.className = "reel";
-    var strip = document.createElement("span"); strip.className = "strip";
-    for (var dgt = 0; dgt <= 9; dgt++){ var ds = document.createElement("span"); ds.textContent = dgt; strip.appendChild(ds); }
-    reel.appendChild(strip); numEl.appendChild(reel); strips.push(strip);
-  }
 
   var members = GROUPS.map(function(g){ return PEOPLE.filter(function(p){ return p.group === g.key; }); });
   var dots = [], clusters = [], cards = [], indexBtns = [], pips = [], cardByIdx = {};
@@ -1483,23 +1431,8 @@
     L.fx = L.cx + L.R * Math.cos(Fr);
     L.fy = L.cy + L.R * Math.sin(Fr);
 
-    outerRing.style.width = outerRing.style.height = (L.R * 2) + "px";
     innerRing.style.width = innerRing.style.height = (L.rInner * 2) + "px";
 
-    // Watch-bezel ticks: 60 marks, a longer gold one every fifth.
-    var rO = L.rInner - (L.mobile ? 14 : 16), minor = L.mobile ? 5 : 8, major = L.mobile ? 9 : 15;
-    var bs = rO * 2 + 6;
-    bezel.setAttribute("width", bs);
-    bezel.setAttribute("height", bs);
-    bezel.setAttribute("viewBox", (-bs / 2) + " " + (-bs / 2) + " " + bs + " " + bs);
-    var ticks = "";
-    for (var t = 0; t < 60; t++){
-      var big = t % 5 === 0, a = t * 6 * Math.PI / 180, len = big ? major : minor;
-      var c = Math.cos(a), sn = Math.sin(a);
-      ticks += '<line x1="' + (c * rO).toFixed(2) + '" y1="' + (sn * rO).toFixed(2) + '" x2="' + (c * (rO - len)).toFixed(2) + '" y2="' + (sn * (rO - len)).toFixed(2) +
-        '" stroke="' + (big ? "#C08A2E" : "rgba(28,36,64,0.22)") + '" stroke-width="' + (big ? 1.8 : 1) + '" stroke-linecap="round"/>';
-    }
-    bezel.innerHTML = ticks;
 
     var s = L.rInner * 2 + 6;
     progSvg.setAttribute("width", s);
@@ -1560,13 +1493,6 @@
       ch.classList.add("leave");
     });
   }
-  function setReel(n, animate){
-    [Math.floor(n / 10) % 10, n % 10].forEach(function(dgt, j){
-      if (!animate) strips[j].style.transition = "none";
-      strips[j].style.transform = "translateY(" + (-dgt) + "em)";
-      if (!animate){ void strips[j].offsetWidth; strips[j].style.transition = ""; }
-    });
-  }
   function setActive(k){
     if (k === active) return;
     var first = active === -1;
@@ -1576,10 +1502,9 @@
     cards.forEach(function(list, j){ list.forEach(function(el){ el.tabIndex = j === k ? 0 : -1; }); });
     countEl.textContent = pad(k + 1);
     barEl.style.backgroundColor = GROUPS[k].color;
-    if (first || reduceMotion){ setLetters(GROUPS[k].label, false); setReel(k + 1, false); return; }
+    if (first || reduceMotion){ setLetters(GROUPS[k].label, false); return; }
     window.clearTimeout(swapTimer);
     leaveLetters();
-    setReel(k + 1, true);
     swapTimer = window.setTimeout(function(){ setLetters(GROUPS[active].label, true); }, 260);
   }
 
@@ -1602,7 +1527,6 @@
     progSvg.style.left = hx + "px";
     progSvg.style.top = hy + "px";
     progSvg.style.transform = "translate(-50%,-50%) rotate(" + L.F + "deg) scaleY(-1)";
-    outerRing.style.opacity = (1 - close).toFixed(3);
 
     clusters.forEach(function(c, k){
       var d = Math.abs(k - p);
@@ -1636,16 +1560,6 @@
     progArc.style.strokeDashoffset = (L.circ * (1 - frac)).toFixed(2);
     progArc.style.opacity = e.toFixed(3);
 
-    // Glow follows the department in focus, then settles behind the crest in gold.
-    var k0 = Math.min(N - 1, Math.floor(focusP)), k1 = Math.min(N - 1, k0 + 1), f = focusP - k0;
-    var rgb = [0,1,2].map(function(i){
-      var v = RGB[k0][i] + (RGB[k1][i] - RGB[k0][i]) * f;
-      return Math.round(lerp(v, GOLD[i], close));
-    }).join(",");
-    glow.style.setProperty("--glow", rgb);
-    var gx = lerp(L.fx, hx, close), gy = lerp(L.fy, hy, close);
-    glow.style.transform = "translate(" + (gx - glow.offsetWidth / 2) + "px," + (gy - glow.offsetHeight / 2) + "px)";
-    glow.style.opacity = e.toFixed(3);
 
     var titleOut = clamp01(close * 3);                  // gone before the crest glides over it
     var lift = ((1 - e) * 36 - close * 24).toFixed(1);
