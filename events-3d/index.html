@@ -83,6 +83,11 @@ canvas:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; }
 .ph-out:hover{ text-decoration:underline; text-underline-offset:4px; }
 .ph-n{ font-variant-numeric:tabular-nums; color:var(--ink-soft); }
 .ph-nav{ display:flex; gap:6px; } .ph-nav button{ width:40px; height:40px; border-radius:50%; border:1px solid var(--line); font-size:1rem; } .ph-nav button:hover{ background:rgba(28,36,64,.06); }
+.enter.go{ position:absolute; left:50%; bottom:calc(11% + 34px); translate:-50% 0; z-index:4; margin:0; background:#1C2440; color:#F6F1E4; opacity:0; visibility:hidden; transition:opacity .4s, visibility 0s .4s, transform .2s, background .2s; }
+.enter.go.on{ opacity:1; visibility:visible; transition:opacity .5s .2s, transform .2s, background .2s; }
+html.dark .enter.go{ background:#F6F1E4; color:#1C2440; } html.dark .enter.go:hover{ background:#fff; }
+.inside{ --ink:#1C2440; --ink-soft:#5F5A48; --line:rgba(28,36,64,.16); color:var(--ink); }
+.ph-frame img{ object-fit:contain; } .ph-n{ text-align:center; padding:0 .8em; } .inside.one .ph-nav{ visibility:hidden; }
 .load{ position:absolute; inset:0; display:grid; place-items:center; font-size:.75rem; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-soft); transition:opacity .6s; pointer-events:none; }
 html.snow, html.snow body{ background-image:radial-gradient(90% 70% at 8% 105%, rgba(150,175,215,.30), transparent 60%), radial-gradient(70% 60% at 100% 0%, rgba(190,205,230,.30), transparent 62%), linear-gradient(180deg, #F4F1EA 20%, #E4EAF2 100%); }
 html.snow .scene::before{ background:radial-gradient(closest-side, #DCE4EE 0%, rgba(226,232,240,.85) 42%, rgba(240,240,238,0) 76%); }
@@ -93,7 +98,7 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
 .swap a.on{ color:var(--ink); border-color:var(--red); }
 #fall{ opacity:calc((1 - var(--night,0)) * var(--leaf,1)); position:fixed; inset:0; width:100%; height:100%; z-index:6; pointer-events:none; -webkit-mask-image:none; mask-image:none; cursor:default; }
 @media (max-width:820px){
-  .swap{ left:22px; bottom:44px; white-space:nowrap; letter-spacing:.08em; } .credit{ left:22px; right:22px; bottom:10px; font-size:.64rem; line-height:1.45; } .copy{ padding-bottom:78px; } .hint{ left:50%; bottom:118px; white-space:nowrap; } .scene::before{ inset:0 -20% 40% -20%; }
+  .swap{ left:22px; bottom:44px; white-space:nowrap; letter-spacing:.08em; } .credit{ left:22px; right:22px; bottom:10px; font-size:.64rem; line-height:1.45; } .copy{ padding-bottom:78px; } .hint{ left:50%; bottom:118px; white-space:nowrap; } .enter.go{ bottom:150px; } .ph-bar{ flex-wrap:wrap; gap:8px; } .ph-n{ order:3; flex-basis:100%; } .scene::before{ inset:0 -20% 40% -20%; }
 }
 </style>
 <script type="importmap">{ "imports": { "three": "./vendor/three.min.js" } }</script>
@@ -103,6 +108,16 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
 <canvas id="fall" aria-hidden="true"></canvas>
 <footer class="credit">3D models &amp; page © 2026 Naing Lin Khant (Moarz) · <a href="../LICENSE">Reuse requires visible credit</a></footer>
 <nav class="swap"><a href="../events.html">← Back to events</a><a class="on" aria-current="page">3D preview · very early beta</a></nav>
+<div class="inside" id="inside" aria-hidden="true">
+  <div class="stage-ph" role="dialog" aria-modal="true" aria-label="Photos from the event">
+    <div class="ph-frame"><img id="phA" alt=""><img id="phB" alt=""></div>
+    <div class="ph-bar">
+      <button type="button" class="ph-out" id="phOut">← Back outside</button>
+      <span class="ph-n" id="phN"></span>
+      <span class="ph-nav"><button type="button" id="phPrev" aria-label="Previous photo">←</button><button type="button" id="phNext" aria-label="Next photo">→</button></span>
+    </div>
+  </div>
+</div>
 <main class="tour" id="tour">
   <i class="snap" style="top:0"></i><i class="snap" style="top:100vh;top:100dvh"></i><i class="snap" style="top:200vh;top:200dvh"></i><i class="snap" style="top:300vh;top:300dvh"></i><i class="snap" style="top:400vh;top:400dvh"></i><i class="snap" style="top:500vh;top:500dvh"></i><i class="snap" style="top:600vh;top:600dvh"></i><i class="snap" style="top:700vh;top:700dvh"></i><i class="snap" style="top:800vh;top:800dvh"></i><i class="snap" style="top:900vh;top:900dvh"></i><i class="snap" style="top:1000vh;top:1000dvh"></i><i class="snap" style="top:1100vh;top:1100dvh"></i><i class="snap" style="top:1200vh;top:1200dvh"></i><i class="snap" style="top:1300vh;top:1300dvh"></i><i class="snap" style="top:1400vh;top:1400dvh"></i><i class="snap" style="top:1500vh;top:1500dvh"></i><i class="snap" style="top:1600vh;top:1600dvh"></i>
   <section class="row">
@@ -232,6 +247,7 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
     </div>
     <div class="scene" id="scene">
       <canvas id="gl"></canvas>
+      <button class="enter go" id="enter" type="button">Step inside <span aria-hidden="true">→</span></button>
       <div class="hint" id="hint">Scroll for the next event · drag to turn the building</div>
       <div class="load" id="load">Building the scene…</div>
     </div>
@@ -528,7 +544,7 @@ function resize() { const wide = innerWidth > 820, w = wrap.clientWidth, h = Mat
 addEventListener("resize", resize); resize();
 const hint = document.getElementById("hint");
 canvas.tabIndex = 0; canvas.setAttribute("aria-label", "A building on King's College Circle. Scroll for the next event. Drag or use the arrow keys to turn the building.");
-canvas.addEventListener("pointerdown", e => { drag = { x: e.clientX, y: e.clientY, look, pitch: pitchT, lx: e.clientX, lt: performance.now() }; vel = 0; canvas.setPointerCapture(e.pointerId); hint.classList.add("gone"); });
+canvas.addEventListener("pointerdown", e => { if (walk.phase) return; drag = { x: e.clientX, y: e.clientY, look, pitch: pitchT, lx: e.clientX, lt: performance.now() }; vel = 0; canvas.setPointerCapture(e.pointerId); hint.classList.add("gone"); });
 canvas.addEventListener("pointermove", e => { if (!drag) return; const now = performance.now();
   look = drag.look + (e.clientX - drag.x) * .0042;
   vel = vel * .6 + ((e.clientX - drag.lx) * .0042 / Math.max(8, now - drag.lt) * 1000) * .4; drag.lx = e.clientX; drag.lt = now;
@@ -577,6 +593,8 @@ function frame(now) {
   const far = 1.3 - .3 * k;                                                                                             // the page opens a little further away and walks in
   arm.subVectors(posNow, tNow); arm.y = 0; arm.applyAxisAngle(UP, -look).multiplyScalar(far);
   camera.position.set(tNow.x + arm.x, posNow.y + pitch * arm.length() * .32 + (1 - k) * 5, tNow.z + arm.z); camera.lookAt(tNow);
+  if (walk.phase) { if (moving) { endWalk(); } else walkCamera(dt); }
+  enterBtn.classList.toggle("on", settled && intro > .9 && !walk.phase && !!heroOf[STOPS[active].hero].root);
   stars.position.copy(camera.position); eyeNow.copy(camera.position); lookDir.set(-arm.x, 0, -arm.z).normalize();
   // each event's banner drops onto the grass once you have arrived, and lifts away when you walk on
   banners.forEach((b, i) => { if (!b.g) return; const here = i === active && settled && intro > .55;
@@ -588,7 +606,7 @@ function frame(now) {
     fall.setMatrixAt(i, fm.compose(fp.set(l.x, l.y, l.z), fq, fs.set(l.s, l.s, l.s))); }
   fall.instanceMatrix.needsUpdate = true;
   if (shadowKick > 0 || intro < 1 || moving || Math.abs(cNow - want.c) > .002 || banners.some(b => b.g && b.d > 0 && b.d < 1) || kitS.some(v => v > .01 && v < .99)) { renderer.shadowMap.needsUpdate = true; shadowKick--; }
-  renderer.render(scene, camera);
+  if (walk.phase !== "photos") renderer.render(scene, camera);
   if (perfEl) { fpsT += dt; fpsN++; if (fpsT > .5) { const r = renderer.info.render, m = renderer.info.memory; perfEl.textContent = Math.round(fpsN / fpsT) + " fps\n" + r.calls + " draw calls\n" + Math.round(r.triangles / 1000) + "k triangles\n" + m.textures + " textures"; fpsT = fpsN = 0; } }
   if (!shown && intro > .5) { shown = true; document.getElementById("load").style.opacity = 0; }
   requestAnimationFrame(frame);
@@ -639,6 +657,74 @@ function raiseBanner(i) { const s = STOPS[i], wide = innerWidth > 820, b = s.ban
   const spot = b ? s.T.clone().setY(0).addScaledVector(s.fwd, -b.front).addScaledVector(s.right, b.side) : s.pos.clone().setY(0).addScaledVector(s.fwd, wide ? 11 : 14).addScaledVector(s.right, wide ? -4.1 : -1.5), to = s.pos.clone().sub(spot).setY(0).normalize();
   const g = makeBanner("../images/events/" + s.poster, { height: b ? 2.3 : wide ? 3.15 : 3.0, wind: .025 }); if (b) g.scale.setScalar(b.scale);
   g.userData.lit = litNow; g.position.copy(spot); g.rotation.y = Math.atan2(to.x, to.z); g.visible = false; scene.add(g); banners[i].g = g; }
+// ---------------------------------------------------------------- step inside: you walk round to the door, it opens, you go in, and the photos from that event take over
+const EVENT_PHOTOS = {}; fetch("./photos.json").then(r => r.ok ? r.json() : {}).then(j => Object.assign(EVENT_PHOTOS, j)).catch(() => {});   // event id → its photos
+const STOCK = "../images/gallery/mcc-gallery-photos/p6-11.jpg";   // shown when an event has no photos of its own yet
+const DOOR = { koffler: "East" };                                 // which door to use where the front is not the model's main door
+const enterBtn = document.getElementById("enter"), inside = document.getElementById("inside"), phImgs = [document.getElementById("phA"), document.getElementById("phB")];
+const V3 = () => new THREE.Vector3(), ez = x => { x = Math.min(1, Math.max(0, x)); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+function rigDoors(h) { if (h.rig !== undefined) return h.rig; h.rig = null; const root = h.root; root.updateMatrixWorld(true);
+  const re = new RegExp("^Door_" + (DOOR[h.key] || "Main") + "_[LR]$"), leaves = []; root.traverse(o => { if (re.test(o.name)) leaves.push(o); });
+  const ent = root.getObjectByName("Entrance_Main"); if (!leaves.length && !ent) return null;
+  const boxes = leaves.map(d => new THREE.Box3().setFromObject(d)), cs = boxes.map(b => b.getCenter(V3())), all = new THREE.Box3(); boxes.forEach(b => all.union(b));
+  const mid = leaves.length ? all.getCenter(V3()) : ent.getWorldPosition(V3()), floor = leaves.length ? all.min.y : mid.y, C = h.box.getCenter(V3());
+  const out = V3(), ref = V3(), ep = ent && !DOOR[h.key] ? ent.getWorldPosition(V3()) : null;                     // which way is out of the door
+  if (ep && Math.hypot(ep.x - mid.x, ep.z - mid.z) > .3) ref.set(ep.x - mid.x, 0, ep.z - mid.z); else ref.set(mid.x - C.x, 0, mid.z - C.z); ref.normalize();
+  if (cs.length > 1) out.set(-(cs[1].z - cs[0].z), 0, cs[1].x - cs[0].x); else if (ent) out.set(0, 0, 1).transformDirection(ent.matrixWorld).setY(0);
+  if (out.lengthSq() < 1e-6) out.copy(ref); out.normalize(); if (out.dot(ref) < 0) out.negate();
+  const side = V3().set(-out.z, 0, out.x);
+  const doors = leaves.map((d, i) => { const c = cs[i], sz = boxes[i].getSize(V3());                                // each leaf hangs on its outer edge and swings inward
+    const half = cs.length > 1 ? Math.hypot(cs[1].x - cs[0].x, cs[1].z - cs[0].z) / 2 : Math.max(sz.x, sz.z) / 2, sgn = cs.length > 1 ? (V3().subVectors(c, mid).setY(0).dot(side) < 0 ? -1 : 1) : 1;
+    const g = new THREE.Group(); g.position.copy(root.worldToLocal(c.clone().addScaledVector(side, sgn * half))); root.add(g); g.updateMatrixWorld(true); g.attach(d);
+    g.rotation.y = .6; g.updateMatrixWorld(true); const moved = new THREE.Box3().setFromObject(d).getCenter(V3()).sub(c).dot(out); g.rotation.y = 0; g.updateMatrixWorld(true);
+    return { g, sign: moved < 0 ? 1 : -1 }; });
+  let light = null; if (leaves.length) { const wd = cs.length > 1 ? Math.hypot(cs[1].x - cs[0].x, cs[1].z - cs[0].z) * 2 : Math.max(all.max.x - all.min.x, all.max.z - all.min.z);   // warm light in the doorway, so every building opens onto the same bright room
+    light = new THREE.Mesh(new THREE.PlaneGeometry(wd, all.max.y - all.min.y), new THREE.MeshBasicMaterial({ color: 0xF7EBD6, transparent: true, opacity: 0, toneMapped: false, fog: false, side: THREE.DoubleSide }));
+    light.position.copy(mid).addScaledVector(out, .03); light.rotation.y = Math.atan2(out.x, out.z); light.visible = false; scene.add(light); }
+  const A = mid.clone().addScaledVector(out, 11).setY(floor + 1.5), B = mid.clone().addScaledVector(out, -2.2).setY(floor + 1.6);
+  return h.rig = { doors, light, A, B, C, lookA: mid.clone().setY(floor + 1.5), lookB: mid.clone().addScaledVector(out, -14).setY(floor + 1.6) }; }
+const walk = { phase: null, t: 0, door: 0, idx: 0, rig: null, list: [], stock: false, name: "", front: 0 };
+function showPhoto(i) { const n = walk.list.length; walk.idx = (i + n) % n; const next = phImgs[walk.front ^ 1], cur = phImgs[walk.front];
+  next.alt = walk.stock ? "Members of the Myanmar Culture Club on Front Campus" : "Photo " + (walk.idx + 1) + " of " + n + " from " + walk.name;
+  const swap = () => { next.classList.add("on"); cur.classList.remove("on"); }; walk.front ^= 1; next.onload = swap; next.src = walk.list[walk.idx]; if (next.complete) swap();
+  document.getElementById("phN").textContent = walk.stock ? walk.name + " · photos from this event are coming soon" : walk.name + " · " + (walk.idx + 1) + " / " + n;
+  if (n > 1) new Image().src = walk.list[(walk.idx + 1) % n]; }
+function openViewer() { inside.classList.toggle("one", walk.list.length < 2); inside.classList.add("lit", "show"); inside.setAttribute("aria-hidden", "false"); showPhoto(0); setTimeout(() => document.getElementById(walk.list.length > 1 ? "phNext" : "phOut").focus(), 60); }
+function startWalk() { if (walk.phase) return; const s = STOPS[active], h = heroOf[s.hero]; if (!h.root) return;
+  const own = EVENT_PHOTOS[s.poster.replace(/\.\w+$/, "")]; walk.stock = !(own && own.length); walk.list = walk.stock ? [STOCK] : own; walk.name = stepBtns[active].getAttribute("aria-label") || "this event";
+  new Image().src = walk.list[0];                                                                                   // the first photo starts loading as you set off
+  walk.rig = rigDoors(h); vel = 0; homing = false; drag = null; hint.classList.add("gone"); walk.t = 0; walk.door = 0;
+  if (reduce || !walk.rig) { walk.phase = "photos"; openViewer(); } else walk.phase = "approach"; }
+function leaveWalk() { if (walk.phase !== "photos") return; inside.classList.remove("show"); setTimeout(() => inside.classList.remove("lit"), 250); inside.setAttribute("aria-hidden", "true");
+  walk.t = 0; if (reduce || !walk.rig) endWalk(); else walk.phase = "leave"; enterBtn.focus({ preventScroll: true }); }
+function endWalk() { walk.phase = null; walk.door = 0; if (walk.rig) { walk.rig.doors.forEach(d => d.g.rotation.y = 0); if (walk.rig.light) walk.rig.light.visible = false; } inside.classList.remove("show", "lit"); inside.setAttribute("aria-hidden", "true"); camera.near = 3; resize(); shadowKick = 20; }
+const wP = V3(), wL = V3();
+function walkCamera(dt) {                                                                                           // takes over the camera while you are on the way in or out
+  const ph = walk.phase, R = walk.rig; if (!ph || !R) return; walk.t += dt; let u = 1, v = 0;
+  if (ph === "approach") { u = ez(walk.t / 2.8); walk.door = Math.max(walk.door, ez((walk.t - 1.3) / 1.3)); if (walk.t >= 2.8) { walk.phase = "enter"; walk.t = 0; } }
+  else if (ph === "enter") { v = ez(walk.t / 1.7); walk.door = 1; if (walk.t > .9 && !inside.classList.contains("lit")) { inside.classList.add("lit"); inside.setAttribute("aria-hidden", "false"); }
+    if (walk.t >= 1.7) { walk.phase = "photos"; openViewer(); } }
+  else if (ph === "photos") v = 1;
+  else if (ph === "leave") { if (walk.t < 1) v = 1 - ez(walk.t / 1); else u = 1 - ez((walk.t - 1) / 2.4); walk.door = 1 - ez((walk.t - 1.2) / 1.3); if (walk.t >= 3.4) { endWalk(); return; } }
+  if (v > 0) { wP.lerpVectors(R.A, R.B, v); wL.lerpVectors(R.lookA, R.lookB, v); }
+  else { const p0 = camera.position, a0 = Math.atan2(p0.x - R.C.x, p0.z - R.C.z), r0 = Math.hypot(p0.x - R.C.x, p0.z - R.C.z), a1 = Math.atan2(R.A.x - R.C.x, R.A.z - R.C.z), r1 = Math.hypot(R.A.x - R.C.x, R.A.z - R.C.z);
+    const da = Math.atan2(Math.sin(a1 - a0), Math.cos(a1 - a0)), a = a0 + da * u, r = r0 + (r1 - r0) * u;           // round the building, never through it
+    wP.set(R.C.x + Math.sin(a) * r, p0.y + (R.A.y - p0.y) * u, R.C.z + Math.cos(a) * r); wL.lerpVectors(tNow, R.lookA, u); }
+  R.doors.forEach(d => d.g.rotation.y = d.sign * walk.door * 1.35); if (R.light) { R.light.visible = walk.door > .01; R.light.material.opacity = Math.min(1, walk.door * 1.6); }
+  const w = wrap.clientWidth, h = Math.max(1, wrap.clientHeight); if (innerWidth > 820) camera.setViewOffset(w, h, -w * SHIFT * (1 - u), 0, w, h);   // the door comes to the middle of the screen
+  camera.near = .5; camera.updateProjectionMatrix(); camera.position.copy(wP); camera.lookAt(wL); renderer.shadowMap.needsUpdate = true; }
+enterBtn.addEventListener("click", startWalk);
+document.getElementById("phOut").addEventListener("click", leaveWalk);
+document.getElementById("phNext").addEventListener("click", () => { if (walk.phase === "photos") showPhoto(walk.idx + 1); });
+document.getElementById("phPrev").addEventListener("click", () => { if (walk.phase === "photos") showPhoto(walk.idx - 1); });
+addEventListener("keydown", e => { if (!walk.phase) return; if ([" ", "PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp"].includes(e.key) && e.target.tagName !== "BUTTON") e.preventDefault(); if (walk.phase !== "photos") return;
+  if (e.key === "Escape") leaveWalk(); if (e.key === "ArrowRight") showPhoto(walk.idx + 1); if (e.key === "ArrowLeft") showPhoto(walk.idx - 1); });
+const stay = e => { if (walk.phase) e.preventDefault(); };                                                          // the page does not scroll on to the next event while you are inside
+addEventListener("wheel", stay, { passive: false }); addEventListener("touchmove", stay, { passive: false });
+{ let sx = null; const fr = document.querySelector(".ph-frame");                                                    // swipe between photos on a phone
+  fr.addEventListener("touchstart", e => sx = e.touches[0].clientX, { passive: true });
+  fr.addEventListener("touchend", e => { if (sx == null || walk.phase !== "photos") return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 40) showPhoto(walk.idx + (dx < 0 ? 1 : -1)); }); }
+window.__walk = () => walk.phase; window.__enter = startWalk; window.__leave = leaveWalk;
 raiseBanner(0);
 frame();
 window.__goto = i => scrollTo(0, tour.offsetTop + i * innerHeight);   // used by the test script

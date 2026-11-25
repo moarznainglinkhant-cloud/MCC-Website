@@ -1,0 +1,51 @@
+{
+ "welcome-picnic": [
+  "../images/events/photos/p6-00.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-01.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-03.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-04.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-05.jpg",
+  "../images/events/photos/p6-06.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-07.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-09.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-10.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-11.jpg",
+  "../images/events/photos/p6-13.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-14.jpg",
+  "../images/events/photos/p6-15.jpg",
+  "../images/gallery/mcc-gallery-photos/p6-16.jpg"
+ ],
+ "burmese-language-workshop": [
+  "../images/events/photos/p25-02.jpg",
+  "../images/events/photos/p25-03.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-04.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-06.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-07.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-08.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-09.jpg",
+  "../images/gallery/mcc-gallery-photos/p25-10.jpg"
+ ],
+ "back-to-school-picnic": [
+  "../images/gallery/mcc-gallery-photos/p30-00.jpg",
+  "../images/gallery/mcc-gallery-photos/p30-01.jpg",
+  "../images/events/photos/p30-03.jpg",
+  "../images/gallery/mcc-gallery-photos/p30-04.jpg",
+  "../images/gallery/mcc-gallery-photos/p30-05.jpg",
+  "../images/gallery/mcc-gallery-photos/p30-06.jpg",
+  "../images/events/photos/p30-07.jpg",
+  "../images/events/photos/p30-08.jpg",
+  "../images/gallery/mcc-gallery-photos/p30-09.jpg"
+ ],
+ "taste-of-southeast-asia": [
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-03.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-04.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-05.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-06.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-07.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-10.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-11.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-12.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-13.jpg",
+  "../images/gallery/mcc-gallery-photos/taste-of-sea-15.jpg"
+ ]
+}
