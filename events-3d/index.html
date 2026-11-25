@@ -422,40 +422,42 @@ leafMat.onBeforeCompile = s => { s.uniforms.uTime = U.uTime; s.uniforms.uTurn = 
         float gust = sin(uTime * .9 + ip.x * .05) * .5 + .5;
         transformed.xy += vec2(sin(uTime * 2.3 + ph), cos(uTime * 1.9 + ph * 1.3)) * (.10 + .16 * gust) / max(.2, length(instanceMatrix[0].xyz));
       #endif`); };
-const PAL = { green: [0x3F6E2E, 0x4E7F36, 0x5F9340, 0x79A848, 0x94B552], turned: [0x79A848, 0xC9C24C, 0xEBB63C, 0xEE9A2E, 0xE2702A, 0xC9482A], gold: [0x6C9A40, 0xA9BC4E, 0xE3C14A, 0xF0B436, 0xE68A2C] };
+const PAL = { green: [0x3F6E2E, 0x4E7F36, 0x5F9340, 0x79A848, 0x94B552], turned: [0x79A848, 0xC9C24C, 0xEBB63C, 0xEE9A2E, 0xE2702A, 0xC9482A], gold: [0x6C9A40, 0xA9BC4E, 0xE3C14A, 0xF0B436, 0xE68A2C], red: [0xF08A32, 0xEE6A2E, 0xE2402A, 0xD4272A, 0xC41C22, 0xB8141E] };
 const boxOf = k => HEROES.find(h => h.key === k).box;
-// trees cost a lot to draw, so only three: two small ones in front of University College, one beside Knox, none at Convocation Hall
+// trees cost a lot to draw, so only three: two small ones in front of University College (the right-hand one a red maple), one beside Knox, none at Convocation Hall
 const treeSpots = (() => { const u = boxOf("uc"), kx = boxOf("knox"); return [
-  [u.min.x + 34, -(u.max.z + 16), 13, "green"], [u.max.x - 28, -(u.max.z + 20), 14, "turned"],
+  [u.min.x + 34, -(u.max.z + 16), 13, "green"], [u.max.x - 28, -(u.max.z + 20), 14, "red"],
   [kx.max.x + 7, -(kx.min.z + 24), 14, "gold"] ]; })();
-const PER = 3600, bark = [], trees = []; let treeWood = null;
+const PER = 3600, bark = [], paleBark = [], trees = []; let treeWood = null, mapleWood = null;
 const leaves = new THREE.InstancedMesh(leafGeo, leafMat, treeSpots.length * PER); leaves.castShadow = true;
 { const M = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), P = new THREE.Vector3(), S = new THREE.Vector3(), col = new THREE.Color(), tmp = new THREE.Color(), up = new THREE.Vector3(0, 1, 0);
   let li = 0;
-  for (const [mx, my, h, palName] of treeSpots) { const base = at([mx, my]), tips = [];
+  for (const [mx, my, h, palName] of treeSpots) { const base = at([mx, my]), tips = [], red = palName === "red";   // red = a red maple: tall oval crown, red at the edge and orange within, pale bark
     (function branch(p, d, len, rad, depth) { const e = p.clone().addScaledVector(d, len);
-      const g = new THREE.CylinderGeometry(rad * .68, rad, len, depth > 2 ? 7 : 5); g.applyQuaternion(q.setFromUnitVectors(up, d)); const mid = p.clone().addScaledVector(d, len / 2); g.translate(mid.x, mid.y, mid.z); g.deleteAttribute("uv"); bark.push(g);
-      if (depth === 0) { tips.push([e, 1]); return; } if (depth <= 2) tips.push([e, .7]);
+      const g = new THREE.CylinderGeometry(rad * .68, rad, len, depth > 2 ? 7 : 5); g.applyQuaternion(q.setFromUnitVectors(up, d)); const mid = p.clone().addScaledVector(d, len / 2); g.translate(mid.x, mid.y, mid.z); g.deleteAttribute("uv"); (red ? paleBark : bark).push(g);
+      if (depth === 0) { tips.push([e, 1]); return; } if (depth <= 2) tips.push([e, red ? .9 : .7]); else if (red && depth === 3) tips.push([e, 1.15]);
       const n = depth >= 3 ? 3 : 2 + (rnd() > .5 ? 1 : 0), a0 = rnd() * 6.28;
-      for (let i = 0; i < n; i++) { const a = a0 + i * 6.28 / n + (rnd() - .5) * .8, sp = .45 + rnd() * .35;
-        branch(e, d.clone().add(new THREE.Vector3(Math.cos(a) * sp, .15 + rnd() * .2, Math.sin(a) * sp)).normalize(), len * (.66 + rnd() * .14), rad * .62, depth - 1); }
-    })(base.clone(), new THREE.Vector3((rnd() - .5) * .08, 1, (rnd() - .5) * .08).normalize(), h * .3, h * .034, 4);
+      for (let i = 0; i < n; i++) { const a = a0 + i * 6.28 / n + (rnd() - .5) * .8, sp = red ? .34 + rnd() * .26 : .45 + rnd() * .35;
+        branch(e, d.clone().add(new THREE.Vector3(Math.cos(a) * sp, red ? .5 + rnd() * .3 : .15 + rnd() * .2, Math.sin(a) * sp)).normalize(), len * ((red ? .74 : .66) + rnd() * .14), rad * .62, depth - 1); }
+    })(base.clone(), new THREE.Vector3((rnd() - .5) * .08, 1, (rnd() - .5) * .08).normalize(), h * (red ? .24 : .3), h * (red ? .03 : .034), 4);
     const ctr = new THREE.Vector3(); tips.forEach(t => ctr.add(t[0])); ctr.divideScalar(tips.length);
     const crownR = Math.max(...tips.map(t => t[0].distanceTo(ctr))) + h * .1;
     const pal = PAL[palName], turn = pal === PAL.green ? .35 + rnd() * .3 : .55 + rnd() * .35;
     for (let i = 0; i < PER; i++, li++) {
-      const [tip, w] = tips[(rnd() * tips.length) | 0], rr = h * .13 * w * Math.cbrt(rnd()), th = rnd() * 6.28, ph = Math.acos(2 * rnd() - 1);
-      P.set(Math.sin(ph) * Math.cos(th), Math.cos(ph) * .8, Math.sin(ph) * Math.sin(th)).multiplyScalar(rr).add(tip);
+      const [tip, w] = tips[(rnd() * tips.length) | 0], rr = h * (red ? .17 : .13) * w * Math.cbrt(rnd()), th = rnd() * 6.28, ph = Math.acos(2 * rnd() - 1);
+      P.set(Math.sin(ph) * Math.cos(th), Math.cos(ph) * (red ? 1.15 : .8), Math.sin(ph) * Math.sin(th)).multiplyScalar(rr).add(tip);
       const out = P.clone().sub(ctr), depthIn = Math.min(1, out.length() / crownR); out.normalize();
       const lit = Math.max(0, out.dot(SUN)) * .75 + Math.max(0, out.y) * .25, shade = .42 + .58 * (lit * .75 + depthIn * .25);
-      const t = Math.min(.999, Math.max(0, turn * (.35 + .65 * (out.dot(SUN) * .5 + .5)) + (rnd() - .5) * .5));
+      const t = red ? Math.min(.999, Math.max(0, .15 + depthIn * .75 + (P.y - ctr.y) / crownR * .18 + (rnd() - .5) * .35))
+        : Math.min(.999, Math.max(0, turn * (.35 + .65 * (out.dot(SUN) * .5 + .5)) + (rnd() - .5) * .5));
       const k = t * (pal.length - 1), a = k | 0; col.setHex(pal[a]).lerp(tmp.setHex(pal[Math.min(pal.length - 1, a + 1)]), k - a);
-      col.multiplyScalar(shade * (.9 + rnd() * .22)); col.lerp(tmp.setHex(0x2A3E3A), (1 - shade) * .45); leaves.setColorAt(li, col);
-      eu.set(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28); q.setFromEuler(eu); const s = h * (.04 + rnd() * .03); S.set(s, s, s);
+      if (red) { col.multiplyScalar((.6 + .4 * shade) * (.86 + rnd() * .24)); col.lerp(tmp.setHex(0x6E0E16), (1 - shade) * .45); } else { col.multiplyScalar(shade * (.9 + rnd() * .22)); col.lerp(tmp.setHex(0x2A3E3A), (1 - shade) * .45); } leaves.setColorAt(li, col);
+      eu.set(rnd() * 6.28, rnd() * 6.28, rnd() * 6.28); q.setFromEuler(eu); const s = h * ((red ? .05 : .04) + rnd() * (red ? .035 : .03)); S.set(s, s, s);
       leaves.setMatrixAt(li, M.compose(P, q, S)); }
-    trees.push({ base, ctr, crownR, warm: pal !== PAL.green }); }
+    trees.push({ base, ctr, crownR, warm: pal !== PAL.green, red }); }
   leaves.instanceColor.needsUpdate = true; scene.add(leaves);
-  const wood = treeWood = new THREE.Mesh(mergeGeometries(bark), new THREE.MeshStandardMaterial({ color: 0x4A372B, roughness: 1 })); wood.castShadow = true; scene.add(wood); }
+  const wood = treeWood = new THREE.Mesh(mergeGeometries(bark), new THREE.MeshStandardMaterial({ color: 0x4A372B, roughness: 1 })); wood.castShadow = true; scene.add(wood);
+  if (paleBark.length) { mapleWood = new THREE.Mesh(mergeGeometries(paleBark), new THREE.MeshStandardMaterial({ color: 0xB9B2A6, roughness: 1 })); mapleWood.castShadow = true; scene.add(mapleWood); } }
 
 // ---------------------------------------------------------------- leaves on the grass, and a few coming down near you
 const warm = [0xE3B93C, 0xEE9A2E, 0xE2702A, 0xC9482A, 0xB9C050, 0x8FAE48];
@@ -473,7 +475,7 @@ for (let i = 0; i < FALL; i++) spawn(i, true);
 for (let i = FALL; i < FALL + GROUND; i++) { const t = trees[(rnd() * trees.length) | 0], a = rnd() * 6.28, r = Math.pow(rnd(), .7) * t.crownR * 2.2;
   fe.set(-Math.PI / 2, 0, rnd() * 6.28); fq.setFromEuler(fe); const s = .16 + rnd() * .1;
   fall.setMatrixAt(i, fm.compose(fp.set(t.base.x + Math.cos(a) * r, .06 + rnd() * .02, t.base.z + Math.sin(a) * r), fq, fs.set(s, s, s)));
-  fall.setColorAt(i, fc.setHex(warm[(rnd() * warm.length) | 0]).multiplyScalar(t.warm ? .95 : .8)); }
+  fall.setColorAt(i, fc.setHex(t.red ? PAL.red[1 + ((rnd() * 5) | 0)] : warm[(rnd() * warm.length) | 0]).multiplyScalar(t.warm ? .95 : .8)); }   // red leaves under the maple
 
 // winter: a snowfield laid over the grass, and snow falling through the scene (so it passes in front of and behind the building)
 const snowField = (() => { const c = document.createElement("canvas"); c.width = c.height = 512; const x = c.getContext("2d"), r = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(99);
@@ -584,7 +586,7 @@ function frame(now) {
   pitch += (pitchT - pitch) * (1 - Math.exp(-dt * 6));
   const settled = Math.abs(cNow - active) < .04;
   const leg = Math.min(N - 2, Math.floor(cNow));
-  leaves.visible = treeWood.visible = cNow < 1.7;                                                                          // the three trees stand at the first two stops; past them they are not drawn at all
+  leaves.visible = treeWood.visible = cNow < 1.7; if (mapleWood) mapleWood.visible = leaves.visible;                                                                          // the three trees stand at the first two stops; past them they are not drawn at all
   HEROES.forEach(h => { if (h.root) h.root.visible = h.key === STOPS[active].hero || (!settled && (h.key === STOPS[leg].hero || h.key === STOPS[leg + 1].hero)); });   // only the building you are at, or the two you are walking between, is ever drawn
   if (p > .3 || t > 1.5) for (let i = Math.max(0, Math.floor(p) - 1); i <= Math.min(N - 1, Math.floor(p) + 2); i++) { const h = heroOf[STOPS[i].hero];      // a building is fetched when you are within two stops of it, once the first view is up
     if (h.later && !h.asked) { h.asked = true; loadHero(h).then(() => { h.root.visible = false; duskNow = -1; shadowKick = 20; }); }
