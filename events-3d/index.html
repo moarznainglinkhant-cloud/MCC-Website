@@ -17,7 +17,7 @@
 html,body{ margin:0; height:100%; background:var(--bg);
   background-image:radial-gradient(120% 55% at 50% 108%, rgba(150,190,96,.42), transparent 70%), radial-gradient(70% 60% at 100% 0%, rgba(227,185,60,.16), transparent 62%), linear-gradient(180deg, #F6F1E4 46%, #E9EDCB 100%); background-attachment:fixed; color:var(--ink); font-family:'Work Sans',system-ui,sans-serif; }
 html{ scroll-snap-type:y proximity; }
-.tour{ position:relative; height:1600vh; height:1600dvh; }
+.tour{ position:relative; height:1700vh; height:1700dvh; }
 .snap{ position:absolute; left:0; width:1px; height:100vh; height:100dvh; scroll-snap-align:start; pointer-events:none; }
 .row{ position:sticky; top:0; height:100vh; height:100dvh; display:block; overflow:hidden; }
 .copy{ position:absolute; inset:0; z-index:2; pointer-events:none; padding:clamp(22px,5vh,48px) clamp(22px,6vw,90px) 64px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; }
@@ -36,7 +36,7 @@ html{ scroll-snap-type:y proximity; }
 .card{ grid-area:1/1; align-self:start; opacity:0; transform:translateY(16px); transition:opacity .35s ease, transform .5s ease; pointer-events:none; }
 .card.on{ opacity:1; transform:none; pointer-events:auto; transition:opacity .6s ease .28s, transform .7s cubic-bezier(.2,.7,.2,1) .28s; }
 .steps{ display:flex; align-items:center; gap:4px; align-self:flex-end; }
-.steps button{ width:clamp(9px, calc((100vw - 190px) / 16), 26px); height:22px; padding:0; border:0; background:none; cursor:pointer; position:relative; }
+.steps button{ width:clamp(9px, calc((100vw - 190px) / 17), 26px); height:22px; padding:0; border:0; background:none; cursor:pointer; position:relative; }
 .steps button::before{ content:""; position:absolute; left:0; right:0; top:10px; height:3px; border-radius:2px; background:var(--line); transition:background .3s; }
 .steps button.on::before{ background:var(--red); }
 .steps button:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
@@ -104,7 +104,7 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
 <footer class="credit">3D models &amp; page © 2026 Naing Lin Khant (Moarz) · <a href="../LICENSE">Reuse requires visible credit</a></footer>
 <nav class="swap"><a href="../events.html">← Back to events</a><a class="on" aria-current="page">3D preview · very early beta</a></nav>
 <main class="tour" id="tour">
-  <i class="snap" style="top:0"></i><i class="snap" style="top:100vh;top:100dvh"></i><i class="snap" style="top:200vh;top:200dvh"></i><i class="snap" style="top:300vh;top:300dvh"></i><i class="snap" style="top:400vh;top:400dvh"></i><i class="snap" style="top:500vh;top:500dvh"></i><i class="snap" style="top:600vh;top:600dvh"></i><i class="snap" style="top:700vh;top:700dvh"></i><i class="snap" style="top:800vh;top:800dvh"></i><i class="snap" style="top:900vh;top:900dvh"></i><i class="snap" style="top:1000vh;top:1000dvh"></i><i class="snap" style="top:1100vh;top:1100dvh"></i><i class="snap" style="top:1200vh;top:1200dvh"></i><i class="snap" style="top:1300vh;top:1300dvh"></i><i class="snap" style="top:1400vh;top:1400dvh"></i><i class="snap" style="top:1500vh;top:1500dvh"></i>
+  <i class="snap" style="top:0"></i><i class="snap" style="top:100vh;top:100dvh"></i><i class="snap" style="top:200vh;top:200dvh"></i><i class="snap" style="top:300vh;top:300dvh"></i><i class="snap" style="top:400vh;top:400dvh"></i><i class="snap" style="top:500vh;top:500dvh"></i><i class="snap" style="top:600vh;top:600dvh"></i><i class="snap" style="top:700vh;top:700dvh"></i><i class="snap" style="top:800vh;top:800dvh"></i><i class="snap" style="top:900vh;top:900dvh"></i><i class="snap" style="top:1000vh;top:1000dvh"></i><i class="snap" style="top:1100vh;top:1100dvh"></i><i class="snap" style="top:1200vh;top:1200dvh"></i><i class="snap" style="top:1300vh;top:1300dvh"></i><i class="snap" style="top:1400vh;top:1400dvh"></i><i class="snap" style="top:1500vh;top:1500dvh"></i><i class="snap" style="top:1600vh;top:1600dvh"></i>
   <section class="row">
     <div class="dusk" aria-hidden="true"></div><div class="night" aria-hidden="true"></div><div class="winter" aria-hidden="true"></div><div class="wnight" aria-hidden="true"></div>
     <div class="copy">
@@ -173,6 +173,13 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
           <div class="sky"><i></i>Autumn</div>
         </article>
         <article class="card">
+          <div class="date">Friday, December 27, 2024</div>
+          <h2 class="title">An MCC Pub <em>Night</em></h2>
+          <div class="meta"><span>Duke of York Pub, 39 Prince Arthur Ave</span><span>7:30 PM</span></div>
+          <p class="desc">A holiday MCC pub night — mingling with friends and delicious platters on MCC.</p>
+          <div class="sky"><i></i>Winter</div>
+        </article>
+        <article class="card">
           <div class="date">Friday, January 24, 2025</div>
           <h2 class="title">An Intercultural <em>Adventure</em></h2>
           <div class="meta"><span>Cumberland House, Cumberland Room</span><span>1:10–3:10 PM</span></div>
@@ -221,7 +228,7 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
           <div class="sky"><i></i>Spring</div>
         </article>
       </div>
-      <div class="steps" id="steps"><button aria-label="MCC Welcome Picnic" class=on></button><button aria-label="Back to School Picnic"></button><button aria-label="MCC Run"></button><button aria-label="Home Away From Home"></button><button aria-label="General Meeting"></button><button aria-label="Burmese Language Workshop"></button><button aria-label="Multicultural Munch"></button><button aria-label="Multicultural Bazaar: Food Giveaway"></button><button aria-label="Taste of Southeast Asia"></button><button aria-label="An Intercultural Adventure"></button><button aria-label="A Savoury Taste of Myanmar: Ohn No Khao Swe"></button><button aria-label="Origami Workshop"></button><button aria-label="&quot;Hi Hi&quot;: UTCN × MCC Culture Exchange"></button><button aria-label="MCC Mixer"></button><button aria-label="A Sweet Taste of Myanmar &amp; China"></button><button aria-label="HiHi Culture Exchange"></button><span id="count">1 / 16 · Autumn</span></div>
+      <div class="steps" id="steps"><button aria-label="MCC Welcome Picnic" class=on></button><button aria-label="Back to School Picnic"></button><button aria-label="MCC Run"></button><button aria-label="Home Away From Home"></button><button aria-label="General Meeting"></button><button aria-label="Burmese Language Workshop"></button><button aria-label="Multicultural Munch"></button><button aria-label="Multicultural Bazaar: Food Giveaway"></button><button aria-label="Taste of Southeast Asia"></button><button aria-label="An MCC Pub Night"></button><button aria-label="An Intercultural Adventure"></button><button aria-label="A Savoury Taste of Myanmar: Ohn No Khao Swe"></button><button aria-label="Origami Workshop"></button><button aria-label="&quot;Hi Hi&quot;: UTCN × MCC Culture Exchange"></button><button aria-label="MCC Mixer"></button><button aria-label="A Sweet Taste of Myanmar &amp; China"></button><button aria-label="HiHi Culture Exchange"></button><span id="count">1 / 17 · Autumn</span></div>
     </div>
     <div class="scene" id="scene">
       <canvas id="gl"></canvas>
@@ -241,7 +248,7 @@ import { mergeGeometries } from "./vendor/BufferGeometryUtils.min.js";
 const LL = (lon, lat) => [(lon + 79.3957) * Math.cos(43.6628 * Math.PI / 180) * 111320, (lat - 43.6628) * 111320];
 const KCC = { x: 5, y: -118, r: 66 };                      // King's College Circle: lawn centre and radius
 const at = ([x, y], h = 0) => new THREE.Vector3(x, h, -y); // map → three.js (north is -z)
-const HERO = { uc: [-79.395782, 43.662902], knox: [-79.3966595, 43.6613788], hart: [-79.394592, 43.663910], conv: [-79.3953881, 43.6607904], koffler: [-79.4005564, 43.6605893], doo: [-79.4009247, 43.6610804], sussex: [-79.4010004, 43.6648362], oise: [-79.3986591, 43.6684544], sc: [-79.3979739, 43.6586586], cumb: [-79.3959546, 43.6594627], rw: [-79.3989217, 43.6633095], wood: [-79.3989081, 43.6666186] };
+const HERO = { uc: [-79.395782, 43.662902], knox: [-79.3966595, 43.6613788], hart: [-79.394592, 43.663910], conv: [-79.3953881, 43.6607904], koffler: [-79.4005564, 43.6605893], doo: [-79.4009247, 43.6610804], sussex: [-79.4010004, 43.6648362], oise: [-79.3986591, 43.6684544], sc: [-79.3979739, 43.6586586], cumb: [-79.3959546, 43.6594627], rw: [-79.3989217, 43.6633095], wood: [-79.3989081, 43.6666186], duke: [-79.3974079, 43.6691408] };
 // the events, in the order of the walk: by season, not by year. For each: the building, where the camera stands to look at it (far back with a long lens),
 // the poster, the light of that hour, and the weather. az: 0 = camera to the south of the building, 90 = to the east, 180 = to the north, -90 = to the west.
 const DAY   = { col: 0xFFF1DC, int: 2.9, sky: 0xD2E4FF, gnd: 0xB9A276, hemi: 1.10, exp: 1.06 };
@@ -260,6 +267,7 @@ const STOPS = [
   { hero: "sc", off: [-2.6, 2.2], th: 9.5, az: -28, dist: 90, poster: "multicultural-bazaar-giveaway.jpg", banner: { front: 42, side: -16, scale: 2 }, sky: [16, 11, 0xFFF8E6], L: { ...DAY, from: [30, 30] } },                                                        // same building from its other corner, by day
   { hero: "doo", off: [4, 6], th: 13, az: 245, dist: 132, poster: "taste-of-southeast-asia.jpg", banner: { front: 84, side: -17, scale: 2 }, sky: [-14, 12, 0xDCE6FF], L: { ...NIGHT, dir: [-.30, .55, -.78] } },                                                       // 7 to 9 on a November night: the disc in the sky is the moon
   // ---- winter
+  { hero: "duke", off: [-1, 3], th: 6.5, az: 222, dist: 76, poster: "pub-night.jpg", banner: { front: 28, side: -13.5, scale: 2 }, sky: [-14, 12, 0xDCE6FF], L: { ...NIGHT, from: [-30, 40], snow: 1, leaf: 0 } },                                                   // 7:30 on a late-December night, snow down; the pub from its street corner
   { hero: "cumb", off: [0, 0], th: 8.5, az: -65, dist: 80, eye: 4.5, poster: "intercultural-adventure.jpg", banner: { front: 32, side: -15, scale: 2 }, sky: [16, 10, 0xFFFFFF], L: { ...SNOWY, dir: [-.62, .42, .66], glow: .8 } },                                    // a snowy January afternoon; camera and light as in the winter draft
   { hero: "cumb", off: [0, 0], th: 8.5, az: -22, dist: 80, eye: 4.5, poster: "savoury-taste-myanmar.jpg", banner: { front: 32, side: -15, scale: 2 }, sky: [16, 12, 0xFFFDF4], L: { ...SNOWY, from: [-32, 34], col: 0xFFF3E2, int: 2.3, hemi: 1.5, exp: 1.12, glow: .5 } },   // early March, snow still down; the house from its south side
   { hero: "rw", off: [-11, -4.5], th: 13, az: 160, dist: 196, poster: "origami-workshop.jpg", banner: { front: 148, side: -19, scale: 2 }, sky: [-14, 12, 0xDCE6FF], L: { ...NIGHT, from: [-30, 40], snow: 1, leaf: 0 } },                                              // 5 to 7 on a January night, snow on the ground
@@ -269,7 +277,7 @@ const STOPS = [
   { hero: "cumb", off: [0, 0], th: 8.5, az: -65, dist: 80, eye: 4.5, poster: "sweet-taste-myanmar-china.jpg", banner: { front: 32, side: -15, scale: 2 }, sky: [16, 11, 0xFFF8E6], L: { ...DAY, dir: [-.62, .50, .66], sky: 0xCFE4FF, gnd: 0xA9B98A, hemi: 1.15, leaf: 0, glow: .6 } },   // the same house in spring, from the front
   { hero: "cumb", off: [0, 0], th: 8.5, az: -108, dist: 80, eye: 4.5, poster: "hihi-culture-exchange.jpg", banner: { front: 32, side: -15, scale: 2 }, sky: [16, 11, 0xFFF8E6], L: { ...DAY, from: [30, 36], sky: 0xCFE4FF, gnd: 0xA9B98A, hemi: 1.15, leaf: 0, glow: .6 } },       // and from its north-west corner
 ];
-const SEASON_OF = i => i < 9 ? "Autumn" : i < 12 ? "Winter" : "Spring";
+const SEASON_OF = i => i < 9 ? "Autumn" : i < 13 ? "Winter" : "Spring";
 const EYE_H = 1.8;
 STOPS.forEach(s => { const L = s.L, a = s.az * Math.PI / 180; for (const [k, v] of [["dusk", 0], ["night", 0], ["snow", 0], ["leaf", 1], ["glow", 0]]) if (L[k] == null) L[k] = v; if (s.turn == null) s.turn = .9;
   if (L.from) { const a2 = (s.az + L.from[0]) * Math.PI / 180, e = L.from[1] * Math.PI / 180; L.dir = [Math.sin(a2) * Math.cos(e), Math.sin(e), Math.cos(a2) * Math.cos(e)]; }   // light from the camera's side, so the front is lit: [degrees round from the camera, degrees up]
@@ -315,6 +323,7 @@ const HEROES = [
   { key: "cumb",    file: "./models/cumberland-house.glb", ll: HERO.cumb, later: true },
   { key: "rw",      file: "./models/ramsay-wright.glb",    ll: HERO.rw, later: true },
   { key: "wood",    file: "./models/woodsworth-college.glb", ll: HERO.wood, later: true },
+  { key: "duke",    file: "./models/duke-of-york.glb",        ll: HERO.duke, later: true },
 ];
 const heroBoxes = [];
 const snowOn = (m, amt) => { if (m.userData.snowy) return; m.userData.snowy = true; m.onBeforeCompile = sh => { sh.uniforms.uSnow = U.uSnow;
