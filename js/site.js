@@ -180,7 +180,7 @@ const I18N = {
     gallery_shape_on: "Surprise Me",
     gallery_shape_off: "Back to photos",
     newsletter_eyebrow: "MCC Newsletter",
-    newsletter_h1: "What's new with MCC.",
+    newsletter_h1: "What's new with MCC",
     newsletter_lede: "Club updates, upcoming events, and stories from the community, published every couple of weeks.",
   },
   mm: {
