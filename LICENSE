@@ -1,0 +1,38 @@
+Myanmar Culture Club (University of Toronto) website
+Copyright (c) 2026 Naing Lin Khant (Moarz). All rights reserved, except as allowed below.
+
+1. What you may do
+
+You may copy, change and reuse the code and design of this website (its HTML,
+CSS and JavaScript) and the 3D building models in events-3d/models/ in your own
+work, as long as you follow condition 2.
+
+2. Visible credit (required)
+
+Any website, app or other work that uses a substantial part of this code, this
+design or these 3D models must show the following credit in a place where its
+visitors can see it without opening the source code, for example in the page
+footer or next to the 3D scene:
+
+    Based on work by Naing Lin Khant (Moarz)
+    https://moarznainglinkhant-cloud.github.io/Portfolio-/
+
+A credit that appears only in source code comments, a README or a licence file
+does not meet this condition. A copy of this licence must stay with any copy of
+the code or the models.
+
+3. What this licence does not cover
+
+The Myanmar Culture Club name and logo, event posters, photographs, written
+content, recordings and any information about members belong to the club or to
+their own authors and may not be reused without permission.
+
+Third-party libraries included in this repository (for example three.js in the
+vendor folders) remain under their own licences.
+
+4. No warranty
+
+Everything here is provided "as is", without warranty of any kind. The author
+is not liable for any claim or damage arising from its use.
+
+If you break a condition above, your permission under this licence ends.
