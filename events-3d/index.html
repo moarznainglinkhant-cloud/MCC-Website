@@ -577,7 +577,7 @@ function frame(now) {
       U.uSnow.value = snow; snowField.visible = flakes.visible = snow > .01; snowField.material.opacity = snow; flakes.material.uniforms.uA.value = snow; flakes.material.uniforms.uPx.value = renderer.domElement.height * 1.5;   /* winter: snow on the ground, on the roofs and in the air */
       litNow = night * .9; banners.forEach(b => { if (!b.g) return; b.g.userData.lit = litNow; if (b.g.userData.fabric) b.g.userData.fabric.emissiveIntensity = litNow; });                                    // evening: the page sky darkens and the windows come on
       HEROES.forEach(h => (h.glow || []).forEach(m => m.emissiveIntensity = Math.max(dusk, night, glowMin) * m.userData.glow)); }
-    if (flakes.visible) flakes.position.lerpVectors(posNow, tNow, .62).setY(0);
+    if (flakes.visible) flakes.position.lerpVectors(posNow, tNow, .62).setY(0); blossomTick();
     skyDir.lerpVectors(STOPS[i].skyDir, STOPS[i + 1].skyDir, f).normalize(); sunDisc.position.copy(posNow).addScaledVector(skyDir, 2400); sunDisc.material.color.lerpColors(STOPS[i].skyCol, STOPS[i + 1].skyCol, f); }
   if (moving) { homing = true; look = Math.atan2(Math.sin(look), Math.cos(look)); pitchT = 0; }                       // walking on turns the building back to its front
   if (!drag) { look += vel * dt; vel *= Math.exp(-dt * 2.2); if (Math.abs(vel) < .002) vel = 0; if (homing) { look *= Math.exp(-dt * 5); if (Math.abs(look) < .002) { look = 0; homing = false; } } } else homing = false;
@@ -611,6 +611,49 @@ function frame(now) {
   if (!shown && intro > .5) { shown = true; document.getElementById("load").style.opacity = 0; }
   requestAnimationFrame(frame);
 }
+// ---------------------------------------------------------------- spring: a cherry tree in bloom beside the building, and petals coming down
+const BLOSSOM = "b";
+const SPRING = ["hihi-culture-trivia-2023.jpg", "mcc-mixer.jpg", "sweet-taste-myanmar-china.jpg", "hihi-culture-exchange.jpg"];
+const cherry = []; const petals = (() => { const br = (s => () => (s = (s * 16807) % 2147483647) / 2147483647)(4127), PINK = [0xF7C6D3, 0xFBDDE5, 0xF2A9BF, 0xFDEEF1, 0xEC96B2];
+  const M = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), P = new THREE.Vector3(), S = new THREE.Vector3(), col = new THREE.Color(), tmp = new THREE.Color(), up = new THREE.Vector3(0, 1, 0);
+  STOPS.forEach((s, si) => { if (!SPRING.includes(s.poster)) return; const k = s.dist / 80, h = 7.5 * Math.sqrt(k), g = new THREE.Group(); g.visible = false; scene.add(g); const ent = { i: si, g, ctr: null, r: 0 }; cherry.push(ent);
+    if (BLOSSOM !== "b") return;
+    const base = s.T.clone().setY(0).addScaledVector(s.fwd, -s.dist * .34).addScaledVector(s.right, s.dist * .17), tips = [], bark = [];
+    (function branch(p, d, len, rad, depth) { const e = p.clone().addScaledVector(d, len);
+      const c = new THREE.CylinderGeometry(rad * .7, rad, len, depth > 2 ? 7 : 5); c.applyQuaternion(q.setFromUnitVectors(up, d)); const mid = p.clone().addScaledVector(d, len / 2); c.translate(mid.x, mid.y, mid.z); c.deleteAttribute("uv"); bark.push(c);
+      if (depth === 0) { tips.push([e, 1]); return; } if (depth <= 2) tips.push([e, .75]);
+      const n = depth >= 3 ? 3 : 2 + (br() > .4 ? 1 : 0), a0 = br() * 6.28;
+      for (let i = 0; i < n; i++) { const a = a0 + i * 6.28 / n + (br() - .5) * .8, sp = .75 + br() * .45;                 // a cherry spreads wide and low
+        branch(e, d.clone().add(new THREE.Vector3(Math.cos(a) * sp, .05 + br() * .22, Math.sin(a) * sp)).normalize(), len * (.7 + br() * .14), rad * .62, depth - 1); }
+    })(base.clone(), new THREE.Vector3((br() - .5) * .1, 1, (br() - .5) * .1).normalize(), h * .24, h * .036, 4);
+    const ctr = new THREE.Vector3(); tips.forEach(t => ctr.add(t[0])); ctr.divideScalar(tips.length); const crownR = Math.max(...tips.map(t => t[0].distanceTo(ctr))) + h * .1; ent.ctr = ctr; ent.r = crownR;
+    const N = 3000, GR = 500, m = new THREE.InstancedMesh(leafGeo, leafMat, N + GR); m.castShadow = true;
+    for (let i = 0; i < N; i++) { const [tip, w] = tips[(br() * tips.length) | 0], rr = h * .15 * w * Math.cbrt(br()), th = br() * 6.28, ph = Math.acos(2 * br() - 1);
+      P.set(Math.sin(ph) * Math.cos(th), Math.cos(ph) * .8, Math.sin(ph) * Math.sin(th)).multiplyScalar(rr).add(tip);
+      const out = P.clone().sub(ctr), depthIn = Math.min(1, out.length() / crownR); out.normalize(); const sun = new THREE.Vector3(...s.L.dir).normalize();
+      const shade = .66 + .34 * ((Math.max(0, out.dot(sun)) * .7 + Math.max(0, out.y) * .3) * .75 + depthIn * .25);
+      col.setHex(PINK[(br() * PINK.length) | 0]).multiplyScalar(shade * (.94 + br() * .1)); col.lerp(tmp.setHex(0x8A5A72), (1 - shade) * .5); m.setColorAt(i, col);
+      eu.set(br() * 6.28, br() * 6.28, br() * 6.28); q.setFromEuler(eu); const sc = h * (.045 + br() * .03); S.set(sc, sc, sc); m.setMatrixAt(i, M.compose(P, q, S)); }
+    for (let i = N; i < N + GR; i++) { const a = br() * 6.28, r = Math.pow(br(), .7) * crownR * 2.1; eu.set(-Math.PI / 2, 0, br() * 6.28); q.setFromEuler(eu); const sc = (.14 + br() * .1) * Math.sqrt(k); S.set(sc, sc, sc);   // petals already on the ground
+      m.setMatrixAt(i, M.compose(P.set(base.x + Math.cos(a) * r, .07 + br() * .02, base.z + Math.sin(a) * r), q, S)); m.setColorAt(i, col.setHex(PINK[(br() * PINK.length) | 0]).multiplyScalar(.96)); }
+    m.instanceColor.needsUpdate = true; m.frustumCulled = false; g.add(m);
+    const wood = new THREE.Mesh(mergeGeometries(bark), new THREE.MeshStandardMaterial({ color: 0x3E2C2A, roughness: 1 })); wood.castShadow = true; g.add(wood); });
+  const n = 1500, pos = new Float32Array(n * 3), seed = new Float32Array(n * 2); for (let i = 0; i < n; i++) { pos[i * 3] = -110 + br() * 220; pos[i * 3 + 1] = br() * 40; pos[i * 3 + 2] = -110 + br() * 220; seed[i * 2] = br(); seed[i * 2 + 1] = br(); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute("position", new THREE.BufferAttribute(pos, 3)); geo.setAttribute("seed", new THREE.BufferAttribute(seed, 2));
+  const p = new THREE.Points(geo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false, uniforms: { uTime: U.uTime, uPx: { value: 1 }, uA: { value: 0 } },
+    vertexShader: `attribute vec2 seed; uniform float uTime, uPx; varying float vA; varying float vS; varying float vR;
+      void main(){ vec3 p = position; float sp = .9 + seed.x * 1.1;
+        p.y = mod(p.y - uTime * sp, 40.0); p.x += sin(uTime * (.6 + seed.y) + seed.x * 40.0) * 2.2 + uTime * 1.6 * (0.5 + seed.y); p.x = mod(p.x + 110.0, 220.0) - 110.0;
+        p.z += cos(uTime * (.5 + seed.x) + seed.y * 40.0) * 1.8;
+        vec4 mv = modelViewMatrix * vec4(p, 1.0); gl_Position = projectionMatrix * mv; vS = seed.y; vR = uTime * (1.0 + seed.x * 2.0) + seed.y * 30.0;
+        gl_PointSize = max(1.5, uPx * (.22 + seed.y * .2) / -mv.z); vA = smoothstep(0.0, 2.0, p.y) * (.75 + seed.x * .25); }`,
+    fragmentShader: `uniform float uA; varying float vA; varying float vS; varying float vR;
+      void main(){ vec2 c = gl_PointCoord - .5; float cs = cos(vR), sn = sin(vR); c = vec2(c.x * cs - c.y * sn, c.x * sn + c.y * cs); c.y *= 1.0 + 1.6 * abs(sin(vR * .7));   // a petal is an oval that tumbles
+        float a = smoothstep(.5, .34, length(c)) * vA * uA; vec3 col = mix(vec3(.97, .74, .82), vec3(1.0, .93, .95), vS); gl_FragColor = vec4(col * a, a); }`, premultipliedAlpha: true }));
+  p.frustumCulled = false; p.visible = false; scene.add(p); return p; })();
+function blossomTick() { let a = 0; for (const c of cherry) { const d = Math.abs(cNow - c.i); c.g.visible = d < 1; a = Math.max(a, 1 - d); }
+  a = Math.min(1, a * 1.6); petals.visible = a > .01 && BLOSSOM !== "0"; if (petals.visible) { petals.material.uniforms.uA.value = a; petals.material.uniforms.uPx.value = renderer.domElement.height * 1.5; petals.position.lerpVectors(posNow, tNow, .62).setY(0); } }
+
 // ---------------------------------------------------------------- a pop-up banner stand, like the ones at the door of an event, with the event's own poster on it
 function makeBanner(posterUrl, { height = 2.1, snow = false, wind = .05 } = {}) {
   const g = new THREE.Group(), POLE = height + .45, metal = new THREE.MeshStandardMaterial({ color: 0x17181B, roughness: .42, metalness: .35 });
