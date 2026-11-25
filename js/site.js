@@ -2975,14 +2975,16 @@ var MCC_TEAM_PHOTOS = {
   "naing lin khant": "images/team/moarz.jpg",
   "eaint chan myae": "images/team/grace.jpg",
   "kaung min phyo": "images/team/martin.jpg",       // alt: images/team/martin-ocean.jpg
-  "eaint myint mo kyaw": "images/team/catherine.jpg"
+  "eaint myint mo kyaw": "images/team/catherine.jpg",
+  "thant thiri oo": "images/team/tina.jpg"
 };
 // Optional uncropped originals: shown when someone opens a profile and clicks the photo.
 // Same keys as above. Without an entry here, the click shows the round photo's own file.
 var MCC_TEAM_PHOTOS_FULL = {
   "eaint chan myae": "images/team/grace-full.jpg",
   "kaung min phyo": "images/team/martin-full.jpg",  // alt: images/team/martin-ocean-full.jpg
-  "eaint myint mo kyaw": "images/team/catherine-full.jpg"
+  "eaint myint mo kyaw": "images/team/catherine-full.jpg",
+  "thant thiri oo": "images/team/tina-full.jpg"
 };
 function teamPhoto(r) {
   const col = (r.photo || r.photo_url || r.image || "").trim();
