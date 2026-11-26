@@ -16,9 +16,9 @@
 *{ box-sizing:border-box; }
 html,body{ margin:0; height:100%; background:var(--bg);
   background-image:radial-gradient(120% 55% at 50% 108%, rgba(150,190,96,.42), transparent 70%), radial-gradient(70% 60% at 100% 0%, rgba(227,185,60,.16), transparent 62%), linear-gradient(180deg, #F6F1E4 46%, #E9EDCB 100%); background-attachment:fixed; color:var(--ink); font-family:'Work Sans',system-ui,sans-serif; }
-html{ scroll-snap-type:y proximity; }
+html{ scroll-snap-type:y mandatory; }
 .tour{ position:relative; height:1700vh; height:1700dvh; }
-.snap{ position:absolute; left:0; width:1px; height:100vh; height:100dvh; scroll-snap-align:start; pointer-events:none; }
+.snap{ position:absolute; left:0; width:1px; height:100vh; height:100dvh; scroll-snap-align:start; scroll-snap-stop:always; pointer-events:none; }
 .row{ position:sticky; top:0; height:100vh; height:100dvh; display:block; overflow:hidden; }
 .copy{ position:absolute; inset:0; z-index:2; pointer-events:none; padding:clamp(22px,5vh,48px) clamp(22px,6vw,90px) 64px; display:flex; flex-direction:column; justify-content:space-between; align-items:flex-start; }
 .copy > *{ pointer-events:auto; }
@@ -83,7 +83,11 @@ canvas:focus-visible{ outline:2px solid var(--gold); outline-offset:-2px; }
 .ph-out:hover{ text-decoration:underline; text-underline-offset:4px; }
 .ph-n{ font-variant-numeric:tabular-nums; color:var(--ink-soft); }
 .ph-nav{ display:flex; gap:6px; } .ph-nav button{ width:40px; height:40px; border-radius:50%; border:1px solid var(--line); font-size:1rem; } .ph-nav button:hover{ background:rgba(28,36,64,.06); }
-.enter.go{ position:absolute; left:50%; bottom:calc(11% + 34px); translate:-50% 0; z-index:4; margin:0; background:#1C2440; color:#F6F1E4; opacity:0; visibility:hidden; transition:opacity .4s, visibility 0s .4s, transform .2s, background .2s; }
+.dock{ position:absolute; left:50%; bottom:calc(11% + 34px); translate:-50% 0; z-index:4; display:flex; align-items:center; gap:10px; white-space:nowrap; }
+.dock .mv{ display:inline-flex; align-items:center; gap:.45em; height:2.5em; min-width:2.5em; justify-content:center; padding:0 1em; border-radius:999px; border:1px solid var(--line); background:rgba(255,255,255,.55); color:var(--ink); cursor:pointer; font:600 .95rem/1 'Familjen Grotesk',system-ui,sans-serif; transition:background .2s, opacity .3s; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+.dock .mv:hover{ background:rgba(255,255,255,.85); } .dock .mv:disabled{ opacity:.3; cursor:default; } .dock .mv:focus-visible{ outline:2px solid var(--gold); outline-offset:3px; } .dock #mvPrev{ padding:0; }
+html.dark .dock .mv{ background:rgba(20,26,48,.45); } html.dark .dock .mv:hover{ background:rgba(20,26,48,.75); }
+.enter.go{ margin:0; background:#1C2440; color:#F6F1E4; opacity:0; visibility:hidden; transition:opacity .4s, visibility 0s .4s, transform .2s, background .2s; }
 .enter.go.on{ opacity:1; visibility:visible; transition:opacity .5s .2s, transform .2s, background .2s; }
 html.dark .enter.go{ background:#F6F1E4; color:#1C2440; } html.dark .enter.go:hover{ background:#fff; }
 .inside{ --ink:#1C2440; --ink-soft:#5F5A48; --line:rgba(28,36,64,.16); color:var(--ink); }
@@ -98,7 +102,7 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
 .swap a.on{ color:var(--ink); border-color:var(--red); }
 #fall{ opacity:calc((1 - var(--night,0)) * var(--leaf,1)); position:fixed; inset:0; width:100%; height:100%; z-index:6; pointer-events:none; -webkit-mask-image:none; mask-image:none; cursor:default; }
 @media (max-width:820px){
-  .swap{ left:22px; bottom:44px; white-space:nowrap; letter-spacing:.08em; } .credit{ left:22px; right:22px; bottom:10px; font-size:.64rem; line-height:1.45; } .copy{ padding-bottom:78px; } .hint{ left:50%; bottom:118px; white-space:nowrap; } .enter.go{ bottom:150px; } .ph-bar{ flex-wrap:wrap; gap:8px; } .ph-n{ order:3; flex-basis:100%; } .scene::before{ inset:0 -20% 40% -20%; }
+  .swap{ left:22px; bottom:44px; white-space:nowrap; letter-spacing:.08em; } .credit{ left:22px; right:22px; bottom:10px; font-size:.64rem; line-height:1.45; } .copy{ padding-bottom:78px; } .hint{ left:50%; bottom:118px; white-space:nowrap; } .dock{ bottom:150px; gap:6px; } .dock .mv, .enter.go{ font-size:.85rem; } .enter.go{ padding:.75em 1em; } .ph-bar{ flex-wrap:wrap; gap:8px; } .ph-n{ order:3; flex-basis:100%; } .scene::before{ inset:0 -20% 40% -20%; }
 }
 </style>
 <script type="importmap">{ "imports": { "three": "./vendor/three.min.js" } }</script>
@@ -247,8 +251,8 @@ html.snow .sky{ background:rgba(255,255,255,.75); }
     </div>
     <div class="scene" id="scene">
       <canvas id="gl"></canvas>
-      <button class="enter go" id="enter" type="button">Step inside <span aria-hidden="true">→</span></button>
-      <div class="hint" id="hint">Scroll for the next event · drag to turn the building</div>
+      <div class="dock"><button class="mv" id="mvPrev" type="button" aria-label="Previous event">↑</button><button class="enter go" id="enter" type="button">Step inside <span aria-hidden="true">→</span></button><button class="mv" id="mvNext" type="button">Next event <span aria-hidden="true">↓</span></button></div>
+      <div class="hint" id="hint">Scroll to walk on · drag to turn the building</div>
       <div class="load" id="load">Building the scene…</div>
     </div>
   </section>
@@ -535,7 +539,24 @@ const stars = (() => { const n = 3400, R = 2600, pos = new Float32Array(n * 3), 
     fragmentShader: `uniform float uNight; varying vec3 vC; varying float vB;
       void main() { float d = length(gl_PointCoord - .5); float a = smoothstep(.5, .18, d) * vB * uNight; gl_FragColor = vec4(vC * a, a); }`, premultipliedAlpha: true });
   const p = new THREE.Points(g, m); p.frustumCulled = false; p.renderOrder = -2; p.visible = false; scene.add(p); return p; })();
-const goTo = i => scrollTo({ top: tour.offsetTop + i * innerHeight, behavior: reduce ? "auto" : "smooth" });
+// moving between events: one scroll, swipe, key press or button always walks you one whole stop, so you can never end up between two buildings
+let travel = null, wheelAcc = 0, wheelLast = 0, wheelMag = 0, wheelHold = false;
+function goTo(i) { i = Math.max(0, Math.min(N - 1, i)); if (travel || (typeof walk !== "undefined" && walk.phase)) return; const y0 = scrollY, y1 = tour.offsetTop + i * innerHeight, d = Math.abs(y1 - y0); if (d < 2) return;
+  if (reduce) { scrollTo(0, y1); return; }
+  document.documentElement.style.scrollSnapType = "none"; travel = { y0, y1, t0: performance.now(), D: Math.min(2800, 1150 + 350 * d / innerHeight) }; }
+const stepBy = dir => goTo(Math.round(progress()) + dir);
+function travelTick() { if (!travel) return; const k = Math.min(1, (performance.now() - travel.t0) / travel.D), e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2; scrollTo(0, travel.y0 + (travel.y1 - travel.y0) * e);
+  if (k >= 1) { travel = null; document.documentElement.style.scrollSnapType = ""; } }
+addEventListener("wheel", e => { if (e.ctrlKey) return; e.preventDefault(); if (typeof walk !== "undefined" && walk.phase) return;
+  const now = e.timeStamp, gap = now - wheelLast, mag = Math.abs(e.deltaY), fresh = gap > 90 || mag > wheelMag * 1.5 + 4; wheelLast = now; wheelMag = mag;   // a pause, or a sudden harder push, means a new scroll
+  if (gap > 90) wheelAcc = 0; if (fresh) wheelHold = false;
+  if (travel || wheelHold) return;                                                                                                    // the fading tail of the same scroll does not carry you on to the stop after
+  wheelAcc += e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
+  if (Math.abs(wheelAcc) > 30) { stepBy(wheelAcc > 0 ? 1 : -1); wheelAcc = 0; wheelHold = true; } }, { passive: false });
+addEventListener("keydown", e => { if ((typeof walk !== "undefined" && walk.phase) || e.altKey || e.ctrlKey || e.metaKey) return; const onBtn = e.target.tagName === "BUTTON", onCanvas = e.target === canvas;
+  const dir = (e.key === "PageDown" || (e.key === " " && !e.shiftKey && !onBtn) || (e.key === "ArrowDown" && !onCanvas)) ? 1 : (e.key === "PageUp" || (e.key === " " && e.shiftKey && !onBtn) || (e.key === "ArrowUp" && !onCanvas)) ? -1 : 0;
+  if (dir) { e.preventDefault(); stepBy(dir); } else if (e.key === "Home") { e.preventDefault(); goTo(0); } else if (e.key === "End") { e.preventDefault(); goTo(N - 1); } });
+document.getElementById("mvPrev").addEventListener("click", () => stepBy(-1)); document.getElementById("mvNext").addEventListener("click", () => stepBy(1));
 stepBtns.forEach((b, i) => b.addEventListener("click", () => goTo(i)));
 cards.forEach((c, k) => c.hidden = k !== 0);
 function setActive(i) { if (i === active) return; active = i; cards.forEach((c, k) => { c.classList.toggle("on", k === i); c.hidden = k !== i; }); stepBtns.forEach((b, k) => b.classList.toggle("on", k === i)); count.textContent = (i + 1) + " / " + N + " · " + SEASON_OF(i); }
@@ -563,7 +584,7 @@ let last = performance.now(), shown = false, homing = false;
 function frame(now) {
   const dt = Math.min(.05, ((now || performance.now()) - last) / 1000); last = now || performance.now(); const t = U.uTime.value += dt;
   intro = Math.min(1, intro + dt / 2.8); const k = 1 - Math.pow(1 - intro, 3);
-  const p = progress(), moving = Math.abs(p - lastP) > .0005; lastP = p;
+  travelTick(); const p = progress(), moving = Math.abs(p - lastP) > .0005; lastP = p;
   poseAt(p, want); setActive(Math.round(p)); if (p > .08) hint.classList.add("gone");
   const ease = reduce ? 1 : 1 - Math.exp(-dt * 4);
   posNow.lerp(want.pos, ease); tNow.lerp(want.T, ease); turnNow += (want.turn - turnNow) * ease; U.uTurn.value = turnNow; cNow += (want.c - cNow) * ease;
@@ -596,6 +617,7 @@ function frame(now) {
   arm.subVectors(posNow, tNow); arm.y = 0; arm.applyAxisAngle(UP, -look).multiplyScalar(far);
   camera.position.set(tNow.x + arm.x, posNow.y + pitch * arm.length() * .32 + (1 - k) * 5, tNow.z + arm.z); camera.lookAt(tNow);
   if (walk.phase) { if (moving) { endWalk(); } else walkCamera(dt); }
+  mvPrev.disabled = active === 0; mvNext.disabled = active === N - 1;
   enterBtn.classList.toggle("on", settled && intro > .9 && !walk.phase && !!heroOf[STOPS[active].hero].root);
   stars.position.copy(camera.position); eyeNow.copy(camera.position); lookDir.set(-arm.x, 0, -arm.z).normalize();
   // each event's banner drops onto the grass once you have arrived, and lifts away when you walk on
@@ -706,6 +728,7 @@ function raiseBanner(i) { const s = STOPS[i], wide = innerWidth > 820, b = s.ban
 const EVENT_PHOTOS = {}; fetch("./photos.json").then(r => r.ok ? r.json() : {}).then(j => Object.assign(EVENT_PHOTOS, j)).catch(() => {});   // event id → its photos
 const STOCK = "../images/gallery/mcc-gallery-photos/p6-11.jpg";   // shown when an event has no photos of its own yet
 const DOOR = { koffler: "East" };                                 // which door to use where the front is not the model's main door
+const mvPrev = document.getElementById("mvPrev"), mvNext = document.getElementById("mvNext");
 const enterBtn = document.getElementById("enter"), inside = document.getElementById("inside"), phImgs = [document.getElementById("phA"), document.getElementById("phB")];
 const V3 = () => new THREE.Vector3(), ez = x => { x = Math.min(1, Math.max(0, x)); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
 function rigDoors(h) { if (h.rig !== undefined) return h.rig; h.rig = null; const root = h.root; root.updateMatrixWorld(true);
@@ -765,7 +788,7 @@ document.getElementById("phPrev").addEventListener("click", () => { if (walk.pha
 addEventListener("keydown", e => { if (!walk.phase) return; if ([" ", "PageDown", "PageUp", "Home", "End", "ArrowDown", "ArrowUp"].includes(e.key) && e.target.tagName !== "BUTTON") e.preventDefault(); if (walk.phase !== "photos") return;
   if (e.key === "Escape") leaveWalk(); if (e.key === "ArrowRight") showPhoto(walk.idx + 1); if (e.key === "ArrowLeft") showPhoto(walk.idx - 1); });
 const stay = e => { if (walk.phase) e.preventDefault(); };                                                          // the page does not scroll on to the next event while you are inside
-addEventListener("wheel", stay, { passive: false }); addEventListener("touchmove", stay, { passive: false });
+addEventListener("touchmove", stay, { passive: false });
 { let sx = null; const fr = document.querySelector(".ph-frame");                                                    // swipe between photos on a phone
   fr.addEventListener("touchstart", e => sx = e.touches[0].clientX, { passive: true });
   fr.addEventListener("touchend", e => { if (sx == null || walk.phase !== "photos") return; const dx = e.changedTouches[0].clientX - sx; sx = null; if (Math.abs(dx) > 40) showPhoto(walk.idx + (dx < 0 ? 1 : -1)); }); }
